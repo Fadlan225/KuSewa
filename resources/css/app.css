@@ -1,1 +1,49 @@
 @import "tailwindcss";
+
+/* Hide native range thumbs inside the price-range component and use custom dots */
+#price-range input[type=range] {
+	-webkit-appearance: none;
+	appearance: none;
+	background: transparent;
+}
+
+#price-range input[type=range]::-webkit-slider-thumb {
+	-webkit-appearance: none;
+	appearance: none;
+	width: 0;
+	height: 0;
+	background: transparent;
+	border: none;
+}
+#price-range input[type=range]::-moz-range-thumb {
+	width: 0;
+	height: 0;
+	background: transparent;
+	border: none;
+}
+#price-range input[type=range]::-ms-thumb {
+	width: 0;
+	height: 0;
+	background: transparent;
+	border: none;
+}
+#price-range input[type=range] {
+	position: absolute;
+	left: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	z-index: 3;
+	height: 24px; /* clickable area */
+	cursor: pointer;
+}
+
+/* Custom thumb visuals should not block pointer events */
+#price-range #thumb-min,
+#price-range #thumb-max {
+	pointer-events: none;
+}
+
+/* Make sure the input ranges remain clickable across the full track */
+#price-range input[type=range] { pointer-events: auto; }
+
+

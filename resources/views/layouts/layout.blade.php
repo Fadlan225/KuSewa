@@ -3,7 +3,9 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>@yield('title', 'My App')</title>
+  <title>@yield('title', 'KuSewa')</title>
+
+  @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
 <body>
@@ -11,7 +13,6 @@
     <a href="/">Home</a>
   </nav>
 
-  <!-- Main Content Placeholder -->
   <div class="container">
     @yield('content')
   </div>

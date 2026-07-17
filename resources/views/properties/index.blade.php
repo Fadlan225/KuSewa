@@ -138,21 +138,97 @@ $areaFilters = ['Samarinda Kota', 'Sebulu', 'Kepulauan Derawan', 'Kutai Kartaneg
           </div>
         </div>
 
-        <div class="rounded-xl border border-slate-300 bg-white p-4 shadow-md">
+        <div id="price-range" class="rounded-xl border border-slate-300 bg-white p-4 shadow-md">
           <h3 class="text-xs font-bold text-slate-900">Rentang harga</h3>
           <p class="text-[10px] text-slate-500 mb-3">Per malam</p>
+
           <div class="flex items-center gap-2 mb-4">
-            <input type="text" value="IDR 0"
+            <input id="price-min-input" type="text" value="IDR 0"
               class="h-7 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-[10px] font-medium text-slate-700 text-center outline-none">
             <span class="text-slate-400 text-xs">-</span>
-            <input type="text" value="IDR 16.000.000"
+            <input id="price-max-input" type="text" value="IDR 16.000.000"
               class="h-7 w-full rounded-md border border-slate-300 bg-slate-50 px-2 text-[10px] font-medium text-slate-700 text-center outline-none">
           </div>
-          <div class="relative h-1 w-full bg-slate-200 rounded-full">
-            <div class="absolute left-0 right-0 h-full bg-[#fec107] rounded-full"></div>
-            <div class="absolute left-2 -top-1 h-3 w-3 rounded-full border-2 border-[#fec107] bg-white"></div>
-            <div class="absolute right-4 -top-1 h-3 w-3 rounded-full border-2 border-[#fec107] bg-white"></div>
+
+          <div class="relative h-6 w-full">
+            <div class="absolute inset-0 flex items-center">
+              <div class="h-1 w-full bg-slate-200 rounded-full"></div>
+              <div id="range-fill" class="absolute h-1 bg-[#fec107] rounded-full" style="left:0;right:0"></div>
+            </div>
+
+            <input id="range-min" type="range" min="0" max="16000000" step="10000" value="0"
+              class="absolute left-0 top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent pointer-events-auto">
+            <input id="range-max" type="range" min="0" max="16000000" step="10000" value="16000000"
+              class="absolute left-0 top-1/2 w-full -translate-y-1/2 appearance-none bg-transparent pointer-events-auto">
+
+            <div id="thumb-min" class="absolute -top-1 h-3 w-3 rounded-full border-2 border-[#fec107] bg-white shadow"
+              style="left:0"></div>
+            <div id="thumb-max" class="absolute -top-1 h-3 w-3 rounded-full border-2 border-[#fec107] bg-white shadow"
+              style="right:0"></div>
           </div>
+
+          <script>
+            (function(){
+              const fmt = (v) => {
+                const n = Number(v) || 0;
+                return 'IDR ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+              };
+
+              const minRange = document.getElementById('range-min');
+              const maxRange = document.getElementById('range-max');
+              const minInput = document.getElementById('price-min-input');
+              const maxInput = document.getElementById('price-max-input');
+              const fill = document.getElementById('range-fill');
+              const thumbMin = document.getElementById('thumb-min');
+              const thumbMax = document.getElementById('thumb-max');
+
+              const MIN = Number(minRange.min);
+              const MAX = Number(minRange.max);
+
+              function percent(value){ return ((value - MIN) / (MAX - MIN)) * 100; }
+
+              function updateUI(){
+                let a = Number(minRange.value);
+                let b = Number(maxRange.value);
+                if(a > b){ const tmp = a; a = b; b = tmp; }
+                const left = percent(a);
+                const right = 100 - percent(b);
+                fill.style.left = left + '%';
+                fill.style.right = right + '%';
+                thumbMin.style.left = `calc(${left}% - 6px)`;
+                thumbMax.style.left = `calc(${100 - right}% - 6px)`;
+                minInput.value = fmt(a);
+                maxInput.value = fmt(b);
+              }
+
+              minRange.addEventListener('input', () => {
+                if(Number(minRange.value) > Number(maxRange.value)) {
+                  maxRange.value = minRange.value;
+                }
+                updateUI();
+              });
+              maxRange.addEventListener('input', () => {
+                if(Number(maxRange.value) < Number(minRange.value)) {
+                  minRange.value = maxRange.value;
+                }
+                updateUI();
+              });
+
+              minInput.addEventListener('change', () => {
+                const v = Number(minInput.value.replace(/[^0-9]/g, '')) || 0;
+                minRange.value = Math.min(Math.max(v, MIN), Number(maxRange.value));
+                updateUI();
+              });
+              maxInput.addEventListener('change', () => {
+                const v = Number(maxInput.value.replace(/[^0-9]/g, '')) || MAX;
+                maxRange.value = Math.max(Math.min(v, MAX), Number(minRange.value));
+                updateUI();
+              });
+
+              // initialize positions
+              updateUI();
+            })();
+          </script>
         </div>
 
         <div class="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-md">
