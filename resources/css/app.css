@@ -1,49 +1,22 @@
 @import "tailwindcss";
 
-/* Hide native range thumbs inside the price-range component and use custom dots */
-#price-range input[type=range] {
-	-webkit-appearance: none;
-	appearance: none;
-	background: transparent;
+@theme {
+    --color-background: #F8F9FA;
+    --color-primary: #FFC000;
+    --color-primary-light: #466080;
+    --color-secondary: #0A2540;
+    --color-text: #000000;
+    --color-muted: #6C757D;
 }
 
-#price-range input[type=range]::-webkit-slider-thumb {
-	-webkit-appearance: none;
-	appearance: none;
-	width: 0;
-	height: 0;
-	background: transparent;
-	border: none;
+html { scroll-behavior: smooth; }
+* { scrollbar-width: thin; scrollbar-color: var(--color-primary) transparent; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-primary) 90%, white), var(--color-primary));
+    border-radius: 999px; border: 2px solid transparent; background-clip: content-box;
 }
-#price-range input[type=range]::-moz-range-thumb {
-	width: 0;
-	height: 0;
-	background: transparent;
-	border: none;
+::selection {
+    background: color-mix(in srgb, var(--color-primary) 25%, transparent); color: var(--color-primary);
 }
-#price-range input[type=range]::-ms-thumb {
-	width: 0;
-	height: 0;
-	background: transparent;
-	border: none;
-}
-#price-range input[type=range] {
-	position: absolute;
-	left: 0;
-	top: 50%;
-	transform: translateY(-50%);
-	z-index: 3;
-	height: 24px; /* clickable area */
-	cursor: pointer;
-}
-
-/* Custom thumb visuals should not block pointer events */
-#price-range #thumb-min,
-#price-range #thumb-max {
-	pointer-events: none;
-}
-
-/* Make sure the input ranges remain clickable across the full track */
-#price-range input[type=range] { pointer-events: auto; }
-
-

@@ -17,6 +17,9 @@ return new class extends Migration
             $table->string('title');
             $table->string('description');
             $table->json('detail');
+            $table->string('province');
+            $table->string('city');
+            $table->string('address');
             $table->string('latitude');
             $table->string('longitude');
             $table->enum('status', ['active','inactive', 'pending'])->default('pending');
