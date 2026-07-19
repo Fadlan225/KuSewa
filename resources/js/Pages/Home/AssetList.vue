@@ -27,7 +27,7 @@ const formatRupiah = (value) => {
 </script>
 
 <template>
-    <div class="min-h-screen max-w-7xl m-auto py-8 sm:py-10 space-y-10 sm:space-y-12 bg-white text-[#0A2540] font-sans overflow-x-hidden">
+    <div class="min-h-screen max-w-7xl m-auto py-8 sm:py-10 space-y-10 sm:space-y-12 bg-bg text-[#0A2540] font-sans overflow-x-hidden">
 
         <template v-for="(section, idx) in [
             { title: 'Rekomendasi Untukmu', data: recommendedAssets },

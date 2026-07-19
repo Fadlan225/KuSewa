@@ -4,7 +4,9 @@ import { ref, computed, nextTick } from 'vue';
 // We keep them outside the function so they are shared across all components
 
 // State kontrol UI
+const keywordQuery = ref('');
 const isMobileSearchOpen = ref(false);
+const isKeywordSheetOpen = ref(false); // New state for keyword sheet
 const activeSearchStep = ref('aset'); // 'aset', 'lokasi', 'jadwal', 'harga'
 const steps = ['aset', 'lokasi', 'jadwal', 'harga'];
 
@@ -353,8 +355,10 @@ const prevDesktopMonth = () => {
 
 export function useHomeSearch() {
     return {
+        keywordQuery,
         // UI
         isMobileSearchOpen,
+        isKeywordSheetOpen,
         activeSearchStep,
         steps,
         currentStepIndex,

@@ -4,6 +4,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head } from '@inertiajs/vue3';
 import HeroSection from './HeroSection.vue';
 import MobileSearchSheet from './MobileSearchSheet.vue';
+import KeywordSearchSheet from './KeywordSearchSheet.vue';
 import LokasiSearchSheet from './LokasiSearchSheet.vue';
 import AssetList from './AssetList.vue';
 
@@ -51,9 +52,13 @@ onMounted(() => {
         <!-- ACTUAL CONTENT (Tampil setelah loading selesai) -->
         <template v-else>
             <HeroSection/>
+            <!-- Mobile Bottom Sheets -->
             <MobileSearchSheet />
+            <KeywordSearchSheet />
             <LokasiSearchSheet />
-            <AssetList />
+            <main class="w-full">
+                <AssetList />
+            </main>
         </template>
 
     </AppLayout>

@@ -1,8 +1,11 @@
 <script setup>
+import { ref } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 
 const {
+    keywordQuery,
     isMobileSearchOpen,
+    isKeywordSheetOpen,
     desktopActiveMenu,
     selectedAssets,
     searchQuery,
@@ -34,20 +37,27 @@ const {
     activeThumb
 } = useHomeSearch();
 </script>
-<template>
-    <div>
-        <div class="relative w-full h-[450px] lg:h-[500px] bg-cover bg-center" style="background-image: url('/public.png');">
 
+<template>
+    <!-- 1. WRAPPER UTAMA: Berongga (padding) di mobile, kembali full-width (tanpa padding) di desktop (md:px-0 md:pt-0) -->
+    <div class="w-full px-3 pt-3 pb-6 sm:px-6 md:px-0 md:pt-0 md:pb-0">
+
+        <!-- 2. HERO CONTAINER: rounded di mobile, lurus kembali (rounded-none) di desktop -->
+        <div class="relative w-full h-[360px] sm:h-[420px] md:h-[500px] lg:h-[540px] bg-cover bg-center rounded-2xl md:rounded-none overflow-hidden shadow-sm md:shadow-none transition-all duration-300" style="background-image: url('/public.png');">
+
+            <!-- Overlay gelap -->
             <div class="absolute inset-0 bg-black/50"></div>
 
-            <div class="relative z-10 flex flex-col justify-center h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Konten di dalam Hero (Teks & Search Bar tetap di tengah area max-w-7xl) -->
+            <div class="relative z-10 flex flex-col justify-center h-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-8">
 
-                <div class="max-w-3xl mt-8 md:mt-0 text-center md:text-left">
-                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-extrabold text-white leading-tight tracking-tight">
+                <!-- Teks Judul & Subjudul -->
+                <div class="max-w-3xl text-center md:text-left">
+                    <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight">
                         Semua Kebutuhan <span class="text-[#FFC000]">Sewa, </span><br class="hidden sm:block">
                         <span class="text-[#FFC000]">Dalam</span> Satu Platform
                     </h1>
-                    <p class="mt-4 text-base sm:text-lg text-white/90 font-medium max-w-xl leading-relaxed mx-auto md:mx-0">
+                    <p class="mt-2 sm:mt-4 text-xs sm:text-sm md:text-base lg:text-lg text-white/90 font-medium max-w-xl leading-relaxed mx-auto md:mx-0">
                         Temukan lahan, gedung, gudang, baliho, hunian, dan berbagai aset lainnya dengan mudah.
                     </p>
                 </div>
@@ -56,58 +66,52 @@ const {
                 <!-- Overlay untuk menutup modal jika di klik di luar -->
                 <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/10 transition-opacity"></div>
 
-                <div class="hidden md:flex mt-8 flex-col items-center w-full max-w-[850px] relative z-50">
-                    <div class="bg-white rounded-full p-1 flex flex-row items-center w-full shadow-xl border border-[#6C757D]/10 relative transition-all duration-300">
+                <div class="hidden md:flex mt-6 lg:mt-8 flex-col w-full max-w-[850px] relative z-50">
+<!-- Card Utama (Slim & Compact) -->
+<div class="bg-white rounded-full p-1.5 shadow-lg border border-gray-200/80 flex flex-row items-center justify-between w-full transition-all duration-300">
 
-                        <!-- Item 1: Jenis Aset -->
-                        <div @click="desktopActiveMenu = desktopActiveMenu === 'jenis' ? null : 'jenis'" class="flex-1 flex items-center justify-between px-6 1 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200 w-full" :class="desktopActiveMenu === 'jenis' ? 'bg-[#F8F9FA] shadow-inner' : ''">
-                            <div class="flex flex-col">
-                                <span class="text-[13px] font-bold text-[#0A2540] tracking-wide">Jenis Aset</span>
-                                <span class="text-[12px] text-[#6C757D] truncate max-w-[120px]" :class="selectedAssets.length ? 'text-[#0A2540] font-medium' : ''">
-                                    {{ selectedAssets.length ? selectedAssets.join(', ') : 'Semua Aset' }}
-                                </span>
-                            </div>
-                        </div>
+    <!-- Item 1: Lokasi -->
+    <div @click="desktopActiveMenu = desktopActiveMenu === 'lokasi' ? null : 'lokasi'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'lokasi' ? 'bg-[#F8F9FA] shadow-inner' : ''">
+        <div class="flex flex-col">
+            <span class="text-[12px] font-bold text-[#0A2540] tracking-wide">Lokasi</span>
+            <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="searchQuery ? 'text-[#0A2540] font-medium' : ''">
+                {{ searchQuery || 'Semua lokasi' }}
+            </span>
+        </div>
+    </div>
 
-                        <!-- Divider -->
-                        <div class="h-6 w-px bg-[#6C757D]/20 mx-0.5"></div>
+    <!-- Divider -->
+    <div class="h-6 w-px bg-gray-200 mx-1"></div>
 
-                        <!-- Item 2: Lokasi -->
-                        <div @click="desktopActiveMenu = desktopActiveMenu === 'lokasi' ? null : 'lokasi'" class="flex-1 flex items-center justify-between px-6 py-1 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200 w-full" :class="desktopActiveMenu === 'lokasi' ? 'bg-[#F8F9FA] shadow-inner' : ''">
-                            <div class="flex flex-col">
-                                <span class="text-[13px] font-bold text-[#0A2540] tracking-wide">Lokasi</span>
-                                <span class="text-[12px] text-[#6C757D] truncate max-w-[120px]">{{ searchQuery || 'Cari destinasi' }}</span>
-                            </div>
-                        </div>
+    <!-- Item 2: Jadwal -->
+    <div @click="desktopActiveMenu = desktopActiveMenu === 'jadwal' ? null : 'jadwal'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'jadwal' ? 'bg-[#F8F9FA] shadow-inner' : ''">
+        <div class="flex flex-col">
+            <span class="text-[12px] font-bold text-[#0A2540] tracking-wide">Jadwal</span>
+            <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="formattedSchedule !== 'Pilih Tanggal' && formattedSchedule ? 'text-[#0A2540] font-medium' : ''">
+                {{ formattedSchedule || 'Pilih tanggal' }}
+            </span>
+        </div>
+    </div>
 
-                        <!-- Divider -->
-                        <div class="h-6 w-px bg-[#6C757D]/20 mx-0.5"></div>
+    <!-- Divider -->
+    <div class="h-6 w-px bg-gray-200 mx-1"></div>
 
-                        <!-- Item 3: Jadwal -->
-                        <div @click="desktopActiveMenu = desktopActiveMenu === 'jadwal' ? null : 'jadwal'" class="flex-1 flex items-center justify-between px-6 py-1 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200 w-full" :class="desktopActiveMenu === 'jadwal' ? 'bg-[#F8F9FA] shadow-inner' : ''">
-                            <div class="flex flex-col">
-                                <span class="text-[13px] font-bold text-[#0A2540] tracking-wide">Jadwal</span>
-                                <span class="text-[12px] text-[#6C757D] truncate max-w-[120px]">{{ formattedSchedule }}</span>
-                            </div>
-                        </div>
+    <!-- Item 3: Rentang Harga -->
+    <div @click="desktopActiveMenu = desktopActiveMenu === 'harga' ? null : 'harga'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'harga' ? 'bg-[#F8F9FA] shadow-inner' : ''">
+        <div class="flex flex-col">
+            <span class="text-[12px] font-bold text-[#0A2540] tracking-wide">Harga</span>
+            <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="(parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? 'text-[#0A2540] font-medium' : ''">
+                {{ (parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Budget Anda' }}
+            </span>
+        </div>
+    </div>
 
-                        <!-- Divider -->
-                        <div class="h-6 w-px bg-[#6C757D]/20 mx-0.5"></div>
+    <!-- Tombol Search -->
+    <button class="bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0 ml-1 active:scale-95 cursor-pointer">
+        <i class="fa-solid fa-magnifying-glass text-sm font-bold"></i>
+    </button>
 
-                        <!-- Item 4: Rentang Harga -->
-                        <div @click="desktopActiveMenu = desktopActiveMenu === 'harga' ? null : 'harga'" class="flex-1 flex items-center justify-between pl-6 pr-2 py-1 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200 w-full" :class="desktopActiveMenu === 'harga' ? 'bg-[#F8F9FA] shadow-inner' : ''">
-                            <div class="flex flex-col">
-                                <span class="text-[13px] font-bold text-[#0A2540] tracking-wide">Harga</span>
-                                <span class="text-[12px] text-[#6C757D]" :class="(parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? 'text-[#0A2540] font-medium' : ''">
-                                    {{ (parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Budget Anda' }}
-                                </span>
-                            </div>
-                            <!-- Tombol Search -->
-                            <button class="bg-[#FFC000] hover:bg-[#e6ad00] w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 shadow-sm hover:shadow-md flex-shrink-0 ml-4 active:scale-95">
-                                <i class="fa-solid fa-magnifying-glass text-[#0A2540] text-sm"></i>
-                            </button>
-                        </div>
-                    </div>
+</div>
 
                     <!-- DESKTOP MODAL DROPDOWN -->
                     <Transition
@@ -118,39 +122,7 @@ const {
                         leave-from-class="transform scale-100 opacity-100 translate-y-0"
                         leave-to-class="transform scale-95 opacity-0 -translate-y-4"
                     >
-                        <div v-if="desktopActiveMenu" class="absolute top-[110%] w-full bg-white rounded-[32px] shadow-2xl border border-[#6C757D]/10 p-6 z-50 origin-top flex flex-col max-h-[75vh] overflow-y-auto hide-scrollbar">
-
-                            <!-- ================== DESKTOP: JENIS ASET ================== -->
-                            <div v-if="desktopActiveMenu === 'jenis'" class="w-full px-2">
-                                <h2 class="text-lg font-extrabold text-[#0A2540] mb-4">Pilih Jenis Aset</h2>
-
-                                <div class="mb-4">
-                                    <label class="inline-flex items-center gap-3 cursor-pointer group">
-                                        <div class="w-4 h-4 rounded flex items-center justify-center transition border border-[#6C757D]/30 group-hover:border-[#0A2540]"
-                                            :class="selectedAssets.length === 0 ? 'bg-[#0A2540] border-[#0A2540]' : 'bg-transparent'">
-                                            <i v-if="selectedAssets.length === 0" class="fa-solid fa-check text-white text-[9px]"></i>
-                                        </div>
-                                        <span class="text-[13px] font-bold text-[#0A2540] group-hover:font-medium transition">Semua</span>
-                                        <input type="checkbox" :checked="selectedAssets.length === 0" @change="selectedAssets = []" class="hidden">
-                                    </label>
-                                </div>
-
-                                <div class="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
-                                    <div v-for="category in assetCategories" :key="category.name">
-                                        <h3 class="text-[11px] font-bold text-[#6C757D] uppercase tracking-wider mb-2">{{ category.name }}</h3>
-                                        <div class="space-y-2">
-                                            <label v-for="item in category.items" :key="item" class="flex items-center gap-3 cursor-pointer group">
-                                                <div class="w-4 h-4 rounded flex items-center justify-center transition border border-[#6C757D]/30 group-hover:border-[#0A2540]"
-                                                    :class="selectedAssets.includes(item) ? 'bg-[#0A2540] border-[#0A2540]' : 'bg-transparent'">
-                                                    <i v-if="selectedAssets.includes(item)" class="fa-solid fa-check text-white text-[9px]"></i>
-                                                </div>
-                                                <span class="text-[13px] text-[#0A2540] group-hover:font-medium transition">{{ item }}</span>
-                                                <input type="checkbox" :value="item" v-model="selectedAssets" class="hidden">
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div v-if="desktopActiveMenu" class="absolute top-[108%] w-full bg-white rounded-[32px] shadow-2xl border border-[#6C757D]/10 p-6 z-50 origin-top flex flex-col max-h-[75vh] overflow-y-auto hide-scrollbar">
 
                             <!-- ================== DESKTOP: LOKASI ================== -->
                             <div v-if="desktopActiveMenu === 'lokasi'" class="w-full max-w-sm mx-auto">
@@ -303,14 +275,27 @@ const {
                 </div>
 
                 <!-- ==================== MOBILE SEARCH TRIGGER ==================== -->
-                <div class="md:hidden mt-6 w-full px-2">
-                    <button
-                        @click="isMobileSearchOpen = true"
-                        class="w-full bg-white rounded-full py-2 px-6 flex items-center justify-center gap-1.5 shadow-lg text-[#0A2540] font-bold text-base active:scale-95 transition-transform"
-                    >
-                        <i class="fa-solid fa-magnifying-glass text-[#0A2540]"></i>
-                        Mulai pencarian
-                    </button>
+                <div class="md:hidden mt-4 sm:mt-6 w-full max-w-sm mx-auto">
+                    <div class="relative w-full flex items-center">
+                        <!-- Ikon Kaca Pembesar -->
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 text-[#6C757D] text-xs z-10"></i>
+
+                        <!-- Fake Input that opens Keyword Sheet -->
+                        <div
+                            @click="isKeywordSheetOpen = true"
+                            class="w-full bg-white text-xs font-medium rounded-full pl-10 pr-12 py-3.5 shadow-lg active:scale-[0.98] transition-transform cursor-pointer flex items-center"
+                        >
+                            <span class="truncate" :class="keywordQuery ? 'text-[#0A2540]' : 'text-[#6C757D]'">{{ keywordQuery || 'Mau sewa apa hari ini?' }}</span>
+                        </div>
+
+                        <!-- Filter Button that opens Filter Sheet (Kanan Dalam) -->
+                        <button
+                            @click.stop="isMobileSearchOpen = true"
+                            class="absolute right-1.5 w-8 h-8 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm"
+                        >
+                            <i class="fa-solid fa-sliders text-[11px] font-bold"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

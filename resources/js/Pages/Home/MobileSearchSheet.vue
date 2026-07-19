@@ -50,68 +50,19 @@ const {
     parsedMinPrice,
     parsedMaxPrice,
     maxLimit,
-    formatPriceShort,
-    
-    // Swipe
-    touchStartY,
-    sheetTransform,
-    onTouchStart,
-    onTouchMove,
-    onTouchEnd
+    formatPriceShort
 } = useHomeSearch();
+import BottomSheet from '@/Components/UI/BottomSheet.vue';
 </script>
 
 <template>
-    <div>
-        <!-- OVERLAY -->
-        <Transition
-            enter-active-class="transition-opacity duration-300"
-            enter-from-class="opacity-0"
-            enter-to-class="opacity-100"
-            leave-active-class="transition-opacity duration-300"
-            leave-from-class="opacity-100"
-            leave-to-class="opacity-0"
-        >
-            <div v-if="isMobileSearchOpen" @click="isMobileSearchOpen = false" class="fixed inset-0 bg-black/60 z-[100] md:hidden"></div>
-        </Transition>
-
-        <!-- BOTTOM SHEET -->
-        <Transition
-            enter-active-class="transition-transform duration-300 ease-out"
-            enter-from-class="translate-y-full"
-            enter-to-class="translate-y-0"
-            leave-active-class="transition-transform duration-200 ease-in"
-            leave-from-class="translate-y-0"
-            leave-to-class="translate-y-full"
-        >
-            <div v-if="isMobileSearchOpen" class="fixed inset-x-0 bottom-0 z-[100] flex items-end justify-center md:hidden pointer-events-none">
-                <div
-                    class="relative w-full h-[65vh] bg-[#F8F9FA] rounded-t-[32px] flex flex-col shadow-2xl pointer-events-auto"
-                    :style="{ transform: sheetTransform, transition: touchStartY === 0 ? 'transform 0.2s ease-out' : 'none' }"
-                >
-                    <!-- Drag Handle -->
-                    <div
-                        class="w-full flex justify-center pt-5 pb-5 cursor-grab active:cursor-grabbing touch-none"
-                        @touchstart="onTouchStart"
-                        @touchmove.prevent="onTouchMove"
-                        @touchend="onTouchEnd"
-                    >
-                        <div class="w-12 h-1.5 bg-[#6C757D]/30 rounded-full"></div>
-                    </div>
-
-                    <!-- Header (Close Button & Tabs) -->
-                    <div class="px-5 pb-0 border-b border-[#6C757D]/10">
-                        <div class="flex items-center justify-between mb-4">
-                            <h2 class="text-lg font-extrabold text-[#0A2540] capitalize">{{ activeSearchStep }}</h2>
-                            <button
-                                @click="isMobileSearchOpen = false"
-                                class="w-8 h-8 rounded-full bg-white border border-[#6C757D]/20 flex items-center justify-center text-[#0A2540] shadow-sm active:scale-95 transition"
-                            >
-                                <i class="fa-solid fa-xmark"></i>
-                            </button>
-                        </div>
-
-                        <!-- Tabs -->
+    <BottomSheet v-model="isMobileSearchOpen" title="">
+        <!-- Kita tidak menggunakan judul bawaan BottomSheet karena ada tabs di header -->
+        <template #tabs>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-extrabold text-[#0A2540] capitalize">{{ activeSearchStep }}</h2>
+            </div>
+            <!-- Tabs -->
                         <div class="flex items-center gap-6 overflow-x-auto hide-scrollbar">
                             <button v-for="step in steps" :key="step"
                                     @click="activeSearchStep = step"
@@ -120,12 +71,11 @@ const {
                                 {{ step }}
                                 <div v-if="activeSearchStep === step" class="absolute bottom-0 left-0 right-0 h-[3px] bg-[#0A2540] rounded-t-md"></div>
                             </button>
-                        </div>
-                    </div>
+            </div>
+        </template>
 
-                    <!-- Slider Content Area -->
-                    <div class="relative w-full flex-1 overflow-hidden">
-                        <div class="flex w-full h-full transition-transform duration-300 ease-in-out" :style="`transform: translateX(-${currentStepIndex * 100}%)`">
+        <!-- Slider Content Area -->
+        <div class="flex w-full h-full transition-transform duration-300 ease-in-out" :style="`transform: translateX(-${currentStepIndex * 100}%)`">
 
                             <!-- 1. JENIS ASET -->
                             <div class="w-full h-full flex-shrink-0 px-4 overflow-y-auto pb-24 hide-scrollbar">
@@ -313,17 +263,15 @@ const {
                             </div>
 
                         </div>
-                    </div>
-
-                    <!-- Footer Action Bar -->
-                    <div class="absolute bottom-0 w-full bg-[#F8F9FA] border-t border-[#6C757D]/10 p-4 flex justify-center items-center z-20">
-                        <button @click="isMobileSearchOpen = false" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold w-full py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-[15px]">
-                            <i class="fa-solid fa-magnifying-glass"></i>
-                            Terapkan
-                        </button>
-                    </div>
-                </div>
+        
+        <template #footer>
+            <!-- Footer Action Bar -->
+            <div class="absolute bottom-0 w-full bg-[#F8F9FA] border-t border-[#6C757D]/10 p-4 flex justify-center items-center z-20">
+                <button @click="isMobileSearchOpen = false" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold w-full py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-[15px]">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    Terapkan
+                </button>
             </div>
-        </Transition>
-    </div>
+        </template>
+    </BottomSheet>
 </template>
