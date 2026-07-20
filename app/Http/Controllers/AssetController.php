@@ -87,6 +87,9 @@ class AssetController extends Controller
             'pricings',
             'ownerProfile.user',
             'reviews.user',
+            'favorites' => function ($query) {
+                $query->where('user_id', auth()->id());
+            }
         ])
         ->loadAvg('reviews', 'rating')
         ->loadCount([
@@ -94,6 +97,10 @@ class AssetController extends Controller
             'favorites'
         ]);
 
+        $favorite = $asset->favorites->first();
+        $asset->isFavorite = (bool) $favorite;
+        $asset->favorite_id = $favorite?->id;
+        unset($asset->favorites);
 
         return inertia('Home/Assets/Show', [
             'asset' => $asset
