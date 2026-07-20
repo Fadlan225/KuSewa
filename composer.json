@@ -54,8 +54,7 @@
 
         "network": [
             "Composer\\Config::disableProcessTimeout",
-            "npm run build",
-            "php artisan serve --host=0.0.0.0 --port=8080"
+            "node scripts/network.js"
         ],
         "test": [
             "@php artisan config:clear --ansi @no_additional_args",
