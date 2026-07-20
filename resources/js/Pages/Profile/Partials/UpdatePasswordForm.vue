@@ -1,8 +1,4 @@
 <script setup>
-import InputError from '@/Components/InputError.vue';
-import InputLabel from '@/Components/InputLabel.vue';
-import PrimaryButton from '@/Components/PrimaryButton.vue';
-import TextInput from '@/Components/TextInput.vue';
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
@@ -37,71 +33,73 @@ const updatePassword = () => {
     <section>
         <header>
             <h2 class="text-lg font-medium text-gray-900">
-                Update Password
+                Perbarui Kata Sandi
             </h2>
 
             <p class="mt-1 text-sm text-gray-600">
-                Ensure your account is using a long, random password to stay
-                secure.
+                Pastikan akun Anda menggunakan kata sandi yang panjang dan acak untuk tetap aman.
             </p>
         </header>
 
         <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
             <div>
-                <InputLabel for="current_password" value="Current Password" />
+                <label for="current_password" class="block font-medium text-sm text-gray-700">Kata Sandi Saat Ini</label>
 
-                <TextInput
+                <input
                     id="current_password"
                     ref="currentPasswordInput"
                     v-model="form.current_password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full border-gray-300 focus:border-[#466080] focus:ring-[#466080] rounded-md shadow-sm"
                     autocomplete="current-password"
                 />
 
-                <InputError
-                    :message="form.errors.current_password"
-                    class="mt-2"
-                />
+                <p v-show="form.errors.current_password" class="mt-2 text-sm text-red-600">
+                    {{ form.errors.current_password }}
+                </p>
             </div>
 
             <div>
-                <InputLabel for="password" value="New Password" />
+                <label for="password" class="block font-medium text-sm text-gray-700">Kata Sandi Baru</label>
 
-                <TextInput
+                <input
                     id="password"
                     ref="passwordInput"
                     v-model="form.password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full border-gray-300 focus:border-[#466080] focus:ring-[#466080] rounded-md shadow-sm"
                     autocomplete="new-password"
                 />
 
-                <InputError :message="form.errors.password" class="mt-2" />
+                <p v-show="form.errors.password" class="mt-2 text-sm text-red-600">
+                    {{ form.errors.password }}
+                </p>
             </div>
 
             <div>
-                <InputLabel
-                    for="password_confirmation"
-                    value="Confirm Password"
-                />
+                <label for="password_confirmation" class="block font-medium text-sm text-gray-700">Konfirmasi Kata Sandi</label>
 
-                <TextInput
+                <input
                     id="password_confirmation"
                     v-model="form.password_confirmation"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full border-gray-300 focus:border-[#466080] focus:ring-[#466080] rounded-md shadow-sm"
                     autocomplete="new-password"
                 />
 
-                <InputError
-                    :message="form.errors.password_confirmation"
-                    class="mt-2"
-                />
+                <p v-show="form.errors.password_confirmation" class="mt-2 text-sm text-red-600">
+                    {{ form.errors.password_confirmation }}
+                </p>
             </div>
 
             <div class="flex items-center gap-4">
-                <PrimaryButton :disabled="form.processing">Save</PrimaryButton>
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="inline-flex items-center px-4 py-2 bg-[#466080] border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-[#36506d] active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-[#466080] focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
+                >
+                    Simpan
+                </button>
 
                 <Transition
                     enter-active-class="transition ease-in-out"
@@ -113,7 +111,7 @@ const updatePassword = () => {
                         v-if="form.recentlySuccessful"
                         class="text-sm text-gray-600"
                     >
-                        Saved.
+                        Disimpan.
                     </p>
                 </Transition>
             </div>

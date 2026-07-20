@@ -2,6 +2,8 @@
 import InputError from '@/Components/InputError.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+// Pastikan AuthLayout di-import jika tidak diregistrasikan secara global
+// import AuthLayout from '@/Layouts/AuthLayout.vue';
 
 const form = useForm({
     name: '',

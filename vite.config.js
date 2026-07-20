@@ -25,13 +25,13 @@ export default defineConfig({
         port: 5173,
 
         cors: {
-            origin: ['http://10.124.91.170:8080',
+            origin: ['http://192.168.18.55:8080',
                     'http://127.0.0.1:8000',
             ]
         },
 
         hmr: {
-            host: '10.124.91.170',
+            host: '192.168.18.55',
             port: 5173,
         },
     },
