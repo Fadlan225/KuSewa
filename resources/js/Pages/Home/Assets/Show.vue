@@ -33,8 +33,9 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('id-ID', options);
 };
 
-// Mengelola Galeri Foto
-// Mengelola Galeri Foto
+// ==========================================
+// MENGELOLA GALERI FOTO (TERMASUK KATEGORI)
+// ==========================================
 const allImages = computed(() => {
     return props.asset.images
         ?.map(img => img.image_url)
@@ -42,11 +43,49 @@ const allImages = computed(() => {
 });
 
 const hasImages = computed(() => allImages.value.length > 0);
-
 const mainImage = computed(() => allImages.value[0]);
 const gridImages = computed(() => allImages.value.slice(1, 5));
 
 const showGalleryModal = ref(false);
+const activeCategory = ref('Semua');
+
+// Memformat array objek untuk modal galeri berdasarkan kategori
+// Asumsi: object dari DB memiliki kolom `category` (contoh: 'Interior', 'Eksterior')
+const galleryImages = computed(() => {
+    return props.asset.images?.filter(img => img.image_url).map(img => ({
+        url: img.image_url,
+        category: img.category || 'Lainnya' // Fallback jika category null
+    })) ?? [];
+});
+
+// Menghitung jumlah gambar per kategori untuk ditampilkan di tombol tabs
+const galleryCategories = computed(() => {
+    const counts = { 'Semua': galleryImages.value.length };
+    
+    galleryImages.value.forEach(img => {
+        const cat = img.category;
+        counts[cat] = (counts[cat] || 0) + 1;
+    });
+
+    // Ubah ke format array agar mudah di-loop di Vue
+    return Object.keys(counts).map(name => ({
+        name,
+        count: counts[name]
+    }));
+});
+
+// Memfilter gambar yang akan dirender pada Grid Modal
+const filteredGalleryImages = computed(() => {
+    if (activeCategory.value === 'Semua') return galleryImages.value;
+    return galleryImages.value.filter(img => img.category === activeCategory.value);
+});
+
+// Method untuk menutup modal & mereset kategori aktif
+const closeGalleryModal = () => {
+    showGalleryModal.value = false;
+    activeCategory.value = 'Semua';
+};
+
 
 // Menghitung harga termurah untuk ditampilkan di card booking
 const lowestPrice = computed(() => {
@@ -75,7 +114,7 @@ const form = useForm({
 });
 
 const submitBooking = () => {
-    form.get(route('booking.create', { asset: props.asset.id })); // Sesuaikan dengan route Anda nanti
+    form.get(route('booking.create', { asset: props.asset.id })); 
 };
 
 // Menghitung distribusi rating (5 bintang sampai 1 bintang)
@@ -99,7 +138,7 @@ const reviewDistribution = computed(() => {
 });
 
 // ==========================================
-// KALENDER SEWA (Sama seperti Search/Filter)
+// KALENDER SEWA
 // ==========================================
 const daysOfWeek = ['Min', 'Sn', 'Sl', 'R', 'Km', 'J', 'Sb'];
 const startDate = ref(null);
@@ -148,8 +187,6 @@ const prevMonth = () => {
 
 const selectDate = (year, month, date) => {
     const selected = new Date(year, month, date);
-
-    // Blokir tanggal masa lalu
     const today = new Date();
     today.setHours(0,0,0,0);
     if (selected < today) return;
@@ -284,27 +321,60 @@ const handleTouchEnd = (e) => {
         </div>
     </nav>
 
-    <!-- Gallery Modal (Lightbox sederhana) -->
-    <div v-if="showGalleryModal" class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 sm:p-10">
-        <button @click="showGalleryModal = false" class="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 p-3 rounded-full transition z-50">
-            <i class="fa-solid fa-xmark text-xl"></i>
-        </button>
-        <div class="w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div v-for="(img, idx) in allImages" :key="idx" class="relative w-full h-auto min-h-[300px] bg-gray-900 rounded-xl shadow-lg overflow-hidden flex items-center justify-center">
-                <!-- Placeholder di Belakang -->
-                <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-600 z-0">
-                    <i class="fa-solid fa-image text-5xl mb-2"></i>
-                    <span class="font-medium">No Image</span>
-                </div>
+    <!-- ============================================================ -->
+    <!-- GALLERY MODAL (FULLSCREEN DENGAN KATEGORI)                   -->
+    <!-- ============================================================ -->
+    <transition name="fade">
+        <div v-if="showGalleryModal" class="fixed inset-0 z-50 bg-white flex flex-col">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-4 sm:px-8 py-4 border-b border-gray-200 bg-white sticky top-0 z-10">
+                <h2 class="text-2xl font-extrabold text-[#0A2540]">Galeri Foto</h2>
+                <button @click="closeGalleryModal" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa-solid fa-xmark text-xl text-[#0A2540]"></i>
+                </button>
+            </div>
 
-                <img
-                    :src="img"
-                    class="w-full h-full object-cover relative z-10"
-                    @error="$event.target.style.display='none'"
-                />
+            <!-- Tab Filter Kategori -->
+            <div class="px-4 sm:px-8 py-4 border-b border-gray-100 bg-white flex gap-3 overflow-x-auto no-scrollbar shadow-sm">
+                <button 
+                    v-for="cat in galleryCategories" 
+                    :key="cat.name"
+                    @click="activeCategory = cat.name"
+                    class="px-5 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border"
+                    :class="activeCategory === cat.name 
+                        ? 'bg-[#0A2540] text-white border-[#0A2540]' 
+                        : 'bg-white text-[#0A2540] border-gray-300 hover:border-[#0A2540] hover:bg-gray-50'">
+                    {{ cat.name }} ({{ cat.count }})
+                </button>
+            </div>
+
+            <!-- Grid Gambar berdasarkan Kategori -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-8 bg-gray-50">
+                <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div 
+                        v-for="(img, idx) in filteredGalleryImages" 
+                        :key="idx" 
+                        class="relative w-full aspect-square bg-gray-200 rounded-xl overflow-hidden group shadow-sm"
+                    >
+                        <!-- Placeholder Saat Memuat/Error -->
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
+                            <i class="fa-solid fa-image text-4xl mb-2"></i>
+                        </div>
+                        
+                        <!-- Gambar Real -->
+                        <img
+                            :src="img.url"
+                            class="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-110"
+                            @error="$event.target.style.display='none'"
+                            loading="lazy"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </transition>
+    <!-- ============================================================ -->
+
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-[#0A2540] font-sans pb-32 lg:pb-10">
 
@@ -348,7 +418,7 @@ const handleTouchEnd = (e) => {
                 {{ currentMobileImageIndex + 1 }} / {{ allImages.length }}
             </div>
 
-            <!-- Left/Right navigation hints (optional, but good for UX) -->
+            <!-- Left/Right navigation hints -->
             <button v-if="hasImages && currentMobileImageIndex > 0" @click.stop="prevImage" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white text-gray-800 rounded-full z-20 shadow-sm transition">
                 <i class="fa-solid fa-chevron-left text-xs"></i>
             </button>
@@ -364,13 +434,10 @@ const handleTouchEnd = (e) => {
                 class="w-full md:w-1/2 h-full cursor-pointer hover:opacity-95 transition bg-gray-100 flex items-center justify-center relative overflow-hidden"
                 @click="hasImages && (showGalleryModal = true)"
             >
-                <!-- Placeholder Selalu Ada di Belakang -->
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
                     <i class="fa-solid fa-image text-6xl mb-3"></i>
                     <span class="font-medium text-sm">Tidak ada foto</span>
                 </div>
-
-                <!-- Gambar Asli (akan disembunyikan jika error) -->
                 <img
                     v-if="hasImages"
                     :src="mainImage"
@@ -380,29 +447,23 @@ const handleTouchEnd = (e) => {
                 />
             </div>
 
-            <!-- Right Small Images Grid (Desktop only) -->
+            <!-- Right Small Images Grid -->
             <div class="hidden md:grid w-1/2 h-full grid-cols-2 grid-rows-2 gap-2">
                 <div v-for="(img, index) in gridImages" :key="index" class="relative h-full w-full cursor-pointer overflow-hidden group bg-gray-100" @click="showGalleryModal = true">
-
-                    <!-- Placeholder di Belakang -->
                     <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-0">
                         <i class="fa-solid fa-image text-3xl mb-1"></i>
                         <span class="text-[10px] font-medium">No Image</span>
                     </div>
-
                     <img
                         :src="img"
                         class="w-full h-full object-cover relative z-10 group-hover:scale-105 transition duration-500"
                         :alt="`Gallery image ${index+1}`"
                         @error="$event.target.style.display='none'"
                     />
-
-                    <!-- Tampilkan overlay pada gambar terakhir jika gambar lebih dari 5 -->
                     <div v-if="index === 3 && allImages.length > 5" class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-lg z-20">
                         +{{ allImages.length - 5 }} Foto
                     </div>
                 </div>
-
             </div>
 
             <!-- Floating Show All Button -->
@@ -424,7 +485,6 @@ const handleTouchEnd = (e) => {
                             <h2 class="text-xl font-extrabold">
                                 {{ asset.owner_profile?.user?.name || 'Anonim' }}
                             </h2>
-
                             <span
                                 v-if="asset.owner_profile?.status === 'verified'"
                                 class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold"
@@ -432,36 +492,24 @@ const handleTouchEnd = (e) => {
                                 Terverifikasi
                             </span>
                         </div>
-
-                        <p class="text-sm text-gray-500 mt-1">
-                            Pemilik aset
-                        </p>
-
-                        <p
-                            v-if="asset.owner_profile?.user?.phone"
-                            class="text-sm text-gray-600 mt-2"
-                        >
+                        <p class="text-sm text-gray-500 mt-1">Pemilik aset</p>
+                        <p v-if="asset.owner_profile?.user?.phone" class="text-sm text-gray-600 mt-2">
                             {{ asset.owner_profile.user.phone }}
                         </p>
                     </div>
-
                     <div class="w-14 h-14 rounded-full overflow-hidden shrink-0">
                         <img
                             v-if="asset.owner_profile?.user?.profile_photo"
                             :src="asset.owner_profile.user.profile_photo"
                             class="w-full h-full object-cover"
                         />
-
-                        <div
-                            v-else
-                            class="w-full h-full flex items-center justify-center bg-[#0A2540] text-white font-bold text-xl"
-                        >
+                        <div v-else class="w-full h-full flex items-center justify-center bg-[#0A2540] text-white font-bold text-xl">
                             {{ asset.owner_profile?.user?.name?.charAt(0) || 'O' }}
                         </div>
                     </div>
                 </div>
 
-                <!-- Spesifikasi Tambahan (JSON) -->
+                <!-- Spesifikasi Tambahan -->
                 <div v-if="getSpecKeys.length > 0" class="py-6 border-b border-gray-200">
                     <h3 class="text-lg font-bold mb-4">Informasi Umum</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
@@ -512,7 +560,6 @@ const handleTouchEnd = (e) => {
                     <p class="text-sm text-gray-500 mb-8">{{ formattedDateRange }}</p>
 
                     <div class="bg-white rounded-2xl relative w-full overflow-hidden touch-pan-y" @touchstart.passive="handleTouchStart" @touchend.passive="handleTouchEnd">
-                        <!-- Header Bulan -->
                         <div class="flex justify-between items-center mb-10 px-2 pt-6">
                             <button @click="prevMonth" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition" :class="calendarPage === 0 ? 'opacity-30 cursor-not-allowed' : ''">
                                 <i class="fa-solid fa-chevron-left text-[#0A2540] text-sm"></i>
@@ -526,23 +573,19 @@ const handleTouchEnd = (e) => {
                             </button>
                         </div>
 
-                        <!-- Grid Kalender -->
                         <div class="relative overflow-hidden min-h-[280px]">
                             <transition :name="transitionName" mode="out-in">
                                 <div :key="calendarPage" class="flex gap-12 sm:px-4 w-full">
-                                    <!-- Kalender Bulan Kiri -->
+                                    <!-- Bulan Kiri -->
                                     <div class="flex-1">
                                         <div class="grid grid-cols-7 gap-y-6 mb-1">
                                             <div v-for="day in daysOfWeek" :key="'d1-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
                                             <div v-for="i in monthsData[calendarPage]?.emptyDaysStart" :key="'e1-'+i"></div>
                                             <div v-for="date in monthsData[calendarPage]?.daysInMonth" :key="'d1-'+date" class="relative flex justify-center items-center h-10">
-
-                                                <!-- KONEKTOR RENTANG -->
                                                 <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
                                                 <div v-else-if="isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
                                                 <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
 
-                                                <!-- BULATAN TANGGAL -->
                                                 <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
                                                     :class="[
                                                         isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
@@ -554,26 +597,22 @@ const handleTouchEnd = (e) => {
                                                     <span>{{ date }}</span>
                                                 </div>
 
-                                                <!-- TANDA MULAI & SELESAI -->
                                                 <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
                                                 <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- Kalender Bulan Kanan (Hanya Desktop) -->
+                                    <!-- Bulan Kanan -->
                                     <div class="flex-1 hidden sm:block">
                                         <div class="grid grid-cols-7 gap-y-6 mb-1">
                                             <div v-for="day in daysOfWeek" :key="'d2-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
                                             <div v-for="i in monthsData[calendarPage + 1]?.emptyDaysStart" :key="'e2-'+i"></div>
                                             <div v-for="date in monthsData[calendarPage + 1]?.daysInMonth" :key="'d2-'+date" class="relative flex justify-center items-center h-10">
-
-                                                <!-- KONEKTOR RENTANG -->
                                                 <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
                                                 <div v-else-if="isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
                                                 <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
 
-                                                <!-- BULATAN TANGGAL -->
                                                 <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
                                                     :class="[
                                                         isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
@@ -585,7 +624,6 @@ const handleTouchEnd = (e) => {
                                                     <span>{{ date }}</span>
                                                 </div>
 
-                                                <!-- TANDA MULAI & SELESAI -->
                                                 <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
                                                 <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
                                             </div>
@@ -594,8 +632,6 @@ const handleTouchEnd = (e) => {
                                 </div>
                             </transition>
                         </div>
-
-                        <!-- Tombol Kosongkan Tanggal -->
                         <div class="mt-8 mb-6 mr-2 flex justify-end">
                             <button @click="clearDates" class="text-sm font-bold text-[#0A2540] hover:underline underline-offset-2 transition-all px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg">
                                 Kosongkan tanggal
@@ -606,69 +642,41 @@ const handleTouchEnd = (e) => {
 
             <!-- SEKSI ULASAN -->
             <div id="ulasan" class="mt-12 mb-10">
-                <!-- Judul Seksi -->
                 <div class="mb-6">
-                    <span class="text-primary font-extrabold text-[11px] tracking-widest uppercase">
-                        Kepuasan Pelanggan
-                    </span>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-secondary mt-1">
-                        Apa Kata Mereka?
-                    </h2>
+                    <span class="text-primary font-extrabold text-[11px] tracking-widest uppercase">Kepuasan Pelanggan</span>
+                    <h2 class="text-3xl sm:text-4xl font-extrabold text-secondary mt-1">Apa Kata Mereka?</h2>
                 </div>
-
-                <!-- Container Utama: Summary & Daftar Ulasan -->
                 <div class="flex flex-col gap-8">
-
-                    <!-- CARD SUMMARY (Rating Keseluruhan) -->
                     <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-xl flex flex-col sm:flex-row items-center sm:items-stretch gap-6 sm:gap-0">
-
-                        <!-- Sisi Kiri: Rata-rata -->
                         <div class="flex flex-col items-center justify-center sm:pr-8 sm:border-r border-gray-100 min-w-[150px]">
-                            <!-- Tampilkan rating atau strip jika belum ada ulasan -->
                             <span class="text-5xl font-black text-[#0A2540] tracking-tighter">
                                 {{ asset.reviews_avg_rating ? parseFloat(asset.reviews_avg_rating).toFixed(1) : '-' }}
                             </span>
-
-                            <!-- Bintang Rata-rata -->
                             <div class="flex items-center gap-1 mt-3">
-                                <i v-for="i in 5" :key="i"
-                                class="fa-solid fa-star text-sm"
-                                :class="i <= Math.round(asset.reviews_avg_rating || 0) ? 'text-[#FFC000]' : 'text-gray-200'">
-                                </i>
+                                <i v-for="i in 5" :key="i" class="fa-solid fa-star text-sm" :class="i <= Math.round(asset.reviews_avg_rating || 0) ? 'text-[#FFC000]' : 'text-gray-200'"></i>
                             </div>
-
                             <span class="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">
                                 {{ asset.reviews_count || 0 }} Penilaian
                             </span>
                         </div>
-
-                        <!-- Sisi Kanan: Progress Bar Breakdown -->
                         <div class="flex-grow sm:pl-8 flex flex-col justify-center gap-2 w-full">
                             <div v-for="item in reviewDistribution" :key="item.star" class="flex items-center gap-3 text-sm">
                                 <div class="flex items-center gap-1 w-8 justify-end text-gray-500 font-medium text-xs">
                                     {{ item.star }} <i class="fa-solid fa-star text-[#FFC000] text-[10px]"></i>
                                 </div>
-
-                                <!-- Progress Bar dinamis -->
                                 <div class="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden">
                                     <div class="h-full bg-[#FFC000] rounded-full transition-all duration-500" :style="{ width: item.percentage + '%' }"></div>
                                 </div>
-
-                                <!-- Jumlah ulasan per bintang -->
                                 <div class="w-4 text-xs font-medium text-gray-400 text-right">{{ item.count }}</div>
                             </div>
                         </div>
                     </div>
 
                     <div v-if="asset.reviews && asset.reviews.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <!-- Card Individual Ulasan -->
                         <div v-for="review in asset.reviews" :key="review.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                            <!-- Header Card Ulasan: Profil & Bintang -->
                             <div class="flex items-start justify-between mb-3">
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
-                                        <!-- Inisial Nama atau Foto -->
                                         <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" class="w-full h-full object-cover" />
                                         <span v-else>{{ review.user?.name?.charAt(0) || 'U' }}</span>
                                     </div>
@@ -677,21 +685,13 @@ const handleTouchEnd = (e) => {
                                         <p class="text-xs text-gray-500">{{ formatDate(review.created_at) }}</p>
                                     </div>
                                 </div>
-                                <!-- Bintang Ulasan User -->
                                 <div class="flex gap-0.5">
                                     <i v-for="i in 5" :key="i" class="fa-solid fa-star text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'"></i>
                                 </div>
                             </div>
-
-                            <!-- Teks Ulasan -->
-                            <p class="text-sm text-gray-600 leading-relaxed">
-                                "{{ review.review }}"
-                            </p>
+                            <p class="text-sm text-gray-600 leading-relaxed">"{{ review.review }}"</p>
                         </div>
-
                     </div>
-
-                    <!-- EMPTY STATE (Jika belum ada ulasan) -->
                     <div v-else class="flex flex-col items-center justify-center py-16 text-center">
                         <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
                             <i class="fa-solid fa-star text-2xl text-gray-200"></i>
@@ -699,7 +699,6 @@ const handleTouchEnd = (e) => {
                         <h3 class="text-[#0A2540] font-bold text-lg mb-1">Belum Ada Ulasan</h3>
                         <p class="text-sm text-gray-500">Jadilah yang pertama memberikan ulasan!</p>
                     </div>
-
                 </div>
             </div>
 
@@ -708,13 +707,11 @@ const handleTouchEnd = (e) => {
             <!-- KANAN (Booking Sticky Card) -->
             <div class="lg:col-span-1">
                 <div class="sticky top-24 bg-white border border-gray-200 shadow-2xl shadow-gray-200/50 rounded-2xl p-6">
-                    <!-- Header Harga Card -->
                     <div class="flex items-end gap-1 mb-6">
                         <span class="text-2xl font-extrabold text-[#0A2540]">{{ formatRupiah(lowestPrice?.price) }}</span>
                         <span class="text-gray-500 mb-1">/ {{ lowestPrice ? periodLabel[lowestPrice.period] : 'opsi' }}</span>
                     </div>
 
-                    <!-- Pilihan Harga Lain -->
                     <div v-if="asset.pricings && asset.pricings.length > 0" class="mb-6 space-y-2">
                         <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Opsi Sewa Tersedia</h4>
                         <label v-for="price in asset.pricings" :key="price.id"
@@ -728,20 +725,15 @@ const handleTouchEnd = (e) => {
                         </label>
                     </div>
 
-                    <!-- Tombol Pesan -->
                     <button
                         @click="submitBooking"
                         :disabled="asset.status !== 'active' || !asset.pricings.length"
                         class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
                         Pesan Sekarang
                     </button>
-
                     <p v-if="asset.status !== 'active'" class="text-center text-red-500 text-xs font-bold mt-3">Aset ini sedang tidak tersedia.</p>
                     <p class="text-center text-gray-400 text-xs mt-4">Anda belum dikenakan biaya apapun.</p>
-
                     <hr class="my-6 border-gray-100" />
-
-                    <!-- Ringkasan Info (Opsional untuk card) -->
                     <div class="flex items-center justify-between text-sm text-gray-500">
                         <span class="underline">Hubungi Pemilik</span>
                         <i class="fa-solid fa-message"></i>
@@ -772,7 +764,10 @@ const handleTouchEnd = (e) => {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* Calendar Animations */
+/* Calendar & Modal Animations */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
 .slide-left-enter-active,
 .slide-left-leave-active,
 .slide-right-enter-active,
