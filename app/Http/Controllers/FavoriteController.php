@@ -35,12 +35,16 @@ class FavoriteController extends Controller
             ]
         ]);
 
-        Favorite::create([
+        // Cegah duplikat jika request datang lebih dari sekali
+        $favorite = Favorite::firstOrCreate([
             'user_id' => auth()->id(),
             'asset_id' => $request->asset_id
         ]);
 
-        return back();
+        return response()->json([
+            'success' => true,
+            'favorite_id' => $favorite->id
+        ]);
     }
 
     /**
@@ -79,6 +83,6 @@ class FavoriteController extends Controller
 
         $favorite->delete();
 
-        return back();
+        return response()->json(['success' => true]);
     }
 }
