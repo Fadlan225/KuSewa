@@ -347,7 +347,7 @@ const handleTouchEnd = (e) => {
             <div v-if="hasImages" class="absolute bottom-4 right-4 bg-black/60 text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 tracking-widest backdrop-blur-sm shadow-md">
                 {{ currentMobileImageIndex + 1 }} / {{ allImages.length }}
             </div>
-            
+
             <!-- Left/Right navigation hints (optional, but good for UX) -->
             <button v-if="hasImages && currentMobileImageIndex > 0" @click.stop="prevImage" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white text-gray-800 rounded-full z-20 shadow-sm transition">
                 <i class="fa-solid fa-chevron-left text-xs"></i>
