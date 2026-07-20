@@ -105,7 +105,7 @@ const navigateToAsset = () => {
     router.visit(route('assets.show', props.asset.id));
 };
 
-let tapCount = 0;
+let lastTapTime = 0;
 let tapTimeout = null;
 let touchStartX = 0;
 let touchStartY = 0;
@@ -130,17 +130,14 @@ const onTouchEnd = (e) => {
     // Cegah browser memicu event click bawaan (yang memicu navigasi ganda)
     if (e.cancelable) e.preventDefault();
 
-    tapCount++;
-    if (tapCount === 1) {
-        tapTimeout = setTimeout(() => {
-            tapCount = 0;
-            navigateToAsset();
-        }, 300);
-    } else if (tapCount === 2) {
-        clearTimeout(tapTimeout);
-        tapCount = 0;
+    const now = Date.now();
+    const elapsed = now - lastTapTime;
+    const rect = e.currentTarget.getBoundingClientRect();
 
-        const rect = e.currentTarget.getBoundingClientRect();
+    if (elapsed > 0 && elapsed < 350) {
+        // Tap beruntun (Double, triple, spam)
+        clearTimeout(tapTimeout);
+
         spawnHeart(t.clientX - rect.left, t.clientY - rect.top);
 
         if (!isFavorite.value && !isPending.value) {
@@ -148,22 +145,27 @@ const onTouchEnd = (e) => {
             isPending.value = true;
             syncFavorite(true);
         }
+
+        lastTapTime = now;
+    } else {
+        // Tap pertama
+        lastTapTime = now;
+        tapTimeout = setTimeout(() => {
+            navigateToAsset();
+        }, 300); // 300ms delay sebelum navigasi
     }
 };
 
 // Desktop: Mouse click fallback (hanya dieksekusi jika e.preventDefault() di touchend tidak terjadi)
 const onMouseClick = (e) => {
-    tapCount++;
-    if (tapCount === 1) {
-        tapTimeout = setTimeout(() => {
-            tapCount = 0;
-            navigateToAsset();
-        }, 300);
-    } else if (tapCount === 2) {
-        clearTimeout(tapTimeout);
-        tapCount = 0;
+    const now = Date.now();
+    const elapsed = now - lastTapTime;
+    const rect = e.currentTarget.getBoundingClientRect();
 
-        const rect = e.currentTarget.getBoundingClientRect();
+    if (elapsed > 0 && elapsed < 350) {
+        // Tap beruntun (Double, triple, spam)
+        clearTimeout(tapTimeout);
+
         spawnHeart(e.clientX - rect.left, e.clientY - rect.top);
 
         if (!isFavorite.value && !isPending.value) {
@@ -171,6 +173,14 @@ const onMouseClick = (e) => {
             isPending.value = true;
             syncFavorite(true);
         }
+
+        lastTapTime = now;
+    } else {
+        // Tap pertama
+        lastTapTime = now;
+        tapTimeout = setTimeout(() => {
+            navigateToAsset();
+        }, 300);
     }
 };
 
@@ -300,7 +310,7 @@ const periodLabel = {
                             '--angle': heart.angle + 'deg',
                             fontSize: heart.size + 'px',
                         }"
-                    ></div>
+                    ><i class="fa-solid fa-heart text-red-500"></i></div>
                 </TransitionGroup>
             </div>
 
