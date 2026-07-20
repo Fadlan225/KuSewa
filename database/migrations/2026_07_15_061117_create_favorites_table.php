@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
             $table->foreignId('asset_id')->constrained()->onDelete('restrict');
+            $table->unique(['user_id', 'asset_id']);
             $table->timestamps();
         });
     }

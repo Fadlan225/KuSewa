@@ -549,6 +549,7 @@ const initials = computed(() => {
                     <!-- Language Selector Desktop -->
                     <div
                         class="flex items-center gap-2 cursor-pointer transition-all duration-300 px-3 py-1.5 rounded-lg border border-transparent"
+                        v-if="!page.props.auth.user"
                         :class="[
                             isCurrentlyTransparent
                                 ? 'text-white hover:bg-white/10'
@@ -568,12 +569,12 @@ const initials = computed(() => {
                         <img
                             v-if="page.props.auth.user.profile_photo"
                             :src="page.props.auth.user.profile_photo"
-                            class="w-10 h-10 rounded-full object-cover"
+                            class="w-5 h-5 rounded-full object-cover"
                         />
 
                         <div
                             v-else
-                            class="w-10 h-10 rounded-full bg-[#0A2540] text-white flex items-center justify-center font-bold"
+                            class="w-6 h-6 rounded-full bg-[#0A2540] text-white flex items-center justify-center font-bold text-xs"
                         >
                             {{ initials }}
                         </div>

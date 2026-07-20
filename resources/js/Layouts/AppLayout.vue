@@ -8,6 +8,14 @@ defineProps({
     transparentNavbar: {
         type: Boolean,
         default: false
+    },
+    hideNavbar: {
+        type: Boolean,
+        default: false
+    },
+    hideBottombar: {
+        type: Boolean,
+        default: false
     }
 });
 </script>
@@ -15,13 +23,13 @@ defineProps({
 <template>
     <div class="min-h-screen bg-[#F8F9FA] font-sans text-[#000000]">
         <Head title="KuSewa" />
-        <Navbar :transparent="transparentNavbar" />
+        <Navbar v-if="!hideNavbar" :transparent="transparentNavbar" />
 
-        <main :class="{ 'pt-16': !transparentNavbar }">
+        <main :class="{ 'pt-16': !transparentNavbar && !hideNavbar }">
             <slot />
         </main>
 
-        <Bottombar />
+        <Bottombar v-if="!hideBottombar" />
         
         <Footer />
     </div>
