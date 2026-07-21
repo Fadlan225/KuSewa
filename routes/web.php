@@ -10,6 +10,10 @@ use App\Http\Controllers\FavoriteController;
 Route::get('/', [AssetController::class, 'index'])->name('Home');
 Route::resource('assets', AssetController::class)->only(['show']);
 
+Route::get('/notifikasi', function () {
+    return Inertia::render('Home/Notifikasi');
+});
+
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });
