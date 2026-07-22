@@ -1,0 +1,525 @@
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue';
+import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
+import MobileSearchSheet from '@/Pages/Home/MobileSearchSheet.vue';
+import { useHomeSearch } from '@/Composables/useHomeSearch';
+
+const page = usePage();
+
+const props = defineProps({
+    assets:              { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
+    filters:             { type: Object, default: () => ({}) },
+    searchHistory:       { type: Array,  default: () => [] },
+    trending:            { type: Array,  default: () => [] },
+    locationSuggestions: { type: Array,  default: () => [] },
+    facilities:          { type: Array,  default: () => [] },
+});
+
+// Filter state lokal
+const localKeyword    = ref(props.filters.q        || '');
+const localLocation   = ref(props.filters.location || '');
+const localMinPrice   = ref(props.filters.min_price || 0);
+const localMaxPrice   = ref(props.filters.max_price || 10000000);
+const localCategories = ref(props.filters.category ? (Array.isArray(props.filters.category) ? [...props.filters.category] : [props.filters.category]) : []);
+const localDateStart  = ref(props.filters.date_start || '');
+const localDateEnd    = ref(props.filters.date_end   || '');
+const localFacilities = ref(props.filters.facilities ? (Array.isArray(props.filters.facilities) ? [...props.filters.facilities] : [props.filters.facilities]) : []);
+
+const maxLimit = 10000000;
+const isFilterOpen = ref(false);
+const isLoading    = ref(false);
+
+// Kategori dari DB (via props.categories yang di-share dari layout / HomeController via search route)
+const dbCategories = computed(() => page.props.categories || []);
+
+const {
+    suggestions, isLoadingSuggestions, fetchSuggestions, logSearch,
+    formatPriceShort,
+} = useHomeSearch();
+
+// Suggestions
+const showSuggestions = ref(false);
+watch(localKeyword, (val) => {
+    fetchSuggestions(val);
+    showSuggestions.value = val.length >= 1 && suggestions.value.length > 0;
+});
+watch(suggestions, (val) => {
+    if (localKeyword.value.length >= 1) showSuggestions.value = val.length > 0;
+});
+
+// Lokasi suggestions dari DB props
+const filteredLocationSuggestions = computed(() => {
+    if (!localLocation.value) return props.locationSuggestions.slice(0, 6);
+    const q = localLocation.value.toLowerCase();
+    return props.locationSuggestions.filter(l =>
+        l.title.toLowerCase().includes(q)
+    ).slice(0, 6);
+});
+
+const applyFilters = () => {
+    isLoading.value = true;
+    const params = {};
+    if (localKeyword.value.trim())    { params.q = localKeyword.value.trim(); logSearch(params.q); }
+    if (localLocation.value.trim())     params.location    = localLocation.value.trim();
+    if (localCategories.value.length)   params.category    = localCategories.value;
+    if (localMinPrice.value > 0)        params.min_price   = localMinPrice.value;
+    if (localMaxPrice.value < maxLimit) params.max_price   = localMaxPrice.value;
+    if (localDateStart.value)           params.date_start  = localDateStart.value;
+    if (localDateEnd.value)             params.date_end    = localDateEnd.value;
+    if (localFacilities.value.length)   params.facilities  = localFacilities.value;
+
+    router.get('/search', params, {
+        preserveState: false,
+        onFinish: () => { isLoading.value = false; },
+    });
+    showSuggestions.value = false;
+};
+
+const selectSuggestion = (text) => {
+    localKeyword.value = text;
+    showSuggestions.value = false;
+    applyFilters();
+};
+
+const selectLocation = (city) => {
+    localLocation.value = city;
+};
+
+const toggleCategory = (cat) => {
+    const idx = localCategories.value.indexOf(cat);
+    if (idx > -1) localCategories.value.splice(idx, 1);
+    else localCategories.value.push(cat);
+};
+
+const resetFilters = () => {
+    localKeyword.value    = '';
+    localLocation.value   = '';
+    localMinPrice.value   = 0;
+    localMaxPrice.value   = maxLimit;
+    localCategories.value = [];
+    localFacilities.value = [];
+    localDateStart.value  = '';
+    localDateEnd.value    = '';
+    router.get('/search', {}, { preserveState: false });
+};
+
+const onKeywordFocus = () => {
+    if (suggestions.value.length) showSuggestions.value = true;
+};
+
+const onKeywordBlur = () => {
+    setTimeout(() => { showSuggestions.value = false; }, 200);
+};
+
+// ── Slider harga ─────────────────────────────────────────────────────────
+const sliderTrackRef = ref(null);
+const activeThumb    = ref(null);
+
+const minPercent = computed(() => Math.min((localMinPrice.value / maxLimit) * 100, 100));
+const maxPercent = computed(() => Math.min((localMaxPrice.value / maxLimit) * 100, 100));
+
+const startDrag = (e, type) => {
+    activeThumb.value = type;
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, { passive: false });
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+};
+const onDrag = (e) => {
+    if (!sliderTrackRef.value) return;
+    const rect = sliderTrackRef.value.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    let percent = ((clientX - rect.left) / rect.width) * 100;
+    const step = 100000;
+    if (activeThumb.value === 'min') {
+        percent = Math.max(0, Math.min(percent, maxPercent.value - 1));
+        localMinPrice.value = Math.round((percent / 100) * maxLimit / step) * step;
+    } else {
+        percent = Math.max(minPercent.value + 1, Math.min(percent, 100));
+        localMaxPrice.value = Math.round((percent / 100) * maxLimit / step) * step;
+    }
+};
+const stopDrag = () => {
+    activeThumb.value = null;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+};
+
+const toggleFacility = (fac) => {
+    const idx = localFacilities.value.indexOf(fac);
+    if (idx > -1) localFacilities.value.splice(idx, 1);
+    else localFacilities.value.push(fac);
+    applyFilters();
+};
+
+// ── Kalender mini (date range picker) ───────────────────────────────────
+const today = new Date();
+const calendarYear  = ref(today.getFullYear());
+const calendarMonth = ref(today.getMonth());
+const daysOfWeek = ['Min','Sn','Sl','R','Km','J','Sb'];
+
+const calendarTitle = computed(() => {
+    return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' })
+        .format(new Date(calendarYear.value, calendarMonth.value));
+});
+const daysInMonth = computed(() => new Date(calendarYear.value, calendarMonth.value + 1, 0).getDate());
+const firstDayOfMonth = computed(() => new Date(calendarYear.value, calendarMonth.value, 1).getDay());
+
+const prevMonth = () => {
+    if (calendarMonth.value === 0) { calendarMonth.value = 11; calendarYear.value--; }
+    else calendarMonth.value--;
+};
+const nextMonth = () => {
+    if (calendarMonth.value === 11) { calendarMonth.value = 0; calendarYear.value++; }
+    else calendarMonth.value++;
+};
+
+const selectDate = (day) => {
+    const date = new Date(calendarYear.value, calendarMonth.value, day);
+    const iso  = `${calendarYear.value}-${String(calendarMonth.value + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    if (!localDateStart.value || (localDateStart.value && localDateEnd.value)) {
+        localDateStart.value = iso;
+        localDateEnd.value   = '';
+    } else if (iso < localDateStart.value) {
+        localDateStart.value = iso;
+    } else {
+        localDateEnd.value = iso;
+    }
+};
+
+const isDateStart  = (day) => localDateStart.value === `${calendarYear.value}-${String(calendarMonth.value+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+const isDateEnd    = (day) => localDateEnd.value   === `${calendarYear.value}-${String(calendarMonth.value+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+const isDateInRange = (day) => {
+    if (!localDateStart.value || !localDateEnd.value) return false;
+    const d = `${calendarYear.value}-${String(calendarMonth.value+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    return d > localDateStart.value && d < localDateEnd.value;
+};
+const isPastDay = (day) => {
+    const d = new Date(calendarYear.value, calendarMonth.value, day);
+    d.setHours(0,0,0,0);
+    const t = new Date(); t.setHours(0,0,0,0);
+    return d < t;
+};
+
+const formatDateShort = (iso) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(+y, +m-1, +d));
+};
+
+const clearDates = () => { localDateStart.value = ''; localDateEnd.value = ''; };
+
+// ── Misc ─────────────────────────────────────────────────────────────────
+const hasActiveFilters = computed(() =>
+    localKeyword.value || localLocation.value || localCategories.value.length > 0 ||
+    localMinPrice.value > 0 || localMaxPrice.value < maxLimit ||
+    localDateStart.value || localDateEnd.value || localFacilities.value.length > 0
+);
+
+const assetData       = computed(() => props.assets?.data || []);
+const paginationLinks = computed(() => props.assets?.links || []);
+
+const searchTitle = computed(() => {
+    if (props.filters.q)                 return `Hasil untuk "${props.filters.q}"`;
+    if (props.filters.location)          return `Aset di "${props.filters.location}"`;
+    if (props.filters.category?.length)  return `Kategori: ${props.filters.category.join(', ')}`;
+    return 'Semua Aset';
+});
+
+const formatRupiah = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
+</script>
+
+<template>
+    <AppLayout>
+        <Head :title="searchTitle + ' - KuSewa'" />
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 min-h-screen">
+
+            <!-- ─── SEARCH & FILTER BAR ─────────────────────────────────── -->
+            <div class="mb-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+
+                <!-- Row 1: Keyword & Location -->
+                <div class="flex flex-col sm:flex-row gap-3 mb-3">
+
+                    <!-- Keyword -->
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C757D] text-xs z-10"></i>
+                        <input
+                            v-model="localKeyword"
+                            @focus="onKeywordFocus"
+                            @blur="onKeywordBlur"
+                            @keyup.enter="applyFilters"
+                            type="text"
+                            placeholder="Cari aset..."
+                            class="w-full pl-9 pr-4 py-2.5 text-sm bg-[#F8F9FA] border border-gray-200 rounded-xl focus:outline-none focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition"
+                        />
+                        <!-- Suggestions Dropdown -->
+                        <div v-if="showSuggestions && suggestions.length > 0" class="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                            <div v-for="s in suggestions" :key="s.text" @mousedown.prevent="selectSuggestion(s.text)" class="flex items-center gap-3 px-4 py-2.5 hover:bg-[#F8F9FA] cursor-pointer transition">
+                                <i :class="s.icon + ' text-[#6C757D] text-xs w-4'"></i>
+                                <span class="text-sm text-[#0A2540] font-medium">{{ s.text }}</span>
+                                <span class="ml-auto text-[10px] text-[#6C757D]">{{ s.type === 'history' ? 'riwayat' : s.type === 'category' ? 'kategori' : s.type === 'location' ? 'lokasi' : s.type === 'popular' ? 'populer' : 'aset' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-location-dot absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C757D] text-xs"></i>
+                        <input
+                            v-model="localLocation"
+                            @keyup.enter="applyFilters"
+                            type="text"
+                            placeholder="Lokasi..."
+                            class="w-full pl-9 pr-4 py-2.5 text-sm bg-[#F8F9FA] border border-gray-200 rounded-xl focus:outline-none focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition"
+                        />
+                    </div>
+
+                    <!-- Toggle Filters -->
+                    <button @click="isFilterOpen = !isFilterOpen" class="flex items-center gap-2 px-4 py-2.5 bg-[#F8F9FA] border border-gray-200 rounded-xl text-sm font-semibold text-[#0A2540] hover:bg-gray-100 transition whitespace-nowrap">
+                        <i class="fa-solid fa-sliders text-xs"></i>
+                        Filter
+                        <span v-if="hasActiveFilters" class="w-2 h-2 rounded-full bg-[#FFC000] ml-0.5 flex-shrink-0"></span>
+                        <i :class="['fa-solid fa-chevron-down text-[10px] transition-transform', isFilterOpen ? 'rotate-180' : '']"></i>
+                    </button>
+
+                    <!-- Apply -->
+                    <button @click="applyFilters" class="flex items-center gap-2 px-5 py-2.5 bg-[#0A2540] hover:bg-[#113a63] text-white rounded-xl text-sm font-bold transition whitespace-nowrap active:scale-95">
+                        <i class="fa-solid fa-magnifying-glass text-xs"></i>
+                        Cari
+                    </button>
+                </div>
+
+                <!-- Row 2: Extended Filters -->
+                <Transition name="expand">
+                    <div v-if="isFilterOpen" class="border-t border-gray-100 pt-4 space-y-5">
+
+                        <!-- Jenis Aset dari DB -->
+                        <div>
+                            <h3 class="text-xs font-bold text-[#0A2540] mb-2">Jenis Aset</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    v-for="cat in dbCategories" :key="cat.id"
+                                    @click="toggleCategory(cat.name)"
+                                    :class="[
+                                        'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition',
+                                        localCategories.includes(cat.name)
+                                            ? 'bg-[#0A2540] text-white border-[#0A2540]'
+                                            : 'bg-white text-[#0A2540] border-gray-200 hover:border-[#0A2540]'
+                                    ]"
+                                >
+                                    <i v-if="cat.icon" :class="cat.icon + ' text-[10px]'"></i>
+                                    {{ cat.name }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Lokasi Disarankan -->
+                        <div v-if="filteredLocationSuggestions.length > 0">
+                            <h3 class="text-xs font-bold text-[#0A2540] mb-2">Lokasi Disarankan</h3>
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    v-for="loc in filteredLocationSuggestions" :key="loc.id"
+                                    @click="selectLocation(loc.title)"
+                                    :class="[
+                                        'flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border transition',
+                                        localLocation === loc.title
+                                            ? 'bg-[#FFC000] text-[#0A2540] border-[#FFC000]'
+                                            : 'bg-white text-[#0A2540] border-gray-200 hover:border-[#FFC000]'
+                                    ]"
+                                >
+                                    <i class="fa-solid fa-location-dot text-[10px]"></i>
+                                    {{ loc.title }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Jadwal / Date Range -->
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <h3 class="text-xs font-bold text-[#0A2540]">Jadwal Sewa</h3>
+                                <button v-if="localDateStart" @click="clearDates" class="text-[10px] text-[#6C757D] hover:text-red-500 font-semibold underline underline-offset-2">Reset</button>
+                            </div>
+
+                            <!-- Calendar mini -->
+                            <div class="bg-[#F8F9FA] rounded-xl p-3">
+                                <!-- Header kalender -->
+                                <div class="flex items-center justify-between mb-3">
+                                    <button @click="prevMonth" class="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition">
+                                        <i class="fa-solid fa-chevron-left text-[10px] text-[#0A2540]"></i>
+                                    </button>
+                                    <span class="text-xs font-bold text-[#0A2540]">{{ calendarTitle }}</span>
+                                    <button @click="nextMonth" class="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition">
+                                        <i class="fa-solid fa-chevron-right text-[10px] text-[#0A2540]"></i>
+                                    </button>
+                                </div>
+                                <!-- Hari -->
+                                <div class="grid grid-cols-7 gap-1 mb-1">
+                                    <div v-for="d in daysOfWeek" :key="d" class="text-center text-[9px] font-bold text-[#6C757D]">{{ d }}</div>
+                                </div>
+                                <!-- Tanggal -->
+                                <div class="grid grid-cols-7 gap-1">
+                                    <div v-for="i in firstDayOfMonth" :key="'e'+i"></div>
+                                    <button
+                                        v-for="day in daysInMonth" :key="day"
+                                        @click="!isPastDay(day) && selectDate(day)"
+                                        :disabled="isPastDay(day)"
+                                        :class="[
+                                            'relative h-7 w-full text-xs font-semibold rounded-lg transition flex items-center justify-center',
+                                            isPastDay(day) ? 'text-gray-300 cursor-not-allowed' :
+                                            isDateStart(day) || isDateEnd(day) ? 'bg-[#0A2540] text-white' :
+                                            isDateInRange(day) ? 'bg-[#0A2540]/10 text-[#0A2540]' :
+                                            'text-[#0A2540] hover:bg-gray-200'
+                                        ]"
+                                    >{{ day }}</button>
+                                </div>
+                                <!-- Range label -->
+                                <div v-if="localDateStart" class="mt-3 flex items-center gap-2 text-xs text-[#0A2540] font-semibold">
+                                    <i class="fa-solid fa-calendar-days text-[#FFC000]"></i>
+                                    {{ formatDateShort(localDateStart) }}
+                                    <template v-if="localDateEnd">
+                                        <i class="fa-solid fa-arrow-right text-[10px] text-[#6C757D]"></i>
+                                        {{ formatDateShort(localDateEnd) }}
+                                    </template>
+                                    <span v-else class="text-[#6C757D] font-normal">(pilih tanggal selesai)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Rentang Harga -->
+                        <div>
+                            <h3 class="text-xs font-bold text-[#0A2540] mb-3">Rentang Harga</h3>
+                            <div class="flex gap-3 mb-3">
+                                <div class="flex-1 border border-gray-200 rounded-xl p-2.5 bg-[#F8F9FA]">
+                                    <div class="text-[10px] text-[#6C757D] font-bold mb-1">Min</div>
+                                    <div class="text-sm font-bold text-[#0A2540]">Rp {{ localMinPrice.toLocaleString('id-ID') }}</div>
+                                </div>
+                                <div class="flex-1 border border-gray-200 rounded-xl p-2.5 bg-[#F8F9FA]">
+                                    <div class="text-[10px] text-[#6C757D] font-bold mb-1">Maks</div>
+                                    <div class="text-sm font-bold text-[#0A2540]">{{ localMaxPrice >= maxLimit ? '> Rp 10 Jt' : 'Rp ' + localMaxPrice.toLocaleString('id-ID') }}</div>
+                                </div>
+                            </div>
+                            <div class="relative h-1.5 mx-2 mt-4" ref="sliderTrackRef">
+                                <div class="absolute inset-0 bg-gray-200 rounded-full"></div>
+                                <div class="absolute h-full bg-[#0A2540] rounded-full" :style="`left: ${minPercent}%; right: ${100 - maxPercent}%`"></div>
+                                <div @mousedown="startDrag($event, 'min')" @touchstart.prevent="startDrag($event, 'min')"
+                                    class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[2px] border-[#0A2540] rounded-full shadow cursor-grab z-20 hover:scale-110 transition-transform"
+                                    :style="`left: calc(${minPercent}% - 8px)`"></div>
+                                <div @mousedown="startDrag($event, 'max')" @touchstart.prevent="startDrag($event, 'max')"
+                                    class="absolute top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-[2px] border-[#0A2540] rounded-full shadow cursor-grab z-20 hover:scale-110 transition-transform"
+                                    :style="`left: calc(${maxPercent}% - 8px)`"></div>
+                            </div>
+                            <div class="flex justify-between mt-3 text-[10px] text-[#6C757D]">
+                                <span>Rp 0</span><span>Rp 10 Jt</span>
+                            </div>
+                        </div>
+
+                        <!-- Reset -->
+                        <div class="flex justify-end">
+                            <button @click="resetFilters" class="text-xs text-[#6C757D] hover:text-[#0A2540] font-semibold underline underline-offset-2 transition">Reset Semua Filter</button>
+                        </div>
+                    </div>
+                </Transition>
+            </div>
+
+            <!-- ─── HEADER HASIL ─────────────────────────────────────────── -->
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-xl font-extrabold text-[#0A2540]">{{ searchTitle }}</h1>
+                    <p class="text-xs text-[#6C757D] mt-0.5">{{ props.assets?.total ?? assetData.length }} aset ditemukan</p>
+                </div>
+                <Link :href="route('Home')" class="flex items-center gap-1.5 text-xs text-[#6C757D] hover:text-[#0A2540] transition font-semibold">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    Kembali
+                </Link>
+            </div>
+
+            <!-- Active Filter Chips -->
+            <div v-if="hasActiveFilters" class="flex flex-wrap gap-2 mb-5">
+                <span v-if="filters.q" class="flex items-center gap-1.5 px-3 py-1 bg-[#0A2540]/10 text-[#0A2540] rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-magnifying-glass text-[9px]"></i> {{ filters.q }}
+                </span>
+                <span v-if="filters.location" class="flex items-center gap-1.5 px-3 py-1 bg-[#0A2540]/10 text-[#0A2540] rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-location-dot text-[9px]"></i> {{ filters.location }}
+                </span>
+                <span v-for="cat in (filters.category || [])" :key="cat" class="flex items-center gap-1.5 px-3 py-1 bg-[#FFC000]/20 text-[#0A2540] rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-layer-group text-[9px]"></i> {{ cat }}
+                </span>
+                <span v-if="filters.date_start" class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-calendar text-[9px]"></i>
+                    {{ formatDateShort(filters.date_start) }}
+                    <template v-if="filters.date_end"> – {{ formatDateShort(filters.date_end) }}</template>
+                </span>
+                <span v-if="filters.min_price > 0 || filters.max_price < maxLimit" class="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-wallet text-[9px]"></i>
+                    {{ formatPriceShort(filters.min_price || 0) }} – {{ (filters.max_price || 0) >= maxLimit ? '> 10 Jt' : formatPriceShort(filters.max_price) }}
+                </span>
+            </div>
+
+            <!-- ─── LOADING ──────────────────────────────────────────────── -->
+            <template v-if="isLoading">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                    <AssetCardSkeleton v-for="i in 10" :key="i" class="w-full flex-none" />
+                </div>
+            </template>
+
+            <!-- ─── HASIL PENCARIAN ──────────────────────────────────────── -->
+            <template v-else>
+                <div v-if="assetData.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                    <LazyAssetCard
+                        v-for="asset in assetData" :key="asset.id"
+                        :asset="asset"
+                        :categoryName="asset.category?.name || ''"
+                        class="w-full flex-none"
+                    />
+                </div>
+
+                <!-- Empty state -->
+                <div v-else class="flex flex-col items-center justify-center py-24 text-center">
+                    <div class="w-24 h-24 bg-[#F8F9FA] rounded-full flex items-center justify-center mb-5">
+                        <i class="fa-solid fa-magnifying-glass text-4xl text-[#6C757D]/40"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-[#0A2540] mb-2">Tidak Ada Hasil</h2>
+                    <p class="text-sm text-[#6C757D] mb-6 max-w-xs">Coba ubah kata kunci, lokasi, atau tanggal yang Anda pilih.</p>
+                    <button @click="resetFilters" class="px-6 py-2.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-bold rounded-xl transition text-sm">
+                        Reset Filter
+                    </button>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="paginationLinks.length > 3" class="flex justify-center gap-1.5 mt-10 flex-wrap">
+                    <template v-for="link in paginationLinks" :key="link.label">
+                        <button
+                            v-if="link.url"
+                            @click="router.get(link.url, {}, { preserveState: false })"
+                            :class="['px-3 py-1.5 rounded-lg text-xs font-semibold transition border', link.active ? 'bg-[#0A2540] text-white border-[#0A2540]' : 'bg-white text-[#0A2540] border-gray-200 hover:border-[#0A2540]']"
+                            v-html="link.label"
+                        ></button>
+                        <span v-else class="px-3 py-1.5 rounded-lg text-xs text-[#6C757D] border border-transparent" v-html="link.label"></span>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </AppLayout>
+</template>
+
+<style scoped>
+.expand-enter-active, .expand-leave-active {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+.expand-enter-from, .expand-leave-to {
+    opacity: 0;
+    max-height: 0;
+}
+.expand-enter-to, .expand-leave-from {
+    opacity: 1;
+    max-height: 900px;
+}
+</style>

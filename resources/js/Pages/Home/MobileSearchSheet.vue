@@ -1,5 +1,12 @@
 <script setup>
+import { usePage } from '@inertiajs/vue3';
+import { computed, watch, onMounted } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
+
+const page = usePage();
+
+// Kategori dari database (via props dari HomeController)
+const assetCategoriesFromDB = computed(() => page.props.categories || []);
 
 const {
     isMobileSearchOpen,
@@ -10,18 +17,19 @@ const {
     nextStep,
     prevStep,
     clearCurrentOrAll,
-    
+    performSearch,
+
     // Aset
     assetSearchQuery,
     selectedAssets,
-    filteredAssetCategories,
     toggleAsset,
-    
+
     // Lokasi
     searchQuery,
     filteredLocations,
+    setLocationSuggestions,
     openLokasiFullScreen,
-    
+
     // Jadwal
     startDate,
     endDate,
@@ -32,7 +40,7 @@ const {
     monthsData,
     daysOfWeek,
     loadMoreMonths,
-    
+
     // Harga
     minPrice,
     maxPrice,
@@ -52,6 +60,29 @@ const {
     maxLimit,
     formatPriceShort
 } = useHomeSearch();
+
+// Filter kategori berdasarkan pencarian (from DB)
+const filteredCategoriesFromDB = computed(() => {
+    if (!assetSearchQuery.value) return assetCategoriesFromDB.value;
+    const q = assetSearchQuery.value.toLowerCase();
+    return assetCategoriesFromDB.value.filter(cat =>
+        cat.name.toLowerCase().includes(q)
+    );
+});
+
+// Inisialisasi lokasi dari DB props
+onMounted(() => {
+    setLocationSuggestions(page.props.locationSuggestions || []);
+});
+watch(() => page.props.locationSuggestions, (val) => {
+    setLocationSuggestions(val || []);
+});
+
+const handleApply = () => {
+    isMobileSearchOpen.value = false;
+    performSearch();
+};
+
 import BottomSheet from '@/Components/UI/BottomSheet.vue';
 </script>
 
@@ -93,8 +124,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                         >
                                     </div>
 
-                                    <div class="space-y-4">
-                                        <!-- Opsi Semua -->
+                                    <!-- Opsi Semua -->
                                         <div v-if="!assetSearchQuery">
                                             <div class="space-y-2">
                                                 <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
@@ -107,22 +137,23 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                             </div>
                                         </div>
 
-                                        <div v-for="(cat, idx) in filteredAssetCategories" :key="idx">
+                                        <!-- Kategori dari DB -->
+                                        <div v-for="cat in filteredCategoriesFromDB" :key="cat.id">
                                             <h3 class="text-xs font-bold text-[#6C757D] mb-2">{{ cat.name }}</h3>
                                             <div class="space-y-2">
-                                                <label v-for="item in cat.items" :key="item" class="flex items-center gap-3 cursor-pointer group p-1">
-                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(item)}">
-                                                        <i v-if="selectedAssets.includes(item)" class="fa-solid fa-check text-white text-[10px]"></i>
+                                                <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
+                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(cat.name)}">
+                                                        <i v-if="selectedAssets.includes(cat.name)" class="fa-solid fa-check text-white text-[10px]"></i>
                                                     </div>
-                                                    <span class="text-sm font-medium text-[#0A2540]">{{ item }}</span>
-                                                    <input type="checkbox" :value="item" class="hidden" @change="toggleAsset(item)">
+                                                    <i v-if="cat.icon" :class="cat.icon + ' text-[#FFC000] text-sm'"></i>
+                                                    <span class="text-sm font-medium text-[#0A2540]">{{ cat.name }}</span>
+                                                    <input type="checkbox" :value="cat.name" class="hidden" @change="toggleAsset(cat.name)">
                                                 </label>
                                             </div>
                                         </div>
-                                        <div v-if="filteredAssetCategories.length === 0" class="text-center py-4 text-[#6C757D] font-medium text-sm">
+                                        <div v-if="filteredCategoriesFromDB.length === 0" class="text-center py-4 text-[#6C757D] font-medium text-sm">
                                             Tidak ada hasil.
                                         </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -267,9 +298,9 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
         <template #footer>
             <!-- Footer Action Bar -->
             <div class="absolute bottom-0 w-full bg-[#F8F9FA] border-t border-[#6C757D]/10 p-4 flex justify-center items-center z-20">
-                <button @click="isMobileSearchOpen = false" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold w-full py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-[15px]">
+                <button @click="handleApply" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold w-full py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-[15px]">
                     <i class="fa-solid fa-magnifying-glass"></i>
-                    Terapkan
+                    Terapkan Filter
                 </button>
             </div>
         </template>

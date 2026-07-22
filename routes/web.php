@@ -4,10 +4,22 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FavoriteController;
 
-Route::get('/', [AssetController::class, 'index'])->name('Home');
+Route::get('/', [HomeController::class, 'index'])->name('Home');
+
+// Search
+Route::get('/search', [HomeController::class, 'search'])->name('assets.search');
+Route::get('/search/suggest', [HomeController::class, 'suggest'])->name('search.suggest');
+
+Route::middleware('auth')->group(function () {
+    Route::post('/search-logs', [HomeController::class, 'logSearch'])->name('search.log');
+    Route::delete('/search-logs', [HomeController::class, 'clearSearchHistory'])->name('search.clear');
+    Route::delete('/search-logs/keyword', [HomeController::class, 'deleteSearchKeyword'])->name('search.deleteKeyword');
+});
+
 Route::resource('assets', AssetController::class)->only(['show']);
 
 Route::middleware(['auth', 'role:owner'])->group(function () {

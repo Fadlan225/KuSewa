@@ -1,6 +1,39 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { router, usePage, Head, Link } from '@inertiajs/vue3';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue';
+import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
+import MobileSearchSheet from '@/Pages/Home/MobileSearchSheet.vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
+
+const page = usePage();
+
+const props = defineProps({
+    assets:              { type: Object, default: () => ({ data: [], links: [], meta: {} }) },
+    filters:             { type: Object, default: () => ({}) },
+    searchHistory:       { type: Array,  default: () => [] },
+    trending:            { type: Array,  default: () => [] },
+    locationSuggestions: { type: Array,  default: () => [] },
+    facilities:          { type: Array,  default: () => [] },
+});
+
+// Filter state lokal
+const localKeyword    = ref(props.filters.q        || '');
+const localLocation   = ref(props.filters.location || '');
+const localMinPrice   = ref(props.filters.min_price || 0);
+const localMaxPrice   = ref(props.filters.max_price || 10000000);
+const localCategories = ref(props.filters.category ? (Array.isArray(props.filters.category) ? [...props.filters.category] : [props.filters.category]) : []);
+const localDateStart  = ref(props.filters.date_start || '');
+const localDateEnd    = ref(props.filters.date_end   || '');
+const localFacilities = ref(props.filters.facilities ? (Array.isArray(props.filters.facilities) ? [...props.filters.facilities] : [props.filters.facilities]) : []);
+
+const maxLimit = 10000000;
+const isFilterOpen = ref(false);
+const isLoading    = ref(false);
+
+// Kategori dari DB (via props.categories yang di-share dari layout / HomeController via search route)
+const dbCategories = computed(() => page.props.categories || []);
 
 const {
     keywordQuery,
@@ -12,7 +45,7 @@ const {
     formattedSchedule,
     parsedMinPrice,
     parsedMaxPrice,
-    maxLimit,
+    maxLimit: searchMaxLimit,
     formatPriceShort,
     assetCategories,
     assetSearchQuery,
@@ -23,71 +56,241 @@ const {
     prevDesktopMonth,
     nextDesktopMonth,
     monthsData,
-    daysOfWeek,
-    selectDate,
+    daysOfWeek: searchDaysOfWeek,
+    selectDate: searchSelectDate,
     isStartDate,
     isEndDate,
     isInRange,
-    endDate,
+    endDate: searchEndDate,
     formattedMinPrice,
     formattedMaxPrice,
     handleMinPriceInput,
     handleMaxPriceInput,
     priceError,
-    minPercent,
-    maxPercent,
-    startDrag,
+    minPercent: searchMinPercent,
+    maxPercent: searchMaxPercent,
+    startDrag: searchStartDrag,
     sliderTrack,
-    activeThumb,
+    activeThumb: searchActiveThumb,
     performSearch,
+    suggestions, isLoadingSuggestions, fetchSuggestions, logSearch,
 } = useHomeSearch();
 
-let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
+onMounted(() => {
+    // Sync URL params to useHomeSearch state
+    if (props.filters.q) keywordQuery.value = props.filters.q;
+    if (props.filters.category) {
+        selectedAssets.value = Array.isArray(props.filters.category) ? props.filters.category : [props.filters.category];
+    }
+    if (props.filters.location) searchQuery.value = props.filters.location;
+    if (props.filters.min_price) parsedMinPrice.value = parseInt(props.filters.min_price);
+    if (props.filters.max_price) parsedMaxPrice.value = parseInt(props.filters.max_price);
+    if (props.filters.date_end) searchEndDate.value = new Date(props.filters.date_end);
+});
 
-const handleScroll = () => {
-    if (desktopActiveMenu.value !== null) {
-        if (Math.abs(window.scrollY - lastScrollY) > 50) {
-            desktopActiveMenu.value = null;
-        }
+// Suggestions
+const showSuggestions = ref(false);
+watch(localKeyword, (val) => {
+    fetchSuggestions(val);
+    showSuggestions.value = val.length >= 1 && suggestions.value.length > 0;
+});
+watch(suggestions, (val) => {
+    if (localKeyword.value.length >= 1) showSuggestions.value = val.length > 0;
+});
+
+// Lokasi suggestions dari DB props
+const filteredLocationSuggestions = computed(() => {
+    if (!localLocation.value) return props.locationSuggestions.slice(0, 6);
+    const q = localLocation.value.toLowerCase();
+    return props.locationSuggestions.filter(l =>
+        l.title.toLowerCase().includes(q)
+    ).slice(0, 6);
+});
+
+const applyFilters = () => {
+    isLoading.value = true;
+    const params = {};
+    if (localKeyword.value.trim())    { params.q = localKeyword.value.trim(); logSearch(params.q); }
+    if (localLocation.value.trim())     params.location    = localLocation.value.trim();
+    if (localCategories.value.length)   params.category    = localCategories.value;
+    if (localMinPrice.value > 0)        params.min_price   = localMinPrice.value;
+    if (localMaxPrice.value < maxLimit) params.max_price   = localMaxPrice.value;
+    if (localDateStart.value)           params.date_start  = localDateStart.value;
+    if (localDateEnd.value)             params.date_end    = localDateEnd.value;
+    if (localFacilities.value.length)   params.facilities  = localFacilities.value;
+
+    router.get('/search', params, {
+        preserveState: false,
+        onFinish: () => { isLoading.value = false; },
+    });
+    showSuggestions.value = false;
+};
+
+const selectSuggestion = (text) => {
+    localKeyword.value = text;
+    showSuggestions.value = false;
+    applyFilters();
+};
+
+const selectLocation = (city) => {
+    localLocation.value = city;
+};
+
+const toggleCategory = (cat) => {
+    const idx = localCategories.value.indexOf(cat);
+    if (idx > -1) localCategories.value.splice(idx, 1);
+    else localCategories.value.push(cat);
+};
+
+const resetFilters = () => {
+    localKeyword.value    = '';
+    localLocation.value   = '';
+    localMinPrice.value   = 0;
+    localMaxPrice.value   = maxLimit;
+    localCategories.value = [];
+    localFacilities.value = [];
+    localDateStart.value  = '';
+    localDateEnd.value    = '';
+    router.get('/search', {}, { preserveState: false });
+};
+
+const onKeywordFocus = () => {
+    if (suggestions.value.length) showSuggestions.value = true;
+};
+
+const onKeywordBlur = () => {
+    setTimeout(() => { showSuggestions.value = false; }, 200);
+};
+
+// ── Slider harga ─────────────────────────────────────────────────────────
+const sliderTrackRef = ref(null);
+const activeThumb    = ref(null);
+
+const minPercent = computed(() => Math.min((localMinPrice.value / maxLimit) * 100, 100));
+const maxPercent = computed(() => Math.min((localMaxPrice.value / maxLimit) * 100, 100));
+
+const startDrag = (e, type) => {
+    activeThumb.value = type;
+    document.addEventListener('mousemove', onDrag);
+    document.addEventListener('touchmove', onDrag, { passive: false });
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+};
+const onDrag = (e) => {
+    if (!sliderTrackRef.value) return;
+    const rect = sliderTrackRef.value.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    let percent = ((clientX - rect.left) / rect.width) * 100;
+    const step = 100000;
+    if (activeThumb.value === 'min') {
+        percent = Math.max(0, Math.min(percent, maxPercent.value - 1));
+        localMinPrice.value = Math.round((percent / 100) * maxLimit / step) * step;
     } else {
-        lastScrollY = window.scrollY;
+        percent = Math.max(minPercent.value + 1, Math.min(percent, 100));
+        localMaxPrice.value = Math.round((percent / 100) * maxLimit / step) * step;
+    }
+};
+const stopDrag = () => {
+    activeThumb.value = null;
+    document.removeEventListener('mousemove', onDrag);
+    document.removeEventListener('touchmove', onDrag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+};
+
+const toggleFacility = (fac) => {
+    const idx = localFacilities.value.indexOf(fac);
+    if (idx > -1) localFacilities.value.splice(idx, 1);
+    else localFacilities.value.push(fac);
+    applyFilters();
+};
+
+// ── Kalender mini (date range picker) ───────────────────────────────────
+const today = new Date();
+const calendarYear  = ref(today.getFullYear());
+const calendarMonth = ref(today.getMonth());
+const daysOfWeek = ['Min','Sn','Sl','R','Km','J','Sb'];
+
+const calendarTitle = computed(() => {
+    return new Intl.DateTimeFormat('id-ID', { month: 'long', year: 'numeric' })
+        .format(new Date(calendarYear.value, calendarMonth.value));
+});
+const daysInMonth = computed(() => new Date(calendarYear.value, calendarMonth.value + 1, 0).getDate());
+const firstDayOfMonth = computed(() => new Date(calendarYear.value, calendarMonth.value, 1).getDay());
+
+const prevMonth = () => {
+    if (calendarMonth.value === 0) { calendarMonth.value = 11; calendarYear.value--; }
+    else calendarMonth.value--;
+};
+const nextMonth = () => {
+    if (calendarMonth.value === 11) { calendarMonth.value = 0; calendarYear.value++; }
+    else calendarMonth.value++;
+};
+
+const selectDate = (day) => {
+    const date = new Date(calendarYear.value, calendarMonth.value, day);
+    const iso  = `${calendarYear.value}-${String(calendarMonth.value + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    if (!localDateStart.value || (localDateStart.value && localDateEnd.value)) {
+        localDateStart.value = iso;
+        localDateEnd.value   = '';
+    } else if (iso < localDateStart.value) {
+        localDateStart.value = iso;
+    } else {
+        localDateEnd.value = iso;
     }
 };
 
-onMounted(() => {
-    window.addEventListener('scroll', handleScroll, { passive: true });
+const isDateStart  = (day) => localDateStart.value === `${calendarYear.value}-${String(calendarMonth.value+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+const isDateEnd    = (day) => localDateEnd.value   === `${calendarYear.value}-${String(calendarMonth.value+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+const isDateInRange = (day) => {
+    if (!localDateStart.value || !localDateEnd.value) return false;
+    const d = `${calendarYear.value}-${String(calendarMonth.value+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    return d > localDateStart.value && d < localDateEnd.value;
+};
+const isPastDay = (day) => {
+    const d = new Date(calendarYear.value, calendarMonth.value, day);
+    d.setHours(0,0,0,0);
+    const t = new Date(); t.setHours(0,0,0,0);
+    return d < t;
+};
+
+const formatDateShort = (iso) => {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(+y, +m-1, +d));
+};
+
+const clearDates = () => { localDateStart.value = ''; localDateEnd.value = ''; };
+
+// ── Misc ─────────────────────────────────────────────────────────────────
+const hasActiveFilters = computed(() =>
+    localKeyword.value || localLocation.value || localCategories.value.length > 0 ||
+    localMinPrice.value > 0 || localMaxPrice.value < maxLimit ||
+    localDateStart.value || localDateEnd.value || localFacilities.value.length > 0
+);
+
+const assetData       = computed(() => props.assets?.data || []);
+const paginationLinks = computed(() => props.assets?.links || []);
+
+const searchTitle = computed(() => {
+    if (props.filters.q)                 return `Hasil untuk "${props.filters.q}"`;
+    if (props.filters.location)          return `Aset di "${props.filters.location}"`;
+    if (props.filters.category?.length)  return `Kategori: ${props.filters.category.join(', ')}`;
+    return 'Semua Aset';
 });
 
-onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll);
-});
+const formatRupiah = (v) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(v);
 </script>
 
 <template>
-    <!-- 1. WRAPPER UTAMA: Berongga (padding) di mobile, kembali full-width (tanpa padding) di desktop (md:px-0 md:pt-0) -->
-    <div class="w-full px-3 pt-3 pb-6 sm:px-6 md:px-0 md:pt-0 md:pb-0 relative z-[90]">
+    <AppLayout>
+        <Head :title="searchTitle + ' - KuSewa'" />
 
-        <!-- 2. HERO CONTAINER: rounded di mobile, lurus kembali (rounded-none) di desktop -->
-        <div class="relative w-full h-[360px] sm:h-[420px] md:h-[500px] lg:h-[540px] bg-cover bg-center rounded-2xl md:rounded-none overflow-hidden md:overflow-visible shadow-sm md:shadow-none transition-all duration-300" style="background-image: url('/public.png');">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-16 min-h-screen">
 
-            <!-- Overlay gelap -->
-            <div class="absolute inset-0 bg-black/50"></div>
-
-            <!-- Konten di dalam Hero (Teks & Search Bar tetap di tengah area max-w-7xl) -->
-            <div class="relative z-10 flex flex-col justify-center h-full max-w-7xl mx-auto px-6 sm:px-10 lg:px-8">
-
-                <!-- Teks Judul & Subjudul -->
-                <div class="max-w-3xl text-center md:text-left">
-                    <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight">
-                        Semua Kebutuhan <span class="text-[#FFC000]">Sewa, </span><br class="hidden sm:block">
-                        <span class="text-[#FFC000]">Dalam</span> Satu Platform
-                    </h1>
-                    <p class="mt-2 sm:mt-4 text-xs sm:text-sm md:text-base lg:text-lg text-white/90 font-medium max-w-xl leading-relaxed mx-auto md:mx-0">
-                        Temukan lahan, gedung, gudang, baliho, hunian, dan berbagai aset lainnya dengan mudah.
-                    </p>
-                </div>
-
-                <!-- ==================== DESKTOP SEARCH BAR ==================== -->
+            <!-- ─── SEARCH & FILTER BAR ─────────────────────────────────── -->
+<div class="mb-2 relative z-[70]">
+<!-- ==================== DESKTOP SEARCH BAR ==================== -->
                 <!-- Overlay untuk menutup modal jika di klik di luar -->
                 <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/10 transition-opacity"></div>
 
@@ -138,8 +341,8 @@ onUnmounted(() => {
                         <div @click="desktopActiveMenu = desktopActiveMenu === 'harga' ? null : 'harga'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'harga' ? 'bg-[#F8F9FA] shadow-inner' : ''">
                             <div class="flex flex-col">
                                 <span class="text-[12px] font-bold text-[#0A2540] tracking-wide">Harga</span>
-                                <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="(parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? 'text-[#0A2540] font-medium' : ''">
-                                    {{ (parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Budget Anda' }}
+                                <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="(parsedMinPrice > 0 || parsedMaxPrice < searchMaxLimit) ? 'text-[#0A2540] font-medium' : ''">
+                                    {{ (parsedMinPrice > 0 || parsedMaxPrice < searchMaxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Budget Anda' }}
                                 </span>
                             </div>
                         </div>
@@ -239,9 +442,9 @@ onUnmounted(() => {
                                     <!-- Kalender Kiri -->
                                     <div class="flex-1">
                                         <div class="grid grid-cols-7 gap-y-5 mb-1">
-                                            <div v-for="day in daysOfWeek" :key="'d1-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
+                                            <div v-for="day in searchDaysOfWeek" :key="'d1-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
                                             <div v-for="i in monthsData[desktopCalendarPage]?.emptyDaysStart" :key="'e1-'+i"></div>
-                                            <div v-for="date in monthsData[desktopCalendarPage]?.daysInMonth" :key="'d1-'+date" class="relative flex justify-center items-center h-10" @click="selectDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)">
+                                            <div v-for="date in monthsData[desktopCalendarPage]?.daysInMonth" :key="'d1-'+date" class="relative flex justify-center items-center h-10" @click="searchSelectDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)">
                                                 <!-- KONEKTOR RENTANG -->
                                                 <div v-if="isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
                                                 <div v-else-if="isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
@@ -263,9 +466,9 @@ onUnmounted(() => {
                                     <!-- Kalender Kanan -->
                                     <div class="flex-1">
                                         <div class="grid grid-cols-7 gap-y-5 mb-1">
-                                            <div v-for="day in daysOfWeek" :key="'d2-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
+                                            <div v-for="day in searchDaysOfWeek" :key="'d2-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
                                             <div v-for="i in monthsData[desktopCalendarPage + 1]?.emptyDaysStart" :key="'e2-'+i"></div>
-                                            <div v-for="date in monthsData[desktopCalendarPage + 1]?.daysInMonth" :key="'d2-'+date" class="relative flex justify-center items-center h-10" @click="selectDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)">
+                                            <div v-for="date in monthsData[desktopCalendarPage + 1]?.daysInMonth" :key="'d2-'+date" class="relative flex justify-center items-center h-10" @click="searchSelectDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)">
                                                 <!-- KONEKTOR RENTANG -->
                                                 <div v-if="isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
                                                 <div v-else-if="isInRange(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
@@ -316,24 +519,24 @@ onUnmounted(() => {
                                     <!-- Background track -->
                                     <div class="absolute inset-0 bg-[#6C757D]/20 rounded-full"></div>
                                     <!-- Active track -->
-                                    <div class="absolute h-full bg-[#0A2540] rounded-full" :style="`left: ${minPercent}%; right: ${100 - maxPercent}%`"></div>
+                                    <div class="absolute h-full bg-[#0A2540] rounded-full" :style="`left: ${searchMinPercent}%; right: ${100 - searchMaxPercent}%`"></div>
 
                                     <!-- Min Thumb & Tooltip -->
-                                    <div @mousedown="startDrag($event, 'min')" @touchstart.prevent="startDrag($event, 'min')"
+                                    <div @mousedown="searchStartDrag($event, 'min')" @touchstart.prevent="searchStartDrag($event, 'min')"
                                         class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-[3px] border-[#0A2540] rounded-full shadow-sm z-20 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
-                                        :style="`left: calc(${minPercent}% - 10px)`">
-                                        <div v-show="activeThumb === 'min'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
-                                            {{ parsedMinPrice >= maxLimit ? '> 10 Jt' : formatPriceShort(parsedMinPrice) }}
+                                        :style="`left: calc(${searchMinPercent}% - 10px)`">
+                                        <div v-show="searchActiveThumb === 'min'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
+                                            {{ parsedMinPrice >= searchMaxLimit ? '> 10 Jt' : formatPriceShort(parsedMinPrice) }}
                                             <div class="absolute -bottom-[4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0A2540] rotate-45 rounded-sm -z-10"></div>
                                         </div>
                                     </div>
 
                                     <!-- Max Thumb & Tooltip -->
-                                    <div @mousedown="startDrag($event, 'max')" @touchstart.prevent="startDrag($event, 'max')"
+                                    <div @mousedown="searchStartDrag($event, 'max')" @touchstart.prevent="searchStartDrag($event, 'max')"
                                         class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-[3px] border-[#0A2540] rounded-full shadow-sm z-20 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
-                                        :style="`left: calc(${maxPercent}% - 10px)`">
-                                        <div v-show="activeThumb === 'max'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
-                                            {{ parsedMaxPrice >= maxLimit ? '> 10 Jt' : formatPriceShort(parsedMaxPrice) }}
+                                        :style="`left: calc(${searchMaxPercent}% - 10px)`">
+                                        <div v-show="searchActiveThumb === 'max'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
+                                            {{ parsedMaxPrice >= searchMaxLimit ? '> 10 Jt' : formatPriceShort(parsedMaxPrice) }}
                                             <div class="absolute -bottom-[4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0A2540] rotate-45 rounded-sm -z-10"></div>
                                         </div>
                                     </div>
@@ -347,7 +550,8 @@ onUnmounted(() => {
                     </Transition>
                 </div>
 
-                <!-- ==================== MOBILE SEARCH TRIGGER ==================== -->
+                
+<!-- ==================== MOBILE SEARCH TRIGGER ==================== -->
                 <div class="md:hidden mt-4 sm:mt-6 w-full max-w-sm mx-auto">
                     <div class="relative w-full flex items-center">
                         <!-- Ikon Kaca Pembesar -->
@@ -371,6 +575,127 @@ onUnmounted(() => {
                     </div>
                 </div>
             </div>
+
+            <!-- ==================== FACILITIES PILLS ==================== -->
+            <div class="mb-6 flex gap-2 overflow-x-auto no-scrollbar pb-2 pt-2 pr-4 pl-1">
+                <button
+                    v-for="fac in facilities"
+                    :key="fac"
+                    @click="toggleFacility(fac)"
+                    class="px-4 py-1.5 rounded-full border transition-colors whitespace-nowrap text-sm font-semibold flex-shrink-0"
+                    :class="localFacilities.includes(fac) ? 'bg-[#0A2540] text-white border-[#0A2540]' : 'bg-white text-[#0A2540] border-[#6C757D]/30 hover:border-[#0A2540]'"
+                >
+                    {{ fac }}
+                </button>
+            </div>
+
+<!-- ─── HEADER HASIL ─────────────────────────────────────────── -->
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h1 class="text-xl font-extrabold text-[#0A2540]">{{ searchTitle }}</h1>
+                    <p class="text-xs text-[#6C757D] mt-0.5">{{ props.assets?.total ?? assetData.length }} aset ditemukan</p>
+                </div>
+                <Link :href="route('Home')" class="flex items-center gap-1.5 text-xs text-[#6C757D] hover:text-[#0A2540] transition font-semibold">
+                    <i class="fa-solid fa-arrow-left text-[10px]"></i>
+                    Kembali
+                </Link>
+            </div>
+
+            <!-- Active Filter Chips -->
+            <div v-if="hasActiveFilters" class="flex flex-wrap gap-2 mb-5">
+                <span v-if="filters.q" class="flex items-center gap-1.5 px-3 py-1 bg-[#0A2540]/10 text-[#0A2540] rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-magnifying-glass text-[9px]"></i> {{ filters.q }}
+                </span>
+                <span v-if="filters.location" class="flex items-center gap-1.5 px-3 py-1 bg-[#0A2540]/10 text-[#0A2540] rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-location-dot text-[9px]"></i> {{ filters.location }}
+                </span>
+                <span v-for="cat in (filters.category || [])" :key="cat" class="flex items-center gap-1.5 px-3 py-1 bg-[#FFC000]/20 text-[#0A2540] rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-layer-group text-[9px]"></i> {{ cat }}
+                </span>
+                <span v-if="filters.date_start" class="flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-calendar text-[9px]"></i>
+                    {{ formatDateShort(filters.date_start) }}
+                    <template v-if="filters.date_end"> – {{ formatDateShort(filters.date_end) }}</template>
+                </span>
+                <span v-if="filters.min_price > 0 || filters.max_price < maxLimit" class="flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 rounded-full text-xs font-semibold">
+                    <i class="fa-solid fa-wallet text-[9px]"></i>
+                    {{ formatPriceShort(filters.min_price || 0) }} – {{ (filters.max_price || 0) >= maxLimit ? '> 10 Jt' : formatPriceShort(filters.max_price) }}
+                </span>
+            </div>
+
+            <!-- ─── LOADING ──────────────────────────────────────────────── -->
+            <template v-if="isLoading">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-4">
+                    <AssetCardSkeleton layout="horizontal" v-for="i in 10" :key="i" class="w-full flex-none" />
+                </div>
+            </template>
+
+            <!-- ─── HASIL PENCARIAN ──────────────────────────────────────── -->
+            <template v-else>
+                <div v-if="assetData.length > 0" class="flex flex-col gap-4">
+                    <HorizontalAssetCard
+                        v-for="asset in assetData" :key="asset.id"
+                        :asset="asset"
+                        :categoryName="asset.category?.name || ''"
+                        class="w-full flex-none"
+                    />
+                </div>
+
+                
+                <!-- ========== EMPTY STATE (3 KONDISI) ========== -->
+                <div
+                    v-else
+                    class="flex flex-col items-center pt-10 pb-32 px-4 w-full text-center"
+                >
+                    <img
+                        src="/empty.svg"
+                        class="w-48 h-48 object-contain mb-6"
+                        alt="Ilustrasi Kosong"
+                    >
+                    <h3 class="text-lg sm:text-xl font-extrabold text-[#0A2540] mb-2">
+                        {{ hasActiveFilters ? 'Filter Tidak Ditemukan' : 'Pencarian Kosong' }}
+                    </h3>
+                    <p class="text-xs sm:text-sm text-gray-500 max-w-md mx-auto mb-6">
+                        {{ hasActiveFilters ? 'Coba kurangi beberapa filter untuk melihat lebih banyak hasil.' : 'Belum ada aset yang sesuai dengan pencarian Anda.' }}
+                    </p>
+                    <button
+                        v-if="hasActiveFilters"
+                        @click="resetFilters"
+                        class="bg-[#FFC000] text-[#0A2540] text-sm font-bold py-3 px-8 rounded-full shadow-md uppercase tracking-wide hover:bg-[#e6ad00] transition-colors"
+                    >
+                        Hapus Semua Filter
+                    </button>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="paginationLinks.length > 3" class="flex justify-center gap-1.5 mt-10 flex-wrap">
+                    <template v-for="link in paginationLinks" :key="link.label">
+                        <button
+                            v-if="link.url"
+                            @click="router.get(link.url, {}, { preserveState: false })"
+                            :class="['px-3 py-1.5 rounded-lg text-xs font-semibold transition border', link.active ? 'bg-[#0A2540] text-white border-[#0A2540]' : 'bg-white text-[#0A2540] border-gray-200 hover:border-[#0A2540]']"
+                            v-html="link.label"
+                        ></button>
+                        <span v-else class="px-3 py-1.5 rounded-lg text-xs text-[#6C757D] border border-transparent" v-html="link.label"></span>
+                    </template>
+                </div>
+            </template>
         </div>
-    </div>
+        <MobileSearchSheet />
+    </AppLayout>
 </template>
+
+<style scoped>
+.expand-enter-active, .expand-leave-active {
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+.expand-enter-from, .expand-leave-to {
+    opacity: 0;
+    max-height: 0;
+}
+.expand-enter-to, .expand-leave-from {
+    opacity: 1;
+    max-height: 900px;
+}
+</style>

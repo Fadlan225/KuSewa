@@ -1,4 +1,5 @@
 import { ref, computed, nextTick } from 'vue';
+import { router } from '@inertiajs/vue3';
 
 // Global singleton state for Home Page Search
 // We keep them outside the function so they are shared across all components
@@ -6,7 +7,7 @@ import { ref, computed, nextTick } from 'vue';
 // State kontrol UI
 const keywordQuery = ref('');
 const isMobileSearchOpen = ref(false);
-const isKeywordSheetOpen = ref(false); // New state for keyword sheet
+const isKeywordSheetOpen = ref(false);
 const activeSearchStep = ref('aset'); // 'aset', 'lokasi', 'jadwal', 'harga'
 const steps = ['aset', 'lokasi', 'jadwal', 'harga'];
 
@@ -17,7 +18,6 @@ const nextStep = () => {
     if (!isLastStep.value) {
         activeSearchStep.value = steps[currentStepIndex.value + 1];
     } else {
-        // Lakukan pencarian
         isMobileSearchOpen.value = false;
     }
 };
@@ -30,7 +30,6 @@ const prevStep = () => {
 
 const clearCurrentOrAll = () => {
     if (isLastStep.value) {
-        // Hapus semua dan kembali ke awal
         selectedAssets.value = [];
         searchQuery.value = '';
         activeSearchStep.value = 'aset';
@@ -72,31 +71,26 @@ const toggleAsset = (item) => {
 
 // State Pencarian Lokasi
 const searchQuery = ref('');
-const locationSuggestions = [
-    { id: 1, title: 'Di dekat lokasi Anda', desc: 'Cari tahu apa yang ada di sekitar Anda', icon: 'fa-solid fa-location-arrow', iconColor: 'text-blue-500', bg: 'bg-blue-50' },
-    { id: 2, title: 'Baliho Sudirman, Jakarta', desc: 'Aset iklan strategis', icon: 'fa-solid fa-rectangle-ad', iconColor: 'text-red-500', bg: 'bg-red-50' },
-    { id: 3, title: 'Kuta, Bali', desc: 'Karena di favorit Anda terdapat penginapan di Kuta', icon: 'fa-solid fa-umbrella-beach', iconColor: 'text-teal-500', bg: 'bg-teal-50' },
-    { id: 4, title: 'Balikpapan, Kalimantan Timur', desc: 'Di dekat Anda', icon: 'fa-solid fa-city', iconColor: 'text-orange-500', bg: 'bg-orange-50' },
-    { id: 5, title: 'Bandung, Jawa Barat', desc: 'Untuk para pencinta alam', icon: 'fa-solid fa-mountain-sun', iconColor: 'text-green-500', bg: 'bg-green-50' },
-    { id: 6, title: 'Gedung Serbaguna Brawijaya', desc: 'Cocok untuk acara besar', icon: 'fa-solid fa-building', iconColor: 'text-purple-500', bg: 'bg-purple-50' },
-];
+
+// Lokasi dari DB (diisi oleh komponen dari page.props.locationSuggestions)
+const locationSuggestions = ref([]);
+
+const setLocationSuggestions = (data) => {
+    locationSuggestions.value = data || [];
+};
 
 const filteredLocations = computed(() => {
-    if (!searchQuery.value) return locationSuggestions;
+    if (!searchQuery.value) return locationSuggestions.value;
     const query = searchQuery.value.toLowerCase();
-    return locationSuggestions.filter(item =>
+    return locationSuggestions.value.filter(item =>
         item.title.toLowerCase().includes(query) ||
-        item.desc.toLowerCase().includes(query)
+        (item.desc && item.desc.toLowerCase().includes(query))
     );
 });
 
 const isLokasiFullScreen = ref(false);
-const openLokasiFullScreen = () => {
-    isLokasiFullScreen.value = true;
-};
-const closeLokasiFullScreen = () => {
-    isLokasiFullScreen.value = false;
-};
+const openLokasiFullScreen = () => { isLokasiFullScreen.value = true; };
+const closeLokasiFullScreen = () => { isLokasiFullScreen.value = false; };
 
 // State Kalender / Jadwal
 const startDate = ref(null);
@@ -185,9 +179,7 @@ const handleMinPriceInput = (e) => {
     let val = parseInt(e.target.value.replace(/\D/g, '')) || 0;
     minPrice.value = val;
     validatePrices();
-    nextTick(() => {
-        e.target.value = formattedMinPrice.value;
-    });
+    nextTick(() => { e.target.value = formattedMinPrice.value; });
 };
 
 const handleMaxPriceInput = (e) => {
@@ -195,9 +187,7 @@ const handleMaxPriceInput = (e) => {
     if (val > maxLimit) val = maxLimit;
     maxPrice.value = val;
     validatePrices();
-    nextTick(() => {
-        e.target.value = formattedMaxPrice.value;
-    });
+    nextTick(() => { e.target.value = formattedMaxPrice.value; });
 };
 
 const minPercent = computed(() => {
@@ -257,22 +247,21 @@ const stopDrag = () => {
     document.removeEventListener('touchend', stopDrag);
 };
 
-// Fungsi utilitas UI kalender
+// ── Kalender ─────────────────────────────────────────────────────────────
 const daysOfWeek = ['Min', 'Sn', 'Sl', 'R', 'Km', 'J', 'Sb'];
 const monthsToShow = ref(4);
 const monthsData = computed(() => {
     const data = [];
-    let currentMonth = new Date(2026, 6, 1); // July 2026
+    let currentMonth = new Date(2026, 6, 1);
     for (let i = 0; i < monthsToShow.value; i++) {
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth();
         const monthName = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(currentMonth);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const firstDay = new Date(year, month, 1).getDay(); // 0 is Sunday
+        const firstDay = new Date(year, month, 1).getDay();
         data.push({
             id: `${year}-${month}`,
-            year,
-            month,
+            year, month,
             title: `${monthName} ${year}`,
             daysInMonth,
             emptyDaysStart: firstDay
@@ -281,9 +270,7 @@ const monthsData = computed(() => {
     }
     return data;
 });
-const loadMoreMonths = () => {
-    monthsToShow.value += 4;
-};
+const loadMoreMonths = () => { monthsToShow.value += 4; };
 
 // Swipe to close mobile sheet
 const touchStartY = ref(0);
@@ -299,14 +286,10 @@ const onTouchStart = (e) => {
     touchStartY.value = e.touches[0].clientY;
     touchCurrentY.value = e.touches[0].clientY;
 };
-const onTouchMove = (e) => {
-    touchCurrentY.value = e.touches[0].clientY;
-};
+const onTouchMove = (e) => { touchCurrentY.value = e.touches[0].clientY; };
 const onTouchEnd = () => {
     const deltaY = touchCurrentY.value - touchStartY.value;
-    if (deltaY > 90) {
-        isMobileSearchOpen.value = false;
-    }
+    if (deltaY > 90) { isMobileSearchOpen.value = false; }
     touchStartY.value = 0;
     touchCurrentY.value = 0;
 };
@@ -319,14 +302,10 @@ const onTouchStartLokasi = (e) => {
     touchStartLokasiY.value = e.touches[0].clientY;
     touchCurrentLokasiY.value = e.touches[0].clientY;
 };
-const onTouchMoveLokasi = (e) => {
-    touchCurrentLokasiY.value = e.touches[0].clientY;
-};
+const onTouchMoveLokasi = (e) => { touchCurrentLokasiY.value = e.touches[0].clientY; };
 const onTouchEndLokasi = () => {
     const deltaY = touchCurrentLokasiY.value - touchStartLokasiY.value;
-    if (deltaY > 90) {
-        isLokasiFullScreen.value = false;
-    }
+    if (deltaY > 90) { isLokasiFullScreen.value = false; }
     touchStartLokasiY.value = 0;
     touchCurrentLokasiY.value = 0;
 };
@@ -353,6 +332,97 @@ const prevDesktopMonth = () => {
     if (desktopCalendarPage.value > 0) desktopCalendarPage.value--;
 };
 
+// ── SEARCH FUNCTIONALITY ─────────────────────────────────────────────────
+
+// Suggestions
+const suggestions = ref([]);
+const isLoadingSuggestions = ref(false);
+let suggestDebounce = null;
+
+const fetchSuggestions = (keyword) => {
+    clearTimeout(suggestDebounce);
+    if (!keyword || keyword.length < 1) {
+        suggestions.value = [];
+        return;
+    }
+    isLoadingSuggestions.value = true;
+    suggestDebounce = setTimeout(async () => {
+        try {
+            const res = await fetch(`/search/suggest?q=${encodeURIComponent(keyword)}`, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                credentials: 'same-origin',
+            });
+            if (res.ok) {
+                suggestions.value = await res.json();
+            }
+        } catch (e) {
+            suggestions.value = [];
+        } finally {
+            isLoadingSuggestions.value = false;
+        }
+    }, 300);
+};
+
+function getXsrfToken() {
+    const match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]*)'));
+    return match ? decodeURIComponent(match[2]) : '';
+}
+
+const logSearch = async (keyword) => {
+    if (!keyword) return;
+    try {
+        await fetch('/search-logs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-XSRF-TOKEN': getXsrfToken(),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ keyword }),
+        });
+    } catch (e) {
+        // Ignore silently – logging failure shouldn't block the user
+    }
+};
+
+const performSearch = () => {
+    const params = {};
+
+    if (keywordQuery.value.trim()) {
+        params.q = keywordQuery.value.trim();
+        // Log search (fire and forget)
+        logSearch(params.q);
+    }
+    if (selectedAssets.value.length > 0) {
+        params.category = selectedAssets.value;
+    }
+    if (searchQuery.value.trim()) {
+        params.location = searchQuery.value.trim();
+    }
+    if (startDate.value) {
+        params.date_start = startDate.value.toISOString().split('T')[0];
+    }
+    if (endDate.value) {
+        params.date_end = endDate.value.toISOString().split('T')[0];
+    }
+    if (parsedMinPrice.value > 0) {
+        params.min_price = parsedMinPrice.value;
+    }
+    if (parsedMaxPrice.value < maxLimit) {
+        params.max_price = parsedMaxPrice.value;
+    }
+
+    router.get('/search', params, { preserveState: false });
+
+    // Tutup semua UI
+    isMobileSearchOpen.value = false;
+    isKeywordSheetOpen.value = false;
+    desktopActiveMenu.value = null;
+    suggestions.value = [];
+};
+
 export function useHomeSearch() {
     return {
         keywordQuery,
@@ -377,6 +447,7 @@ export function useHomeSearch() {
         // Lokasi
         searchQuery,
         locationSuggestions,
+        setLocationSuggestions,
         filteredLocations,
         isLokasiFullScreen,
         openLokasiFullScreen,
@@ -433,13 +504,20 @@ export function useHomeSearch() {
         onTouchStart,
         onTouchMove,
         onTouchEnd,
-        
+
         // Lokasi Sheet Swipes
         touchStartLokasiY,
         touchCurrentLokasiY,
         lokasiSheetTransform,
         onTouchStartLokasi,
         onTouchMoveLokasi,
-        onTouchEndLokasi
+        onTouchEndLokasi,
+
+        // Search
+        suggestions,
+        isLoadingSuggestions,
+        fetchSuggestions,
+        logSearch,
+        performSearch,
     };
 }

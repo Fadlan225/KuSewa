@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\asset_category;
 use App\Models\asset;
 
 use Illuminate\Http\Request;
@@ -13,52 +12,7 @@ class AssetController extends Controller
      */
     public function index()
     {
-        $categories = asset_category::select(['id', 'name', 'icon'])
-            ->with([
-                'assets' => function ($query) {
-                    $query->where('status', 'active')
-                        ->select([
-                            'id',
-                            'asset_category_id',
-                            'owner_profile_id',
-                            'title',
-                            'city',
-                            'address',
-                            'status'
-                        ])
-                        ->with([
-                            'firstImage',
-                            'primaryPricing:id,asset_id,period,price',
-                            'favorites' => function ($query) {
-                                $query->where('user_id', auth()->id());
-                            }
-                        ])
-                        ->withAvg('reviews as reviews_avg_rating', 'rating');
-                }
-            ])
-            ->whereHas('assets', fn($q) => $q->where('status', 'active'))
-            ->get();
 
-
-        $categories->each(function ($category) {
-
-            $category->assets->each(function ($asset) {
-
-                $favorite = $asset->favorites->first();
-
-                $asset->isFavorite = (bool) $favorite;
-                $asset->favorite_id = $favorite?->id;
-
-                unset($asset->favorites);
-
-            });
-
-        });
-
-
-        return inertia('Home/index', [
-            'categories' => $categories
-        ]);
     }
     /**
      * Show the form for creating a new resource.

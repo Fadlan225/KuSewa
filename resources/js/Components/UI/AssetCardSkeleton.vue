@@ -1,45 +1,47 @@
+<script setup>
+defineProps({
+    layout: {
+        type: String,
+        default: 'vertical'
+    }
+});
+</script>
+
 <template>
-    <!-- Skeleton satu kartu aset, ukuran sama dengan kartu aslinya, bentuk kotak lebih persegi -->
-    <div class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col animate-pulse rounded-2xl shadow-lg bg-white overflow-hidden">
-
-        <!-- Area Gambar skeleton (aspek rasio lanskap, meniru gambar Marina Bay Sands) -->
-        <div class="aspect-[3/2] w-full bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 relative overflow-hidden">
-            <!-- Shimmer sweep -->
+    <div
+        v-if="layout === 'vertical'"
+        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col animate-pulse rounded-2xl shadow-md bg-white overflow-hidden"
+    >
+        <div class="aspect-[3/2] w-full bg-gray-200 relative overflow-hidden">
             <div class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
-
-            <!-- Badge skeleton kiri atas (meniru bentuk badge "PULANG-PERGI", lebih gelap) -->
-            <div class="absolute top-3 left-3 h-6 w-28 bg-gray-400 rounded-md"></div>
-            <!-- Ikon simpan skeleton kanan atas (meniru bentuk penanda buku dengan tanda +) -->
-            <div class="absolute top-3 right-3 w-7 h-8 bg-white/70 rounded"></div>
         </div>
+        <div class="flex flex-col gap-2 p-3 sm:p-4">
+            <div class="h-4 rounded bg-gray-200 w-full"></div>
+            <div class="h-3 rounded bg-gray-200 w-2/3"></div>
+            <div class="h-4 rounded bg-gray-200 w-1/2 mt-2"></div>
+        </div>
+    </div>
 
-        <!-- Teks skeleton dengan padding yang lebih besar -->
-        <div class="flex flex-col gap-2 p-4 pt-4 pb-3">
-            <!-- Judul (satu baris penuh, meniru "Jakarta - Singapore") -->
-            <div class="h-4.5 rounded bg-gray-200 w-full"></div>
-
-            <!-- Kontainer Detail (meniru Ikon Kuning + Tanggal) -->
-            <div class="flex items-center gap-1.5 mt-1">
-                <!-- Ikon detail (meniru ikon kuning) -->
-                <div class="w-4 h-4 rounded-full bg-gray-300"></div>
-                <!-- Tanggal skeleton -->
-                <div class="h-3.5 rounded bg-gray-100 w-3/5"></div>
+    <div
+        v-else
+        class="w-full snap-start flex flex-row animate-pulse rounded-2xl shadow-sm border border-gray-100 bg-white overflow-hidden"
+    >
+        <div class="w-[120px] sm:w-[200px] lg:w-[240px] flex-shrink-0 aspect-[4/3] sm:aspect-[3/2] bg-gray-200 relative overflow-hidden">
+            <div class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+        </div>
+        <div class="flex flex-col flex-grow p-3 sm:p-4 gap-3 bg-white sm:flex-row">
+            <div class="flex flex-col flex-grow justify-between gap-1.5">
+                <div class="h-5 rounded bg-gray-200 w-3/4"></div>
+                <div class="h-4 rounded bg-gray-200 w-1/3 mt-1"></div>
+                <div class="h-3 rounded bg-gray-200 w-1/2 mt-2"></div>
             </div>
-
-            <!-- Harga (Meniru harga oranye, warna skeleton oranye muda) -->
-            <div class="h-5 rounded bg-orange-100 w-2/3 mt-1"></div>
+            <div class="sm:w-[200px] flex flex-col justify-end sm:justify-between sm:border-l border-gray-100 sm:pl-4 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
+                <div class="h-5 rounded bg-gray-200 w-1/2 ml-auto sm:ml-0"></div>
+                <div class="h-8 rounded bg-gray-200 w-full sm:w-24 ml-auto mt-2 sm:mt-0"></div>
+            </div>
         </div>
     </div>
 </template>
-
-<style scoped>
-@keyframes shimmer {
-    100% { transform: translateX(100%); }
-}
-.animate-shimmer {
-    animation: shimmer 1.5s infinite;
-}
-</style>
 
 <style scoped>
 @keyframes shimmer {

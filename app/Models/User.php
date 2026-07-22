@@ -50,4 +50,8 @@ class User extends Authenticatable
     public function reviews(){
         return $this->hasMany(review::class);
     }
+
+    public function searchLogs(){
+        return $this->hasMany(search_log::class);
+    }
 }

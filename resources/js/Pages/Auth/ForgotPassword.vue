@@ -21,7 +21,7 @@ const submit = () => {
 
     <!-- Container Utama (Full Screen, Relative) -->
     <div class="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        
+
         <!-- FULLSCREEN BACKGROUND -->
         <div class="absolute inset-0 z-0">
             <img
@@ -35,7 +35,7 @@ const submit = () => {
 
         <!-- KONTEN UTAMA (Di atas Background) -->
         <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10 md:gap-4 lg:gap-16">
-            
+
             <!-- SISI KIRI: Teks Promosi (Hanya muncul di desktop md:) -->
             <div class="hidden md:flex flex-col w-full md:w-1/2 text-white pr-4 gap-12">
                 <!-- Logo -->
