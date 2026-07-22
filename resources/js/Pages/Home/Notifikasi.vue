@@ -31,14 +31,14 @@
           >
             <span>{{ filter }}</span>
             
-            <!-- Badge angka bulat untuk masing-masing filter kecuali 'Semua' -->
+            <!-- Badge angka bulat (Background Putih) -->
             <span 
               v-if="filter !== 'Semua' && getUnreadCount(filter) > 0"
               :class="[
-                'min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold transition-colors flex items-center justify-center',
+                'w-5 h-5 rounded-full text-[11px] font-bold transition-colors flex items-center justify-center bg-white shadow-sm',
                 activeFilter === filter
-                  ? 'bg-[#0A2540] text-white'
-                  : 'bg-[#FFC000] text-[#0A2540]'
+                  ? 'text-[#0A2540]'
+                  : 'text-gray-600 border border-gray-200'
               ]"
             >
               {{ getUnreadCount(filter) }}
@@ -47,12 +47,14 @@
         </div>
       </header>
 
-      <!-- EMPTY STATE -->
-      <div v-if="Object.keys(groupedNotifications).length === 0" class="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div class="text-6xl mb-4">🔔</div>
-        <h3 class="text-lg font-bold text-[var(--color-secondary)] mb-2">Belum ada notifikasi</h3>
-        <p class="text-[var(--color-muted)] max-w-sm">Semua aktivitas penyewaan Anda, mulai dari booking hingga pembayaran akan muncul di sini.</p>
-      </div>
+<!-- EMPTY STATE -->
+<div v-if="Object.keys(groupedNotifications).length === 0" class="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl shadow-sm border border-gray-100">
+  <div class="text-5xl text-gray-300 mb-4">
+    <i class="fa-regular fa-bell"></i>
+  </div>
+  <h3 class="text-lg font-bold text-[var(--color-secondary)] mb-2">Belum ada notifikasi</h3>
+  <p class="text-[var(--color-muted)] max-w-sm text-sm">Semua aktivitas penyewaan Anda, mulai dari booking hingga pembayaran akan muncul di sini.</p>
+</div>
 
       <!-- TIMELINE LIST -->
       <div v-else class="space-y-8">
@@ -137,85 +139,7 @@ const filters = ['Semua', 'Booking', 'Pembayaran', 'Chat', 'Sistem'];
 const activeFilter = ref('Semua');
 
 // Mock Data
-const notifications = ref([
-  {
-    id: 1,
-    type: 'Booking',
-    status: 'success', 
-    title: 'Booking Diterima',
-    description: 'Villa Bukit Asri menerima permintaan penyewaan Anda.',
-    time: '5 menit lalu',
-    dateGroup: 'Hari Ini',
-    read: false,
-    actionLabel: 'Lihat Detail'
-  },
-  {
-    id: 2,
-    type: 'Pembayaran',
-    status: 'warning', 
-    title: 'Menunggu Pembayaran',
-    description: 'Segera selesaikan pembayaran dalam 30 menit.',
-    time: '20 menit lalu',
-    dateGroup: 'Hari Ini',
-    read: false,
-    actionLabel: 'Bayar Sekarang'
-  },
-  {
-    id: 3,
-    type: 'Chat',
-    status: 'info', 
-    title: 'Pesan Baru',
-    description: 'Pemilik aset mengirim pesan kepada Anda.',
-    time: '1 jam lalu',
-    dateGroup: 'Hari Ini',
-    read: false,
-    actionLabel: 'Buka Chat'
-  },
-  {
-    id: 4,
-    type: 'Pembayaran',
-    status: 'success', 
-    title: 'Pembayaran Berhasil',
-    description: 'Dana telah diteruskan kepada pemilik aset.',
-    time: 'Kemarin, 14:30',
-    dateGroup: 'Kemarin',
-    read: true,
-    actionLabel: 'Lihat Detail'
-  },
-  {
-    id: 5,
-    type: 'Booking',
-    status: 'error', 
-    title: 'Booking Ditolak',
-    description: 'Mohon maaf, jadwal tidak tersedia untuk tanggal tersebut.',
-    time: 'Kemarin, 09:15',
-    dateGroup: 'Kemarin',
-    read: true,
-    actionLabel: 'Lihat Detail'
-  },
-  {
-    id: 6,
-    type: 'Review', // Anggap ini masuk kategori sistem atau lainnya jika diubah
-    status: 'success',
-    title: 'Ulasan Berhasil Dikirim',
-    description: 'Terima kasih telah memberikan ulasan pada Villa Bukit Asri.',
-    time: '12 Okt, 10:00',
-    dateGroup: 'Minggu Lalu',
-    read: true,
-    actionLabel: 'Tutup'
-  },
-  {
-    id: 7,
-    type: 'Sistem',
-    status: 'info',
-    title: 'Profil Berhasil Diperbarui',
-    description: 'Data diri Anda telah berhasil diperbarui di dalam sistem.',
-    time: '10 Okt, 08:00',
-    dateGroup: 'Minggu Lalu',
-    read: true,
-    actionLabel: 'Tutup'
-  }
-]);
+const notifications = ref([]);
 
 // Methods & Computed Properties
 const getUnreadCount = (filterName) => {
