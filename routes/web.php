@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\BookingController;
 
 Route::get('/', [AssetController::class, 'index'])->name('Home');
 Route::resource('assets', AssetController::class)->only(['show']);
@@ -35,3 +36,5 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__ . '/auth.php';
+
+Route::get('/booking-page', [BookingController::class, 'BookingPage'])->name('booking-page');
