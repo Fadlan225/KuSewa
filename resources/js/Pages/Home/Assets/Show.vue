@@ -66,6 +66,7 @@ const periodLabel = {
 };
 
 const formatDate = (dateString) => {
+    if (!dateString) return '';
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('id-ID', options);
 };
@@ -90,14 +91,18 @@ const getSpecKeys = computed(() => {
     return Object.keys(spec);
 });
 
-// Form Booking (persiapan)
+// Form Booking
 const form = useForm({
     asset_id: props.asset.id,
     pricing_id: lowestPrice.value ? lowestPrice.value.id : null,
+    start_date: null,
+    end_date: null,
 });
 
 const submitBooking = () => {
-    form.get(route('booking.create', { asset: props.asset.id })); // Sesuaikan dengan route Anda nanti
+    form.start_date = startDate.value ? startDate.value.toISOString().split('T')[0] : null;
+    form.end_date = endDate.value ? endDate.value.toISOString().split('T')[0] : null;
+    form.get(route('booking.create', { asset: props.asset.id }));
 };
 
 // Menghitung distribusi rating (5 bintang sampai 1 bintang)
@@ -121,7 +126,7 @@ const reviewDistribution = computed(() => {
 });
 
 // ==========================================
-// KALENDER SEWA (Sama seperti Search/Filter)
+// KALENDER SEWA
 // ==========================================
 const daysOfWeek = ['Min', 'Sn', 'Sl', 'R', 'Km', 'J', 'Sb'];
 const startDate = ref(null);
@@ -238,6 +243,48 @@ const handleTouchEnd = (e) => {
     if (touchEndX.value > touchStartX.value + 50) prevMonth();
 };
 
+// DATA ROOM TYPES (untuk section Pilih Jenis Kamar)
+const roomTypes = computed(() => {
+    // Jika asset memiliki data kamar dari API, gunakan itu
+    if (props.asset.room_types && props.asset.room_types.length > 0) {
+        return props.asset.room_types;
+    }
+    // Data dummy sebagai fallback sesuai desain
+    return [
+        {
+            id: 1,
+            name: 'Superior Room',
+            price: null,
+            priceLabel: 'Bayar online',
+            facilities: ['1 king bed', '1 king bed', 'AL', 'AC', 'TV'],
+            isVilla: false,
+        },
+        {
+            id: 2,
+            name: 'Deluxe Room',
+            price: 2250000,
+            priceLabel: null,
+            facilities: ['1 king bed', '1 king bed', 'AL', 'AC', 'TV'],
+            isVilla: false,
+        },
+        {
+            id: 3,
+            name: 'Villa Tiga Kamar Tidur',
+            price: 2250000,
+            priceLabel: null,
+            facilities: ['Kapasitas: 6 dewasa', 'Seluruh villa', 'Dapur pribadi', 'TV Layar datar', 'Kolam renang pribadi'],
+            isVilla: true,
+        }
+    ];
+});
+
+// Data untuk footer villa
+const villaTotal = computed(() => {
+    return {
+        label: '1 vila seharga',
+        price: 288332
+    };
+});
 </script>
 
 <template>
@@ -245,405 +292,510 @@ const handleTouchEnd = (e) => {
 
     <AppLayout :hideNavbar="true" :hideBottombar="true">
 
-    <!-- CUSTOM STICKY NAVBAR -->
-    <DetailNavbar :isFavorited="asset.isFavorite" @favorite="handleFavorite" />
+        <!-- CUSTOM STICKY NAVBAR -->
+        <DetailNavbar :isFavorited="asset.isFavorite" @favorite="handleFavorite" />
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-[#0A2540] font-sans pb-32 lg:pb-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-[#ffc000] font-sans pb-32 lg:pb-10">
 
-        <!-- TITLE & HEADER -->
-        <div class="mb-6">
-            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">{{ asset.title }}</h1>
-            <div class="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-600">
-                <div class="flex items-center gap-1">
-                    <i class="fa-solid fa-location-dot text-gray-400"></i>
-                    <span class="underline decoration-gray-300">{{ asset.city }}, {{ asset.province }}</span>
-                </div>
+            <!-- TITLE & HEADER -->
+            <div class="mb-6">
+                <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">{{ asset.title }}</h1>
+                <div class="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-600">
+                    <div class="flex items-center gap-1">
+                        <i class="fa-solid fa-location-dot text-gray-400"></i>
+                        <span class="underline decoration-gray-300">{{ asset.city }}, {{ asset.province }}</span>
+                    </div>
 
-                <div class="flex items-center gap-1">
-                    <i class="fa-solid fa-star text-[#FFC000]"></i>
-                    <span class="text-[#0A2540] font-bold">{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
-                    <span class="text-gray-500 underline decoration-gray-300">· {{ asset.reviews_count || 0 }} Ulasan</span>
-                </div>
+                    <div class="flex items-center gap-1">
+                        <i class="fa-solid fa-star text-[#FFC000]"></i>
+                        <span class="text-[#ffc000] font-bold">{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
+                        <span class="text-gray-500 underline decoration-gray-300">· {{ asset.reviews_count || 0 }} Ulasan</span>
+                    </div>
 
-                <div class="flex items-center gap-1">
-                    <i class="fa-solid fa-heart text-red-500"></i>
-                    <span class="text-gray-500">
-                        {{ asset.favorites_count || 0 }} favorit
-                    </span>
+                    <div class="flex items-center gap-1">
+                        <i class="fa-solid fa-heart text-red-500"></i>
+                        <span class="text-gray-500">
+                            {{ asset.favorites_count || 0 }} favorit
+                        </span>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- HERO GALLERY AND MODAL -->
-        <AssetGallery :images="asset.images" />
+            <!-- HERO GALLERY AND MODAL -->
+            <AssetGallery :images="asset.images" />
+            <!-- CONTENT LAYOUT (Kiri: Detail, Kanan: Booking Card) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-12 mt-8">
 
-        <!-- CONTENT LAYOUT (Kiri: Detail, Kanan: Booking Card) -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+                <!-- KIRI (Detail) -->
+                <div class="lg:col-span-2 space-y-10">
 
-            <!-- KIRI (Detail) -->
-            <div class="lg:col-span-2 space-y-10">
+                    <!-- Info Host -->
+                    <div class="flex items-center justify-between pb-8 border-b border-gray-200">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h2 class="text-xl font-extrabold">
+                                    {{ asset.owner_profile?.user?.name || 'Anonim' }}
+                                </h2>
 
-                <!-- Info Host -->
-                <div class="flex items-center justify-between pb-8 border-b border-gray-200">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h2 class="text-xl font-extrabold">
-                                {{ asset.owner_profile?.user?.name || 'Anonim' }}
-                            </h2>
+                                <span
+                                    v-if="asset.owner_profile?.status === 'verified'"
+                                    class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold"
+                                >
+                                    Terverifikasi
+                                </span>
+                            </div>
 
-                            <span
-                                v-if="asset.owner_profile?.status === 'verified'"
-                                class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold"
+                            <p class="text-sm text-gray-500 mt-1">
+                                Pemilik aset
+                            </p>
+
+                            <p
+                                v-if="asset.owner_profile?.user?.phone"
+                                class="text-sm text-gray-600 mt-2"
                             >
-                                Terverifikasi
-                            </span>
-                        </div>
-
-                        <p class="text-sm text-gray-500 mt-1">
-                            Pemilik aset
-                        </p>
-
-                        <p
-                            v-if="asset.owner_profile?.user?.phone"
-                            class="text-sm text-gray-600 mt-2"
-                        >
-                            {{ asset.owner_profile.user.phone }}
-                        </p>
-                    </div>
-
-                    <div class="w-14 h-14 rounded-full overflow-hidden shrink-0">
-                        <img
-                            v-if="asset.owner_profile?.user?.profile_photo"
-                            :src="asset.owner_profile.user.profile_photo"
-                            class="w-full h-full object-cover"
-                        />
-
-                        <div
-                            v-else
-                            class="w-full h-full flex items-center justify-center bg-[#0A2540] text-white font-bold text-xl"
-                        >
-                            {{ asset.owner_profile?.user?.name?.charAt(0) || 'O' }}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Spesifikasi Tambahan (JSON) -->
-                <div v-if="getSpecKeys.length > 0" class="py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold mb-4">Informasi Umum</h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
-                        <div v-for="key in getSpecKeys" :key="key" class="flex flex-col">
-                            <span class="text-gray-500 text-sm capitalize mb-1">{{ key.replace(/_/g, ' ') }}</span>
-                            <span class="font-bold text-[#0A2540]">{{ specification[key] }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Deskripsi -->
-                <div class="py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold mb-4">Tentang Aset Ini</h3>
-                    <div class="text-gray-600 leading-relaxed whitespace-pre-line text-justify">
-                        {{ asset.description }}
-                    </div>
-                </div>
-
-                <!-- Fasilitas Utama -->
-                <div id="fasilitas" v-if="facilities.length > 0" class="py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold mb-4">Fasilitas Utama</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div v-for="(fac, idx) in facilities" :key="idx" class="flex items-center gap-3 text-gray-700 font-medium">
-                            <i class="fa-solid fa-check text-green-500"></i>
-                            <span class="capitalize">{{ fac }}</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Lokasi Map Placeholder -->
-                <div id="lokasi" class="py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold mb-4">Lokasi</h3>
-                    <p class="text-gray-600 mb-4">{{ asset.address }}, {{ asset.city }}, {{ asset.province }}</p>
-                    <div class="w-full h-64 bg-gray-200 rounded-xl overflow-hidden relative flex items-center justify-center">
-                        <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://map.viamichelin.com/map/carte?map=viamichelin&z=10&lat=-0.502&lon=117.153&width=800&height=400&format=png&version=latest&layer=background')"></div>
-                        <div class="z-10 flex flex-col items-center bg-white/90 p-4 rounded-xl shadow-lg">
-                            <i class="fa-solid fa-location-dot text-red-500 text-3xl mb-2"></i>
-                            <span class="font-bold">Peta belum diintegrasikan</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SEKSI PEMILIHAN TANGGAL (KALENDER) -->
-                <div class="pb-10 border-b border-gray-200">
-                    <h2 class="text-2xl font-extrabold text-[#0A2540] mb-1">
-                        {{ nightsCount ? `${nightsCount} malam di ${asset.title || 'Kota ini'}` : 'Pilih tanggal sewa' }}
-                    </h2>
-                    <p class="text-sm text-gray-500 mb-8">{{ formattedDateRange }}</p>
-
-                    <div class="bg-white rounded-2xl relative w-full overflow-hidden touch-pan-y" @touchstart.passive="handleTouchStart" @touchend.passive="handleTouchEnd">
-                        <!-- Header Bulan -->
-                        <div class="flex justify-between items-center mb-10 px-2 pt-6">
-                            <button @click="prevMonth" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition" :class="calendarPage === 0 ? 'opacity-30 cursor-not-allowed' : ''">
-                                <i class="fa-solid fa-chevron-left text-[#0A2540] text-sm"></i>
-                            </button>
-                            <div class="flex gap-8 w-full px-4">
-                                <h3 class="flex-1 text-center text-[15px] font-bold text-[#0A2540]">{{ monthsData[calendarPage]?.title }}</h3>
-                                <h3 class="flex-1 text-center text-[15px] font-bold text-[#0A2540] hidden sm:block">{{ monthsData[calendarPage + 1]?.title }}</h3>
-                            </div>
-                            <button @click="nextMonth" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
-                                <i class="fa-solid fa-chevron-right text-[#0A2540] text-sm"></i>
-                            </button>
-                        </div>
-
-                        <!-- Grid Kalender -->
-                        <div class="relative overflow-hidden min-h-[280px]">
-                            <transition :name="transitionName" mode="out-in">
-                                <div :key="calendarPage" class="flex gap-12 sm:px-4 w-full">
-                                    <!-- Kalender Bulan Kiri -->
-                                    <div class="flex-1">
-                                        <div class="grid grid-cols-7 gap-y-6 mb-1">
-                                            <div v-for="day in daysOfWeek" :key="'d1-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
-                                            <div v-for="i in monthsData[calendarPage]?.emptyDaysStart" :key="'e1-'+i"></div>
-                                            <div v-for="date in monthsData[calendarPage]?.daysInMonth" :key="'d1-'+date" class="relative flex justify-center items-center h-10">
-
-                                                <!-- KONEKTOR RENTANG -->
-                                                <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-
-                                                <!-- BULATAN TANGGAL -->
-                                                <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
-                                                    :class="[
-                                                        isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
-                                                        { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                          'text-[#1A1A1A]': isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                          'text-[#0A2540]': !isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) }
-                                                    ]"
-                                                    @click="!isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && selectDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)">
-                                                    <span>{{ date }}</span>
-                                                </div>
-
-                                                <!-- TANDA MULAI & SELESAI -->
-                                                <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                                <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Kalender Bulan Kanan (Hanya Desktop) -->
-                                    <div class="flex-1 hidden sm:block">
-                                        <div class="grid grid-cols-7 gap-y-6 mb-1">
-                                            <div v-for="day in daysOfWeek" :key="'d2-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
-                                            <div v-for="i in monthsData[calendarPage + 1]?.emptyDaysStart" :key="'e2-'+i"></div>
-                                            <div v-for="date in monthsData[calendarPage + 1]?.daysInMonth" :key="'d2-'+date" class="relative flex justify-center items-center h-10">
-
-                                                <!-- KONEKTOR RENTANG -->
-                                                <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-
-                                                <!-- BULATAN TANGGAL -->
-                                                <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
-                                                    :class="[
-                                                        isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
-                                                        { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                          'text-[#1A1A1A]': isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                          'text-[#0A2540]': !isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) }
-                                                    ]"
-                                                    @click="!isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && selectDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)">
-                                                    <span>{{ date }}</span>
-                                                </div>
-
-                                                <!-- TANDA MULAI & SELESAI -->
-                                                <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                                <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </transition>
-                        </div>
-
-                        <!-- Tombol Kosongkan Tanggal -->
-                        <div class="mt-8 mb-6 mr-2 flex justify-end">
-                            <button @click="clearDates" class="text-sm font-bold text-[#0A2540] hover:underline underline-offset-2 transition-all px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg">
-                                Kosongkan tanggal
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-            <!-- SEKSI ULASAN -->
-            <div id="ulasan" class="mt-12 mb-10">
-                <!-- Judul Seksi -->
-                <div class="mb-6">
-                    <span class="text-primary font-extrabold text-[11px] tracking-widest uppercase">
-                        Kepuasan Pelanggan
-                    </span>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-secondary mt-1">
-                        Apa Kata Mereka?
-                    </h2>
-                </div>
-
-                <!-- Container Utama: Summary & Daftar Ulasan -->
-                <div class="flex flex-col gap-8">
-
-                    <!-- CARD SUMMARY (Rating Keseluruhan) -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-xl flex flex-col sm:flex-row items-center sm:items-stretch gap-6 sm:gap-0">
-
-                        <!-- Sisi Kiri: Rata-rata -->
-                        <div class="flex flex-col items-center justify-center sm:pr-8 sm:border-r border-gray-100 min-w-[150px]">
-                            <!-- Tampilkan rating atau strip jika belum ada ulasan -->
-                            <span class="text-5xl font-black text-[#0A2540] tracking-tighter">
-                                {{ asset.reviews_avg_rating ? parseFloat(asset.reviews_avg_rating).toFixed(1) : '-' }}
-                            </span>
-
-                            <!-- Bintang Rata-rata -->
-                            <div class="flex items-center gap-1 mt-3">
-                                <i v-for="i in 5" :key="i"
-                                class="fa-solid fa-star text-sm"
-                                :class="i <= Math.round(asset.reviews_avg_rating || 0) ? 'text-[#FFC000]' : 'text-gray-200'">
-                                </i>
-                            </div>
-
-                            <span class="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">
-                                {{ asset.reviews_count || 0 }} Penilaian
-                            </span>
-                        </div>
-
-                        <!-- Sisi Kanan: Progress Bar Breakdown -->
-                        <div class="flex-grow sm:pl-8 flex flex-col justify-center gap-2 w-full">
-                            <div v-for="item in reviewDistribution" :key="item.star" class="flex items-center gap-3 text-sm">
-                                <div class="flex items-center gap-1 w-8 justify-end text-gray-500 font-medium text-xs">
-                                    {{ item.star }} <i class="fa-solid fa-star text-[#FFC000] text-[10px]"></i>
-                                </div>
-
-                                <!-- Progress Bar dinamis -->
-                                <div class="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#FFC000] rounded-full transition-all duration-500" :style="{ width: item.percentage + '%' }"></div>
-                                </div>
-
-                                <!-- Jumlah ulasan per bintang -->
-                                <div class="w-4 text-xs font-medium text-gray-400 text-right">{{ item.count }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="asset.reviews && asset.reviews.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <!-- Card Individual Ulasan -->
-                        <div v-for="review in asset.reviews" :key="review.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                            <!-- Header Card Ulasan: Profil & Bintang -->
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
-                                        <!-- Inisial Nama atau Foto -->
-                                        <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" class="w-full h-full object-cover" />
-                                        <span v-else>{{ review.user?.name?.charAt(0) || 'U' }}</span>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-[#0A2540] text-sm">{{ review.user?.name || 'Anonim' }}</p>
-                                        <p class="text-xs text-gray-500">{{ formatDate(review.created_at) }}</p>
-                                    </div>
-                                </div>
-                                <!-- Bintang Ulasan User -->
-                                <div class="flex gap-0.5">
-                                    <i v-for="i in 5" :key="i" class="fa-solid fa-star text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'"></i>
-                                </div>
-                            </div>
-
-                            <!-- Teks Ulasan -->
-                            <p class="text-sm text-gray-600 leading-relaxed">
-                                "{{ review.review }}"
+                                <i class="fa-solid fa-phone text-xs mr-1 text-gray-400"></i>
+                                {{ asset.owner_profile.user.phone }}
                             </p>
                         </div>
 
-                    </div>
+                        <div class="w-14 h-14 rounded-full overflow-hidden shrink-0 border border-gray-200 shadow-sm">
+                            <img
+                                v-if="asset.owner_profile?.user?.profile_photo"
+                                :src="asset.owner_profile.user.profile_photo"
+                                class="w-full h-full object-cover"
+                            />
 
-                    <!-- EMPTY STATE (Jika belum ada ulasan) -->
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-center">
-                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
-                            <i class="fa-solid fa-star text-2xl text-gray-200"></i>
-                        </div>
-                        <h3 class="text-[#0A2540] font-bold text-lg mb-1">Belum Ada Ulasan</h3>
-                        <p class="text-sm text-gray-500">Jadilah yang pertama memberikan ulasan!</p>
-                    </div>
-
-                </div>
-            </div>
-
-            </div>
-
-            <!-- KANAN (Booking Sticky Card) -->
-            <div class="lg:col-span-1">
-                <div class="sticky top-24 bg-white border border-gray-200 shadow-2xl shadow-gray-200/50 rounded-2xl p-6">
-                    <!-- Header Harga Card -->
-                    <div class="flex items-end gap-1 mb-6">
-                        <span class="text-2xl font-extrabold text-[#0A2540]">{{ formatRupiah(lowestPrice?.price) }}</span>
-                        <span class="text-gray-500 mb-1">/ {{ lowestPrice ? periodLabel[lowestPrice.period] : 'opsi' }}</span>
-                    </div>
-
-                    <!-- Pilihan Harga Lain -->
-                    <div v-if="asset.pricings && asset.pricings.length > 0" class="mb-6 space-y-2">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Opsi Sewa Tersedia</h4>
-                        <label v-for="price in asset.pricings" :key="price.id"
-                               class="flex justify-between items-center p-3 rounded-xl border-2 cursor-pointer transition-all"
-                               :class="form.pricing_id === price.id ? 'border-[#FFC000] bg-[#FFC000]/5' : 'border-gray-100 hover:border-gray-300'">
-                            <div class="flex items-center gap-3">
-                                <input type="radio" :value="price.id" v-model="form.pricing_id" class="w-4 h-4 text-[#FFC000] focus:ring-[#FFC000]" />
-                                <span class="text-sm font-semibold capitalize">{{ periodLabel[price.period] }}</span>
+                            <div
+                                v-else
+                                class="w-full h-full flex items-center justify-center bg-[#ffc000] text-white font-bold text-xl"
+                            >
+                                {{ asset.owner_profile?.user?.name?.charAt(0) || 'O' }}
                             </div>
-                            <span class="text-sm font-bold">{{ formatRupiah(price.price) }}</span>
-                        </label>
+                        </div>
                     </div>
 
-                    <!-- Tombol Pesan -->
-                    <button
-                        @click="submitBooking"
-                        :disabled="asset.status !== 'active' || !asset.pricings.length"
-                        class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
-                        Pesan Sekarang
+                    <!-- Spesifikasi Tambahan (JSON) -->
+                    <div v-if="getSpecKeys.length > 0" class="py-6 border-b border-gray-200">
+                        <h3 class="text-lg font-bold mb-4">Informasi Umum</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
+                            <div v-for="key in getSpecKeys" :key="key" class="flex flex-col">
+                                <span class="text-gray-500 text-sm capitalize mb-1">{{ key.replace(/_/g, ' ') }}</span>
+                                <span class="font-bold text-[#ffc000]">{{ specification[key] }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Deskripsi -->
+                    <div class="py-6 border-b border-gray-200">
+                        <h3 class="text-lg font-bold mb-4">Tentang Aset Ini</h3>
+                        <div class="text-gray-600 leading-relaxed whitespace-pre-line text-justify">
+                            {{ asset.description }}
+                        </div>
+                    </div>
+
+                    <!-- Fasilitas Utama -->
+                    <div id="fasilitas" v-if="facilities.length > 0" class="py-6 border-b border-gray-200">
+                        <h3 class="text-lg font-bold mb-4">Fasilitas Utama</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div v-for="(fac, idx) in facilities" :key="idx" class="flex items-center gap-3 text-gray-700 font-medium">
+                                <div class="w-7 h-7 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                                    <i class="fa-solid fa-check text-xs"></i>
+                                </div>
+                                <span class="capitalize">{{ fac }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lokasi Map Placeholder -->
+                    <div id="lokasi" class="py-6 border-b border-gray-200">
+                        <h3 class="text-lg font-bold mb-4">Lokasi</h3>
+                        <p class="text-gray-600 mb-4">{{ asset.address }}, {{ asset.city }}, {{ asset.province }}</p>
+                        <div class="w-full h-64 bg-gray-200 rounded-xl overflow-hidden relative flex items-center justify-center shadow-inner">
+                            <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://map.viamichelin.com/map/carte?map=viamichelin&z=10&lat=-0.502&lon=117.153&width=800&height=400&format=png&version=latest&layer=background')"></div>
+                            <div class="z-10 flex flex-col items-center bg-white/95 p-4 rounded-2xl shadow-lg border border-gray-100">
+                                <i class="fa-solid fa-location-dot text-red-500 text-3xl mb-2"></i>
+                                <span class="font-bold text-[#ffc000]">{{ asset.city }}, {{ asset.province }}</span>
+                                <span class="text-xs text-gray-500 mt-0.5">Lokasi presisi diberikan setelah konfirmasi sewa</span>
+                            </div>
+                        </div>
+                    </div>
+            <!-- SECTION PILIH JENIS KAMAR (DESAIN DARI FOTO) -->
+            <div id="pilih-kamar" class="mt-10 mb-8 bg-white rounded-3xl border border-gray-200 shadow-sm overflow-hidden">
+                <!-- Header -->
+                <div class="px-6 pt-6 pb-4">
+                    <h2 class="text-2xl font-extrabold text-[#ffc000]">Pilih Jenis Kamar</h2>
+                </div>
+
+                <!-- Availability Bar -->
+                <div class="mx-6 mb-6 flex flex-wrap items-center gap-3 bg-[#F0F3F7] px-4 py-3 rounded-full text-sm">
+                    <span class="flex items-center gap-2 font-medium text-[#ffc000]">
+                        <i class="fa-regular fa-calendar"></i>
+                        Kam, 23 Jul - Jum, 24 Jul
+                    </span>
+                    <span class="w-1 h-1 rounded-full bg-gray-400"></span>
+                    <span class="flex items-center gap-2 text-gray-700">
+                        <i class="fa-regular fa-user"></i>
+                        2 dewasa - 0 anak - Jul
+                    </span>
+                    <span class="w-1 h-1 rounded-full bg-gray-400"></span>
+                    <span class="flex items-center gap-2 text-gray-700">
+                        <i class="fa-regular fa-door-open"></i>
+                        2 dewasa - 0 anak - 1 kamar
+                    </span>
+                    <button class="ml-auto bg-[#ffc000] text-white font-semibold px-6 py-1.5 rounded-full text-sm hover:bg-[#1a3a5a] transition">
+                        Pesan
                     </button>
+                </div>
 
-                    <p v-if="asset.status !== 'active'" class="text-center text-red-500 text-xs font-bold mt-3">Aset ini sedang tidak tersedia.</p>
-                    <p class="text-center text-gray-400 text-xs mt-4">Anda belum dikenakan biaya apapun.</p>
+                <!-- Daftar Room Types -->
+                <div class="px-6 pb-4 space-y-3">
+                    <!-- Loop room types -->
+                    <div 
+                        v-for="room in roomTypes" 
+                        :key="room.id"
+                        class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl border border-gray-200 hover:border-gray-400 transition bg-white"
+                        :class="room.isVilla ? 'bg-[#F3F7FE] border-[#DCE5F0]' : ''"
+                    >
+                        <!-- Kiri: Nama & Fasilitas -->
+                        <div class="flex-1 min-w-[180px]">
+                            <h3 class="font-bold text-[#ffc000] text-lg">{{ room.name }}</h3>
+                            <div class="flex flex-wrap gap-1.5 mt-1.5">
+                                <span 
+                                    v-for="(fac, idx) in room.facilities" 
+                                    :key="idx"
+                                    class="inline-flex items-center gap-1 bg-[#E9EDF3] px-2.5 py-0.5 rounded-full text-xs font-medium text-[#1F2A3E]"
+                                >
+                                    <i v-if="fac.includes('king')" class="fa-solid fa-bed text-[10px]"></i>
+                                    <i v-else-if="fac.includes('dewasa')" class="fa-solid fa-user text-[10px]"></i>
+                                    <i v-else-if="fac.includes('Villa') || fac.includes('villa')" class="fa-solid fa-house text-[10px]"></i>
+                                    <i v-else-if="fac.includes('Dapur')" class="fa-solid fa-kitchen-set text-[10px]"></i>
+                                    <i v-else-if="fac.includes('TV')" class="fa-solid fa-tv text-[10px]"></i>
+                                    <i v-else-if="fac.includes('Kolam')" class="fa-solid fa-water-ladder text-[10px]"></i>
+                                    {{ fac }}
+                                </span>
+                            </div>
+                        </div>
 
-                    <hr class="my-6 border-gray-100" />
-
-                    <!-- Ringkasan Info (Opsional untuk card) -->
-                    <div class="flex items-center justify-between text-sm text-gray-500">
-                        <span class="underline">Hubungi Pemilik</span>
-                        <i class="fa-solid fa-message"></i>
+                        <!-- Kanan: Aksi & Harga -->
+                        <div class="flex items-center gap-4 flex-wrap">
+                            <button 
+                                class="bg-[#ffc000] text-white font-semibold px-4 py-1.5 rounded-full text-sm hover:bg-[#1a3a5a] transition flex items-center gap-1.5"
+                            >
+                                <i class="fa-regular fa-credit-card text-xs"></i>
+                                Pesan sekarang
+                            </button>
+                            <span class="font-bold text-[#ffc000] whitespace-nowrap">
+                                <template v-if="room.price">
+                                    Rp {{ room.price.toLocaleString('id-ID') }}
+                                </template>
+                                <template v-else>
+                                    <span class="text-sm font-medium text-[#5F738C]">Bayar online</span>
+                                </template>
+                            </span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Footer: Villa Total -->
+                <div class="px-6 py-4 border-t border-gray-200 flex flex-wrap items-center justify-end gap-4">
+                    <span class="text-[#1F334A] font-medium">{{ villaTotal.label }}</span>
+                    <span class="font-extrabold text-[#ffc000] text-xl">Rp {{ villaTotal.price.toLocaleString('id-ID') }}</span>
+                    <button class="bg-[#ffc000] text-white font-semibold px-8 py-2 rounded-full text-sm hover:bg-[#1a3a5a] transition">
+                        Pilih Villa
+                    </button>
+                </div>
+            </div>
+            <!-- ============================================ -->
+            <!-- END SECTION PILIH JENIS KAMAR                 -->
+            <!-- ============================================ -->
+
+                    <!-- SEKSI PEMILIHAN TANGGAL (KALENDER) -->
+                    <div class="pb-10 border-b border-gray-200">
+                        <div class="flex items-center justify-between mb-1">
+                            <h2 class="text-2xl font-extrabold text-[#ffc000]">
+                                {{ nightsCount ? `${nightsCount} malam di ${asset.title || 'Kota ini'}` : 'Pilih tanggal sewa' }}
+                            </h2>
+                            <button
+                                v-if="startDate"
+                                @click="clearDates"
+                                class="text-xs text-gray-500 hover:text-black underline font-semibold transition"
+                            >
+                                Hapus Tanggal
+                            </button>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-8">{{ formattedDateRange }}</p>
+
+                        <div class="bg-white rounded-2xl relative w-full overflow-hidden touch-pan-y border border-gray-100 p-2 sm:p-4 shadow-sm" @touchstart.passive="handleTouchStart" @touchend.passive="handleTouchEnd">
+                            <!-- Header Bulan -->
+                            <div class="flex justify-between items-center mb-6 px-2 pt-2">
+                                <button
+                                    @click="prevMonth"
+                                    class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition border border-gray-200"
+                                    :class="calendarPage === 0 ? 'opacity-30 cursor-not-allowed' : ''"
+                                >
+                                    <i class="fa-solid fa-chevron-left text-[#ffc000] text-sm"></i>
+                                </button>
+                                <div class="flex gap-8 w-full px-4">
+                                    <h3 class="flex-1 text-center text-[15px] font-extrabold text-[#ffc000]">{{ monthsData[calendarPage]?.title }}</h3>
+                                    <h3 class="flex-1 text-center text-[15px] font-extrabold text-[#ffc000] hidden sm:block">{{ monthsData[calendarPage + 1]?.title }}</h3>
+                                </div>
+                                <button
+                                    @click="nextMonth"
+                                    class="w-9 h-9 rounded-full hover:bg-gray-100 flex items-center justify-center transition border border-gray-200"
+                                >
+                                    <i class="fa-solid fa-chevron-right text-[#ffc000] text-sm"></i>
+                                </button>
+                            </div>
+
+                            <!-- Grid Kalender -->
+                            <div class="relative overflow-hidden min-h-[280px]">
+                                <transition :name="transitionName" mode="out-in">
+                                    <div :key="calendarPage" class="flex gap-8 sm:px-2 w-full">
+                                        <!-- Kalender Bulan Kiri -->
+                                        <div class="flex-1">
+                                            <div class="grid grid-cols-7 text-center mb-3">
+                                                <div v-for="day in daysOfWeek" :key="'d1-'+day" class="text-xs font-bold text-gray-400 py-1">
+                                                    {{ day }}
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-7 gap-y-1 text-center text-sm font-medium">
+                                                <div v-for="e in monthsData[calendarPage]?.emptyDaysStart" :key="'e1-'+e" class="h-10"></div>
+                                                <div
+                                                    v-for="d in monthsData[calendarPage]?.daysInMonth"
+                                                    :key="'m1-'+d"
+                                                    @click="selectDate(monthsData[calendarPage].year, monthsData[calendarPage].month, d)"
+                                                    class="h-10 flex items-center justify-center cursor-pointer transition-all relative text-xs sm:text-sm"
+                                                    :class="[
+                                                        isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, d) ? 'text-gray-300 line-through cursor-not-allowed' : 'hover:bg-gray-100 text-gray-800',
+                                                        isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, d) ? 'bg-[#ffc000] text-white font-bold rounded-l-full shadow' : '',
+                                                        isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, d) ? 'bg-[#ffc000] text-white font-bold rounded-r-full shadow' : '',
+                                                        isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, d) ? 'bg-blue-50 text-[#ffc000] font-semibold' : '',
+                                                        (isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, d) && isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, d)) ? 'rounded-full' : ''
+                                                    ]"
+                                                >
+                                                    {{ d }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Kalender Bulan Kanan (Kompak/Desktop) -->
+                                        <div v-if="monthsData[calendarPage + 1]" class="flex-1 hidden sm:block">
+                                            <div class="grid grid-cols-7 text-center mb-3">
+                                                <div v-for="day in daysOfWeek" :key="'d2-'+day" class="text-xs font-bold text-gray-400 py-1">
+                                                    {{ day }}
+                                                </div>
+                                            </div>
+                                            <div class="grid grid-cols-7 gap-y-1 text-center text-sm font-medium">
+                                                <div v-for="e in monthsData[calendarPage + 1]?.emptyDaysStart" :key="'e2-'+e" class="h-10"></div>
+                                                <div
+                                                    v-for="d in monthsData[calendarPage + 1]?.daysInMonth"
+                                                    :key="'m2-'+d"
+                                                    @click="selectDate(monthsData[calendarPage + 1].year, monthsData[calendarPage + 1].month, d)"
+                                                    class="h-10 flex items-center justify-center cursor-pointer transition-all relative text-xs sm:text-sm"
+                                                    :class="[
+                                                        isPastDate(monthsData[calendarPage + 1].year, monthsData[calendarPage + 1].month, d) ? 'text-gray-300 line-through cursor-not-allowed' : 'hover:bg-gray-100 text-gray-800',
+                                                        isStartDate(monthsData[calendarPage + 1].year, monthsData[calendarPage + 1].month, d) ? 'bg-[#ffc000] text-white font-bold rounded-l-full shadow' : '',
+                                                        isEndDate(monthsData[calendarPage + 1].year, monthsData[calendarPage + 1].month, d) ? 'bg-[#ffc000] text-white font-bold rounded-r-full shadow' : '',
+                                                        isInRange(monthsData[calendarPage + 1].year, monthsData[calendarPage + 1].month, d) ? 'bg-blue-50 text-[#ffc000] font-semibold' : '',
+                                                        (isStartDate(monthsData[calendarPage + 1].year, monthsData[calendarPage + 1].month, d) && isEndDate(monthsData[calendarPage + 1].year, monthsData[calendarPage + 1].month, d)) ? 'rounded-full' : ''
+                                                    ]"
+                                                >
+                                                    {{ d }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SEKSI ULASAN & RATING -->
+                    <div id="ulasan" class="pt-4">
+                        <div class="flex items-center gap-2 mb-6">
+                            <i class="fa-solid fa-star text-2xl text-[#FFC000]"></i>
+                            <h2 class="text-2xl font-extrabold">
+                                {{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}
+                            </h2>
+                            <span class="text-2xl font-extrabold text-gray-300">·</span>
+                            <h2 class="text-2xl font-extrabold">
+                                {{ asset.reviews_count || 0 }} Ulasan
+                            </h2>
+                        </div>
+
+                        <!-- Rating Breakdown Bars -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-3 mb-10">
+                            <div v-for="item in reviewDistribution" :key="item.star" class="flex items-center gap-3">
+                                <span class="text-sm font-semibold text-gray-700 w-3">{{ item.star }}</span>
+                                <div class="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
+                                    <div
+                                        class="bg-[#ffc000] h-full rounded-full transition-all duration-500"
+                                        :style="{ width: `${item.percentage}%` }"
+                                    ></div>
+                                </div>
+                                <span class="text-xs text-gray-500 w-8 text-right">{{ item.count }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Daftar Ulasan User -->
+                        <div v-if="asset.reviews && asset.reviews.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            <div
+                                v-for="review in asset.reviews"
+                                :key="review.id"
+                                class="p-5 border border-gray-100 rounded-2xl bg-gray-50/50 space-y-3"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-300 flex-shrink-0">
+                                        <img
+                                            v-if="review.user?.profile_photo"
+                                            :src="review.user.profile_photo"
+                                            class="w-full h-full object-cover"
+                                        />
+                                        <div v-else class="w-full h-full bg-[#ffc000] text-white flex items-center justify-center font-bold text-sm">
+                                            {{ review.user?.name?.charAt(0) || 'U' }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-[#ffc000]">{{ review.user?.name || 'Pengguna' }}</h4>
+                                        <p class="text-xs text-gray-400">{{ formatDate(review.created_at) }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-1">
+                                    <i v-for="s in 5" :key="s" class="fa-solid fa-star text-xs" :class="s <= review.rating ? 'text-[#FFC000]' : 'text-gray-300'"></i>
+                                </div>
+
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    {{ review.comment }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div v-else class="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                            <i class="fa-regular fa-comment-dots text-3xl text-gray-400 mb-2"></i>
+                            <p class="text-sm font-semibold text-gray-500">Belum ada ulasan untuk aset ini</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- KANAN (Booking Card Sticky) -->
+                <div class="lg:col-span-1">
+                    <div class="sticky top-28 bg-white border border-gray-200 rounded-3xl p-6 shadow-xl space-y-6">
+
+                        <!-- Harga & Rating -->
+                        <div class="flex justify-between items-baseline">
+                            <div>
+                                <span class="text-2xl font-extrabold text-[#ffc000]">
+                                    {{ lowestPrice ? formatRupiah(lowestPrice.price) : 'Hubungi' }}
+                                </span>
+                                <span v-if="lowestPrice" class="text-sm text-gray-500 font-normal">
+                                    / {{ periodLabel[lowestPrice.period] || 'malam' }}
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-1 text-xs font-semibold">
+                                <i class="fa-solid fa-star text-[#FFC000]"></i>
+                                <span>{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
+                                <span class="text-gray-400">({{ asset.reviews_count || 0 }})</span>
+                            </div>
+                        </div>
+
+                        <!-- Selector Pilihan Paket Harga (Jika ada > 1 jenis harga) -->
+                        <div v-if="asset.pricings && asset.pricings.length > 1" class="space-y-1">
+                            <label class="text-xs font-bold uppercase tracking-wider text-gray-500">Pilih Paket Sewa</label>
+                            <select
+                                v-model="form.pricing_id"
+                                class="w-full text-sm border-gray-300 focus:border-[#ffc000] focus:ring-[#ffc000] rounded-xl py-2.5"
+                            >
+                                <option v-for="p in asset.pricings" :key="p.id" :value="p.id">
+                                    {{ formatRupiah(p.price) }} / {{ periodLabel[p.period] || p.period }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Form/Box Pilihan Tanggal -->
+                        <div class="border border-gray-300 rounded-2xl overflow-hidden divide-y divide-gray-300">
+                            <div class="p-3 bg-gray-50/50">
+                                <label class="block text-[10px] font-extrabold uppercase text-gray-500 tracking-wider">Mulai Sewa</label>
+                                <div class="text-sm font-semibold text-[#ffc000] mt-0.5">
+                                    {{ startDate ? startDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih tanggal' }}
+                                </div>
+                            </div>
+                            <div class="p-3 bg-gray-50/50">
+                                <label class="block text-[10px] font-extrabold uppercase text-gray-500 tracking-wider">Selesai Sewa</label>
+                                <div class="text-sm font-semibold text-[#ffc000] mt-0.5">
+                                    {{ endDate ? endDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih tanggal' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tombol CTA Sewa -->
+                        <button href="#pilih-kamar" 
+                            @click="submitBooking"
+                            class="w-full bg-[#ffc000] hover:bg-[#071c30] text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                            <span onclick="document.getElementById('pilih-kamar').scrollIntoView({ behavior: 'smooth' });" style="cursor: pointer;">Ajukan Sewa Sekarang</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+
+                        <p class="text-center text-xs text-gray-500">
+                            Anda belum akan dikenakan biaya pada tahap ini
+                        </p>
+
+                        <!-- Total Perhitungan Jika Ada Tanggal Pilih -->
+                        <div v-if="nightsCount > 0 && lowestPrice" class="pt-4 border-t border-gray-200 space-y-3 text-sm">
+                            <div class="flex justify-between text-gray-600">
+                                <span>{{ formatRupiah(lowestPrice.price) }} x {{ nightsCount }} malam</span>
+                                <span>{{ formatRupiah(lowestPrice.price * nightsCount) }}</span>
+                            </div>
+                            <div class="flex justify-between font-bold text-[#ffc000] pt-2 border-t border-gray-100 text-base">
+                                <span>Total estimasi</span>
+                                <span>{{ formatRupiah(lowestPrice.price * nightsCount) }}</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
             </div>
 
         </div>
-    </div>
 
-    <!-- CUSTOM BOTTOM BAR (MOBILE ONLY) -->
-    <DetailBottomBar 
-        :price="lowestPrice?.price || 0" 
-        :nightsCount="nightsCount" 
-        :formattedDateRange="formattedDateRange"
-        :periodLabel="lowestPrice ? periodLabel[lowestPrice.period] : 'opsi'"
-        :disabled="asset.status !== 'active' || !asset.pricings.length"
-        @submit="submitBooking"
-    />
+        <!-- BOTTOM BAR FOR MOBILE -->
+        <DetailBottomBar
+            :price="lowestPrice?.price"
+            :period="lowestPrice?.period"
+            @book="submitBooking"
+        />
 
     </AppLayout>
 </template>
 
 <style scoped>
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Calendar Animations */
 .slide-left-enter-active,
 .slide-left-leave-active,
 .slide-right-enter-active,
 .slide-right-leave-active {
-    transition: all 0.2s ease-out;
+  transition: all 0.25s ease-in-out;
 }
-.slide-left-enter-from { opacity: 0; transform: translateX(30px); }
-.slide-left-leave-to { opacity: 0; transform: translateX(-30px); }
-.slide-right-enter-from { opacity: 0; transform: translateX(-30px); }
-.slide-right-leave-to { opacity: 0; transform: translateX(30px); }
+
+.slide-left-enter-from {
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+.slide-left-leave-to {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slide-right-enter-from {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slide-right-leave-to {
+  transform: translateX(100%);
+  opacity: 0;
+}
 </style>
