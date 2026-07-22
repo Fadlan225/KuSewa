@@ -129,7 +129,7 @@
                 <span class="text-xs font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-lg">★ {{ facility.rating }}</span>
               </div>
             </div>
-            <button class="text-xs font-bold text-[#b38600] hover:text-amber-700 transition-colors pt-2">
+            <button type="button" class="text-xs font-bold text-[#b38600] hover:text-amber-700 transition-colors pt-2 cursor-pointer">
               Lihat Semua Fasilitas →
             </button>
           </section>
@@ -214,10 +214,13 @@
               </div>
             </div>
 
-            <!-- Action Button -->
-            <button class="w-full bg-[#ffc000] hover:bg-[#ebd000] active:scale-[0.98] text-slate-950 font-extrabold py-3.5 rounded-xl transition-all shadow-lg shadow-[#ffc000]/25 text-sm">
+            <!-- Action Button (Menggunakan Inertia Link) -->
+            <Link 
+              href="/payment-page" 
+              :data="{ booking_id: '1377346270' }"
+              class="block text-center w-full bg-[#ffc000] hover:bg-[#ebd000] active:scale-[0.98] text-slate-950 font-extrabold py-3.5 rounded-xl transition-all shadow-lg shadow-[#ffc000]/25 text-sm cursor-pointer select-none">
               Lanjut ke Pembayaran
-            </button>
+            </Link>
 
             <p class="text-[10px] text-slate-400 text-center leading-relaxed">
               Dengan melanjutkan, Anda menyetujui <a href="#" class="underline font-medium text-slate-600">Syarat & Ketentuan</a> pemesanan kusewa.id.
@@ -251,6 +254,7 @@
 
 <script setup>
 import { reactive } from 'vue'
+import { Link } from '@inertiajs/vue3' // Import Link dari Inertia.js
 
 const form = reactive({
   namaPemesan: '2k_muhammaddzakwan dzakwan',
