@@ -2,23 +2,23 @@
 
 namespace Database\Seeders;
 
-use App\Models\Booking;
-use App\Models\Review;
+use App\Models\booking;
+use App\Models\review;
 use Illuminate\Database\Seeder;
 
 class ReviewSeeder extends Seeder
 {
     public function run(): void
     {
-        $bookings = Booking::where('booking_status', 'accepted')->get();
+        $bookings = booking::where('booking_status', 'accepted')->get();
 
-        foreach ($bookings as $booking) {
+        foreach ($bookings as $b) {
 
             if (fake()->boolean(70)) {
 
-                Review::create([
-                    'user_id'    => $booking->user_id,
-                    'booking_id' => $booking->id,
+                review::create([
+                    'user_id'    => $b->user_id,
+                    'booking_id' => $b->id,
                     'rating'     => fake()->numberBetween(3, 5),
                     'review'     => fake()->randomElement([
                         'Tempatnya bagus dan sesuai deskripsi.',

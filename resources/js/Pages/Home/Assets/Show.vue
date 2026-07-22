@@ -577,7 +577,7 @@ const handleTouchEnd = (e) => {
                     <!-- Header Harga Card -->
                     <div class="flex items-end gap-1 mb-6">
                         <span class="text-2xl font-extrabold text-[#0A2540]">{{ formatRupiah(lowestPrice?.price) }}</span>
-                        <span class="text-gray-500 mb-1">/ {{ lowestPrice ? periodLabel[lowestPrice.period] : 'opsi' }}</span>
+                        <span class="text-gray-500 mb-1">/sewa</span>
                     </div>
 
                     <!-- Pilihan Harga Lain -->
@@ -588,7 +588,7 @@ const handleTouchEnd = (e) => {
                                :class="form.pricing_id === price.id ? 'border-[#FFC000] bg-[#FFC000]/5' : 'border-gray-100 hover:border-gray-300'">
                             <div class="flex items-center gap-3">
                                 <input type="radio" :value="price.id" v-model="form.pricing_id" class="w-4 h-4 text-[#FFC000] focus:ring-[#FFC000]" />
-                                <span class="text-sm font-semibold capitalize">{{ periodLabel[price.period] }}</span>
+                                <span class="text-sm font-semibold capitalize">Harga Sewa</span>
                             </div>
                             <span class="text-sm font-bold">{{ formatRupiah(price.price) }}</span>
                         </label>
@@ -623,7 +623,7 @@ const handleTouchEnd = (e) => {
         :price="lowestPrice?.price || 0" 
         :nightsCount="nightsCount" 
         :formattedDateRange="formattedDateRange"
-        :periodLabel="lowestPrice ? periodLabel[lowestPrice.period] : 'opsi'"
+        :periodLabel="'sewa'"
         :disabled="asset.status !== 'active' || !asset.pricings.length"
         @submit="submitBooking"
     />

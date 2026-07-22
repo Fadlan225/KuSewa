@@ -86,7 +86,7 @@ class HomeController extends Controller
                         ])
                         ->with([
                             'images',
-                            'primaryPricing:id,asset_id,period,price',
+                            'defaultPricing:id,asset_id,price',
                             'favorites' => function ($query) {
                                 $query->where('user_id', auth()->id());
                             }
@@ -138,7 +138,7 @@ class HomeController extends Controller
             ])
             ->with([
                 'images',
-                'primaryPricing:id,asset_id,period,price',
+                'defaultPricing:id,asset_id,price',
                 'category:id,name,icon',
                 'favorites' => function ($q) {
                     $q->where('user_id', auth()->id());
@@ -170,7 +170,7 @@ class HomeController extends Controller
 
         // Filter harga
         if ($minPrice > 0 || $maxPrice < 10000000) {
-            $query->whereHas('primaryPricing', fn($q) => $q->whereBetween('price', [$minPrice, $maxPrice]));
+            $query->whereHas('defaultPricing', fn($q) => $q->whereBetween('price', [$minPrice, $maxPrice]));
         }
 
         // Filter fasilitas
@@ -204,7 +204,6 @@ class HomeController extends Controller
             $query->orderBy(
                 \App\Models\asset_pricing::select('price')
                     ->whereColumn('asset_id', 'assets.id')
-                    ->where('is_primary', true)
                     ->limit(1),
                 'asc'
             );
@@ -212,7 +211,6 @@ class HomeController extends Controller
             $query->orderBy(
                 \App\Models\asset_pricing::select('price')
                     ->whereColumn('asset_id', 'assets.id')
-                    ->where('is_primary', true)
                     ->limit(1),
                 'desc'
             );

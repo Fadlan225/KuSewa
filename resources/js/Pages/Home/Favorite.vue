@@ -67,11 +67,11 @@ const filteredFavorites = computed(() => {
 
     switch (sort.value) {
         case 'Harga Terendah':
-            data = [...data].sort((a, b) => (a.primary_pricing?.price || 0) - (b.primary_pricing?.price || 0))
+            data = [...data].sort((a, b) => (a.default_pricing?.price || 0) - (b.default_pricing?.price || 0))
             break
 
         case 'Harga Tertinggi':
-            data = [...data].sort((a, b) => (b.primary_pricing?.price || 0) - (a.primary_pricing?.price || 0))
+            data = [...data].sort((a, b) => (b.default_pricing?.price || 0) - (a.default_pricing?.price || 0))
             break
 
         case 'Rating Terendah':

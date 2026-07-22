@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('asset_pricings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_id')->constrained()->onDelete('restrict')->nullable();
-            $table->foreignId('asset_unit_id')->constrained()->onDelete('restrict')->nullable();
+            $table->foreignId('asset_id')->nullable()->constrained()->onDelete('restrict');
+            $table->foreignId('asset_unit_id')->nullable()->constrained()->onDelete('restrict');
             $table->decimal('price',15,2);
             $table->timestamps();
         });

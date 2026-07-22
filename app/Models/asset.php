@@ -42,10 +42,9 @@ class asset extends Model
         return $this->hasMany(asset_pricing::class);
     }
 
-    public function primaryPricing()
+    public function defaultPricing()
     {
-        return $this->hasOne(asset_pricing::class)
-            ->where('is_primary', true);
+        return $this->hasOne(asset_pricing::class)->orderBy('id');
     }
 
     public function bookings(){

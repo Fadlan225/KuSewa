@@ -356,10 +356,10 @@ const periodLabel = {
                 </div>
 
                 <div class="font-bold text-sm sm:text-base text-[#F97316] mt-auto pt-1">
-                    <template v-if="asset.primary_pricing">
-                        {{ formatRupiah(asset.primary_pricing.price) }}
+                    <template v-if="asset.default_pricing">
+                        {{ formatRupiah(asset.default_pricing.price) }}
                         <span class="text-[10px] font-normal text-gray-400">
-                            /{{ periodLabel[asset.primary_pricing.period] || asset.primary_pricing.period }}
+                            /sewa
                         </span>
                     </template>
                     <span v-else class="text-[11px] font-medium text-gray-400">Hubungi Pemilik</span>

@@ -20,7 +20,7 @@ class FavoriteController extends Controller
                     'title', 'city', 'address', 'status', 'detail'
                 ])->with([
                     'images', 
-                    'primaryPricing:id,asset_id,period,price',
+                    'defaultPricing:id,asset_id,price',
                     'category:id,name'
                 ])
                 ->withAvg('reviews as reviews_avg_rating', 'rating')

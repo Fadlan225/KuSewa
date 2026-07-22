@@ -374,10 +374,10 @@ const periodLabel = {
                 <!-- Kanan: Harga -->
                 <div class="sm:w-[200px] flex flex-col justify-end sm:justify-between sm:border-l border-[#6C757D]/20 sm:pl-4 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
                     <div class="font-bold text-base sm:text-lg text-[#FFC000] leading-tight text-right sm:text-left">
-                        <template v-if="asset.primary_pricing">
-                            {{ formatRupiah(asset.primary_pricing.price) }}
+                        <template v-if="asset.default_pricing">
+                            {{ formatRupiah(asset.default_pricing.price) }}
                             <span class="text-[10px] font-normal text-[#0A2540] block sm:inline">
-                                /{{ periodLabel[asset.primary_pricing.period] || asset.primary_pricing.period }}
+                                /sewa
                             </span>
                         </template>
                         <span v-else class="text-sm font-medium text-gray-400">Hubungi Pemilik</span>
