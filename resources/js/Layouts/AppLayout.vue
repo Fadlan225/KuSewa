@@ -1,10 +1,13 @@
 <script setup>
-import { Head} from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 
 import Navbar from '@/Components/Navbar.vue';
 import Footer from '@/Components/Footer.vue';
 import Bottombar from '@/Components/Bottombar.vue';
 import GlobalLoading from "@/Components/GlobalLoading.vue";
+
+// 1. IMPORT KOMPONEN FLOATING CHAT DI SINI
+import FloatingChat from '@/Components/FloatingChat.vue';
 
 defineProps({
     transparentNavbar: {
@@ -37,5 +40,8 @@ defineProps({
         <Bottombar v-if="!hideBottombar" />
 
         <Footer />
+
+        <!-- 2. PASANG WIDGET FLOATING CHAT DI SINI (SEBELUM PENUTUP DIV) -->
+        <FloatingChat />
     </div>
 </template>
