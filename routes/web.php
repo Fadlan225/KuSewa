@@ -26,6 +26,10 @@ Route::get('/notifikasi', function () {
     return Inertia::render('Home/Notifikasi');
 });
 
+Route::get('/chat', function () {
+    return Inertia::render('Home/Chat');
+});
+
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });
