@@ -78,7 +78,7 @@ class HomeController extends Controller
     {
         // Ambil semua kategori beserta type_ids di bawahnya
         $categories = asset_category::select(['id', 'name', 'icon'])
-            ->with(['types:id,category_id,name,allow_units'])
+            ->with(['types:id,category_id,name,allow_units,rental_unit'])
             ->whereHas('types.assets', fn($q) => $q->where('status', 'active'))
             ->get();
 
@@ -92,7 +92,7 @@ class HomeController extends Controller
                 ->with([
                     'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                     'defaultPricing:id,asset_id,price',
-                    'type:id,name,allow_units,category_id',
+                    'type:id,name,allow_units,rental_unit,category_id',
                     'favorites' => function ($q) {
                         $q->select(['id', 'user_id', 'asset_id'])
                           ->where('user_id', auth()->id());
@@ -145,7 +145,7 @@ class HomeController extends Controller
             ->with([
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                 'defaultPricing:id,asset_id,price',
-                'type:id,name,allow_units,category_id',
+                'type:id,name,allow_units,rental_unit,category_id',
                 'type.category:id,name,icon',
                 'favorites' => function ($q) {
                     $q->select(['id', 'user_id', 'asset_id'])

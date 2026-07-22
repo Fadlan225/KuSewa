@@ -226,6 +226,17 @@ const periodLabel = {
     hour: 'jam', day: 'hari',
     week: 'minggu', month: 'bulan', year: 'tahun'
 };
+
+const rentalUnitLabel = (unit) => {
+    const labels = {
+        hour: "jam",
+        day: "hari",
+        night: "malam",
+        month: "bulan",
+    };
+
+    return labels[unit] ?? "sewa";
+};
 </script>
 
 <template>
@@ -384,8 +395,8 @@ const periodLabel = {
                         <template v-if="asset.default_pricing">
                             {{ formatRupiah(asset.default_pricing.price) }}
                             <span class="text-[10px] font-normal text-[#0A2540] block sm:inline">
-                                /sewa
-                            </span>
+                            /{{ rentalUnitLabel(asset.type?.rental_unit) }}
+                        </span>
                         </template>
                         <span v-else class="text-sm font-medium text-gray-400">Hubungi Pemilik</span>
                     </div>

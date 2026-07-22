@@ -8,6 +8,17 @@ const props = defineProps({
     categoryName: { type: String, required: true }
 });
 
+const rentalUnitLabel = (unit) => {
+    const labels = {
+        hour: "jam",
+        day: "hari",
+        night: "malam",
+        month: "bulan",
+    };
+
+    return labels[unit] ?? "sewa";
+};
+
 // thumbnailImages dari backend (max 3), fallback ke images lama atau first_image
 const imgList = computed(() => props.asset.thumbnail_images || props.asset.images || []);
 const img1 = computed(() => imgList.value[0]?.image_url || props.asset.first_image?.image_url);
@@ -366,7 +377,7 @@ const periodLabel = {
                     <template v-if="asset.default_pricing">
                         {{ formatRupiah(asset.default_pricing.price) }}
                         <span class="text-[10px] font-normal text-gray-400">
-                            /sewa
+                            /{{ rentalUnitLabel(asset.type?.rental_unit) }}
                         </span>
                     </template>
                     <span v-else class="text-[11px] font-medium text-gray-400">Hubungi Pemilik</span>

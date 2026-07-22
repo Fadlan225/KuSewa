@@ -9,6 +9,7 @@ class asset_type extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'rental_unit',
         'allow_units',
     ];
 

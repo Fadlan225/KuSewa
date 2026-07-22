@@ -23,45 +23,46 @@ class AssetTypeSeeder extends Seeder
 
         $types = [
             // ── Hunian ──────────────────────────────────────────────────
-            ['category' => 'Hunian',     'name' => 'Rumah',       'allow_units' => false],
-            ['category' => 'Hunian',     'name' => 'Villa',       'allow_units' => false],
-            ['category' => 'Hunian',     'name' => 'Apartemen',   'allow_units' => true],
-            ['category' => 'Hunian',     'name' => 'Homestay',    'allow_units' => true],
-            ['category' => 'Hunian',     'name' => 'Guest House', 'allow_units' => true],
-            ['category' => 'Hunian',     'name' => 'Kos',         'allow_units' => true],
-            ['category' => 'Hunian',     'name' => 'Hotel',       'allow_units' => true],
-            ['category' => 'Hunian',     'name' => 'Resort',      'allow_units' => true],
-            ['category' => 'Hunian',     'name' => 'Kontrakan',   'allow_units' => false],
+            ['category' => 'Hunian', 'name' => 'Rumah',       'allow_units' => false, 'rental_unit' => 'day'],
+            ['category' => 'Hunian', 'name' => 'Villa',       'allow_units' => false, 'rental_unit' => 'night'],
+            ['category' => 'Hunian', 'name' => 'Apartemen',   'allow_units' => true,  'rental_unit' => 'night'],
+            ['category' => 'Hunian', 'name' => 'Homestay',    'allow_units' => true,  'rental_unit' => 'night'],
+            ['category' => 'Hunian', 'name' => 'Guest House', 'allow_units' => true,  'rental_unit' => 'night'],
+            ['category' => 'Hunian', 'name' => 'Kos',         'allow_units' => true,  'rental_unit' => 'month'],
+            ['category' => 'Hunian', 'name' => 'Hotel',       'allow_units' => true,  'rental_unit' => 'night'],
+            ['category' => 'Hunian', 'name' => 'Resort',      'allow_units' => true,  'rental_unit' => 'night'],
+            ['category' => 'Hunian', 'name' => 'Kontrakan',   'allow_units' => false, 'rental_unit' => 'month'],
 
             // ── Komersial ───────────────────────────────────────────────
-            ['category' => 'Komersial',  'name' => 'Ruko',        'allow_units' => false],
-            ['category' => 'Komersial',  'name' => 'Toko',        'allow_units' => false],
-            ['category' => 'Komersial',  'name' => 'Kios',        'allow_units' => true],
-            ['category' => 'Komersial',  'name' => 'Gudang',      'allow_units' => false],
+            ['category' => 'Komersial', 'name' => 'Ruko',     'allow_units' => false, 'rental_unit' => 'month'],
+            ['category' => 'Komersial', 'name' => 'Toko',     'allow_units' => false, 'rental_unit' => 'month'],
+            ['category' => 'Komersial', 'name' => 'Kios',     'allow_units' => true,  'rental_unit' => 'month'],
+            ['category' => 'Komersial', 'name' => 'Gudang',   'allow_units' => false, 'rental_unit' => 'month'],
 
             // ── Lahan ───────────────────────────────────────────────────
-            ['category' => 'Lahan',      'name' => 'Lahan Kosong',    'allow_units' => false],
-            ['category' => 'Lahan',      'name' => 'Lahan Parkir',    'allow_units' => false],
-            ['category' => 'Lahan',      'name' => 'Lahan Pertanian', 'allow_units' => false],
+            ['category' => 'Lahan', 'name' => 'Lahan Kosong',    'allow_units' => false, 'rental_unit' => 'month'],
+            ['category' => 'Lahan', 'name' => 'Lahan Parkir',    'allow_units' => false, 'rental_unit' => 'month'],
+            ['category' => 'Lahan', 'name' => 'Lahan Pertanian', 'allow_units' => false, 'rental_unit' => 'month'],
 
             // ── Event ───────────────────────────────────────────────────
-            ['category' => 'Event',      'name' => 'Gedung',       'allow_units' => false],
-            ['category' => 'Event',      'name' => 'Aula',         'allow_units' => false],
-            ['category' => 'Event',      'name' => 'Ruang Meeting', 'allow_units' => false],
-            ['category' => 'Event',      'name' => 'Studio',       'allow_units' => true],
+            ['category' => 'Event', 'name' => 'Gedung',         'allow_units' => false, 'rental_unit' => 'day'],
+            ['category' => 'Event', 'name' => 'Aula',           'allow_units' => false, 'rental_unit' => 'day'],
+            ['category' => 'Event', 'name' => 'Ruang Meeting',  'allow_units' => false, 'rental_unit' => 'hour'],
+            ['category' => 'Event', 'name' => 'Studio',         'allow_units' => true,  'rental_unit' => 'hour'],
 
             // ── Media Iklan ─────────────────────────────────────────────
-            ['category' => 'Media Iklan', 'name' => 'Baliho Digital',      'allow_units' => false],
-            ['category' => 'Media Iklan', 'name' => 'Baliho Konvensional', 'allow_units' => false],
+            ['category' => 'Media Iklan', 'name' => 'Baliho Digital',      'allow_units' => false, 'rental_unit' => 'month'],
+            ['category' => 'Media Iklan', 'name' => 'Baliho Konvensional', 'allow_units' => false, 'rental_unit' => 'month'],
         ];
 
         $rows = array_map(function ($type) use ($categories) {
             return [
                 'category_id' => $categories[$type['category']],
-                'name'        => $type['name'],
-                'allow_units' => $type['allow_units'],
-                'created_at'  => now(),
-                'updated_at'  => now(),
+                'name'         => $type['name'],
+                'allow_units'  => $type['allow_units'],
+                'rental_unit'  => $type['rental_unit'],
+                'created_at'   => now(),
+                'updated_at'   => now(),
             ];
         }, $types);
 
