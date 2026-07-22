@@ -17,8 +17,8 @@ return new class extends Migration
             $table->foreignId('asset_unit_id')->nullable()->constrained()->onDelete('restrict');
             $table->string('booking_code');
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
-            $table->date('start_date');
-            $table->date('end_date');
+            $table->dateTime('start_date');
+            $table->dateTime('end_date');
             $table->decimal('subtotal',15,2);
             $table->decimal('service_fee',15,2);
             $table->decimal('total',15,2);

@@ -2,11 +2,12 @@
 import { usePage } from '@inertiajs/vue3';
 import { computed, watch, onMounted } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
+import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
 
 const page = usePage();
 
-// Kategori dari database (via props dari HomeController)
-const assetCategoriesFromDB = computed(() => page.props.categories || []);
+// We'll use filteredAssetCategories from useHomeSearch instead
+
 
 const {
     isMobileSearchOpen,
@@ -23,6 +24,7 @@ const {
     assetSearchQuery,
     selectedAssets,
     toggleAsset,
+    filteredAssetCategories,
 
     // Lokasi
     searchQuery,
@@ -33,6 +35,11 @@ const {
     // Jadwal
     startDate,
     endDate,
+    startTime,
+    endTime,
+    durationMonths,
+    activeScheduleMode,
+    simpleDateString,
     selectDate,
     isStartDate,
     isEndDate,
@@ -58,17 +65,15 @@ const {
     parsedMinPrice,
     parsedMaxPrice,
     maxLimit,
-    formatPriceShort
+    formatPriceShort,
+
+    // Fasilitas
+    selectedFacilities,
+    toggleFacility
 } = useHomeSearch();
 
-// Filter kategori berdasarkan pencarian (from DB)
-const filteredCategoriesFromDB = computed(() => {
-    if (!assetSearchQuery.value) return assetCategoriesFromDB.value;
-    const q = assetSearchQuery.value.toLowerCase();
-    return assetCategoriesFromDB.value.filter(cat =>
-        cat.name.toLowerCase().includes(q)
-    );
-});
+// Filter categories are now handled in useHomeSearch
+
 
 // Inisialisasi lokasi dari DB props
 onMounted(() => {
@@ -137,21 +142,23 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                             </div>
                                         </div>
 
-                                        <!-- Kategori dari DB -->
-                                        <div v-for="cat in filteredCategoriesFromDB" :key="cat.id">
-                                            <h3 class="text-xs font-bold text-[#6C757D] mb-2">{{ cat.name }}</h3>
+                                        <!-- Kategori & Tipe Aset (Grup) -->
+                                        <div v-for="cat in filteredAssetCategories" :key="cat.name" class="mb-4">
+                                            <h3 class="text-xs font-bold text-[#6C757D] mb-2 flex items-center gap-1.5">
+                                                <i v-if="cat.icon" :class="cat.icon + ' text-[#FFC000] text-xs'"></i>
+                                                {{ cat.name }}
+                                            </h3>
                                             <div class="space-y-2">
-                                                <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
-                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(cat.name)}">
-                                                        <i v-if="selectedAssets.includes(cat.name)" class="fa-solid fa-check text-white text-[10px]"></i>
+                                                <label v-for="item in cat.items" :key="item" class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
+                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(item)}">
+                                                        <i v-if="selectedAssets.includes(item)" class="fa-solid fa-check text-white text-[10px]"></i>
                                                     </div>
-                                                    <i v-if="cat.icon" :class="cat.icon + ' text-[#FFC000] text-sm'"></i>
-                                                    <span class="text-sm font-medium text-[#0A2540]">{{ cat.name }}</span>
-                                                    <input type="checkbox" :value="cat.name" class="hidden" @change="toggleAsset(cat.name)">
+                                                    <span class="text-sm font-medium text-[#0A2540]">{{ item }}</span>
+                                                    <input type="checkbox" :value="item" class="hidden" @change="toggleAsset(item)">
                                                 </label>
                                             </div>
                                         </div>
-                                        <div v-if="filteredCategoriesFromDB.length === 0" class="text-center py-4 text-[#6C757D] font-medium text-sm">
+                                        <div v-if="filteredAssetCategories.length === 0" class="text-center py-4 text-[#6C757D] font-medium text-sm">
                                             Tidak ada hasil.
                                         </div>
                                 </div>
@@ -198,36 +205,78 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-[#6C757D]/5 relative">
                                     <button @click="startDate = null; endDate = null" class="absolute top-5 right-5 text-[11px] font-bold text-[#6C757D] hover:text-[#0A2540] underline decoration-[#6C757D]/30 underline-offset-2 z-10">Reset</button>
 
-                                    <div v-for="month in monthsData" :key="month.id" class="mb-6">
-                                        <h3 class="text-[15px] font-bold text-[#0A2540] mb-4 text-center">{{ month.title }}</h3>
-                                        <div class="grid grid-cols-7 gap-y-5 mb-2">
-                                            <div v-for="day in daysOfWeek" :key="day" class="text-center text-[11px] font-bold text-[#6C757D]">
-                                                {{ day }}
-                                            </div>
-                                            <div v-for="i in month.emptyDaysStart" :key="'empty-'+i"></div>
-                                            <div v-for="date in month.daysInMonth" :key="date" class="relative flex justify-center items-center h-9" @click="selectDate(month.year, month.month, date)">
-                                                <div v-if="isStartDate(month.year, month.month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isInRange(month.year, month.month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isEndDate(month.year, month.month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-
-                                                <div
-                                                    class="relative z-10 w-9 h-9 flex flex-col items-center justify-center rounded-full text-[13px] font-bold cursor-pointer transition"
-                                                    :class="{
-                                                        'bg-[#1A1A1A] text-white shadow-md': isStartDate(month.year, month.month, date) || isEndDate(month.year, month.month, date),
-                                                        'text-[#1A1A1A]': isInRange(month.year, month.month, date),
-                                                        'text-[#0A2540]': !isStartDate(month.year, month.month, date) && !isEndDate(month.year, month.month, date) && !isInRange(month.year, month.month, date)
-                                                    }"
-                                                >
-                                                    <span>{{ date }}</span>
+                                    <div v-if="['day', 'night'].includes(activeScheduleMode)">
+                                        <div v-for="month in monthsData" :key="month.id" class="mb-6">
+                                            <h3 class="text-[15px] font-bold text-[#0A2540] mb-4 text-center">{{ month.title }}</h3>
+                                            <div class="grid grid-cols-7 gap-y-5 mb-2">
+                                                <div v-for="day in daysOfWeek" :key="day" class="text-center text-[11px] font-bold text-[#6C757D]">
+                                                    {{ day }}
                                                 </div>
-                                                <div v-if="isStartDate(month.year, month.month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                                <div v-else-if="isEndDate(month.year, month.month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                                <div v-for="i in month.emptyDaysStart" :key="'empty-'+i"></div>
+                                                <div v-for="date in month.daysInMonth" :key="date" class="relative flex justify-center items-center h-9" @click="selectDate(month.year, month.month, date)">
+                                                    <div v-if="isStartDate(month.year, month.month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                                    <div v-else-if="isInRange(month.year, month.month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
+                                                    <div v-else-if="isEndDate(month.year, month.month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+
+                                                    <div
+                                                        class="relative z-10 w-9 h-9 flex flex-col items-center justify-center rounded-full text-[13px] font-bold cursor-pointer transition"
+                                                        :class="{
+                                                            'bg-[#1A1A1A] text-white shadow-md': isStartDate(month.year, month.month, date) || isEndDate(month.year, month.month, date),
+                                                            'text-[#1A1A1A]': isInRange(month.year, month.month, date),
+                                                            'text-[#0A2540]': !isStartDate(month.year, month.month, date) && !isEndDate(month.year, month.month, date) && !isInRange(month.year, month.month, date)
+                                                        }"
+                                                    >
+                                                        <span>{{ date }}</span>
+                                                    </div>
+                                                    <div v-if="isStartDate(month.year, month.month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
+                                                    <div v-else-if="isEndDate(month.year, month.month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button @click="loadMoreMonths" class="w-full py-3 mt-2 bg-gray-100 rounded-xl text-center text-sm font-bold text-[#0A2540] active:bg-gray-200 transition">
+                                            Muat lebih banyak
+                                        </button>
+                                    </div>
+
+                                    <!-- UI KHUSUS HOUR (Jam) -->
+                                    <div v-if="activeScheduleMode === 'hour'" class="pt-2">
+                                        <div class="mb-4">
+                                            <label class="block text-[11px] font-bold text-[#6C757D] mb-1">Tanggal Sewa</label>
+                                            <input type="date" v-model="simpleDateString" class="w-full border border-[#6C757D]/30 rounded-xl p-2.5 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#1A1A1A]" />
+                                        </div>
+
+                                        <h4 class="text-sm font-bold text-[#0A2540] mb-3">Tentukan Waktu (Jam)</h4>
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex-1">
+                                                <label class="block text-[11px] font-bold text-[#6C757D] mb-1">Mulai</label>
+                                                <input v-model="startTime" type="time" class="w-full border border-[#6C757D]/30 rounded-xl p-2.5 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#1A1A1A]" />
+                                            </div>
+                                            <div class="flex-1">
+                                                <label class="block text-[11px] font-bold text-[#6C757D] mb-1">Selesai</label>
+                                                <input v-model="endTime" type="time" class="w-full border border-[#6C757D]/30 rounded-xl p-2.5 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#1A1A1A]" />
                                             </div>
                                         </div>
                                     </div>
-                                    <button @click="loadMoreMonths" class="w-full py-3 mt-2 bg-gray-100 rounded-xl text-center text-sm font-bold text-[#0A2540] active:bg-gray-200 transition">
-                                        Muat lebih banyak
-                                    </button>
+
+                                    <!-- UI KHUSUS MONTH (Bulan) -->
+                                    <div v-if="activeScheduleMode === 'month'" class="pt-2 px-2 max-w-md mx-auto w-full">
+                                        <div class="mb-4">
+                                            <label class="block text-[11px] font-bold text-[#6C757D] mb-1">Mulai Dari Tanggal</label>
+                                            <input type="date" v-model="simpleDateString" class="w-full border border-[#6C757D]/30 rounded-xl p-2.5 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#1A1A1A]" />
+                                        </div>
+
+                                        <div class="mb-4">
+                                            <label class="block text-xs font-bold text-[#6C757D] mb-2 text-center">Durasi Sewa (Bulan)</label>
+                                            <CircularMonthSlider v-model="durationMonths" />
+                                        </div>
+
+                                        <div v-if="endDate" class="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+                                            <span class="text-[11px] text-[#6C757D] font-bold">Tgl. Selesai Otomatis:</span>
+                                            <span class="text-[11px] font-bold text-[#0A2540]">
+                                                {{ endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -293,8 +342,27 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                 </div>
                             </div>
 
+                            <!-- 5. FASILITAS (Search Page Only) -->
+                            <div v-if="steps.includes('fasilitas')" class="w-full h-full flex-shrink-0 px-4 overflow-y-auto pb-24 hide-scrollbar">
+                                <div class="bg-white rounded-2xl p-5 shadow-sm border border-[#6C757D]/5 relative">
+                                    <button @click="selectedFacilities = []" class="absolute top-5 right-5 text-[11px] font-bold text-[#6C757D] hover:text-[#0A2540] underline decoration-[#6C757D]/30 underline-offset-2 z-10">Reset</button>
+                                    <h3 class="font-extrabold text-[#0A2540] text-[15px] mb-4">Fasilitas Populer</h3>
+                                    <div class="space-y-3">
+                                        <label v-for="fac in page.props.facilities || []" :key="fac" class="flex items-center gap-3 cursor-pointer group">
+                                            <div class="relative flex items-center">
+                                                <input type="checkbox" :checked="selectedFacilities.includes(fac)" @change="toggleFacility(fac)" class="peer sr-only">
+                                                <div class="w-5 h-5 rounded border-2 border-gray-300 bg-white peer-checked:bg-[#0A2540] peer-checked:border-[#0A2540] transition flex items-center justify-center">
+                                                    <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100"></i>
+                                                </div>
+                                            </div>
+                                            <span class="text-sm font-semibold text-[#6C757D] group-hover:text-[#0A2540] transition">{{ fac }}</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
-        
+
         <template #footer>
             <!-- Footer Action Bar -->
             <div class="absolute bottom-0 w-full bg-[#F8F9FA] border-t border-[#6C757D]/10 p-4 flex justify-center items-center z-20">

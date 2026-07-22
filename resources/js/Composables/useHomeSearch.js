@@ -1,5 +1,5 @@
-import { ref, computed, nextTick } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { ref, computed, nextTick, watch } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
 
 // Global singleton state for Home Page Search
 // We keep them outside the function so they are shared across all components
@@ -8,15 +8,23 @@ import { router } from '@inertiajs/vue3';
 const keywordQuery = ref('');
 const isMobileSearchOpen = ref(false);
 const isKeywordSheetOpen = ref(false);
-const activeSearchStep = ref('aset'); // 'aset', 'lokasi', 'jadwal', 'harga'
-const steps = ['aset', 'lokasi', 'jadwal', 'harga'];
+const activeSearchStep = ref('aset'); // 'aset', 'lokasi', 'jadwal', 'harga', 'fasilitas'
 
-const currentStepIndex = computed(() => steps.indexOf(activeSearchStep.value));
-const isLastStep = computed(() => currentStepIndex.value === steps.length - 1);
+const steps = computed(() => {
+    // Only show 'fasilitas' tab on the search page
+    const page = usePage();
+    if (page.component === 'Home/Assets/Index') {
+        return ['aset', 'lokasi', 'jadwal', 'harga', 'fasilitas'];
+    }
+    return ['aset', 'lokasi', 'jadwal', 'harga'];
+});
+
+const currentStepIndex = computed(() => steps.value.indexOf(activeSearchStep.value));
+const isLastStep = computed(() => currentStepIndex.value === steps.value.length - 1);
 
 const nextStep = () => {
     if (!isLastStep.value) {
-        activeSearchStep.value = steps[currentStepIndex.value + 1];
+        activeSearchStep.value = steps.value[currentStepIndex.value + 1];
     } else {
         isMobileSearchOpen.value = false;
     }
@@ -24,7 +32,7 @@ const nextStep = () => {
 
 const prevStep = () => {
     if (currentStepIndex.value > 0) {
-        activeSearchStep.value = steps[currentStepIndex.value - 1];
+        activeSearchStep.value = steps.value[currentStepIndex.value - 1];
     }
 };
 
@@ -37,27 +45,24 @@ const clearCurrentOrAll = () => {
 };
 
 // Data Aset
+const globalCategories = ref([]);
+
 const assetSearchQuery = ref('');
-const assetCategories = [
-    {
-        name: 'Tempat Tinggal & Penginapan',
-        items: ['Rumah', 'Apartemen', 'Villa', 'Kos']
-    },
-    {
-        name: 'Komersial & Bisnis',
-        items: ['Ruko', 'Kios', 'Kantor', 'Gedung']
-    },
-    {
-        name: 'Industri & Lahan',
-        items: ['Gudang', 'Workshop', 'Tanah', 'Baliho']
-    }
-];
+const assetCategories = computed(() => {
+    const cats = globalCategories.value || [];
+    return cats.map(cat => ({
+        name: cat.name,
+        icon: cat.icon,
+        items: cat.types ? cat.types.map(t => t.name) : []
+    })).filter(cat => cat.items.length > 0);
+});
+
 const selectedAssets = ref([]);
 
 const filteredAssetCategories = computed(() => {
-    if (!assetSearchQuery.value) return assetCategories;
+    if (!assetSearchQuery.value) return assetCategories.value;
     const q = assetSearchQuery.value.toLowerCase();
-    return assetCategories.map(cat => ({
+    return assetCategories.value.map(cat => ({
         ...cat,
         items: cat.items.filter(item => item.toLowerCase().includes(q))
     })).filter(cat => cat.items.length > 0);
@@ -68,6 +73,10 @@ const toggleAsset = (item) => {
     if (index > -1) selectedAssets.value.splice(index, 1);
     else selectedAssets.value.push(item);
 };
+
+// State Fasilitas dan Sorting
+const selectedFacilities = ref([]);
+const sortOption = ref('popular');
 
 // State Pencarian Lokasi
 const searchQuery = ref('');
@@ -95,16 +104,91 @@ const closeLokasiFullScreen = () => { isLokasiFullScreen.value = false; };
 // State Kalender / Jadwal
 const startDate = ref(null);
 const endDate = ref(null);
+const startTime = ref('09:00');
+const endTime = ref('10:00');
+const durationMonths = ref(1);
+
+const activeScheduleMode = computed(() => {
+    if (selectedAssets.value.length === 0) return 'day';
+    
+    // Ambil data kategori dari props Inertia
+    const categories = globalCategories.value || [];
+    const selectedUnits = [];
+    
+    categories.forEach(cat => {
+        cat.types?.forEach(type => {
+            if (selectedAssets.value.includes(type.name)) {
+                selectedUnits.push(type.rental_unit);
+            }
+        });
+    });
+
+    if (selectedUnits.length === 0) return 'day';
+
+    // Cek apakah semua sama
+    const firstUnit = selectedUnits[0];
+    const allSame = selectedUnits.every(u => u === firstUnit);
+
+    if (allSame) {
+        if (firstUnit === 'hour') return 'hour';
+        if (firstUnit === 'month') return 'month';
+    }
+    
+    return 'day'; // Default fallback
+});
+
+// Watch mode change untuk me-reset jadwal jika mode berganti
+watch(activeScheduleMode, (newMode, oldMode) => {
+    if (newMode !== oldMode) {
+        startDate.value = null;
+        endDate.value = null;
+        startTime.value = '09:00';
+        endTime.value = '10:00';
+        durationMonths.value = 1;
+    }
+});
+
+// Update endDate otomatis jika mode 'month'
+const simpleDateString = computed({
+    get() {
+        if (!startDate.value) return '';
+        const d = startDate.value;
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    },
+    set(val) {
+        if (!val) {
+            startDate.value = null;
+        } else {
+            startDate.value = new Date(val);
+        }
+    }
+});
+
+watch([startDate, durationMonths], () => {
+    if (activeScheduleMode.value === 'month' && startDate.value) {
+        const d = new Date(startDate.value);
+        d.setMonth(d.getMonth() + durationMonths.value);
+        endDate.value = d;
+    }
+});
 
 const selectDate = (year, month, date) => {
     const selected = new Date(year, month, date);
-    if (!startDate.value || (startDate.value && endDate.value)) {
+    
+    if (activeScheduleMode.value === 'hour' || activeScheduleMode.value === 'month') {
+        // Mode hour/month: hanya pilih 1 tanggal (startDate)
         startDate.value = selected;
-        endDate.value = null;
-    } else if (selected < startDate.value) {
-        startDate.value = selected;
+        // endDate di-handle oleh watch (untuk month) atau manual
     } else {
-        endDate.value = selected;
+        // Mode day (rentang 2 tanggal)
+        if (!startDate.value || (startDate.value && endDate.value)) {
+            startDate.value = selected;
+            endDate.value = null;
+        } else if (selected < startDate.value) {
+            startDate.value = selected;
+        } else {
+            endDate.value = selected;
+        }
     }
 };
 
@@ -119,6 +203,7 @@ const isEndDate = (year, month, date) => {
 };
 
 const isInRange = (year, month, date) => {
+    if (activeScheduleMode.value === 'hour') return false; // tidak ada range highlight
     if (!startDate.value || !endDate.value) return false;
     const current = new Date(year, month, date);
     return current > startDate.value && current < endDate.value;
@@ -128,6 +213,17 @@ const formattedSchedule = computed(() => {
     if (!startDate.value) return 'Pilih tanggal';
     const opt = { day: 'numeric', month: 'short' };
     const start = new Intl.DateTimeFormat('id-ID', opt).format(startDate.value);
+    
+    if (activeScheduleMode.value === 'hour') {
+        return `${start}, ${startTime.value} - ${endTime.value}`;
+    }
+    
+    if (activeScheduleMode.value === 'month') {
+        if (!endDate.value) return start;
+        const end = new Intl.DateTimeFormat('id-ID', opt).format(endDate.value);
+        return `${start} - ${end} (${durationMonths.value} Bln)`;
+    }
+
     if (!endDate.value) return start;
     const end = new Intl.DateTimeFormat('id-ID', opt).format(endDate.value);
     return `${start} - ${end}`;
@@ -387,6 +483,59 @@ const logSearch = async (keyword) => {
     }
 };
 
+const hydrateFilters = (filters) => {
+    if (!filters) return;
+    
+    if (filters.q) keywordQuery.value = filters.q;
+    
+    if (filters.category) {
+        selectedAssets.value = Array.isArray(filters.category) ? [...filters.category] : [filters.category];
+    } else {
+        selectedAssets.value = [];
+    }
+
+    if (filters.location) searchQuery.value = filters.location;
+
+    if (filters.facilities) {
+        selectedFacilities.value = Array.isArray(filters.facilities) ? [...filters.facilities] : [filters.facilities];
+    } else {
+        selectedFacilities.value = [];
+    }
+    
+    if (filters.sort) sortOption.value = filters.sort;
+
+    if (filters.date_start) {
+        startDate.value = new Date(filters.date_start.split(' ')[0]);
+        if (activeScheduleMode.value === 'hour') {
+            const timeStr = filters.date_start.split(' ')[1];
+            if (timeStr) startTime.value = timeStr.substring(0, 5); // HH:mm
+        }
+    }
+    
+    if (filters.date_end) {
+        endDate.value = new Date(filters.date_end.split(' ')[0]);
+        if (activeScheduleMode.value === 'hour') {
+            const timeStr = filters.date_end.split(' ')[1];
+            if (timeStr) endTime.value = timeStr.substring(0, 5); // HH:mm
+        } else if (activeScheduleMode.value === 'month') {
+            // Kalkulasi durasi bulan dari start date dan end date
+            if (startDate.value && endDate.value) {
+                let months = (endDate.value.getFullYear() - startDate.value.getFullYear()) * 12;
+                months -= startDate.value.getMonth();
+                months += endDate.value.getMonth();
+                durationMonths.value = months <= 0 ? 1 : months;
+            }
+        }
+    }
+
+    if (filters.min_price) {
+        minPrice.value = filters.min_price;
+    }
+    if (filters.max_price) {
+        maxPrice.value = filters.max_price;
+    }
+};
+
 const performSearch = () => {
     const params = {};
 
@@ -402,19 +551,38 @@ const performSearch = () => {
         params.location = searchQuery.value.trim();
     }
     if (startDate.value) {
-        params.date_start = startDate.value.toISOString().split('T')[0];
+        if (activeScheduleMode.value === 'hour') {
+            params.date_start = `${startDate.value.toISOString().split('T')[0]} ${startTime.value}:00`;
+            params.date_end = `${startDate.value.toISOString().split('T')[0]} ${endTime.value}:00`;
+        } else if (activeScheduleMode.value === 'month') {
+            params.date_start = startDate.value.toISOString().split('T')[0] + ' 00:00:00';
+            if (endDate.value) {
+                params.date_end = endDate.value.toISOString().split('T')[0] + ' 23:59:59';
+            }
+        } else {
+            params.date_start = startDate.value.toISOString().split('T')[0] + ' 00:00:00';
+            if (endDate.value) {
+                params.date_end = endDate.value.toISOString().split('T')[0] + ' 23:59:59';
+            }
+        }
     }
-    if (endDate.value) {
-        params.date_end = endDate.value.toISOString().split('T')[0];
-    }
+    
     if (parsedMinPrice.value > 0) {
         params.min_price = parsedMinPrice.value;
     }
     if (parsedMaxPrice.value < maxLimit) {
         params.max_price = parsedMaxPrice.value;
     }
+    
+    if (selectedFacilities.value.length > 0) {
+        params.facilities = selectedFacilities.value;
+    }
+    
+    if (sortOption.value !== 'popular') {
+        params.sort = sortOption.value;
+    }
 
-    router.get(route('assets.search'), params, { preserveState: false });
+    router.get(route('assets.search'), params, { preserveState: true, preserveScroll: true });
 
     // Tutup semua UI
     isMobileSearchOpen.value = false;
@@ -424,6 +592,15 @@ const performSearch = () => {
 };
 
 export function useHomeSearch() {
+    const page = usePage();
+
+    // Sync categories to global state
+    watch(() => page.props.allCategories || page.props.categories, (newCats) => {
+        if (newCats) {
+            globalCategories.value = newCats;
+        }
+    }, { immediate: true });
+
     return {
         keywordQuery,
         // UI
@@ -436,8 +613,9 @@ export function useHomeSearch() {
         nextStep,
         prevStep,
         clearCurrentOrAll,
+        performSearch,
 
-        // Aset
+        // Asset
         assetSearchQuery,
         assetCategories,
         selectedAssets,
@@ -456,6 +634,11 @@ export function useHomeSearch() {
         // Jadwal
         startDate,
         endDate,
+        startTime,
+        endTime,
+        durationMonths,
+        activeScheduleMode,
+        simpleDateString,
         selectDate,
         isStartDate,
         isEndDate,
@@ -519,5 +702,8 @@ export function useHomeSearch() {
         fetchSuggestions,
         logSearch,
         performSearch,
+        selectedFacilities,
+        sortOption,
+        hydrateFilters,
     };
 }

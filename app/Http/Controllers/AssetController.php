@@ -58,8 +58,11 @@ class AssetController extends Controller
         $asset->favorite_id = $favorite?->id;
         unset($asset->favorites);
 
+        $serviceFee = \Illuminate\Support\Facades\DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
+
         return inertia('Home/Assets/Show', [
-            'asset' => $asset
+            'asset' => $asset,
+            'serviceFee' => $serviceFee
         ]);
     }
 

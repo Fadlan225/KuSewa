@@ -273,13 +273,13 @@ const rentalUnitLabel = (unit) => {
                     <span class="text-[10px] font-medium">No Image</span>
                 </div>
 
-                <!-- 1 Image Layout -->
-                <div v-else-if="imageCount === 1" class="absolute inset-0 w-full h-full z-0">
+                <!-- 1 Image Layout (or Mobile Fallback) -->
+                <div v-if="imageCount >= 1" class="absolute inset-0 w-full h-full z-0" :class="imageCount > 1 ? 'block sm:hidden' : ''">
                     <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                 </div>
 
-                <!-- 2 Image Layout -->
-                <div v-else-if="imageCount === 2" class="absolute inset-0 w-full h-full grid grid-cols-2 gap-0.5 z-0 bg-white">
+                <!-- 2 Image Layout (Desktop Only) -->
+                <div v-if="imageCount === 2" class="absolute inset-0 w-full h-full grid-cols-2 gap-0.5 z-0 bg-white hidden sm:grid">
                     <div class="h-full overflow-hidden relative">
                         <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     </div>
@@ -288,8 +288,8 @@ const rentalUnitLabel = (unit) => {
                     </div>
                 </div>
 
-                <!-- 3 Image Layout -->
-                <div v-else-if="imageCount >= 3" class="absolute inset-0 w-full h-full grid grid-cols-3 gap-0.5 z-0 bg-white">
+                <!-- 3 Image Layout (Desktop Only) -->
+                <div v-if="imageCount >= 3" class="absolute inset-0 w-full h-full grid-cols-3 gap-0.5 z-0 bg-white hidden sm:grid">
                     <div class="col-span-2 h-full overflow-hidden relative">
                         <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
                     </div>
@@ -358,11 +358,11 @@ const rentalUnitLabel = (unit) => {
 
             <!-- ═══ AREA TEKS – klik navigasi ═══ -->
             <div
-                class="flex flex-col sm:flex-row flex-grow p-3 sm:p-4 gap-3 bg-white"
+                class="flex flex-col sm:flex-row flex-grow p-3 sm:p-4 gap-3 bg-white min-w-0"
                 @click="navigateToAsset"
             >
                 <!-- Kiri: Detail Aset -->
-                <div class="flex flex-col flex-grow justify-between gap-1.5">
+                <div class="flex flex-col flex-grow justify-between gap-1.5 min-w-0">
                     <div>
                         <h3 class="font-semibold text-base sm:text-lg leading-tight text-[#0A2540] group-hover:text-[#FFC000] transition-colors line-clamp-1">
                             {{ asset.title }}
@@ -390,8 +390,8 @@ const rentalUnitLabel = (unit) => {
                 </div>
 
                 <!-- Kanan: Harga -->
-                <div class="sm:w-[200px] flex flex-col justify-end sm:justify-between sm:border-l border-[#6C757D]/20 sm:pl-4 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
-                    <div class="font-bold text-base sm:text-lg text-[#FFC000] leading-tight text-right sm:text-left">
+                <div class="sm:w-[200px] shrink-0 flex flex-col justify-end sm:justify-between sm:border-l border-[#6C757D]/20 sm:pl-4 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 min-w-0">
+                    <div class="font-bold text-base sm:text-lg text-[#FFC000] leading-tight text-right sm:text-left truncate">
                         <template v-if="asset.default_pricing">
                             {{ formatRupiah(asset.default_pricing.price) }}
                             <span class="text-[10px] font-normal text-[#0A2540] block sm:inline">

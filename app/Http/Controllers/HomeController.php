@@ -117,6 +117,9 @@ class HomeController extends Controller
 
         return inertia('Home/index', [
             'categories'          => $categories,
+            'allCategories'       => asset_category::select(['id', 'name', 'icon'])
+                                        ->with(['types:id,category_id,name,allow_units,rental_unit'])
+                                        ->get(),
             'searchHistory'       => $meta['searchHistory'],
             'trending'            => $meta['trending'],
             'locationSuggestions' => $locationSuggestions,
@@ -267,8 +270,13 @@ class HomeController extends Controller
                 'facilities' => request('facilities', []),
                 'sort'       => $sort,
             ],
-            'categories'          => asset_category::select(['id', 'name', 'icon'])->get(),
-            'allTypes'            => asset_type::select(['id', 'category_id', 'name', 'allow_units'])->get(),
+            'categories'          => asset_category::select(['id', 'name', 'icon'])
+                ->with(['types:id,category_id,name,allow_units,rental_unit'])
+                ->get(),
+            'allCategories'       => asset_category::select(['id', 'name', 'icon'])
+                ->with(['types:id,category_id,name,allow_units,rental_unit'])
+                ->get(),
+            'allTypes'            => asset_type::select(['id', 'category_id', 'name', 'allow_units', 'rental_unit'])->get(),
             'facilities'          => $allFacilities,
             'searchHistory'       => $meta['searchHistory'],
             'trending'            => $meta['trending'],
@@ -366,5 +374,31 @@ class HomeController extends Controller
             ->each(fn($k) => $addSuggestion($k, 'popular', 'fa-solid fa-fire'));
 
         return response()->json(array_slice($suggestions, 0, 8));
+    }
+
+    /**
+     * Hapus semua riwayat pencarian user
+     */
+    public function clearSearchHistory()
+    {
+        if (auth()->check()) {
+            search_log::where('user_id', auth()->id())->delete();
+            return back()->with('success', 'Riwayat pencarian berhasil dihapus.');
+        }
+        return back();
+    }
+
+    /**
+     * Hapus satu keyword dari riwayat pencarian
+     */
+    public function deleteSearchKeyword(Request $request)
+    {
+        if (auth()->check() && $request->has('keyword')) {
+            search_log::where('user_id', auth()->id())
+                ->where('keyword', $request->keyword)
+                ->delete();
+            return back()->with('success', 'Kata kunci berhasil dihapus.');
+        }
+        return back();
     }
 }

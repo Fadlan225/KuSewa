@@ -1,4 +1,4 @@
-import { defineConfig, splitVendorChunkPlugin } from 'vite';
+import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
@@ -23,7 +23,6 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
-        splitVendorChunkPlugin(), // Auto split vendor chunks
     ],
 
     server: {
@@ -48,9 +47,6 @@ export default defineConfig({
     },
 
     build: {
-        // Gunakan esbuild untuk minify lebih cepat
-        minify: 'esbuild',
-
         // Tingkatkan limit warning chunk size (default 500KB terlalu kecil)
         chunkSizeWarningLimit: 1000,
 

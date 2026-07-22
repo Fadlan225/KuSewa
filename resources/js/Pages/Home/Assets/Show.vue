@@ -1,16 +1,21 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
+import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
 import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
 import AssetGallery from '@/Components/UI/AssetGallery.vue';
+import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
 
 const props = defineProps({
     asset: {
         type: Object,
         required: true,
+    },
+    serviceFee: {
+        type: Number,
+        default: 5
     }
 });
 
@@ -47,7 +52,6 @@ const handleFavorite = async () => {
     }
 };
 
-// Helper untuk format rupiah
 const formatRupiah = (value) => {
     if (!value) return 'Hubungi Pemilik';
     return new Intl.NumberFormat('id-ID', {
@@ -55,6 +59,17 @@ const formatRupiah = (value) => {
         currency: 'IDR',
         minimumFractionDigits: 0
     }).format(value);
+};
+
+const rentalUnitLabel = (unit) => {
+    const labels = {
+        hour: "jam",
+        day: "hari",
+        night: "malam",
+        month: "bulan",
+    };
+
+    return labels[unit] ?? "sewa";
 };
 
 const periodLabel = {
@@ -97,7 +112,33 @@ const form = useForm({
 });
 
 const submitBooking = () => {
-    form.get(route('booking.create', { asset: props.asset.id })); // Sesuaikan dengan route Anda nanti
+    let date_start = null;
+    let date_end = null;
+
+    if (startDate.value) {
+        if (activeScheduleMode.value === 'hour') {
+            date_start = `${startDate.value.toISOString().split('T')[0]} ${startTime.value}:00`;
+            date_end = `${startDate.value.toISOString().split('T')[0]} ${endTime.value}:00`;
+        } else if (activeScheduleMode.value === 'month') {
+            date_start = startDate.value.toISOString().split('T')[0] + ' 00:00:00';
+            if (endDate.value) {
+                date_end = endDate.value.toISOString().split('T')[0] + ' 23:59:59';
+            }
+        } else {
+            date_start = startDate.value.toISOString().split('T')[0] + ' 00:00:00';
+            if (endDate.value) {
+                date_end = endDate.value.toISOString().split('T')[0] + ' 23:59:59';
+            }
+        }
+    }
+
+    const params = {
+        pricing_id: form.pricing_id,
+        date_start,
+        date_end
+    };
+
+    router.get(route('booking.create', { asset: props.asset.id }), params);
 };
 
 // Menghitung distribusi rating (5 bintang sampai 1 bintang)
@@ -128,6 +169,54 @@ const startDate = ref(null);
 const endDate = ref(null);
 const calendarPage = ref(0);
 const transitionName = ref('slide-left');
+
+const activeScheduleMode = computed(() => {
+    return props.asset.type?.rental_unit || 'day';
+});
+
+const startTime = ref('09:00');
+const endTime = ref('10:00');
+const durationMonths = ref(1);
+
+// Untuk simple date input (v-model native date butuh format YYYY-MM-DD)
+const simpleDateString = computed({
+    get() {
+        if (!startDate.value) return '';
+        // Konversi Date ke 'YYYY-MM-DD' di local timezone
+        const d = startDate.value;
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    },
+    set(val) {
+        if (!val) {
+            startDate.value = null;
+        } else {
+            startDate.value = new Date(val);
+        }
+    }
+});
+
+const todayString = computed(() => {
+    const today = new Date();
+    return new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+});
+
+const minTime = computed(() => {
+    if (simpleDateString.value === todayString.value) {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        return `${h}:${m}`;
+    }
+    return '00:00';
+});
+
+watch([startDate, durationMonths], () => {
+    if (activeScheduleMode.value === 'month' && startDate.value) {
+        const d = new Date(startDate.value);
+        d.setMonth(d.getMonth() + durationMonths.value);
+        endDate.value = d;
+    }
+});
 
 const monthsData = computed(() => {
     const today = new Date();
@@ -176,13 +265,17 @@ const selectDate = (year, month, date) => {
     today.setHours(0,0,0,0);
     if (selected < today) return;
 
-    if (!startDate.value || (startDate.value && endDate.value)) {
+    if (activeScheduleMode.value === 'hour' || activeScheduleMode.value === 'month') {
         startDate.value = selected;
-        endDate.value = null;
-    } else if (selected < startDate.value) {
-        startDate.value = selected;
-    } else if (selected > startDate.value) {
-        endDate.value = selected;
+    } else {
+        if (!startDate.value || (startDate.value && endDate.value)) {
+            startDate.value = selected;
+            endDate.value = null;
+        } else if (selected < startDate.value) {
+            startDate.value = selected;
+        } else if (selected > startDate.value) {
+            endDate.value = selected;
+        }
     }
 };
 
@@ -204,6 +297,7 @@ const isEndDate = (year, month, date) => {
 };
 
 const isInRange = (year, month, date) => {
+    if (activeScheduleMode.value === 'hour') return false;
     if (!startDate.value || !endDate.value) return false;
     const current = new Date(year, month, date);
     return current > startDate.value && current < endDate.value;
@@ -220,11 +314,58 @@ const nightsCount = computed(() => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 });
 
+const hoursCount = computed(() => {
+    if (activeScheduleMode.value !== 'hour') return 0;
+    if (!startTime.value || !endTime.value) return 0;
+    const [startH, startM] = startTime.value.split(':').map(Number);
+    const [endH, endM] = endTime.value.split(':').map(Number);
+    const start = new Date(0, 0, 0, startH, startM);
+    const end = new Date(0, 0, 0, endH, endM);
+    
+    if (end <= start) {
+        return 0; // Prevent cross-midnight or negative hours
+    }
+    const diffMs = end - start;
+    return Math.ceil(diffMs / (1000 * 60 * 60));
+});
+
+const durationCount = computed(() => {
+    if (activeScheduleMode.value === 'hour') return hoursCount.value;
+    if (activeScheduleMode.value === 'month') return durationMonths.value;
+    return nightsCount.value;
+});
+
+const subtotal = computed(() => {
+    if (!lowestPrice.value) return 0;
+    const count = durationCount.value || 1;
+    return lowestPrice.value.price * count;
+});
+
+const feeAmount = computed(() => {
+    return Math.round(subtotal.value * (props.serviceFee / 100));
+});
+
+const totalAmount = computed(() => {
+    return subtotal.value + feeAmount.value;
+});
+
 const formattedDateRange = computed(() => {
-    if (!startDate.value) return 'Pilih tanggal Anda untuk melihat ketersediaan';
-    const startStr = startDate.value.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    if (!startDate.value) return '';
+    const opt = { day: 'numeric', month: 'short', year: 'numeric' };
+    const startStr = startDate.value.toLocaleString('id-ID', opt);
+
+    if (activeScheduleMode.value === 'hour') {
+        return `${startStr}, ${startTime.value} - ${endTime.value}`;
+    }
+
+    if (activeScheduleMode.value === 'month') {
+        if (!endDate.value) return startStr;
+        const endStr = endDate.value.toLocaleString('id-ID', opt);
+        return `${startStr} - ${endStr} (${durationMonths.value} Bln)`;
+    }
+
     if (!endDate.value) return startStr;
-    const endStr = endDate.value.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    const endStr = endDate.value.toLocaleString('id-ID', opt);
     return `${startStr} - ${endStr}`;
 });
 
@@ -284,45 +425,34 @@ const handleTouchEnd = (e) => {
             <div class="lg:col-span-2 space-y-10">
 
                 <!-- Info Host -->
-                <div class="flex items-center justify-between pb-8 border-b border-gray-200">
-                    <div>
-                        <div class="flex items-center gap-2">
-                            <h2 class="text-xl font-extrabold">
-                                {{ asset.owner_profile?.user?.name || 'Anonim' }}
-                            </h2>
-
-                            <span
-                                v-if="asset.owner_profile?.status === 'verified'"
-                                class="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700 font-semibold"
-                            >
-                                Terverifikasi
-                            </span>
-                        </div>
-
-                        <p class="text-sm text-gray-500 mt-1">
-                            Pemilik aset
-                        </p>
-
-                        <p
-                            v-if="asset.owner_profile?.user?.phone"
-                            class="text-sm text-gray-600 mt-2"
-                        >
-                            {{ asset.owner_profile.user.phone }}
-                        </p>
-                    </div>
-
+                <div class="flex items-center gap-4 pb-8 border-b border-gray-200">
                     <div class="w-14 h-14 rounded-full overflow-hidden shrink-0">
                         <img
                             v-if="asset.owner_profile?.user?.profile_photo"
                             :src="asset.owner_profile.user.profile_photo"
                             class="w-full h-full object-cover"
                         />
-
                         <div
                             v-else
-                            class="w-full h-full flex items-center justify-center bg-[#0A2540] text-white font-bold text-xl"
+                            class="w-full h-full flex items-center justify-center bg-[#0A2540] text-white font-bold text-lg uppercase tracking-wider"
                         >
-                            {{ asset.owner_profile?.user?.name?.charAt(0) || 'O' }}
+                            {{ asset.owner_profile?.user?.name ? asset.owner_profile.user.name.substring(0, 2) : 'AN' }}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h2 class="flex items-center gap-1.5 text-lg font-extrabold text-[#0A2540]">
+                            Pemilik Aset : {{ asset.owner_profile?.user?.name || 'Anonim' }}
+                            <svg v-if="asset.owner_profile?.status === 'verified'" class="w-[18px] h-[18px] text-green-500" viewBox="0 0 24 24" fill="currentColor" title="Terverifikasi">
+                                <path d="M23 11.99l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2-3.4.14-3.4-.14-1.89 3.2-3.61.82.34 3.69L1 11.99l2.44 2.79-.34 3.69 3.61.82 1.89 3.2 3.4-.14 3.4.14 1.89-3.2 3.61-.82-.34-3.69L23 11.99zm-13.06 5.86l-4.59-4.58 1.41-1.41 3.18 3.18 8.18-8.18 1.41 1.41-9.59 9.58z"/>
+                            </svg>
+                        </h2>
+                        <div class="text-sm text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-1">
+                            <span>Informasi Kontak</span>
+                            <template v-if="asset.owner_profile?.user?.phone">
+                                <span class="font-bold text-gray-300">·</span>
+                                <span>{{ asset.owner_profile.user.phone }}</span>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -373,13 +503,16 @@ const handleTouchEnd = (e) => {
                 <!-- SEKSI PEMILIHAN TANGGAL (KALENDER) -->
                 <div class="pb-10 border-b border-gray-200">
                     <h2 class="text-2xl font-extrabold text-[#0A2540] mb-1">
-                        {{ nightsCount ? `${nightsCount} malam di ${asset.title || 'Kota ini'}` : 'Pilih tanggal sewa' }}
+                        <span v-if="activeScheduleMode === 'hour' && startDate">Jadwal sewa untuk {{ asset.title || 'Aset ini' }}</span>
+                        <span v-else-if="activeScheduleMode === 'month' && startDate">{{ durationMonths }} Bulan di {{ asset.title || 'Sini' }}</span>
+                        <span v-else-if="nightsCount && activeScheduleMode === 'day'">{{ nightsCount }} malam di {{ asset.title || 'Kota ini' }}</span>
+                        <span v-else>Pilih tanggal sewa</span>
                     </h2>
                     <p class="text-sm text-gray-500 mb-8">{{ formattedDateRange }}</p>
 
                     <div class="bg-white rounded-2xl relative w-full overflow-hidden touch-pan-y" @touchstart.passive="handleTouchStart" @touchend.passive="handleTouchEnd">
-                        <!-- Header Bulan -->
-                        <div class="flex justify-between items-center mb-10 px-2 pt-6">
+                        <!-- Header Bulan (Hanya untuk kalender grid) -->
+                        <div v-if="['day', 'night'].includes(activeScheduleMode)" class="flex justify-between items-center mb-10 px-2 pt-6">
                             <button @click="prevMonth" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition" :class="calendarPage === 0 ? 'opacity-30 cursor-not-allowed' : ''">
                                 <i class="fa-solid fa-chevron-left text-[#0A2540] text-sm"></i>
                             </button>
@@ -392,8 +525,8 @@ const handleTouchEnd = (e) => {
                             </button>
                         </div>
 
-                        <!-- Grid Kalender -->
-                        <div class="relative overflow-hidden min-h-[280px]">
+                        <!-- Grid Kalender (Hanya untuk Day/Night) -->
+                        <div v-if="['day', 'night'].includes(activeScheduleMode)" class="relative overflow-hidden min-h-[280px]">
                             <transition :name="transitionName" mode="out-in">
                                 <div :key="calendarPage" class="flex gap-12 sm:px-4 w-full">
                                     <!-- Kalender Bulan Kiri -->
@@ -459,6 +592,51 @@ const handleTouchEnd = (e) => {
                                     </div>
                                 </div>
                             </transition>
+                        </div>
+
+                        <!-- UI KHUSUS HOUR (Jam) -->
+                        <div v-if="activeScheduleMode === 'hour'" class="pt-6">
+                            <div class="mb-6">
+                                <label class="block text-sm font-bold text-[#0A2540] mb-2">Tanggal Sewa</label>
+                                <input type="date" :min="todayString" v-model="simpleDateString" class="w-full sm:w-1/2 border border-gray-200 rounded-xl p-3 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000]" />
+                            </div>
+
+                            <h4 class="text-sm font-bold text-[#0A2540] mb-4">Tentukan Waktu (Jam)</h4>
+                            <div class="flex items-center gap-4 max-w-md">
+                                <div class="flex-1">
+                                    <label class="block text-[11px] font-bold text-[#6C757D] mb-1.5 uppercase tracking-wider">Mulai</label>
+                                    <div class="relative">
+                                        <input v-model="startTime" type="time" :min="minTime" class="w-full border border-gray-200 rounded-xl p-3 pr-10 text-[#0A2540] font-bold text-base bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-8 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
+                                        <i class="fa-regular fa-clock text-lg absolute right-3 top-1/2 -translate-y-1/2 text-[#0A2540] pointer-events-none"></i>
+                                    </div>
+                                </div>
+                                <div class="flex-1">
+                                    <label class="block text-[11px] font-bold text-[#6C757D] mb-1.5 uppercase tracking-wider">Selesai</label>
+                                    <div class="relative">
+                                        <input v-model="endTime" type="time" :min="startTime" class="w-full border border-gray-200 rounded-xl p-3 pr-10 text-[#0A2540] font-bold text-base bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-8 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
+                                        <i class="fa-regular fa-clock text-lg absolute right-3 top-1/2 -translate-y-1/2 text-[#0A2540] pointer-events-none"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UI KHUSUS MONTH (Bulan) -->
+                        <div v-if="activeScheduleMode === 'month'" class="pt-6">
+                            <div class="mb-8">
+                                <label class="block text-sm font-bold text-[#0A2540] mb-2">Mulai Dari Tanggal</label>
+                                <input type="date" :min="todayString" v-model="simpleDateString" class="w-full sm:w-1/2 border border-gray-200 rounded-xl p-3 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000]" />
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-[#6C757D] mb-2 text-center">Durasi Sewa (Bulan)</label>
+                                <CircularMonthSlider v-model="durationMonths" />
+                            </div>
+                            <div v-if="endDate" class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+                                <span class="text-sm text-gray-500 font-medium">Tanggal Selesai :</span>
+                                <span class="text-sm font-bold text-[#0A2540]">
+                                    {{ endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
+                                </span>
+                            </div>
                         </div>
 
                         <!-- Tombol Kosongkan Tanggal -->
@@ -573,44 +751,59 @@ const handleTouchEnd = (e) => {
 
             <!-- KANAN (Booking Sticky Card) -->
             <div class="lg:col-span-1">
-                <div class="sticky top-24 bg-white border border-gray-200 shadow-2xl shadow-gray-200/50 rounded-2xl p-6">
-                    <!-- Header Harga Card -->
+                <div class="sticky top-24 bg-white shadow-2xl shadow-gray-200/50 rounded-2xl p-6 border border-gray-200">
+                    <!-- Price Header -->
                     <div class="flex items-end gap-1 mb-6">
                         <span class="text-2xl font-extrabold text-[#0A2540]">{{ formatRupiah(lowestPrice?.price) }}</span>
-                        <span class="text-gray-500 mb-1">/sewa</span>
+                        <span class="text-gray-500 mb-1">/{{ rentalUnitLabel(asset.type?.rental_unit) }}</span>
                     </div>
 
-                    <!-- Pilihan Harga Lain -->
-                    <div v-if="asset.pricings && asset.pricings.length > 0" class="mb-6 space-y-2">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Opsi Sewa Tersedia</h4>
-                        <label v-for="price in asset.pricings" :key="price.id"
-                               class="flex justify-between items-center p-3 rounded-xl border-2 cursor-pointer transition-all"
-                               :class="form.pricing_id === price.id ? 'border-[#FFC000] bg-[#FFC000]/5' : 'border-gray-100 hover:border-gray-300'">
-                            <div class="flex items-center gap-3">
-                                <input type="radio" :value="price.id" v-model="form.pricing_id" class="w-4 h-4 text-[#FFC000] focus:ring-[#FFC000]" />
-                                <span class="text-sm font-semibold capitalize">Harga Sewa</span>
+                    <!-- Date & Duration Box -->
+                    <div class="border border-gray-200 rounded-xl overflow-hidden mb-6">
+                        <div class="flex border-b border-gray-200">
+                            <!-- Mulai -->
+                            <div class="flex-1 p-3 border-r border-gray-200">
+                                <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Mulai Sewa</p>
+                                <p class="text-sm font-bold text-[#0A2540]">{{ startDate ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih Tanggal' }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ startTime }}</p>
                             </div>
-                            <span class="text-sm font-bold">{{ formatRupiah(price.price) }}</span>
-                        </label>
+                            <!-- Selesai -->
+                            <div class="flex-1 p-3">
+                                <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Selesai Sewa</p>
+                                <p class="text-sm font-bold text-[#0A2540]">{{ (activeScheduleMode === 'hour' && startDate) ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (endDate ? endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-') }}</p>
+                                <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ endTime }}</p>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-gray-50 flex justify-between items-center">
+                            <span class="text-xs font-semibold text-gray-600">Durasi Sewa</span>
+                            <span class="text-sm font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(asset.type?.rental_unit) }}</span>
+                        </div>
                     </div>
 
-                    <!-- Tombol Pesan -->
                     <button
                         @click="submitBooking"
-                        :disabled="asset.status !== 'active' || !asset.pricings.length"
-                        class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                        :disabled="asset.status !== 'active' || !asset.pricings.length || !startDate || durationCount === 0"
+                        class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
                         Pesan Sekarang
                     </button>
 
-                    <p v-if="asset.status !== 'active'" class="text-center text-red-500 text-xs font-bold mt-3">Aset ini sedang tidak tersedia.</p>
-                    <p class="text-center text-gray-400 text-xs mt-4">Anda belum dikenakan biaya apapun.</p>
+                    <p v-if="asset.status !== 'active'" class="text-center text-red-500 text-xs font-bold mb-4">Aset ini sedang tidak tersedia.</p>
 
-                    <hr class="my-6 border-gray-100" />
-
-                    <!-- Ringkasan Info (Opsional untuk card) -->
-                    <div class="flex items-center justify-between text-sm text-gray-500">
-                        <span class="underline">Hubungi Pemilik</span>
-                        <i class="fa-solid fa-message"></i>
+                    <!-- Breakdown -->
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between text-gray-600">
+                            <span>Subtotal</span>
+                            <span class="font-semibold text-[#0A2540]">{{ formatRupiah(subtotal) }}</span>
+                        </div>
+                        <div class="flex justify-between text-gray-600">
+                            <span>Biaya Layanan ({{ serviceFee }}%)</span>
+                            <span class="font-semibold text-[#0A2540]">{{ formatRupiah(feeAmount) }}</span>
+                        </div>
+                        <hr class="border-gray-200">
+                        <div class="flex justify-between font-extrabold text-base text-[#0A2540]">
+                            <span>Total</span>
+                            <span>{{ formatRupiah(totalAmount) }}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -619,12 +812,13 @@ const handleTouchEnd = (e) => {
     </div>
 
     <!-- CUSTOM BOTTOM BAR (MOBILE ONLY) -->
-    <DetailBottomBar 
-        :price="lowestPrice?.price || 0" 
-        :nightsCount="nightsCount" 
+    <DetailBottomBar
+        :price="totalAmount || lowestPrice?.price || 0"
+        :durationCount="durationCount"
+        :durationLabel="rentalUnitLabel(asset.type?.rental_unit)"
         :formattedDateRange="formattedDateRange"
-        :periodLabel="'sewa'"
-        :disabled="asset.status !== 'active' || !asset.pricings.length"
+        :periodLabel="rentalUnitLabel(asset.type?.rental_unit)"
+        :disabled="asset.status !== 'active' || !asset.pricings.length || !startDate || durationCount === 0"
         @submit="submitBooking"
     />
 

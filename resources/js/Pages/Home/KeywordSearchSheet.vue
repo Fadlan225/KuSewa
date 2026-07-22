@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue';
-import { usePage } from '@inertiajs/vue3';
+import { usePage, router } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import BottomSheet from '@/Components/UI/BottomSheet.vue';
 
@@ -16,7 +16,12 @@ const {
 } = useHomeSearch();
 
 // Data real dari props controller
-const searchHistory = computed(() => page.props.searchHistory || []);
+const searchHistory = ref([...(page.props.searchHistory || [])]);
+
+// Keep synced if page props change
+watch(() => page.props.searchHistory, (newVal) => {
+    searchHistory.value = [...(newVal || [])];
+});
 const trending = computed(() => page.props.trending || []);
 
 // Watch keyword untuk live suggestions
@@ -37,7 +42,6 @@ const applySearch = (text) => {
     performSearch();
 };
 
-// Ref ke input untuk auto-focus
 const inputRef = ref(null);
 watch(isKeywordSheetOpen, async (open) => {
     if (open) {
@@ -45,12 +49,47 @@ watch(isKeywordSheetOpen, async (open) => {
         inputRef.value?.focus();
     }
 });
+
+function getXsrfToken() {
+    const match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]*)'));
+    return match ? decodeURIComponent(match[2]) : '';
+}
+
+const deleteHistoryItem = (item) => {
+    // Optimistic UI Update (Instant)
+    searchHistory.value = searchHistory.value.filter(k => k !== item);
+
+    fetch(route('search.deleteKeyword'), {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-XSRF-TOKEN': getXsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ keyword: item }),
+    }).catch(e => console.error(e));
+};
+
+const clearAllHistory = () => {
+    // Optimistic UI Update (Instant)
+    searchHistory.value = [];
+
+    fetch(route('search.clear'), {
+        method: 'DELETE',
+        headers: {
+            'X-XSRF-TOKEN': getXsrfToken(),
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+        }
+    }).catch(e => console.error(e));
+};
 </script>
 
 <template>
     <BottomSheet v-model="isKeywordSheetOpen" heightClass="h-[95vh]">
         <template #header-content>
-            <div class="flex-1 mr-3 relative">
+            <div class="flex-1 mr-3 relative flex items-center">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C757D] text-xs z-10"></i>
                 <input
                     ref="inputRef"
@@ -59,8 +98,15 @@ watch(isKeywordSheetOpen, async (open) => {
                     type="text"
                     placeholder="Mau sewa apa hari ini?"
                     autocomplete="off"
-                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-9 pr-4 py-2 border border-[#6C757D]/20 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all"
+                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-9 pr-10 py-2 border border-[#6C757D]/20 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all"
                 />
+                <button
+                    v-if="keywordQuery"
+                    @click="keywordQuery = ''; inputRef?.focus()"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-[#6C757D] hover:text-[#0A2540] transition z-10 w-6 h-6 flex items-center justify-center rounded-full"
+                >
+                    <i class="fa-solid fa-circle-xmark text-sm"></i>
+                </button>
             </div>
         </template>
 
@@ -112,15 +158,24 @@ watch(isKeywordSheetOpen, async (open) => {
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-sm font-bold text-[#0A2540]">Riwayat Pencarian</h3>
                     </div>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex flex-wrap gap-2 mb-3">
                         <div
                             v-for="item in searchHistory" :key="item"
-                            @click="applySearch(item)"
-                            class="bg-white border border-[#6C757D]/20 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm cursor-pointer hover:bg-gray-50 transition active:scale-95"
+                            class="bg-white border border-[#6C757D]/20 rounded-full pl-3 pr-1 py-1 flex items-center gap-2 shadow-sm transition group hover:bg-gray-50"
                         >
-                            <i class="fa-solid fa-clock-rotate-left text-[#6C757D] text-[10px]"></i>
-                            <span class="text-xs font-medium text-[#0A2540]">{{ item }}</span>
+                            <div @click="applySearch(item)" class="flex items-center gap-2 cursor-pointer active:scale-95 transition">
+                                <i class="fa-solid fa-clock-rotate-left text-[#6C757D] text-[10px]"></i>
+                                <span class="text-xs font-medium text-[#0A2540]">{{ item }}</span>
+                            </div>
+                            <button @click.stop="deleteHistoryItem(item)" class="w-6 h-6 flex items-center justify-center rounded-full text-[#6C757D] hover:bg-red-50 hover:text-red-500 transition ml-1 active:scale-95">
+                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                            </button>
                         </div>
+                    </div>
+                    <div class="flex justify-start">
+                        <button @click="clearAllHistory" class="text-[11px] font-bold text-[#6C757D] hover:text-red-500 transition underline decoration-transparent hover:decoration-red-500 underline-offset-2 active:scale-95">
+                            Hapus Semua Riwayat
+                        </button>
                     </div>
                 </div>
 
