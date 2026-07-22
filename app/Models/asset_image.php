@@ -12,18 +12,23 @@ class asset_image extends Model
 
     protected $appends = ['image_url'];
 
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute(): ?string
     {
         if (!$this->image) {
             return null;
         }
 
-        // Jika file ada di folder public/ direktori langsung (bukan symlink storage)
-        if (file_exists(public_path($this->image))) {
+        // Jika sudah URL lengkap (http/https), return langsung
+        if (str_starts_with($this->image, 'http')) {
+            return $this->image;
+        }
+
+        // Path assets/ → disimpan langsung di public/assets/ oleh seeder GD
+        if (str_starts_with($this->image, 'assets/')) {
             return '/' . $this->image;
         }
 
-        // Sebaliknya gunakan path storage
+        // Path lainnya → storage (symlink public/storage → storage/app/public)
         return '/storage/' . $this->image;
     }
 

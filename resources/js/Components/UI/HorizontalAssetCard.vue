@@ -8,15 +8,20 @@ const props = defineProps({
     categoryName: { type: String, required: true }
 });
 
-// ── Intersection Observer (Lazy Load) ─────────────────────────────────
-const isIntersecting = ref(false);
+// ── Intersection Observer (Lazy Load — Mobile Only) ───────────────────────
+// Desktop (≥1024px): langsung render semua kartu, skip observer (hemat CPU).
+// Mobile/tablet: pakai observer agar gambar load bertahap saat scroll.
+const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+const isIntersecting = ref(isDesktop); // Desktop → true (render langsung)
 const imageLoaded = ref(false);
 const elRef = ref(null);
 let observer = null;
 
-const img1 = computed(() => props.asset.images?.[0]?.image_url || props.asset.first_image?.image_url);
-const img2 = computed(() => props.asset.images?.[1]?.image_url);
-const img3 = computed(() => props.asset.images?.[2]?.image_url);
+// thumbnailImages dari backend (max 3), fallback ke images lama atau first_image
+const imgList = computed(() => props.asset.thumbnail_images || props.asset.images || []);
+const img1 = computed(() => imgList.value[0]?.image_url || props.asset.first_image?.image_url);
+const img2 = computed(() => imgList.value[1]?.image_url);
+const img3 = computed(() => imgList.value[2]?.image_url);
 
 const imageCount = computed(() => {
     if (img3.value) return 3;
@@ -26,12 +31,14 @@ const imageCount = computed(() => {
 });
 
 onMounted(() => {
+    if (isDesktop) return; // Skip observer di desktop
     observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
             isIntersecting.value = true;
             observer?.disconnect();
+            observer = null;
         }
-    }, { rootMargin: '200px' });
+    }, { rootMargin: '300px' });
     if (elRef.value) observer.observe(elRef.value);
 });
 

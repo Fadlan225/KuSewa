@@ -414,7 +414,7 @@ const performSearch = () => {
         params.max_price = parsedMaxPrice.value;
     }
 
-    router.get('/search', params, { preserveState: false });
+    router.get(route('assets.search'), params, { preserveState: false });
 
     // Tutup semua UI
     isMobileSearchOpen.value = false;

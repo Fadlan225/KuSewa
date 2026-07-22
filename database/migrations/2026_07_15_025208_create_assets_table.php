@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('assets', function (Blueprint $table) {
             $table->id();
             $table->foreignId('owner_profile_id')->constrained('owner_profiles')->onDelete('restrict');
-            $table->foreignID('asset_category_id')->constrained()->onDelete('restrict');
+            $table->foreignID('asset_type_id')->constrained()->onDelete('restrict');
             $table->string('title');
             $table->string('description');
             $table->json('detail');

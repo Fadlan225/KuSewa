@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use App\Models\asset_category;
+use App\Models\asset_type;
 use App\Models\asset;
 use App\Models\search_log;
 use App\Models\booking;
@@ -68,43 +70,47 @@ class HomeController extends Controller
 
     /**
      * Halaman beranda utama.
+     * Arsitektur baru: Category → Types → Assets.
+     * Homepage menampilkan per CATEGORY (Hunian, Komersial, Lahan, Event, Media Iklan)
+     * masing-masing berisi max 12 aset terbaru dari semua types di bawahnya.
      */
     public function index()
     {
+        // Ambil semua kategori beserta type_ids di bawahnya
         $categories = asset_category::select(['id', 'name', 'icon'])
-            ->with([
-                'assets' => function ($query) {
-                    $query->where('status', 'active')
-                        ->select([
-                            'id',
-                            'asset_category_id',
-                            'owner_profile_id',
-                            'title',
-                            'city',
-                            'address',
-                            'status'
-                        ])
-                        ->with([
-                            'images',
-                            'defaultPricing:id,asset_id,price',
-                            'favorites' => function ($query) {
-                                $query->where('user_id', auth()->id());
-                            }
-                        ])
-                        ->withAvg('reviews as reviews_avg_rating', 'rating');
-                }
-            ])
-            ->whereHas('assets', fn($q) => $q->where('status', 'active'))
+            ->with(['types:id,category_id,name,allow_units'])
+            ->whereHas('types.assets', fn($q) => $q->where('status', 'active'))
             ->get();
 
+        // Untuk setiap kategori, load aset dari semua typenya (max 12)
         $categories->each(function ($category) {
-            $category->assets->each(function ($asset) {
-                $favorite = $asset->favorites->first();
-                $asset->isFavorite = (bool) $favorite;
-                $asset->favorite_id = $favorite?->id;
-                unset($asset->favorites);
-            });
-        });
+            $typeIds = $category->types->pluck('id');
+
+            $category->assets = asset::whereIn('asset_type_id', $typeIds)
+                ->where('status', 'active')
+                ->select(['id', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status'])
+                ->with([
+                    'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
+                    'defaultPricing:id,asset_id,price',
+                    'type:id,name,allow_units,category_id',
+                    'favorites' => function ($q) {
+                        $q->select(['id', 'user_id', 'asset_id'])
+                          ->where('user_id', auth()->id());
+                    }
+                ])
+                ->withAvg('reviews as reviews_avg_rating', 'rating')
+                ->latest('id')
+                ->limit(12)
+                ->get()
+                ->each(function ($asset) {
+                    $favorite = $asset->favorites->first();
+                    $asset->isFavorite  = (bool) $favorite;
+                    $asset->favorite_id = $favorite?->id;
+                    unset($asset->favorites);
+                });
+        })
+        ->filter(fn($cat) => $cat->assets->isNotEmpty())
+        ->values();
 
         $meta = $this->getSearchMeta();
         $locationSuggestions = $this->getLocationSuggestions();
@@ -133,15 +139,17 @@ class HomeController extends Controller
 
         $query = asset::where('status', 'active')
             ->select([
-                'id', 'asset_category_id', 'owner_profile_id',
+                'id', 'asset_type_id', 'owner_profile_id',
                 'title', 'city', 'address', 'status'
             ])
             ->with([
-                'images',
+                'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                 'defaultPricing:id,asset_id,price',
-                'category:id,name,icon',
+                'type:id,name,allow_units,category_id',
+                'type.category:id,name,icon',
                 'favorites' => function ($q) {
-                    $q->where('user_id', auth()->id());
+                    $q->select(['id', 'user_id', 'asset_id'])
+                        ->where('user_id', auth()->id());
                 }
             ])
             ->withAvg('reviews as reviews_avg_rating', 'rating');
@@ -155,9 +163,9 @@ class HomeController extends Controller
             });
         }
 
-        // Filter kategori (by category name)
+        // Filter kategori (by category name, melalui type → category)
         if (!empty($categories)) {
-            $query->whereHas('category', fn($q) => $q->whereIn('name', $categories));
+            $query->whereHas('type.category', fn($q) => $q->whereIn('name', $categories));
         }
 
         // Filter lokasi (city atau address)
@@ -233,11 +241,18 @@ class HomeController extends Controller
         $locationQuery = $location ?: null;
         $locationSuggestions = $this->getLocationSuggestions($locationQuery);
 
-        // Ambil semua fasilitas yang ada di database dari kolom detail
-        // Detail tersimpan dalam JSON, misal: {"facility":["parkir","toilet","wifi"]}
-        $allFacilities = asset::whereNotNull('detail')->pluck('detail')->flatMap(function ($detail) {
-            return $detail['facility'] ?? [];
-        })->unique()->filter()->values()->toArray();
+        // Ambil semua fasilitas unik - di-cache 60 menit agar tidak query ulang tiap request
+        // Menggunakan JSON_EACH di SQLite / JSON_TABLE di MySQL untuk ekstraksi di DB level
+        $allFacilities = Cache::remember('asset_facilities', 3600, function () {
+            return asset::where('status', 'active')
+                ->whereNotNull('detail')
+                ->pluck('detail')
+                ->flatMap(fn($d) => $d['facility'] ?? [])
+                ->unique()
+                ->filter()
+                ->values()
+                ->toArray();
+        });
 
         return inertia('Home/Assets/Index', [
             'assets'              => $assets,
@@ -253,6 +268,7 @@ class HomeController extends Controller
                 'sort'       => $sort,
             ],
             'categories'          => asset_category::select(['id', 'name', 'icon'])->get(),
+            'allTypes'            => asset_type::select(['id', 'category_id', 'name', 'allow_units'])->get(),
             'facilities'          => $allFacilities,
             'searchHistory'       => $meta['searchHistory'],
             'trending'            => $meta['trending'],

@@ -8,9 +8,11 @@ const props = defineProps({
     categoryName: { type: String, required: true }
 });
 
-const img1 = computed(() => props.asset.images?.[0]?.image_url || props.asset.first_image?.image_url);
-const img2 = computed(() => props.asset.images?.[1]?.image_url);
-const img3 = computed(() => props.asset.images?.[2]?.image_url);
+// thumbnailImages dari backend (max 3), fallback ke images lama atau first_image
+const imgList = computed(() => props.asset.thumbnail_images || props.asset.images || []);
+const img1 = computed(() => imgList.value[0]?.image_url || props.asset.first_image?.image_url);
+const img2 = computed(() => imgList.value[1]?.image_url);
+const img3 = computed(() => imgList.value[2]?.image_url);
 
 const imageCount = computed(() => {
     if (img3.value) return 3;
@@ -19,19 +21,24 @@ const imageCount = computed(() => {
     return 0;
 });
 
-// ── Intersection Observer (Lazy Load) ─────────────────────────────────
-const isIntersecting = ref(false);
+// ── Intersection Observer (Lazy Load — Mobile Only) ───────────────────
+// Di desktop semua kartu langsung visible → skip observer, render langsung.
+// Di mobile/tablet pakai observer agar gambar tidak load sekaligus.
+const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
+const isIntersecting = ref(isDesktop); // Desktop: langsung true, Mobile: tunggu observer
 const imageLoaded = ref(false);
 const elRef = ref(null);
 let observer = null;
 
 onMounted(() => {
+    if (isDesktop) return; // Desktop tidak butuh observer
     observer = new IntersectionObserver((entries) => {
         if (entries[0].isIntersecting) {
             isIntersecting.value = true;
             observer?.disconnect();
+            observer = null;
         }
-    }, { rootMargin: '200px' });
+    }, { rootMargin: '300px' }); // Lebih besar agar load lebih awal saat scroll
     if (elRef.value) observer.observe(elRef.value);
 });
 

@@ -10,7 +10,7 @@ class asset extends Model
 
     protected $fillable = [
         'owner_profile_id',
-        'asset_category_id',
+        'asset_type_id',
         'title',
         'description',
         'latitude',
@@ -34,8 +34,17 @@ class asset extends Model
         return $this->hasOne(asset_image::class)->orderBy('id');
     }
 
-    public function category(){
-        return $this->belongsTo(asset_category::class, 'asset_category_id');
+    /**
+     * Ambil 3 gambar pertama untuk thumbnail (search, favorite, home card).
+     * Limit 3 dilakukan di controller/query level dengan ->latest('id')->limit(3)
+     * karena Eloquent ->limit() pada hasMany tidak efektif di eager loading.
+     */
+    public function thumbnailImages(){
+        return $this->hasMany(asset_image::class)->orderBy('id');
+    }
+
+    public function type(){
+        return $this->belongsTo(asset_type::class, 'asset_type_id');
     }
 
     public function pricings(){

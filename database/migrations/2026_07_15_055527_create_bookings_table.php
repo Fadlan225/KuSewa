@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('subtotal',15,2);
             $table->decimal('service_fee',15,2);
             $table->decimal('total',15,2);
-            $table->enum('booking_status', ['pending','accepted', 'rejected'])->default('pending');
+            $table->enum('booking_status', ['pending','confirmed','completed', 'cancelled'])->default('pending');
             $table->timestamps();
         });
     }

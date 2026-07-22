@@ -16,12 +16,13 @@ class FavoriteController extends Controller
         $favorites = auth()->user()->favorites()
             ->with(['asset' => function ($query) {
                 $query->select([
-                    'id', 'asset_category_id', 'owner_profile_id',
+                    'id', 'asset_type_id', 'owner_profile_id',
                     'title', 'city', 'address', 'status', 'detail'
                 ])->with([
-                    'images', 
+                    'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                     'defaultPricing:id,asset_id,price',
-                    'category:id,name'
+                    'type:id,name,allow_units,category_id',
+                    'type.category:id,name,icon',
                 ])
                 ->withAvg('reviews as reviews_avg_rating', 'rating')
                 ->withCount('reviews');

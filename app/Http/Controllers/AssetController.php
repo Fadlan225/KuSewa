@@ -36,8 +36,10 @@ class AssetController extends Controller
     public function show(asset $asset)
     {
         $asset->load([
-            'category',
+            'type:id,name,allow_units,category_id',
+            'type.category:id,name,icon',
             'images',
+            'thumbnailImages',
             'pricings',
             'ownerProfile.user',
             'reviews.user',

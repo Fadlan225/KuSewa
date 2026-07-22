@@ -87,7 +87,10 @@ const skeletonCards = 6;
         <template v-else>
             <template v-if="visibleCategories.length > 0">
                 <template v-for="category in visibleCategories" :key="category.id">
-                    <section class="pl-4 sm:pl-6 lg:pl-8">
+                <section
+                        class="pl-4 sm:pl-6 lg:pl-8"
+                        style="content-visibility: auto; contain-intrinsic-size: 0 320px;"
+                    >
 
                         <!-- Section Header -->
                         <div class="flex justify-between items-end mb-4 pr-4 sm:pr-6 lg:pr-8">
@@ -101,9 +104,11 @@ const skeletonCards = 6;
                             </a>
                         </div>
 
-                        <!-- Horizontal Scroll -->
-                        <div class="flex overflow-x-auto gap-3 sm:gap-4 pb-6 pt-2 snap-x snap-mandatory no-scrollbar pr-4 sm:pr-6 lg:pr-8">
-
+                        <!-- Horizontal Scroll - will-change agar GPU-accelerated -->
+                        <div
+                            class="flex overflow-x-auto gap-3 sm:gap-4 pb-6 pt-2 snap-x snap-mandatory no-scrollbar pr-4 sm:pr-6 lg:pr-8"
+                            style="will-change: scroll-position; -webkit-overflow-scrolling: touch;"
+                        >
                             <LazyAssetCard
                                 v-for="asset in category.assets"
                                 :key="asset.id"
@@ -172,4 +177,6 @@ const skeletonCards = 6;
 <style scoped>
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+/* GPU acceleration untuk horizontal scroll container */
+[style*="will-change"] { transform: translateZ(0); }
 </style>

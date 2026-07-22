@@ -100,6 +100,8 @@ const stopDrag = () => {
     document.removeEventListener('touchmove', onDrag);
     document.removeEventListener('mouseup', stopDrag);
     document.removeEventListener('touchend', stopDrag);
+    // Hanya trigger filter SETELAH drag selesai, bukan setiap pixel!
+    applyFilters();
 };
 
 const formatPriceIDR = (val) => {
@@ -110,12 +112,14 @@ const handleMinInput = (e) => {
     let val = parseInt(e.target.value.replace(/\D/g, '')) || 0;
     localMinPrice.value = val;
     validatePrices();
+    applyFilters(); // Trigger search setelah input manual
 };
 const handleMaxInput = (e) => {
     let val = parseInt(e.target.value.replace(/\D/g, '')) || 0;
     if (val > maxLimit) val = maxLimit;
     localMaxPrice.value = val;
     validatePrices();
+    applyFilters(); // Trigger search setelah input manual
 };
 
 // UI State
@@ -172,7 +176,7 @@ const applyFilters = () => {
         if (localMaxPrice.value < maxLimit) params.max_price = localMaxPrice.value;
         if (localSort.value !== 'popular') params.sort = localSort.value;
 
-        router.get(route('search'), params, {
+        router.get(route('assets.search'), params, {
             preserveState: true,
             preserveScroll: true,
             onFinish: () => { isLoading.value = false; }
@@ -180,8 +184,9 @@ const applyFilters = () => {
     }, 500);
 };
 
-// Watcher untuk filter auto-apply
-watch([localCategories, localDateStart, localDateEnd, localFacilities, localMinPrice, localMaxPrice, localSort], () => {
+// Watcher untuk filter auto-apply — TIDAK termasuk harga (harga trigger via stopDrag/blur)
+// Ini mencegah ribuan reactive update saat slider price di-drag
+watch([localCategories, localDateStart, localDateEnd, localFacilities, localSort], () => {
     applyFilters();
 }, { deep: true });
 
@@ -387,7 +392,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                                 v-for="(asset, index) in assetData" 
                                 :key="asset.id"
                                 :asset="asset"
-                                :categoryName="asset.category?.name || 'Lainnya'"
+                            :categoryName="asset.type?.category?.name || asset.category?.name || 'Lainnya'"
                             />
                         </div>
 

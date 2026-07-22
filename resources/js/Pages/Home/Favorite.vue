@@ -44,7 +44,7 @@ const selectSort = (val) => {
 }
 
 const getCategoryName = (item) => {
-    return item.category?.name || 'Lainnya'
+    return item.type?.category?.name || item.category?.name || 'Lainnya'
 }
 
 const getCategoryCount = (categoryName) => {
@@ -320,7 +320,7 @@ const filteredFavorites = computed(() => {
                             v-for="asset in filteredFavorites"
                             :key="asset.id"
                             :asset="asset"
-                            :categoryName="asset.category?.name || 'Lainnya'"
+                            :categoryName="getCategoryName(asset)"
                         />
                     </div>
 

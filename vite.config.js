@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite';
+import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
@@ -23,6 +23,7 @@ export default defineConfig({
             },
         }),
         tailwindcss(),
+        splitVendorChunkPlugin(), // Auto split vendor chunks
     ],
 
     server: {
@@ -44,5 +45,58 @@ export default defineConfig({
             host: hmrHost,
             port: hmrPort,
         },
+    },
+
+    build: {
+        // Gunakan esbuild untuk minify lebih cepat
+        minify: 'esbuild',
+
+        // Tingkatkan limit warning chunk size (default 500KB terlalu kecil)
+        chunkSizeWarningLimit: 1000,
+
+        rollupOptions: {
+            output: {
+                // Manual chunk splitting untuk kontrol penuh
+                manualChunks(id) {
+                    // Vendor: Vue core + Inertia + Ziggy (jarang berubah → cache lama)
+                    if (id.includes('node_modules/vue/') ||
+                        id.includes('node_modules/@vue/') ||
+                        id.includes('node_modules/@inertiajs/') ||
+                        id.includes('vendor/tightenco/ziggy')) {
+                        return 'vendor-core';
+                    }
+
+                    // Vendor UI utilities
+                    if (id.includes('node_modules/')) {
+                        return 'vendor-misc';
+                    }
+
+                    // Halaman Home (besar, bisa di-split terpisah)
+                    if (id.includes('/Pages/Home/')) {
+                        return 'page-home';
+                    }
+
+                    // Halaman Assets/Search
+                    if (id.includes('/Pages/Home/Assets/')) {
+                        return 'page-assets';
+                    }
+
+                    // UI Components (cards, dll)
+                    if (id.includes('/Components/UI/')) {
+                        return 'ui-components';
+                    }
+                },
+            },
+        },
+    },
+
+    // Pre-bundle dependensi untuk dev server lebih cepat
+    optimizeDeps: {
+        include: [
+            'vue',
+            '@inertiajs/vue3',
+        ],
+        // Exclude file yang tidak perlu di-bundle oleh vite optimizer
+        exclude: [],
     },
 });

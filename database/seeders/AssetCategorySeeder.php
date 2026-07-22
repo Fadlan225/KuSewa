@@ -9,41 +9,41 @@ class AssetCategorySeeder extends Seeder
 {
     public function run(): void
     {
+        // Disable FK checks sementara agar TRUNCATE bisa berjalan
+        \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::table('asset_categories')->truncate();
+        \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
         DB::table('asset_categories')->insert([
             [
-                'name' => 'Baliho',
-                'icon' => 'fa-solid fa-sign-hanging',
-                'allow_units' => false,
+                'name'       => 'Hunian',
+                'icon'       => 'fa-solid fa-house',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'name' => 'Lahan',
-                'icon' => 'fa-solid fa-map',
-                'allow_units' => false,
+                'name'       => 'Komersial',
+                'icon'       => 'fa-solid fa-store',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'name' => 'Villa',
-                'icon' => 'fa-solid fa-house',
-                'allow_units' => false,
+                'name'       => 'Lahan',
+                'icon'       => 'fa-solid fa-map',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'name' => 'Rumah',
-                'icon' => 'fa-solid fa-house-chimney',
-                'allow_units' => false,
+                'name'       => 'Event',
+                'icon'       => 'fa-solid fa-calendar-star',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
             [
-                'name' => 'Kos',
-                'icon' => 'fa-solid fa-building',
-                'allow_units' => true,
-            ],
-            [
-                'name' => 'Gedung',
-                'icon' => 'fa-solid fa-city',
-                'allow_units' => false,
-            ],
-            [
-                'name' => 'Gudang',
-                'icon' => 'fa-solid fa-warehouse',
-                'allow_units' => false,
+                'name'       => 'Media Iklan',
+                'icon'       => 'fa-solid fa-sign-hanging',
+                'created_at' => now(),
+                'updated_at' => now(),
             ],
         ]);
     }
