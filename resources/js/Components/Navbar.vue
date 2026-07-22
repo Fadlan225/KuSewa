@@ -684,6 +684,13 @@ const initials = computed(() => {
 
                                 <div class="h-px bg-gray-100 my-2"></div>
 
+                                <Link :href="route('profile.edit')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
+                                    <i class="fa-regular fa-user text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
+                                    <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Profile</span>
+                                </Link>
+
+                                <div class="h-px bg-gray-100 my-2"></div>
+
                                 <!-- 2. Mulai Sewakan Aset Card Banner -->
                                 <div
                                     @click="isUserMenuOpen = false"
