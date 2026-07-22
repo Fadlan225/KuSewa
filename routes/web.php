@@ -22,10 +22,15 @@ Route::middleware('auth')->group(function () {
 
 Route::resource('assets', AssetController::class)->only(['show']);
 
+//Route buat testing aja
 Route::get('/notifikasi', function () {
     return Inertia::render('Home/Notifikasi');
 });
+Route::get('/aktivitas', function () {
+    return Inertia::render('Home/Aktivitas');
+});
 
+// ==========================
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });
