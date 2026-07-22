@@ -31,9 +31,6 @@ class asset extends Model
     }
 
     public function firstImage(){
-        // Tidak gunakan oldestOfMany() karena menghasilkan JOIN yang membuat
-        // kolom asset_id menjadi ambigu saat dipakai bersama column shorthand.
-        // hasOne+orderBy menghasilkan query sederhana tanpa JOIN.
         return $this->hasOne(asset_image::class)->orderBy('id');
     }
 

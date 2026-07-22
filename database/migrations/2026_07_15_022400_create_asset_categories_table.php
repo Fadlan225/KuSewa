@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('icon');
+            $table->boolean('allow_units')->default(false);
             $table->timestamps();
         });
     }

@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('asset_pricings', function (Blueprint $table) {
+        Schema::create('service_fees', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_id')->constrained()->onDelete('restrict')->nullable();
-            $table->foreignId('asset_unit_id')->constrained()->onDelete('restrict')->nullable();
-            $table->decimal('price',15,2);
+            $table->enum('fee_type',['fixed','percentage']);
+            $table->decimal('fee_value',15,2);
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('asset_pricings');
+        Schema::dropIfExists('service_fees');
     }
 };

@@ -9,10 +9,14 @@ class booking extends Model
 {
     protected $fillable = [
         'asset_id',
-        'asset_pricing_id',
+        'asset_units_id',
+        'booking_code',
         'user_id',
         'start_date',
         'end_date',
+        'subtotal',
+        'service_fee',
+        'total',
         'booking_status'
     ];
 
@@ -20,8 +24,8 @@ class booking extends Model
         return $this->belongsTo(asset::class);
     }
 
-    public function pricing(){
-        return $this->belongsTo(asset_pricing::class);
+    public function assetUnits(){
+        return $this->belongsTo(asset_units::class);
     }
 
     public function user(){

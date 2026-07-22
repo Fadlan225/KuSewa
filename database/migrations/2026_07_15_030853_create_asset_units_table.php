@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('asset_pricings', function (Blueprint $table) {
+        Schema::create('asset_units', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_id')->constrained()->onDelete('restrict')->nullable();
-            $table->foreignId('asset_unit_id')->constrained()->onDelete('restrict')->nullable();
-            $table->decimal('price',15,2);
+            $table->foreignId('asset_id')->constrained('assets')->onDelete('cascade');
+            $table->string('name');
+            $table->json('detail');
+            $table->integer('quantity');
+            $table->enum('status', ['active','inactive'])->default('active');
             $table->timestamps();
         });
     }
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('asset_pricings');
+        Schema::dropIfExists('asset_units');
     }
 };

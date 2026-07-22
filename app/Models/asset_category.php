@@ -11,6 +11,7 @@ class asset_category extends Model
     protected $fillable = [
         'name',
         'icon',
+        'allow_units',
     ];
 
     public function assets()

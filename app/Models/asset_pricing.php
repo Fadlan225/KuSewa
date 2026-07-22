@@ -8,16 +8,17 @@ class asset_pricing extends Model
 {
     protected $fillable = [
         'asset_id',
-        'period',
-        'is_primary',
+        'asset_unit_id',
         'price',
     ];
 
-    public function asset(){
+    public function asset()
+    {
         return $this->belongsTo(asset::class);
     }
 
-    public function bookings(){
-        return $this->hasMany(booking::class);
+    public function assetUnit()
+    {
+        return $this->belongsTo(asset_units::class, 'asset_unit_id');
     }
 }

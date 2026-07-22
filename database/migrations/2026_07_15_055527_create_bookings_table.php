@@ -13,11 +13,15 @@ return new class extends Migration
     {
         Schema::create('bookings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('asset_id')->constrained()->onDelete('restrict');
-            $table->foreignId('asset_pricing_id')->constrained()->onDelete('restrict');
+            $table->foreignId('asset_id')->constrained()->onDelete('restrict')->nullable();
+            $table->foreignId('asset_unit_id')->constrained()->onDelete('restrict')->nullable();
+            $table->string('booking_code');
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
             $table->date('start_date');
             $table->date('end_date');
+            $table->decimal('subtotal',15,2);
+            $table->decimal('service_fee',15,2);
+            $table->decimal('total',15,2);
             $table->enum('booking_status', ['pending','accepted', 'rejected'])->default('pending');
             $table->timestamps();
         });
