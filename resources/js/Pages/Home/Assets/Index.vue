@@ -387,6 +387,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                                 v-for="(asset, index) in assetData" 
                                 :key="asset.id"
                                 :asset="asset"
+                                :categoryName="asset.category?.name || 'Lainnya'"
                             />
                         </div>
 

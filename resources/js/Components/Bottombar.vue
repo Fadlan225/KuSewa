@@ -16,10 +16,7 @@ const isHomeActive = computed(() => page.url === '/');
 // Menggabungkan logika untuk menu profil/login
 const isAuthActive = computed(() => isActive('/profile').value || isActive('/login').value);
 
-const props = defineProps({
-    auth: Object,
-    isLoggedIn: { type: Boolean, default: false }
-});
+const isLoggedIn = computed(() => !!page.props.auth.user)
 </script>
 
 <template>

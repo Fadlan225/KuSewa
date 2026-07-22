@@ -1,11 +1,22 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import AssetCardSkeleton from './AssetCardSkeleton.vue';
 import { usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     asset: { type: Object, required: true },
     categoryName: { type: String, required: true }
+});
+
+const img1 = computed(() => props.asset.images?.[0]?.image_url || props.asset.first_image?.image_url);
+const img2 = computed(() => props.asset.images?.[1]?.image_url);
+const img3 = computed(() => props.asset.images?.[2]?.image_url);
+
+const imageCount = computed(() => {
+    if (img3.value) return 3;
+    if (img2.value) return 2;
+    if (img1.value) return 1;
+    return 0;
 });
 
 // ── Intersection Observer (Lazy Load) ─────────────────────────────────
@@ -239,26 +250,40 @@ const periodLabel = {
                     <div class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
                 </div>
 
-                <!-- Gambar asli -->
-                <img
-                    v-if="asset.first_image?.image_url && !asset.imageError"
-                    :src="asset.first_image.image_url"
-                    :alt="asset.title"
-                    @load="imageLoaded = true"
-                    @error="asset.imageError = true"
-                    loading="lazy"
-                    decoding="async"
-                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    :class="imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'"
-                />
-
-                <!-- Fallback No Image -->
-                <div
-                    v-else
-                    class="w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-300"
-                >
+                <!-- 0 Image / Error -->
+                <div v-if="!img1 || asset.imageError" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-300 z-0">
                     <i class="fa-solid fa-image text-3xl mb-1"></i>
                     <span class="text-[10px] font-medium">No Image</span>
+                </div>
+
+                <!-- 1 Image Layout -->
+                <div v-else-if="imageCount === 1" class="absolute inset-0 w-full h-full z-0">
+                    <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :class="imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'" loading="lazy" decoding="async" />
+                </div>
+
+                <!-- 2 Image Layout -->
+                <div v-else-if="imageCount === 2" class="absolute inset-0 w-full h-full grid grid-cols-2 gap-0.5 z-0 bg-white">
+                    <div class="h-full overflow-hidden relative">
+                        <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :class="imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'" loading="lazy" />
+                    </div>
+                    <div class="h-full overflow-hidden relative">
+                        <img :src="img2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                    </div>
+                </div>
+
+                <!-- 3 Image Layout -->
+                <div v-else-if="imageCount >= 3" class="absolute inset-0 w-full h-full grid grid-cols-3 gap-0.5 z-0 bg-white">
+                    <div class="col-span-2 h-full overflow-hidden relative">
+                        <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :class="imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'" loading="lazy" />
+                    </div>
+                    <div class="col-span-1 grid grid-rows-2 gap-0.5 h-full">
+                        <div class="h-full overflow-hidden relative">
+                            <img :src="img2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        </div>
+                        <div class="h-full overflow-hidden relative">
+                            <img :src="img3" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Gradients overlay -->

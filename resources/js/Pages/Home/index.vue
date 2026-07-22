@@ -27,7 +27,7 @@ const props = defineProps({
         <KeywordSearchSheet />
         <LokasiSearchSheet />
 
-        <main class="w-full max-w-7xl mx-auto">
+        <main class="w-full max-w-7xl mx-auto pb-24">
             <AssetList :categories="props.categories" />
         </main>
 

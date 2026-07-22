@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Favorite;
+use Inertia\Inertia;
 
 class FavoriteController extends Controller
 {
@@ -12,7 +13,40 @@ class FavoriteController extends Controller
      */
     public function index()
     {
-        //
+        $favorites = auth()->user()->favorites()
+            ->with(['asset' => function ($query) {
+                $query->select([
+                    'id', 'asset_category_id', 'owner_profile_id',
+                    'title', 'city', 'address', 'status', 'detail'
+                ])->with([
+                    'images', 
+                    'primaryPricing:id,asset_id,period,price',
+                    'category:id,name'
+                ])
+                ->withAvg('reviews as reviews_avg_rating', 'rating')
+                ->withCount('reviews');
+            }])
+            ->latest()
+            ->get();
+
+        $transformed = $favorites->map(function ($fav) {
+            $asset = $fav->asset;
+            if (!$asset) return null;
+            
+            $asset->isFavorite = true;
+            $asset->favorite_id = $fav->id;
+            
+            return $asset;
+        })->filter()->values();
+
+        $categoriesList = collect(['Semua'])->merge(
+            \App\Models\asset_category::pluck('name')
+        )->values();
+
+        return Inertia::render('Home/Favorite', [
+            'initialFavorites' => $transformed,
+            'categoriesList' => $categoriesList
+        ]);
     }
 
     /**

@@ -38,7 +38,7 @@ class asset extends Model
     }
 
     public function category(){
-        return $this->belongsTo(asset_category::class);
+        return $this->belongsTo(asset_category::class, 'asset_category_id');
     }
 
     public function pricings(){

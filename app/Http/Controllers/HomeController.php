@@ -85,7 +85,7 @@ class HomeController extends Controller
                             'status'
                         ])
                         ->with([
-                            'firstImage',
+                            'images',
                             'primaryPricing:id,asset_id,period,price',
                             'favorites' => function ($query) {
                                 $query->where('user_id', auth()->id());
@@ -137,7 +137,7 @@ class HomeController extends Controller
                 'title', 'city', 'address', 'status'
             ])
             ->with([
-                'firstImage',
+                'images',
                 'primaryPricing:id,asset_id,period,price',
                 'category:id,name,icon',
                 'favorites' => function ($q) {

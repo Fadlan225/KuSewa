@@ -36,6 +36,6 @@ defineProps({
 
         <Bottombar v-if="!hideBottombar" />
 
-        <Footer />
+        <!-- <Footer /> -->
     </div>
 </template>
