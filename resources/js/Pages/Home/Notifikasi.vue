@@ -7,9 +7,6 @@
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div class="flex items-center gap-3">
             <h1 class="text-2xl font-bold text-[var(--color-secondary)]">Notifikasi</h1>
-            <span v-if="unreadCount > 0" class="bg-[var(--color-primary)] text-[var(--color-secondary)] text-xs font-bold px-2 py-1 rounded-full">
-              {{ unreadCount }} Baru
-            </span>
           </div>
           <button 
             @click="markAllAsRead" 
@@ -26,13 +23,26 @@
             :key="filter"
             @click="activeFilter = filter"
             :class="[
-              'whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all',
+              'whitespace-nowrap px-4 py-2 rounded-full text-sm transition-all border flex items-center gap-2',
               activeFilter === filter 
-                ? 'bg-[var(--color-secondary)] text-white shadow-md' 
-                : 'bg-white text-[var(--color-muted)] border border-gray-200 hover:bg-gray-50'
+                ? 'bg-[#FFC000] text-[#0A2540] border-[#FFC000] font-bold shadow-md' 
+                : 'bg-white text-[var(--color-muted)] border-gray-200 hover:bg-gray-50 font-medium'
             ]"
           >
-            {{ filter }}
+            <span>{{ filter }}</span>
+            
+            <!-- Badge angka bulat untuk masing-masing filter kecuali 'Semua' -->
+            <span 
+              v-if="filter !== 'Semua' && getUnreadCount(filter) > 0"
+              :class="[
+                'min-w-[20px] h-5 px-1.5 rounded-full text-[11px] font-bold transition-colors flex items-center justify-center',
+                activeFilter === filter
+                  ? 'bg-[#0A2540] text-white'
+                  : 'bg-[#FFC000] text-[#0A2540]'
+              ]"
+            >
+              {{ getUnreadCount(filter) }}
+            </span>
           </button>
         </div>
       </header>
@@ -50,7 +60,12 @@
           
           <!-- Date Header -->
           <div class="flex items-center gap-4 mb-4">
-            <h2 class="text-sm font-bold text-[var(--color-muted)] uppercase tracking-wider">{{ dateGroup }}</h2>
+            <h2 :class="[
+              'text-sm font-bold uppercase tracking-wider',
+              dateGroup === 'Belum Dibaca' ? 'text-[#E87E04]' : 'text-[var(--color-muted)]'
+            ]">
+              {{ dateGroup }}
+            </h2>
             <div class="flex-1 h-px bg-gray-200"></div>
           </div>
 
@@ -65,7 +80,7 @@
               ]"
             >
               <!-- Unread Indicator Dot -->
-              <div v-if="!notif.read" class="absolute top-4 right-4 w-2 h-2 rounded-full bg-[var(--color-primary)]"></div>
+              <div v-if="!notif.read" class="absolute top-4 right-4 w-2 h-2 rounded-full bg-[#FFC000]"></div>
 
               <!-- Icon -->
               <div class="shrink-0 flex items-start">
@@ -98,7 +113,7 @@
                   @click="handleAction(notif)"
                   class="w-full md:w-auto px-5 py-2.5 rounded-lg text-sm font-bold transition-transform active:scale-95"
                   :class="notif.type === 'Pembayaran' && notif.status === 'warning' 
-                    ? 'bg-[var(--color-primary)] text-[var(--color-secondary)] shadow-sm hover:brightness-105'
+                    ? 'bg-[#FFC000] text-[#0A2540] shadow-sm hover:brightness-105'
                     : 'bg-[var(--color-background)] border border-gray-200 text-[var(--color-secondary)] hover:bg-gray-100'"
                 >
                   {{ notif.actionLabel }}
@@ -117,8 +132,8 @@
 <script setup>
 import { ref, computed } from 'vue';
 
-// Filter Options
-const filters = ['Semua', 'Belum Dibaca', 'Booking', 'Pembayaran', 'Chat', 'Sistem'];
+// Filter Options (Belum Dibaca dihapus)
+const filters = ['Semua', 'Booking', 'Pembayaran', 'Chat', 'Sistem'];
 const activeFilter = ref('Semua');
 
 // Mock Data
@@ -126,7 +141,7 @@ const notifications = ref([
   {
     id: 1,
     type: 'Booking',
-    status: 'success', // Hijau
+    status: 'success', 
     title: 'Booking Diterima',
     description: 'Villa Bukit Asri menerima permintaan penyewaan Anda.',
     time: '5 menit lalu',
@@ -137,7 +152,7 @@ const notifications = ref([
   {
     id: 2,
     type: 'Pembayaran',
-    status: 'warning', // Orange
+    status: 'warning', 
     title: 'Menunggu Pembayaran',
     description: 'Segera selesaikan pembayaran dalam 30 menit.',
     time: '20 menit lalu',
@@ -148,7 +163,7 @@ const notifications = ref([
   {
     id: 3,
     type: 'Chat',
-    status: 'info', // Biru
+    status: 'info', 
     title: 'Pesan Baru',
     description: 'Pemilik aset mengirim pesan kepada Anda.',
     time: '1 jam lalu',
@@ -159,7 +174,7 @@ const notifications = ref([
   {
     id: 4,
     type: 'Pembayaran',
-    status: 'success', // Hijau
+    status: 'success', 
     title: 'Pembayaran Berhasil',
     description: 'Dana telah diteruskan kepada pemilik aset.',
     time: 'Kemarin, 14:30',
@@ -170,7 +185,7 @@ const notifications = ref([
   {
     id: 5,
     type: 'Booking',
-    status: 'error', // Merah
+    status: 'error', 
     title: 'Booking Ditolak',
     description: 'Mohon maaf, jadwal tidak tersedia untuk tanggal tersebut.',
     time: 'Kemarin, 09:15',
@@ -180,7 +195,7 @@ const notifications = ref([
   },
   {
     id: 6,
-    type: 'Review',
+    type: 'Review', // Anggap ini masuk kategori sistem atau lainnya jika diubah
     status: 'success',
     title: 'Ulasan Berhasil Dikirim',
     description: 'Terima kasih telah memberikan ulasan pada Villa Bukit Asri.',
@@ -202,26 +217,49 @@ const notifications = ref([
   }
 ]);
 
-// Computed
-const unreadCount = computed(() => notifications.value.filter(n => !n.read).length);
+// Methods & Computed Properties
+const getUnreadCount = (filterName) => {
+  return notifications.value.filter(n => n.type === filterName && !n.read).length;
+};
 
 const filteredNotifications = computed(() => {
   return notifications.value.filter(notif => {
-    if (activeFilter.value === 'Belum Dibaca') return !notif.read;
     if (activeFilter.value !== 'Semua') return notif.type === activeFilter.value;
     return true;
   });
 });
 
+// Memisahkan notifikasi dan menaruh yang "Belum Dibaca" paling atas
 const groupedNotifications = computed(() => {
-  return filteredNotifications.value.reduce((acc, notif) => {
-    if (!acc[notif.dateGroup]) acc[notif.dateGroup] = [];
-    acc[notif.dateGroup].push(notif);
-    return acc;
-  }, {});
+  const groups = {};
+  const unreadList = [];
+  const readList = [];
+
+  // Pisahkan array berdasarkan status baca
+  filteredNotifications.value.forEach(notif => {
+    if (!notif.read) {
+      unreadList.push(notif);
+    } else {
+      readList.push(notif);
+    }
+  });
+
+  // Masukkan notifikasi belum dibaca ke dalam grup khusus di paling atas
+  if (unreadList.length > 0) {
+    groups['Belum Dibaca'] = unreadList;
+  }
+
+  // Kelompokkan sisanya berdasarkan tanggal aslinya (Hari Ini, Kemarin, dll)
+  readList.forEach(notif => {
+    if (!groups[notif.dateGroup]) {
+      groups[notif.dateGroup] = [];
+    }
+    groups[notif.dateGroup].push(notif);
+  });
+
+  return groups;
 });
 
-// Methods
 const markAllAsRead = () => {
   notifications.value.forEach(n => n.read = true);
 };
