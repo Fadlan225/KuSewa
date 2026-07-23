@@ -88,7 +88,7 @@ const handleSelect = (unit, pricing) => {
     <div class="space-y-4">
         <!-- Looping for units -->
         <div v-for="unit in units" :key="unit.id" class="w-full bg-white sm:bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-sm border-b sm:border border-gray-200 sm:border-gray-100 hover:shadow-md transition-shadow overflow-hidden group flex flex-col sm:flex-row relative">
-            
+
             <!-- MOBILE: Layout sesuai screenshot -->
             <div class="sm:hidden flex flex-col bg-[#F8F9FA] pb-2">
                 <!-- Image Carousel Mobile -->
@@ -129,7 +129,7 @@ const handleSelect = (unit, pricing) => {
                             <h4 class="font-bold text-[#0A2540] text-[13px]">{{ unit.name }}</h4>
                             <button @click="openDetail(unit)" class="text-[#0A2540] underline font-bold text-[12px] hover:text-[#FFC000]">Lihat Rincian</button>
                         </div>
-                        
+
                         <!-- Main Info in Card -->
                         <div class="space-y-2 mb-4 text-[12px] font-bold text-[#0A2540]">
                             <div v-if="unit.detail?.kapasitas" class="flex items-center gap-3">
@@ -141,16 +141,6 @@ const handleSelect = (unit, pricing) => {
                         </div>
 
                         <div class="flex justify-between items-end">
-                            <!-- Extras (Dummy for now to match UI) -->
-                            <div class="space-y-1.5 pb-1">
-                                <div class="flex items-center gap-2 text-[11px] font-bold text-gray-500">
-                                    <i class="fa-solid fa-utensils"></i> Tanpa sarapan
-                                </div>
-                                <div class="flex items-center gap-2 text-[11px] font-bold text-gray-500">
-                                    <i class="fa-solid fa-money-bill-transfer"></i> Tidak Bisa Refund
-                                </div>
-                            </div>
-
                             <!-- Price Column -->
                             <div class="flex flex-col items-end">
                                 <span class="text-[11px] text-gray-400 font-bold line-through mb-0.5">{{ formatRupiah(getLowestPricing(unit).price * 1.1) }}</span>
@@ -190,7 +180,7 @@ const handleSelect = (unit, pricing) => {
                         <h3 class="font-bold text-lg leading-tight text-[#0A2540] truncate mb-1.5 group-hover:text-[#FFC000] transition-colors">
                             {{ unit.name }}
                         </h3>
-                        
+
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 font-medium">
                             <div v-if="unit.detail?.luas" class="flex items-center gap-1.5">
                                 <i class="fa-solid fa-ruler-combined text-[#FFC000]"></i>
@@ -216,7 +206,7 @@ const handleSelect = (unit, pricing) => {
                             </span>
                         </div>
                     </div>
-                    
+
                     <div class="mt-2 text-[11px] font-bold text-red-500">
                         Sisa {{ unit.quantity }} unit!
                     </div>
@@ -254,7 +244,7 @@ const handleSelect = (unit, pricing) => {
         >
             <div v-if="isDesktopModalOpen && selectedDetailUnit" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 hidden md:flex">
                 <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col" @click.stop>
-                    
+
                     <!-- Header -->
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white shrink-0">
                         <h2 class="text-xl font-extrabold text-[#0A2540]">{{ selectedDetailUnit.name }}</h2>
@@ -265,7 +255,7 @@ const handleSelect = (unit, pricing) => {
 
                     <!-- Body -->
                     <div class="flex-grow overflow-y-auto p-6 flex gap-6">
-                        
+
                         <!-- Kiri: Foto -->
                         <div class="w-1/2 flex flex-col gap-3">
                             <div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 group">
@@ -288,10 +278,10 @@ const handleSelect = (unit, pricing) => {
                                     </div>
                                 </template>
                             </div>
-                            
+
                             <!-- Thumbnail List -->
                             <div v-if="selectedDetailUnit.images?.length > 1" class="flex gap-2 overflow-x-auto pb-2 snap-x">
-                                <div v-for="(img, idx) in selectedDetailUnit.images" :key="idx" 
+                                <div v-for="(img, idx) in selectedDetailUnit.images" :key="idx"
                                     @click="activeDetailImageIndex = idx"
                                     class="w-20 aspect-video rounded-lg overflow-hidden shrink-0 cursor-pointer snap-center relative"
                                     :class="activeDetailImageIndex === idx ? 'ring-2 ring-[#FFC000]' : 'opacity-70 hover:opacity-100'">
@@ -361,7 +351,7 @@ const handleSelect = (unit, pricing) => {
         <BottomSheet v-model="isMobileSheetOpen" :title="selectedDetailUnit?.name" heightClass="h-[85vh]">
             <template #default>
                 <div v-if="selectedDetailUnit" class="flex flex-col h-full overflow-y-auto relative pb-24">
-                    
+
                     <!-- Carousel Mobile -->
                     <div class="relative w-full aspect-[4/3] bg-gray-100 group shrink-0">
                         <img v-if="selectedDetailUnit.images?.length > 0" :src="selectedDetailUnit.images[activeDetailImageIndex].image_url" class="w-full h-full object-cover" />
