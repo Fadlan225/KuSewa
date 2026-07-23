@@ -65,6 +65,13 @@ watch(keywordQuery, (val) => {
     fetchSuggestions(val);
 });
 
+// Bersihkan search jika kembali ke beranda tanpa parameter keyword
+watch(() => page.url, () => {
+    if (isHome.value && (!page.props.filters || !page.props.filters.q)) {
+        keywordQuery.value = '';
+    }
+}, { immediate: true });
+
 const isMobileMenuOpen = ref(false);
 const desktopNavActiveMenu = ref(null);
 
@@ -188,10 +195,19 @@ const initials = computed(() => {
                                 <!-- Fake Input Search -->
                                 <div
                                     @click="isKeywordSheetOpen = true"
-                                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-10 pr-10 py-2.5 border border-gray-200/80 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all shadow-inner flex items-center cursor-pointer"
+                                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-10 pr-10 py-2.5 border border-gray-200/80 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all shadow-inner flex items-center cursor-pointer relative"
                                 >
-                                    <span :class="keywordQuery ? 'text-[#0A2540]' : 'text-[#6C757D]'">{{ keywordQuery || 'Mau sewa apa hari ini?' }}</span>
+                                    <span class="truncate pr-4" :class="keywordQuery ? 'text-[#0A2540]' : 'text-[#6C757D]'">{{ keywordQuery || 'Mau sewa apa hari ini?' }}</span>
                                 </div>
+                                
+                                <!-- Tombol Clear Search (Mobile Fake Input) -->
+                                <button
+                                    v-if="keywordQuery"
+                                    @click.stop="keywordQuery = ''"
+                                    class="absolute right-9 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-[#6C757D] hover:text-[#0A2540] transition-colors z-10"
+                                >
+                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                </button>
 
                                 <!-- Tombol Filter Mini (Kanan) -->
                                 <button
@@ -336,6 +352,15 @@ const initials = computed(() => {
                                         : 'bg-[#F8F9FA] text-[#0A2540] placeholder-[#6C757D] border-gray-200/80 focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540]'
                                 ]"
                             />
+                            
+                            <!-- Tombol Clear Search (Desktop Input) -->
+                            <button
+                                v-if="keywordQuery"
+                                @click.stop="keywordQuery = ''; desktopNavActiveMenu = null;"
+                                class="absolute right-9 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-[#6C757D] hover:text-[#0A2540] transition-colors z-[60]"
+                            >
+                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                            </button>
                             <button
                                 @click="desktopNavActiveMenu = desktopNavActiveMenu === 'filter' ? null : 'filter'"
                                 class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm z-50"

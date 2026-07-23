@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class asset_image extends Model
 {
     protected $fillable = [
+        'asset_id',
+        'asset_unit_id',
+        'gallery_category_id',
         'image'
     ];
 
@@ -34,5 +37,10 @@ class asset_image extends Model
 
     public function asset(){
         return $this->belongsTo(asset::class);
+    }
+
+    public function gallery_category()
+    {
+        return $this->belongsTo(galery_category::class);
     }
 }

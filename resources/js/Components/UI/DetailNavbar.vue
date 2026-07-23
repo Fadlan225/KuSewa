@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import BottomSheet from './BottomSheet.vue';
 
 const props = defineProps({
@@ -24,6 +24,14 @@ const props = defineProps({
 });
 
 defineEmits(['favorite']);
+
+const goBack = () => {
+    if (window.history.length > 2) { // length 1 means new tab, length 2 usually means initial page load on some browsers. Better to just check > 1, or use router.visit as fallback
+        window.history.back();
+    } else {
+        router.visit(props.backUrl);
+    }
+};
 
 const showDesktopNavMenu = ref(false);
 const showShareUI = ref(false);
@@ -107,9 +115,9 @@ onUnmounted(() => {
 <template>
     <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <Link :href="backUrl" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
+            <button @click="goBack" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
                 <i class="fa-solid fa-arrow-left text-[#0A2540]"></i>
-            </Link>
+            </button>
 
             <!-- Desktop Scroll Menu -->
             <div class="hidden md:flex gap-6 transition-all duration-300" :class="showDesktopNavMenu ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'">

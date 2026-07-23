@@ -24,7 +24,8 @@ class DatabaseSeeder extends Seeder
 
             // ── Assets & Images ────────────────────────────────────────────
             AssetSeeder::class,             // 220 aset (10/type)
-            AssetImageSeeder::class,        // 2200 gambar GD (10/asset)
+            GaleryCategorySeeder::class,    // Kategori galeri foto per tipe
+            AssetImageSeeder::class,        // Gambar per aset & unit dengan kategori galeri
             AssetPricingSeeder::class,      // Harga realistis per tipe
 
             // ── Transactions ───────────────────────────────────────────────
@@ -35,6 +36,8 @@ class DatabaseSeeder extends Seeder
             // ── Engagement ─────────────────────────────────────────────────
             FavoriteSeeder::class,          // 5 favorite/customer
             SearchLogSeeder::class,         // 10 search log/customer
+
+            ApartemenImageSeeder::class,
         ]);
     }
 }

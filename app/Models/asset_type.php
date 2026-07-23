@@ -22,4 +22,9 @@ class asset_type extends Model
     {
         return $this->hasMany(asset::class);
     }
+
+    public function galery_categories()
+    {
+        return $this->hasMany(galery_category::class);
+    }
 }
