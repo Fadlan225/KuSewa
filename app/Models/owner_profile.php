@@ -2,10 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class owner_profile extends Model
 {
+    use HasFactory;
+
+    // Menentukan nama tabel secara eksplisit
+    protected $table = 'owner_profiles';
+
     protected $fillable = [
         'user_id',
         'national_id',
@@ -14,24 +21,19 @@ class owner_profile extends Model
         'date_of_birth',
         'ktp_photo',
         'status',
-        'verification_at'
+        'verification_at',
     ];
 
-    public function user()
+    protected $casts = [
+        'date_of_birth' => 'date',
+        'verification_at' => 'datetime',
+    ];
+
+    /**
+     * Relasi balik ke User
+     */
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
-    }
-
-    public function bankAccounts()
-    {
-        return $this->hasMany(bank_account::class);
-    }
-
-    public function assets(){
-        return $this->hasMany(asset::class);
-    }
-
-    public function roomChats(){
-        return $this->hasMany(room_chat::class);
     }
 }

@@ -20,6 +20,7 @@ const props = defineProps({
 const page = usePage();
 const isScrolled = ref(false);
 const isUserMenuOpen = ref(false);
+const isLoggedIn = computed(() => !!page.props.auth.user);
 
 const hasOwnerProfile = computed(() => {
     const user = page.props.auth.user;
@@ -115,6 +116,20 @@ const initials = computed(() => {
         .substring(0, 2)
         .toUpperCase();
 });
+
+// Fungsi untuk handle klik tombol "Mulai Sewakan Aset"
+const handleStartSewakan = () => {
+    isUserMenuOpen.value = false;
+    // Jika user sudah login, arahkan ke halaman pengajuan owner
+    // Jika belum login, arahkan ke login
+    if (isLoggedIn.value) {
+        // User sudah login, arahkan ke halaman pengajuan owner
+        window.location.href = route('owner.apply');
+    } else {
+        // User belum login, arahkan ke login
+        window.location.href = route('login');
+    }
+};
 </script>
 <template>
     <nav
@@ -252,9 +267,8 @@ const initials = computed(() => {
                         ></span>
                     </Link>
 
-                    <!-- Bantuan -->
+                    <!-- Bantuan - Tampil untuk semua user -->
                     <Link
-                        v-if="!page.props.auth.user"
                         href="#"
                         :class="[
                             'relative text-sm font-semibold transition-colors duration-300',
@@ -272,9 +286,9 @@ const initials = computed(() => {
                         Bantuan
                     </Link>
 
-                    <!-- Aktivitas -->
+                    <!-- Aktivitas - Hanya untuk user yang login -->
                     <Link
-                        v-if="page.props.auth.user"
+                        v-if="isLoggedIn"
                         href="#"
                         :class="[
                             'relative text-sm font-semibold transition-colors duration-300',
@@ -292,9 +306,9 @@ const initials = computed(() => {
                         Aktivitas
                     </Link>
 
-                    <!-- Kotak Masuk -->
+                    <!-- Kotak Masuk - Hanya untuk user yang login -->
                     <Link
-                        v-if="page.props.auth.user"
+                        v-if="isLoggedIn"
                         href="#"
                         :class="[
                             'relative text-sm font-semibold transition-colors duration-300',
@@ -379,7 +393,7 @@ const initials = computed(() => {
                                     <!-- Default (belum mengetik) -->
                                     <template v-else>
                                         <!-- Riwayat Pencarian (hanya jika login & ada riwayat) -->
-                                        <template v-if="page.props.auth.user && searchHistory.length > 0">
+                                        <template v-if="isLoggedIn && searchHistory.length > 0">
                                             <div class="flex items-center justify-between mb-3">
                                                 <h2 class="text-sm font-extrabold text-[#0A2540]">Riwayat Pencarian</h2>
                                             </div>
@@ -405,7 +419,7 @@ const initials = computed(() => {
                                         </template>
 
                                         <!-- Fallback jika tidak ada data -->
-                                        <template v-if="(!page.props.auth.user || searchHistory.length === 0) && trending.length === 0">
+                                        <template v-if="(!isLoggedIn || searchHistory.length === 0) && trending.length === 0">
                                             <p class="text-xs text-[#6C757D] text-center py-4">Ketik sesuatu untuk mencari aset sewa</p>
                                         </template>
                                     </template>
@@ -599,7 +613,6 @@ const initials = computed(() => {
                     <!-- Language Selector Desktop -->
                     <div
                         class="flex items-center gap-2 cursor-pointer transition-all duration-300 px-3 py-1.5 rounded-lg border border-transparent"
-                        v-if="!page.props.auth.user"
                         :class="[
                             isCurrentlyTransparent
                                 ? 'text-white hover:bg-white/10'
@@ -615,21 +628,38 @@ const initials = computed(() => {
                         <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
                     </div>
 
-                    <!-- Desktop User Dropdown Menu Button -->
+                    <!-- Desktop User Dropdown Menu Button / Login Button -->
                     <div class="relative">
-                        <!-- Trigger Button -->
-                        <button
-                            type="button"
-                            @click="isUserMenuOpen = !isUserMenuOpen"
-                            class="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-full border transition-all duration-200 focus:outline-none"
-                            :class="[
-                                isCurrentlyTransparent
-                                    ? 'bg-white/10 hover:bg-white/20 border-white/30 text-white'
-                                    : 'bg-white hover:bg-gray-50 border-gray-200/90 text-[#0A2540] shadow-xs'
-                            ]"
-                        >
-                            <!-- User Avatar / Initials or Guest Icon -->
-                            <template v-if="page.props.auth.user">
+                        <!-- Jika Belum Login: Tampilkan Tombol Login -->
+                        <template v-if="!isLoggedIn">
+                            <Link
+                                :href="route('login')"
+                                class="flex items-center gap-2 cursor-pointer px-4 py-2 rounded-full border transition-all duration-200 font-semibold text-sm"
+                                :class="[
+                                    isCurrentlyTransparent
+                                        ? 'bg-white/10 hover:bg-white/20 border-white/30 text-white'
+                                        : 'bg-[#0A2540] hover:bg-[#113a63] border-[#0A2540] text-white shadow-sm'
+                                ]"
+                            >
+                                <i class="fa-regular fa-user text-xs"></i>
+                                <span>Masuk</span>
+                            </Link>
+                        </template>
+
+                        <!-- Jika Sudah Login: Tampilkan Profil dengan Dropdown -->
+                        <template v-else>
+                            <!-- Trigger Button -->
+                            <button
+                                type="button"
+                                @click="isUserMenuOpen = !isUserMenuOpen"
+                                class="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-full border transition-all duration-200 focus:outline-none"
+                                :class="[
+                                    isCurrentlyTransparent
+                                        ? 'bg-white/10 hover:bg-white/20 border-white/30 text-white'
+                                        : 'bg-white hover:bg-gray-50 border-gray-200/90 text-[#0A2540] shadow-xs'
+                                ]"
+                            >
+                                <!-- User Avatar / Initials -->
                                 <img
                                     v-if="page.props.auth.user.profile_photo"
                                     :src="page.props.auth.user.profile_photo"
@@ -641,96 +671,91 @@ const initials = computed(() => {
                                 >
                                     {{ initials }}
                                 </div>
-                            </template>
 
-                            <template v-else>
-                                <div class="w-6 h-6 rounded-full bg-[#FFC000]/20 text-[#0A2540] flex items-center justify-center font-bold text-xs">
-                                    <i class="fa-regular fa-user text-xs"></i>
-                                </div>
-                            </template>
+                                <!-- Chevron Down Icon -->
+                                <i
+                                    class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 ml-0.5"
+                                    :class="{ 'rotate-180': isUserMenuOpen }"
+                                ></i>
+                            </button>
 
-                            <!-- Chevron Down Icon -->
-                            <i
-                                class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 ml-0.5"
-                                :class="{ 'rotate-180': isUserMenuOpen }"
-                            ></i>
-                        </button>
-
-                        <!-- Backdrop Overlay to Close Menu -->
-                        <div
-                            v-if="isUserMenuOpen"
-                            @click="isUserMenuOpen = false"
-                            class="fixed inset-0 z-40"
-                        ></div>
-
-                        <!-- User Menu Dropdown Modal -->
-                        <Transition
-                            enter-active-class="transition duration-250 ease-out"
-                            enter-from-class="transform scale-95 opacity-0 -translate-y-3"
-                            enter-to-class="transform scale-100 opacity-100 translate-y-0"
-                            leave-active-class="transition duration-150 ease-in"
-                            leave-from-class="transform scale-100 opacity-100 translate-y-0"
-                            leave-to-class="transform scale-95 opacity-0 -translate-y-3"
-                        >
+                            <!-- Backdrop Overlay to Close Menu -->
                             <div
                                 v-if="isUserMenuOpen"
-                                class="absolute top-[130%] right-0 w-[320px] sm:w-[340px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 origin-top-right text-[#0A2540]"
+                                @click="isUserMenuOpen = false"
+                                class="fixed inset-0 z-40"
+                            ></div>
+
+                            <!-- User Menu Dropdown Modal -->
+                            <Transition
+                                enter-active-class="transition duration-250 ease-out"
+                                enter-from-class="transform scale-95 opacity-0 -translate-y-3"
+                                enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                                leave-active-class="transition duration-150 ease-in"
+                                leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                                leave-to-class="transform scale-95 opacity-0 -translate-y-3"
                             >
-                                <!-- 1. Pusat Bantuan -->
-                                <div class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
-                                    <i class="fa-regular fa-circle-question text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
-                                    <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pusat Bantuan</span>
-                                </div>
-
-                                <div class="h-px bg-gray-100 my-2"></div>
-
-                                <Link :href="route('profile.edit')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
-                                    <i class="fa-regular fa-user text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
-                                    <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Profile</span>
-                                </Link>
-
-                                <div class="h-px bg-gray-100 my-2"></div>
-
-                                <!-- 2. Mulai Sewakan Aset Card Banner -->
                                 <div
-                                    @click="isUserMenuOpen = false"
-                                    class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1"
+                                    v-if="isUserMenuOpen"
+                                    class="absolute top-[130%] right-0 w-[320px] sm:w-[340px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 origin-top-right text-[#0A2540]"
                                 >
-                                    <!-- Ilustrasi SVG (Ditempatkan di sudut kanan) -->
-                                    <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
-                                        <img src="/no-image.svg" alt="Ilustrasi Rumah" class="w-full object-contain object-bottom drop-shadow-sm group-hover:scale-105 transition-transform" />
+                                    <!-- 1. Pusat Bantuan -->
+                                    <div class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
+                                        <i class="fa-regular fa-circle-question text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
+                                        <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pusat Bantuan</span>
                                     </div>
 
-                                    <!-- Konten Teks -->
-                                    <div class="relative z-10 w-2/3 pr-2">
-                                        <h3 class="text-sm font-bold text-[#0A2540] group-hover:text-amber-600 transition-colors">
-                                            Mulai Sewakan Aset
-                                        </h3>
-                                        <p class="text-[11px] text-gray-500 leading-snug mt-1 font-normal">
-                                            Maksimalkan potensi aset Anda dan mulai hasilkan pendapatan tambahan.
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <div class="h-px bg-gray-100 my-2"></div>
-
-                                <!-- 3. Option to go to Dashboard IF user has owner_profile -->
-                                <template v-if="page.props.auth.user && hasOwnerProfile">
                                     <div class="h-px bg-gray-100 my-2"></div>
-                                    <Link
-                                        :href="route('dashboard')"
-                                        @click="isUserMenuOpen = false"
-                                        class="flex items-center gap-3 py-2 px-3 bg-[#0A2540] hover:bg-[#113a63] text-white rounded-xl font-bold text-xs transition shadow-sm my-1"
-                                    >
-                                        <i class="fa-solid fa-chart-pie text-[#FFC000]"></i>
-                                        Dashboard Owner
+
+                                    <Link :href="route('profile.edit')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
+                                        <i class="fa-regular fa-user text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
+                                        <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Profile</span>
                                     </Link>
-                                </template>
 
-                                <div class="h-px bg-gray-100 my-2"></div>
+                                    <div class="h-px bg-gray-100 my-2"></div>
 
-                                <!-- 4. Footer: Logout (If Auth) or Login/Register (If Guest) -->
-                                <div v-if="page.props.auth.user" class="pt-1">
+                                    <!-- 2. Mulai Sewakan Aset Card Banner - Conditional berdasarkan role -->
+                                    <template v-if="!hasOwnerProfile">
+                                        <!-- User biasa - Tampilkan tombol "Mulai Sewakan Aset" -->
+                                        <div
+                                            :href="route('owner.register')"
+                                            @click="handleStartSewakan"
+                                            class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1"
+                                        >
+                                            <!-- Ilustrasi SVG -->
+                                            <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
+                                                <img src="/no-image.svg" alt="Ilustrasi Rumah" class="w-full object-contain object-bottom drop-shadow-sm group-hover:scale-105 transition-transform" />
+                                            </div>
+
+                                            <!-- Konten Teks -->
+                                            <div class="relative z-10 w-2/3 pr-2">
+                                                <h3 class="text-sm font-bold text-[#0A2540] group-hover:text-amber-600 transition-colors">
+                                                    Mulai Sewakan Aset
+                                                </h3>
+                                                <p class="text-[11px] text-gray-500 leading-snug mt-1 font-normal">
+                                                    Maksimalkan potensi aset Anda dan mulai hasilkan pendapatan tambahan.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <template v-else>
+                                        <!-- Owner - Tampilkan Dashboard Owner -->
+                                        <div class="h-px bg-gray-100 my-2"></div>
+                                        <Link
+                                            :href="route('owner.dashboard')"
+                                            @click="isUserMenuOpen = false"
+                                            class="flex items-center gap-3 py-2.5 px-4 bg-[#0A2540] hover:bg-[#113a63] text-white rounded-xl font-bold text-xs transition shadow-sm my-1 w-full justify-center"
+                                        >
+                                            <i class="fa-solid fa-chart-pie text-[#FFC000] text-sm"></i>
+                                            <span class="text-sm">Dashboard Owner</span>
+                                            <i class="fa-solid fa-arrow-right text-[#FFC000] text-xs"></i>
+                                        </Link>
+                                    </template>
+
+                                    <div class="h-px bg-gray-100 my-2"></div>
+
+                                    <!-- 3. Logout Button -->
                                     <Link
                                         :href="route('logout')"
                                         method="post"
@@ -742,18 +767,8 @@ const initials = computed(() => {
                                         Keluar
                                     </Link>
                                 </div>
-
-                                <div v-else class="pt-1 flex flex-col gap-2">
-                                    <Link
-                                        :href="route('login')"
-                                        @click="isUserMenuOpen = false"
-                                        class="w-full text-left text-sm font-bold text-[#0A2540] hover:text-[#FFC000] py-1.5 transition"
-                                    >
-                                        Masuk atau mendaftar
-                                    </Link>
-                                </div>
-                            </div>
-                        </Transition>
+                            </Transition>
+                        </template>
                     </div>
                 </div>
 
@@ -761,3 +776,19 @@ const initials = computed(() => {
         </div>
     </nav>
 </template>
+
+<style scoped>
+.hide-scrollbar::-webkit-scrollbar {
+    width: 4px;
+}
+.hide-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.hide-scrollbar::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 10px;
+}
+.hide-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+</style>
