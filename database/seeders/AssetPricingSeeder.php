@@ -55,15 +55,43 @@ class AssetPricingSeeder extends Seeder
             $config = $this->pricingMap[$asset->type_name] ?? [500000, 5000000, 'month'];
             [$min, $max, $period] = $config;
 
-            // Harga acak dalam rentang, dibulatkan ke 50.000
-            $price = round(rand($min, $max) / 50000) * 50000;
-
-            $batch[] = [
-                'asset_id'   => $asset->id,
-                'price'      => $price,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+            // Cek apakah asset ini memiliki unit
+            $units = DB::table('asset_units')->where('asset_id', $asset->id)->get();
+            
+            if ($units->count() > 0) {
+                // Harga untuk tiap unit
+                foreach ($units as $unit) {
+                    $price1 = round(rand($min, $max) / 50000) * 50000;
+                    $batch[] = [
+                        'asset_id'      => $asset->id,
+                        'asset_unit_id' => $unit->id,
+                        'price'         => $price1,
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ];
+                    
+                    // Opsional: tambah opsi harga kedua (misal +sarapan)
+                    if (rand(0, 1)) {
+                        $batch[] = [
+                            'asset_id'      => $asset->id,
+                            'asset_unit_id' => $unit->id,
+                            'price'         => $price1 + 150000,
+                            'created_at'    => now(),
+                            'updated_at'    => now(),
+                        ];
+                    }
+                }
+            } else {
+                // Harga untuk asset tanpa unit
+                $price = round(rand($min, $max) / 50000) * 50000;
+                $batch[] = [
+                    'asset_id'   => $asset->id,
+                    'asset_unit_id' => null,
+                    'price'      => $price,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
         }
 
         DB::table('asset_pricings')->insert($batch);

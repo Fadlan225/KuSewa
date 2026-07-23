@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
 
             // ── Assets & Images ────────────────────────────────────────────
             AssetSeeder::class,             // 220 aset (10/type)
+            AssetUnitSeeder::class,         // Asset units (kamar, tipe apartemen, kios, studio, dll)
             GaleryCategorySeeder::class,    // Kategori galeri foto per tipe
             AssetImageSeeder::class,        // Gambar per aset & unit dengan kategori galeri
             AssetPricingSeeder::class,      // Harga realistis per tipe

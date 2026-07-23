@@ -6,6 +6,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
 import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
 import AssetGallery from '@/Components/UI/AssetGallery.vue';
+import AssetUnitList from '@/Components/UI/AssetUnitList.vue';
 import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
 
 const props = defineProps({
@@ -94,8 +95,19 @@ const formatDate = (dateString) => {
 
 // Menghitung harga termurah untuk ditampilkan di card booking
 const lowestPrice = computed(() => {
-    if (!props.asset.pricings || props.asset.pricings.length === 0) return null;
-    return props.asset.pricings.reduce((min, p) => p.price < min.price ? p : min, props.asset.pricings[0]);
+    let allPricings = [];
+    if (props.asset.pricings && props.asset.pricings.length > 0) {
+        allPricings = props.asset.pricings;
+    } else if (props.asset.units && props.asset.units.length > 0) {
+        props.asset.units.forEach(unit => {
+            if (unit.pricings) {
+                allPricings = allPricings.concat(unit.pricings);
+            }
+        });
+    }
+
+    if (allPricings.length === 0) return null;
+    return allPricings.reduce((min, p) => p.price < min.price ? p : min, allPricings[0]);
 });
 
 // Fasilitas & Spesifikasi
@@ -146,6 +158,24 @@ const submitBooking = () => {
     };
 
     router.get(route('booking.create', { asset: props.asset.id }), params);
+};
+
+const handleUnitSelect = ({ unit_id, pricing_id, price }) => {
+    form.pricing_id = pricing_id;
+    
+    // Validasi tanggal jika belum diisi atau tidak ada durasi
+    if (!startDate.value || durationCount.value === 0) {
+        // Tampilkan pesan error dan auto-scroll ke kalender
+        alert('Silakan pilih tanggal sewa terlebih dahulu.');
+        const calendarEl = document.getElementById('kalender-sewa');
+        if (calendarEl) {
+            calendarEl.scrollIntoView({ behavior: 'smooth' });
+        }
+        return;
+    }
+    
+    // Jika valid, lanjutkan ke submit booking
+    submitBooking();
 };
 
 // Menghitung distribusi rating (5 bintang sampai 1 bintang)
@@ -511,7 +541,7 @@ const handleTouchEnd = (e) => {
                 </div>
 
                 <!-- SEKSI PEMILIHAN TANGGAL (KALENDER) -->
-                <div class="pb-10 border-b border-gray-200">
+                <div id="kalender-sewa" class="pb-10 border-b border-gray-200">
                     <h2 class="text-2xl font-extrabold text-[#0A2540] mb-1">
                         <span v-if="activeScheduleMode === 'hour' && startDate">Jadwal sewa untuk {{ asset.title || 'Aset ini' }}</span>
                         <span v-else-if="activeScheduleMode === 'month' && startDate">{{ durationMonths }} Bulan di {{ asset.title || 'Sini' }}</span>
@@ -658,6 +688,17 @@ const handleTouchEnd = (e) => {
                     </div>
                 </div>
 
+            <!-- SEKSI PEMILIHAN UNIT (Jika ada units) -->
+            <div v-if="asset.units && asset.units.length > 0" id="pilihan-kamar" class="py-10 border-b border-gray-200">
+                <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Pilihan Kamar / Unit</h2>
+                <AssetUnitList 
+                    :units="asset.units" 
+                    :rentalUnitLabel="activeScheduleMode"
+                    :durationCount="durationCount"
+                    @select="handleUnitSelect"
+                />
+            </div>
+
             <!-- SEKSI ULASAN -->
             <div id="ulasan" class="mt-12 mb-10">
                 <!-- Judul Seksi -->
@@ -791,8 +832,15 @@ const handleTouchEnd = (e) => {
                     </div>
 
                     <button
+                        v-if="asset.units && asset.units.length > 0"
+                        @click="() => document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' })"
+                        class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg mb-4">
+                        Pilih Kamar
+                    </button>
+                    <button
+                        v-else
                         @click="submitBooking"
-                        :disabled="asset.status !== 'active' || !asset.pricings.length || !startDate || durationCount === 0"
+                        :disabled="asset.status !== 'active' || !lowestPrice || !startDate || durationCount === 0"
                         class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
                         Pesan Sekarang
                     </button>

@@ -45,7 +45,9 @@ class AssetController extends Controller
             'reviews.user',
             'favorites' => function ($query) {
                 $query->where('user_id', auth()->id());
-            }
+            },
+            'units.pricings',
+            'units.images.gallery_category'
         ])
         ->loadAvg('reviews', 'rating')
         ->loadCount([

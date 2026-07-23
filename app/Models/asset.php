@@ -72,4 +72,8 @@ class asset extends Model
     public function roomChats(){
         return $this->hasMany(room_chat::class);
     }
+
+    public function units(){
+        return $this->hasMany(asset_units::class);
+    }
 }

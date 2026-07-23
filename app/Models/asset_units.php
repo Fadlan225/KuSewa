@@ -25,11 +25,16 @@ class asset_units extends Model
 
     public function pricings()
     {
-        return $this->hasMany(asset_pricing::class)->whereNotNull('asset_unit_id');
+        return $this->hasMany(asset_pricing::class, 'asset_unit_id')->whereNotNull('asset_unit_id');
     }
 
     public function bookings()
     {
-        return $this->hasMany(booking::class)->whereNotNull('asset_unit_id');
+        return $this->hasMany(booking::class, 'asset_unit_id')->whereNotNull('asset_unit_id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(asset_image::class, 'asset_unit_id');
     }
 }
