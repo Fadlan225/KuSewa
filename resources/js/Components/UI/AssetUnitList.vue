@@ -92,7 +92,7 @@ const handleSelect = (unit, pricing) => {
             <!-- MOBILE: Layout sesuai screenshot -->
             <div class="sm:hidden flex flex-col bg-[#F8F9FA] pb-2">
                 <!-- Image Carousel Mobile -->
-                <div class="relative w-full aspect-[16/9] bg-gray-200" @click="openDetail(unit)">
+                <div class="relative w-full h-[220px] bg-gray-200 shrink-0" @click="openDetail(unit)">
                     <img v-if="getUnitImage(unit)" :src="getUnitImage(unit)" class="w-full h-full object-cover" />
                     <div v-else class="w-full h-full flex items-center justify-center bg-slate-100">
                         <i class="fa-solid fa-image text-3xl text-gray-300"></i>
@@ -143,10 +143,7 @@ const handleSelect = (unit, pricing) => {
                         <div class="flex justify-between items-end">
                             <!-- Price Column -->
                             <div class="flex flex-col items-end">
-                                <span class="text-[11px] text-gray-400 font-bold line-through mb-0.5">{{ formatRupiah(getLowestPricing(unit).price * 1.1) }}</span>
                                 <span class="font-extrabold text-[#e65c00] text-lg">{{ formatRupiah(getLowestPricing(unit).price) }}</span>
-                                <span class="text-[10px] text-gray-500 mt-1">Total {{ formatRupiah(getLowestPricing(unit).price * 1.11) }}</span>
-                                <span class="text-[9px] text-gray-400">(termasuk pajak & biaya)</span>
                             </div>
                         </div>
 
@@ -161,7 +158,7 @@ const handleSelect = (unit, pricing) => {
             </div>
 
             <!-- DESKTOP: 1 Image (Left) -->
-            <div class="hidden sm:block w-[220px] lg:w-[260px] flex-shrink-0 aspect-[4/3] lg:aspect-[16/9] relative bg-slate-100 overflow-hidden cursor-pointer" @click="openDetail(unit)">
+            <div class="hidden sm:block w-[220px] lg:w-[280px] h-[180px] lg:h-[220px] flex-shrink-0 relative bg-slate-100 overflow-hidden cursor-pointer" @click="openDetail(unit)">
                 <img v-if="getUnitImage(unit)" :src="getUnitImage(unit)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div v-else class="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-300">
                     <i class="fa-solid fa-image text-3xl mb-1"></i>
@@ -208,7 +205,7 @@ const handleSelect = (unit, pricing) => {
                     </div>
 
                     <div class="mt-2 text-[11px] font-bold text-red-500">
-                        Sisa {{ unit.quantity }} unit!
+                        Sisa {{ unit.quantity }} unit di harga ini!
                     </div>
                 </div>
 
@@ -221,7 +218,6 @@ const handleSelect = (unit, pricing) => {
                                 /{{ rentalUnitLabel }}
                             </span>
                         </div>
-                        <span class="text-[10px] text-gray-400 block mt-0.5">Di luar pajak & biaya</span>
                     </div>
 
                     <button @click="handleSelect(unit, getLowestPricing(unit))" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] text-xs font-extrabold py-2 px-4 rounded-lg transition-all shadow-sm">
@@ -258,7 +254,7 @@ const handleSelect = (unit, pricing) => {
 
                         <!-- Kiri: Foto -->
                         <div class="w-1/2 flex flex-col gap-3">
-                            <div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-gray-100 group">
+                            <div class="relative w-full h-[240px] md:h-[300px] rounded-xl overflow-hidden bg-gray-100 group shrink-0">
                                 <img v-if="selectedDetailUnit.images?.length > 0" :src="selectedDetailUnit.images[activeDetailImageIndex].image_url" class="w-full h-full object-cover" />
                                 <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400">
                                     <i class="fa-solid fa-image text-4xl mb-2"></i>
@@ -353,7 +349,7 @@ const handleSelect = (unit, pricing) => {
                 <div v-if="selectedDetailUnit" class="flex flex-col h-full overflow-y-auto relative pb-24">
 
                     <!-- Carousel Mobile -->
-                    <div class="relative w-full aspect-[4/3] bg-gray-100 group shrink-0">
+                    <div class="relative w-full h-[250px] bg-gray-100 group shrink-0">
                         <img v-if="selectedDetailUnit.images?.length > 0" :src="selectedDetailUnit.images[activeDetailImageIndex].image_url" class="w-full h-full object-cover" />
                         <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400">
                             <i class="fa-solid fa-image text-4xl mb-2"></i>

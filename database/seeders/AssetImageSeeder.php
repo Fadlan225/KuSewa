@@ -14,7 +14,7 @@ class AssetImageSeeder extends Seeder
         DB::table('asset_images')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        $imagePath = public_path('assets/images');
+        $imagePath = public_path('assets');
 
         // ── Ambil semua galery_categories dikelompokkan per type_id & applies_to ──
         $galeryCategories = DB::table('galery_categories')->get();
@@ -72,7 +72,7 @@ class AssetImageSeeder extends Seeder
                             'asset_id'           => $asset->id,
                             'asset_unit_id'      => null,
                             'gallery_category_id' => $cat->id,
-                            'image'              => 'assets/images/' . $folder . '/' . basename($file),
+                            'image'              => 'assets/' . $folder . '/' . basename($file),
                             'created_at'         => now(),
                             'updated_at'         => now(),
                         ];
@@ -89,7 +89,7 @@ class AssetImageSeeder extends Seeder
                         'asset_id'           => $asset->id,
                         'asset_unit_id'      => null,
                         'gallery_category_id' => $fallbackCat->id,
-                        'image'              => 'assets/images/' . $folder . '/' . basename($file),
+                        'image'              => 'assets/' . $folder . '/' . basename($file),
                         'created_at'         => now(),
                         'updated_at'         => now(),
                     ];
@@ -112,7 +112,7 @@ class AssetImageSeeder extends Seeder
                                 'asset_id'           => null,
                                 'asset_unit_id'      => $unit->id,
                                 'gallery_category_id' => $cat->id,
-                                'image'              => 'assets/images/' . $folder . '/' . basename($file),
+                                'image'              => 'assets/' . $folder . '/' . basename($file),
                                 'created_at'         => now(),
                                 'updated_at'         => now(),
                             ];
