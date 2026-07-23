@@ -381,6 +381,15 @@ const rentalUnitLabel = (unit) => {
                                 {{ [asset.city, asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
                             </span>
                         </div>
+                        
+                        <div v-if="asset.detail?.facility?.length" class="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span v-for="fac in asset.detail.facility.slice(0, 3)" :key="fac" class="px-2 py-0.5 bg-[#F8F9FA] text-[#6C757D] rounded border border-[#6C757D]/20 text-[9px] sm:text-[10px] font-semibold truncate max-w-[80px] sm:max-w-[100px]">
+                                {{ fac }}
+                            </span>
+                            <span v-if="asset.detail.facility.length > 3" class="px-2 py-0.5 bg-[#F8F9FA] text-[#6C757D] rounded border border-[#6C757D]/20 text-[9px] sm:text-[10px] font-semibold">
+                                +{{ asset.detail.facility.length - 3 }}
+                            </span>
+                        </div>
                     </div>
 
                     <div v-if="asset.reviews_count" class="mt-2 text-[10px] sm:text-xs font-medium text-[#0A2540]">

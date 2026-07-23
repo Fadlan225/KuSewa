@@ -372,6 +372,15 @@ const periodLabel = {
                         {{ [asset.city, asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
                     </span>
                 </div>
+                
+                <div v-if="asset.detail?.facility?.length" class="flex flex-wrap items-center gap-1 mt-1.5">
+                    <span v-for="fac in asset.detail.facility.slice(0, 3)" :key="fac" class="px-1.5 py-0.5 bg-[#F8F9FA] text-[#6C757D] rounded border border-[#6C757D]/20 text-[9px] sm:text-[10px] font-medium truncate max-w-[70px] sm:max-w-[90px]">
+                        {{ fac }}
+                    </span>
+                    <span v-if="asset.detail.facility.length > 3" class="px-1.5 py-0.5 bg-[#F8F9FA] text-[#6C757D] rounded border border-[#6C757D]/20 text-[9px] sm:text-[10px] font-medium">
+                        +{{ asset.detail.facility.length - 3 }}
+                    </span>
+                </div>
 
                 <div class="font-bold text-sm sm:text-base text-[#F97316] mt-auto pt-1">
                     <template v-if="asset.default_pricing">

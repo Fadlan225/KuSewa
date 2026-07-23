@@ -88,7 +88,7 @@ class HomeController extends Controller
 
             $category->assets = asset::whereIn('asset_type_id', $typeIds)
                 ->where('status', 'active')
-                ->select(['id', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status'])
+                ->select(['id', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
                 ->with([
                     'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                     'defaultPricing:id,asset_id,price',
@@ -132,7 +132,7 @@ class HomeController extends Controller
     public function search(Request $request)
     {
         $keyword    = $request->input('q', '');
-        $categories = $request->input('category', []);
+        $types      = $request->input('type', []);
         $location   = $request->input('location', '');
         $minPrice   = $request->input('min_price', 0);
         $maxPrice   = $request->input('max_price', 10000000);
@@ -143,7 +143,7 @@ class HomeController extends Controller
         $query = asset::where('status', 'active')
             ->select([
                 'id', 'asset_type_id', 'owner_profile_id',
-                'title', 'city', 'address', 'status'
+                'title', 'city', 'address', 'status', 'detail'
             ])
             ->with([
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
@@ -166,9 +166,9 @@ class HomeController extends Controller
             });
         }
 
-        // Filter kategori (by category name, melalui type → category)
-        if (!empty($categories)) {
-            $query->whereHas('type.category', fn($q) => $q->whereIn('name', $categories));
+        // Filter tipe aset
+        if (!empty($types)) {
+            $query->whereHas('type', fn($q) => $q->whereIn('name', $types));
         }
 
         // Filter lokasi (city atau address)
@@ -261,7 +261,7 @@ class HomeController extends Controller
             'assets'              => $assets,
             'filters'             => [
                 'q'          => $keyword,
-                'category'   => $categories,
+                'type'       => $types,
                 'location'   => $location,
                 'min_price'  => (int) $minPrice,
                 'max_price'  => (int) $maxPrice,

@@ -92,7 +92,7 @@ onUnmounted(() => {
         <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/5 transition-opacity"></div>
         
         <!-- Card Utama (Slim & Compact) -->
-        <div class="bg-white rounded-full p-1.5 shadow-lg border border-gray-200/80 flex flex-row items-center justify-between w-full transition-all duration-300 relative z-50">
+        <div class="flex flex-row items-center justify-between w-full transition-all duration-300 relative z-50">
 
             <!-- Item 1: Jenis Aset -->
             <div @click="desktopActiveMenu = desktopActiveMenu === 'jenis' ? null : 'jenis'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'jenis' ? 'bg-[#F8F9FA] shadow-inner' : ''">

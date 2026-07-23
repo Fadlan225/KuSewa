@@ -59,13 +59,21 @@ const assetCategories = computed(() => {
 
 const selectedAssets = ref([]);
 
+
 const filteredAssetCategories = computed(() => {
     if (!assetSearchQuery.value) return assetCategories.value;
     const q = assetSearchQuery.value.toLowerCase();
-    return assetCategories.value.map(cat => ({
-        ...cat,
-        items: cat.items.filter(item => item.toLowerCase().includes(q))
-    })).filter(cat => cat.items.length > 0);
+    
+    return assetCategories.value.map(cat => {
+        if (cat.name.toLowerCase().includes(q)) {
+            return { ...cat };
+        }
+        
+        return {
+            ...cat,
+            items: cat.items.filter(item => item.toLowerCase().includes(q))
+        };
+    }).filter(cat => cat.items.length > 0);
 });
 
 const toggleAsset = (item) => {
@@ -76,6 +84,11 @@ const toggleAsset = (item) => {
 
 // State Fasilitas dan Sorting
 const selectedFacilities = ref([]);
+const toggleFacility = (fac) => {
+    const idx = selectedFacilities.value.indexOf(fac);
+    if (idx > -1) selectedFacilities.value.splice(idx, 1);
+    else selectedFacilities.value.push(fac);
+};
 const sortOption = ref('popular');
 
 // State Pencarian Lokasi
@@ -488,8 +501,8 @@ const hydrateFilters = (filters) => {
     
     if (filters.q) keywordQuery.value = filters.q;
     
-    if (filters.category) {
-        selectedAssets.value = Array.isArray(filters.category) ? [...filters.category] : [filters.category];
+    if (filters.type) {
+        selectedAssets.value = Array.isArray(filters.type) ? [...filters.type] : [filters.type];
     } else {
         selectedAssets.value = [];
     }
@@ -545,7 +558,7 @@ const performSearch = () => {
         logSearch(params.q);
     }
     if (selectedAssets.value.length > 0) {
-        params.category = selectedAssets.value;
+        params.type = selectedAssets.value;
     }
     if (searchQuery.value.trim()) {
         params.location = searchQuery.value.trim();
@@ -703,6 +716,7 @@ export function useHomeSearch() {
         logSearch,
         performSearch,
         selectedFacilities,
+        toggleFacility,
         sortOption,
         hydrateFilters,
     };

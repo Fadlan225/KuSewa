@@ -149,7 +149,7 @@ const filteredFavorites = computed(() => {
 
                         <!-- Kategori Filter -->
                         <div>
-                            <h3 class="font-medium text-xs text-slate-400 uppercase tracking-wider px-1 mb-2">Kategori</h3>
+                            <h3 class="font-medium text-xs text-slate-400 uppercase tracking-wider px-1 mb-2">Jenis Aset</h3>
                             <div class="space-y-1">
                                 <button
                                     v-for="item in categories"

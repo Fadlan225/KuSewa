@@ -66,7 +66,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="hidden md:flex flex-col w-full max-w-[850px] relative z-[70] mx-auto">
+    <div class="hidden md:flex flex-col w-full max-w-[850px] relative z-[70]">
         <!-- Overlay untuk menutup modal jika di klik di luar -->
         <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/5 transition-opacity"></div>
         

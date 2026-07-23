@@ -19,6 +19,7 @@ const props = defineProps({
 
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import MobileSearchSheet from '@/Pages/Home/MobileSearchSheet.vue';
+import KeywordSearchSheet from '@/Pages/Home/KeywordSearchSheet.vue';
 import StickySubNavSearch from '@/Components/UI/StickySubNavSearch.vue';
 
 const {
@@ -152,6 +153,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
 
         <!-- Mobile Search Sheet Component -->
         <MobileSearchSheet />
+        <KeywordSearchSheet :search-history="props.searchHistory" :trending="props.trending" />
 
         <!-- DESKTOP STICKY SUB-NAV SEARCH -->
         <div class="lg:sticky lg:top-[64px] z-[60] w-full">
@@ -167,8 +169,8 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                     
                     <!-- Dummy Map -->
                     <div class="bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden relative">
-                        <!-- Pola peta SVG sederhana sbg background -->
-                        <div class="absolute inset-0 opacity-20 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSIvPgo8Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0iIzBBMjU0MCIvPgo8L3N2Zz4=')]"></div>
+                        <!-- Gambar peta sebagai background -->
+                        <div class="absolute inset-0 opacity-40 bg-[url('/images/dummy-map.png')] bg-cover bg-center"></div>
                         <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md text-[#0A2540] mb-3 relative z-10">
                             <i class="fa-solid fa-map-location-dot text-xl"></i>
                         </div>
@@ -208,7 +210,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                         
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-[#6C757D] hidden sm:inline">Urutkan:</span>
-                            <div class="relative w-48 z-10">
+                            <div class="relative w-48 z-40">
                                 <button
                                     @click="isSortOpenDesktop = !isSortOpenDesktop"
                                     class="w-full flex items-center justify-between rounded-xl bg-slate-100/80 hover:bg-slate-200/60 border-0 px-3 py-2 text-xs font-medium text-[#1D1D1F] transition-colors"

@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
@@ -19,7 +19,14 @@ const props = defineProps({
     }
 });
 
+const page = usePage();
+
 const handleFavorite = async () => {
+    if (!page.props.auth?.user) {
+        window.location.href = '/login';
+        return;
+    }
+
     if (props.asset.isFavorite) {
         // Hapus favorit
         try {
@@ -321,7 +328,7 @@ const hoursCount = computed(() => {
     const [endH, endM] = endTime.value.split(':').map(Number);
     const start = new Date(0, 0, 0, startH, startM);
     const end = new Date(0, 0, 0, endH, endM);
-    
+
     if (end <= start) {
         return 0; // Prevent cross-midnight or negative hours
     }
@@ -416,7 +423,10 @@ const handleTouchEnd = (e) => {
         </div>
 
         <!-- HERO GALLERY AND MODAL -->
-        <AssetGallery :images="asset.images" />
+         <section id="foto">
+            <AssetGallery :images="asset.images" />
+         </section>
+
 
         <!-- CONTENT LAYOUT (Kiri: Detail, Kanan: Booking Card) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
