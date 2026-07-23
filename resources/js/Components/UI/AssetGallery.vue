@@ -1,6 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
-
+import { ref, computed, watch, onUnmounted } from 'vue';
 const props = defineProps({
     images: {
         type: Array,
@@ -17,6 +16,22 @@ const mainImage = computed(() => allImages.value[0]);
 const gridImages = computed(() => allImages.value.slice(1, 5));
 
 const showGalleryModal = ref(false);
+
+watch(showGalleryModal, (isOpen) => {
+    if (typeof window !== 'undefined') {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    }
+});
+
+onUnmounted(() => {
+    if (typeof window !== 'undefined') {
+        document.body.style.overflow = '';
+    }
+});
 
 // Mobile Gallery Logic
 const currentMobileImageIndex = ref(0);
@@ -44,25 +59,151 @@ const handleGalleryTouchEnd = (e) => {
     if (touchGalleryEndX.value < touchGalleryStartX.value - 50) nextImage();
     if (touchGalleryEndX.value > touchGalleryStartX.value + 50) prevImage();
 };
+
+// Gallery Modal Categories Logic (Dummy logic for now)
+const activeCategory = ref('Semua');
+
+const galleryCategories = computed(() => {
+    const total = allImages.value.length;
+    return [
+        { name: 'Semua', count: total },
+        { name: 'Tampak Luar', count: Math.ceil(total / 3) },
+        { name: 'Interior', count: Math.floor(total / 3) },
+        { name: 'Fasilitas', count: total - Math.ceil(total / 3) - Math.floor(total / 3) }
+    ];
+});
+
+const chunkedImagesByCategory = computed(() => {
+    let cats = galleryCategories.value.filter(c => c.name !== 'Semua' && c.count > 0);
+
+    // Filter berdasarkan kategori yang dipilih
+    if (activeCategory.value !== 'Semua') {
+        cats = cats.filter(c => c.name === activeCategory.value);
+    }
+
+    return cats.map(cat => {
+        let imgs = allImages.value;
+        const total = allImages.value.length;
+        if (cat.name === 'Tampak Luar') {
+            imgs = imgs.slice(0, Math.ceil(total / 3));
+        } else if (cat.name === 'Interior') {
+            imgs = imgs.slice(Math.ceil(total / 3), Math.ceil(total / 3) * 2);
+        } else if (cat.name === 'Fasilitas') {
+            imgs = imgs.slice(Math.ceil(total / 3) * 2);
+        }
+
+        const urls = imgs.map(url => ({ url }));
+        const chunks = [];
+        for (let i = 0; i < urls.length; ) {
+            chunks.push([urls[i]]); // Full width
+            i++;
+            if (i < urls.length) {
+                const pair = [urls[i]];
+                i++;
+                if (i < urls.length) {
+                    pair.push(urls[i]);
+                    i++;
+                }
+                chunks.push(pair); // Pair (half width)
+            }
+        }
+
+        return {
+            name: cat.name,
+            chunks
+        };
+    });
+});
+
+const closeGalleryModal = () => {
+    showGalleryModal.value = false;
+};
 </script>
 
 <template>
     <div>
-        <!-- Gallery Modal (Lightbox sederhana) -->
-        <div v-if="showGalleryModal" class="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4 sm:p-10">
-            <button @click="showGalleryModal = false" class="absolute top-6 right-6 text-white bg-white/10 hover:bg-white/20 p-3 rounded-full transition z-50">
-                <i class="fa-solid fa-xmark text-xl"></i>
-            </button>
-            <div class="w-full max-w-5xl max-h-full overflow-y-auto no-scrollbar grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div v-for="(img, idx) in allImages" :key="idx" class="relative w-full h-auto min-h-[300px] bg-gray-900 rounded-xl shadow-lg overflow-hidden flex items-center justify-center">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-600 z-0">
-                        <i class="fa-solid fa-image text-5xl mb-2"></i>
-                        <span class="font-medium">No Image</span>
+        <!-- ============================================================ -->
+        <!-- GALLERY MODAL (FULLSCREEN / BOTTOM SHEET)                    -->
+        <!-- ============================================================ -->
+        <transition name="fade">
+            <!-- Backdrop -->
+            <div v-if="showGalleryModal" class="fixed inset-0 z-[90] bg-black/40 backdrop-blur-sm" @click="closeGalleryModal"></div>
+        </transition>
+
+        <transition name="slide-up">
+            <div v-if="showGalleryModal" class="fixed inset-x-0 bottom-0 top-12 md:top-0 md:inset-0 z-[100] bg-white md:bg-white/95 md:backdrop-blur-xl flex flex-col rounded-t-3xl md:rounded-none overflow-hidden shadow-2xl">
+                <!-- Header -->
+                <div class="flex items-center justify-between px-4 sm:px-8 py-4 border-b border-gray-200/50 bg-transparent sticky top-0 z-10">
+                    <h2 class="text-xl md:text-2xl font-extrabold text-[#0A2540]">Galeri Foto</h2>
+                    <button @click="closeGalleryModal" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 md:bg-white/50 hover:bg-gray-200 md:hover:bg-white shadow-sm transition-colors">
+                        <i class="fa-solid fa-xmark text-xl text-[#0A2540]"></i>
+                    </button>
+                </div>
+
+                <!-- Tab Filter Kategori -->
+                <div class="px-4 sm:px-8 py-4 border-b border-gray-200/50 bg-transparent flex gap-3 overflow-x-auto no-scrollbar">
+                    <button
+                        v-for="cat in galleryCategories"
+                        :key="cat.name"
+                        @click="activeCategory = cat.name"
+                        class="px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all backdrop-blur-sm flex items-center gap-2 border border-transparent"
+                        :class="activeCategory === cat.name
+                            ? 'bg-primary text-white shadow-md'
+                            : 'bg-gray-100 md:bg-white/60 text-[#0A2540] hover:bg-gray-200 md:hover:bg-white border-gray-200 shadow-sm'">
+                        {{ cat.name }}
+                        <span
+                            class="px-2 py-0.5 rounded-full text-xs font-extrabold flex items-center justify-center min-w-[24px]"
+                            :class="activeCategory === cat.name ? 'bg-white text-primary' : 'bg-white text-gray-500 border border-gray-200'">
+                            {{ cat.count }}
+                        </span>
+                    </button>
+                </div>
+
+                <!-- Grid Gambar berdasarkan Kategori (Continuous Scroll) -->
+                <div class="flex-1 overflow-y-auto p-4 sm:p-8">
+                    <div class="max-w-6xl mx-auto space-y-12 sm:space-y-24">
+
+                        <div v-for="cat in chunkedImagesByCategory" :key="cat.name" class="flex flex-col md:flex-row gap-6 md:gap-8">
+                            <!-- Category Title (Left on desktop, Top on mobile) -->
+                            <div class="w-full md:w-1/3 md:sticky top-0 h-fit pt-2 md:pt-4">
+                                <h3 class="text-2xl font-bold text-[#0A2540]">{{ cat.name }}</h3>
+                            </div>
+
+                            <!-- Photos for this category -->
+                            <div class="w-full md:w-2/3 flex flex-col gap-2 sm:gap-4">
+                                <template v-for="(chunk, idx) in cat.chunks" :key="idx">
+                                    <!-- Full width image -->
+                                    <div v-if="chunk.length === 1" class="w-full aspect-video bg-gray-200 overflow-hidden relative group">
+                                        <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
+                                            <i class="fa-solid fa-image text-4xl mb-2"></i>
+                                        </div>
+                                        <img :src="chunk[0].url" class="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105" @error="$event.target.style.display='none'" loading="lazy" />
+                                    </div>
+
+                                    <!-- Half width images pair -->
+                                    <div v-else-if="chunk.length === 2" class="flex gap-2 sm:gap-4">
+                                        <div class="w-1/2 aspect-[4/3] bg-gray-200 overflow-hidden relative group">
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
+                                                <i class="fa-solid fa-image text-3xl mb-2"></i>
+                                            </div>
+                                            <img :src="chunk[0].url" class="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105" @error="$event.target.style.display='none'" loading="lazy" />
+                                        </div>
+                                        <div class="w-1/2 aspect-[4/3] bg-gray-200 overflow-hidden relative group">
+                                            <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
+                                                <i class="fa-solid fa-image text-3xl mb-2"></i>
+                                            </div>
+                                            <img :src="chunk[1].url" class="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105" @error="$event.target.style.display='none'" loading="lazy" />
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
                     </div>
-                    <img :src="img" class="w-full h-full object-cover relative z-10" @error="$event.target.style.display='none'" />
                 </div>
             </div>
-        </div>
+        </transition>
+        <!-- ============================================================ -->
 
         <!-- MOBILE GALLERY CAROUSEL (Mobile Only) -->
         <div id="foto" class="block md:hidden relative w-full h-[300px] sm:h-[400px] rounded-2xl overflow-hidden mb-8 touch-pan-y" @touchstart.passive="handleGalleryTouchStart" @touchend.passive="handleGalleryTouchEnd">
@@ -79,6 +220,12 @@ const handleGalleryTouchEnd = (e) => {
             <div v-if="hasImages" class="absolute bottom-4 right-4 bg-black/60 text-white text-xs font-bold px-3 py-1.5 rounded-full z-10 tracking-widest backdrop-blur-sm shadow-md">
                 {{ currentMobileImageIndex + 1 }} / {{ allImages.length }}
             </div>
+
+            <!-- Tampilkan Semua Foto Mobile -->
+            <button v-if="hasImages" @click.stop="showGalleryModal = true" class="absolute bottom-4 left-4 bg-white/90 text-[#0A2540] hover:bg-white text-xs font-bold px-4 py-2 rounded-full z-10 shadow-md backdrop-blur-sm flex items-center gap-2">
+                <i class="fa-solid fa-images"></i>
+                Lihat Semua Foto
+            </button>
 
             <!-- Left/Right navigation hints -->
             <button v-if="hasImages && currentMobileImageIndex > 0" @click.stop="prevImage" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white text-gray-800 rounded-full z-20 shadow-sm transition">
@@ -120,6 +267,18 @@ const handleGalleryTouchEnd = (e) => {
         </div>
     </div>
 </template>
+
+<style scoped>
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s ease;
+}
+.slide-up-enter-from,
+.slide-up-leave-to {
+    transform: translateY(100%);
+    opacity: 0;
+}
+</style>
 
 <style scoped>
 .no-scrollbar::-webkit-scrollbar { display: none; }
