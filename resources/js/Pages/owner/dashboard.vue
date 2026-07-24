@@ -110,6 +110,11 @@ const activeTenants = ref([
                         </div>
                         <span class="bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">3</span>
                     </Link>
+                    
+                    <Link :href="route('owner.MonthlyPayment')" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition">
+                    <i class="fa-solid fa-credit-card text-slate-400"></i>
+                    <span>Biaya Bulanan</span>
+                    </Link>
 
                     <Link href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition">
                         <i class="fa-solid fa-[#0A2540] fa-wallet text-slate-400"></i>

@@ -715,29 +715,28 @@ const handleStartSewakan = () => {
                                     <div class="h-px bg-gray-100 my-2"></div>
 
                                     <!-- 2. Mulai Sewakan Aset Card Banner - Conditional berdasarkan role -->
-                                    <template v-if="!hasOwnerProfile">
-                                        <!-- User biasa - Tampilkan tombol "Mulai Sewakan Aset" -->
-                                        <div
-                                            :href="route('owner.register')"
-                                            @click="handleStartSewakan"
-                                            class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1"
-                                        >
-                                            <!-- Ilustrasi SVG -->
-                                            <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
-                                                <img src="/no-image.svg" alt="Ilustrasi Rumah" class="w-full object-contain object-bottom drop-shadow-sm group-hover:scale-105 transition-transform" />
-                                            </div>
+<template v-if="!hasOwnerProfile">
+    <!-- User biasa - Tampilkan tombol "Mulai Sewakan Aset" -->
+    <Link
+        :href="route('owner.register')"
+        class="relative block overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-xs hover:shadow-md my-1"
+    >
+        <!-- Ilustrasi SVG -->
+        <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
+            <img src="/no-image.svg" alt="Ilustrasi Rumah" class="w-full object-contain object-bottom drop-shadow-xs group-hover:scale-105 transition-transform" />
+        </div>
 
-                                            <!-- Konten Teks -->
-                                            <div class="relative z-10 w-2/3 pr-2">
-                                                <h3 class="text-sm font-bold text-[#0A2540] group-hover:text-amber-600 transition-colors">
-                                                    Mulai Sewakan Aset
-                                                </h3>
-                                                <p class="text-[11px] text-gray-500 leading-snug mt-1 font-normal">
-                                                    Maksimalkan potensi aset Anda dan mulai hasilkan pendapatan tambahan.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </template>
+        <!-- Konten Teks -->
+        <div class="relative z-10 w-2/3 pr-2">
+            <h3 class="text-sm font-bold text-[#0A2540] group-hover:text-amber-600 transition-colors">
+                Mulai Sewakan Aset
+            </h3>
+            <p class="text-[11px] text-gray-500 leading-snug mt-1 font-normal">
+                Maksimalkan potensi aset Anda dan mulai hasilkan pendapatan tambahan.
+            </p>
+        </div>
+    </Link>
+</template>
 
                                     <template v-else>
                                         <!-- Owner - Tampilkan Dashboard Owner -->

@@ -10,6 +10,7 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\OwnerDashboardController;
 use App\Http\Controllers\Owner\PropertyController;
 use App\Http\Controllers\OwnerRegisterController;
+use App\Http\Controllers\Owner\MonthlyPaymentController;
 
 // ==========================================
 // PUBLIC ROUTES (Dapat diakses siapapun)
@@ -84,4 +85,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/become-owner/verify/{id}', [OwnerRegisterController::class, 'verify'])
         ->name('owner.register.verify')
         ->middleware('signed');
+});
+
+Route::middleware(['auth'])->prefix('owner')->name('owner.')->group(function () {
+    // Berikan nama route persis 'MonthlyPayment'
+    Route::get('/monthly-payment', [MonthlyPaymentController::class, 'index'])->name('MonthlyPayment');
+    Route::post('/monthly-payment', [MonthlyPaymentController::class, 'store'])->name('MonthlyPayment.store');
 });
