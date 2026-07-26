@@ -14,11 +14,6 @@ const props = defineProps({
     }
 })
 
-// Karena optimistic UI pada HorizontalAssetCard bisa men-toggle favorite secara lokal,
-// namun card tetap tampil (meski isFavorite = false), biarkan saja.
-// Kalau ingin otomatis hilang saat unfavorite, kita bisa filter yang isFavorite === true.
-// Tapi biasanya di halaman Favorit lebih nyaman jika card tidak langsung hilang saat
-// batal favorit, sehingga user bisa membatalkannya. Kita ikuti saja pola standar.
 const favorites = ref(props.initialFavorites)
 const categories = ref(props.categoriesList)
 
@@ -116,7 +111,7 @@ const filteredFavorites = computed(() => {
                             : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'"
                     >
                         {{ item }}
-                        <span 
+                        <span
                             class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1"
                             :class="selectedCategory === item ? 'bg-white text-[#0A2540]' : 'bg-slate-100 text-slate-500'"
                         >
@@ -162,7 +157,7 @@ const filteredFavorites = computed(() => {
                                 >
                                     <div class="flex items-center gap-2">
                                         <span>{{ item }}</span>
-                                        <span 
+                                        <span
                                             class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 transition-colors"
                                             :class="selectedCategory === item ? 'bg-white text-[#0A2540]' : 'bg-slate-200 text-slate-500 group-hover:bg-slate-200/80'"
                                         >

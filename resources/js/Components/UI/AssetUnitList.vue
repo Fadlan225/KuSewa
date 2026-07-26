@@ -14,6 +14,10 @@ const props = defineProps({
     durationCount: {
         type: Number,
         default: 1,
+    },
+    priceMultiplier: {
+        type: Number,
+        default: 1,
     }
 });
 
@@ -213,7 +217,7 @@ const handleSelect = (unit, pricing) => {
                 <div class="w-[200px] shrink-0 flex flex-col justify-between border-l border-[#6C757D]/20 pl-4 min-w-0">
                     <div class="text-left">
                         <div class="font-extrabold text-xl text-[#e65c00] leading-tight truncate">
-                            {{ formatRupiah(getLowestPricing(unit).price) }}
+                            {{ formatRupiah(getLowestPricing(unit).price * priceMultiplier) }}
                             <span class="text-[10px] font-normal text-[#0A2540] inline">
                                 /{{ rentalUnitLabel }}
                             </span>

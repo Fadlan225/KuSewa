@@ -154,7 +154,9 @@ const submitBooking = () => {
     const params = {
         pricing_id: form.pricing_id,
         date_start,
-        date_end
+        date_end,
+        duration: durationCount.value,
+        rental_mode: activeScheduleMode.value
     };
 
     router.get(route('booking.create', { asset: props.asset.id }), params);
@@ -207,7 +209,10 @@ const endDate = ref(null);
 const calendarPage = ref(0);
 const transitionName = ref('slide-left');
 
+const selectedRentalMode = ref(null);
+
 const activeScheduleMode = computed(() => {
+    if (selectedRentalMode.value) return selectedRentalMode.value;
     return props.asset.type?.rental_unit || 'day';
 });
 
@@ -372,10 +377,14 @@ const durationCount = computed(() => {
     return nightsCount.value;
 });
 
+const priceMultiplier = computed(() => {
+    return (props.asset.type?.rental_unit === 'night' && activeScheduleMode.value === 'month') ? 30 : 1;
+});
+
 const subtotal = computed(() => {
     if (!lowestPrice.value) return 0;
     const count = durationCount.value || 1;
-    return lowestPrice.value.price * count;
+    return lowestPrice.value.price * priceMultiplier.value * count;
 });
 
 const feeAmount = computed(() => {
@@ -542,6 +551,21 @@ const handleTouchEnd = (e) => {
 
                 <!-- SEKSI PEMILIHAN TANGGAL (KALENDER) -->
                 <div id="kalender-sewa" class="pb-10 border-b border-gray-200">
+                    <!-- Toggle Sewa Harian / Bulanan (Khusus Apartemen) -->
+                    <div v-if="asset.type?.name === 'Apartemen'" class="flex items-center gap-2 mb-6 bg-slate-100 p-1.5 rounded-xl w-fit">
+                        <button 
+                            @click="selectedRentalMode = 'night'"
+                            class="px-5 py-2 rounded-lg text-sm font-bold transition-all"
+                            :class="activeScheduleMode === 'night' ? 'bg-white text-[#0A2540] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                            Sewa Harian
+                        </button>
+                        <button 
+                            @click="selectedRentalMode = 'month'"
+                            class="px-5 py-2 rounded-lg text-sm font-bold transition-all"
+                            :class="activeScheduleMode === 'month' ? 'bg-white text-[#0A2540] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+                            Sewa Bulanan
+                        </button>
+                    </div>
                     <h2 class="text-2xl font-extrabold text-[#0A2540] mb-1">
                         <span v-if="activeScheduleMode === 'hour' && startDate">Jadwal sewa untuk {{ asset.title || 'Aset ini' }}</span>
                         <span v-else-if="activeScheduleMode === 'month' && startDate">{{ durationMonths }} Bulan di {{ asset.title || 'Sini' }}</span>
@@ -693,7 +717,8 @@ const handleTouchEnd = (e) => {
                 <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Pilihan Kamar / Unit</h2>
                 <AssetUnitList 
                     :units="asset.units" 
-                    :rentalUnitLabel="activeScheduleMode"
+                    :rentalUnitLabel="rentalUnitLabel(activeScheduleMode)"
+                    :priceMultiplier="priceMultiplier"
                     :durationCount="durationCount"
                     @select="handleUnitSelect"
                 />
@@ -804,9 +829,9 @@ const handleTouchEnd = (e) => {
             <div class="lg:col-span-1">
                 <div class="sticky top-24 bg-white shadow-2xl shadow-gray-200/50 rounded-2xl p-6 border border-gray-200">
                     <!-- Price Header -->
-                    <div class="flex items-end gap-1 mb-6">
-                        <span class="text-2xl font-extrabold text-[#0A2540]">{{ formatRupiah(lowestPrice?.price) }}</span>
-                        <span class="text-gray-500 mb-1">/{{ rentalUnitLabel(asset.type?.rental_unit) }}</span>
+                    <div class="flex items-baseline gap-1 mb-6">
+                        <span class="text-3xl font-black text-[#0A2540]">{{ formatRupiah(lowestPrice?.price * priceMultiplier) }}</span>
+                        <span class="text-sm font-medium text-gray-500">/{{ rentalUnitLabel(activeScheduleMode) }}</span>
                     </div>
 
                     <!-- Date & Duration Box -->
@@ -827,7 +852,7 @@ const handleTouchEnd = (e) => {
                         </div>
                         <div class="p-3 bg-gray-50 flex justify-between items-center">
                             <span class="text-xs font-semibold text-gray-600">Durasi Sewa</span>
-                            <span class="text-sm font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(asset.type?.rental_unit) }}</span>
+                            <span class="text-sm font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(activeScheduleMode) }}</span>
                         </div>
                     </div>
 
@@ -873,9 +898,9 @@ const handleTouchEnd = (e) => {
     <DetailBottomBar
         :price="totalAmount || lowestPrice?.price || 0"
         :durationCount="durationCount"
-        :durationLabel="rentalUnitLabel(asset.type?.rental_unit)"
+        :durationLabel="rentalUnitLabel(activeScheduleMode)"
         :formattedDateRange="formattedDateRange"
-        :periodLabel="rentalUnitLabel(asset.type?.rental_unit)"
+        :periodLabel="rentalUnitLabel(activeScheduleMode)"
         :disabled="asset.status !== 'active' || !asset.pricings.length || !startDate || durationCount === 0"
         @submit="submitBooking"
     />

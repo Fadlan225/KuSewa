@@ -7,6 +7,7 @@ use Inertia\Inertia;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\BookingController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -30,11 +31,11 @@ Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
 Route::middleware('auth')->group(function () {
+    // ==========================
+    // Booking
+    // ==========================
+    Route::resource('booking', BookingController::class);
 
     // ==========================
     // Favorite

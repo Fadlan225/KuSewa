@@ -23,6 +23,10 @@ defineProps({
     disabled: {
         type: Boolean,
         default: false
+    },
+    buttonText: {
+        type: String,
+        default: 'Pesan'
     }
 });
 
@@ -39,27 +43,32 @@ const formatRupiah = (value) => {
 <template>
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-5 z-40 md:hidden flex justify-between items-center shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)]">
         <div class="flex flex-col">
-            <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5" v-if="durationCount > 0">Total Harga</span>
-            <span class="text-lg font-extrabold text-[#0A2540] underline decoration-[#0A2540] underline-offset-2" :class="{ 'mt-0': durationCount > 0 }">
-                {{ formatRupiah(price) }}
-            </span>
-            <span class="text-xs text-gray-500 font-medium mt-0.5 truncate max-w-[200px]">
-                <template v-if="formattedDateRange && durationCount > 0">
-                    {{ durationCount }} {{ durationLabel }} · {{ formattedDateRange }}
-                </template>
-                <template v-else-if="durationCount > 0">
-                    untuk {{ durationCount }} {{ durationLabel }}
-                </template>
-                <template v-else>
-                    per {{ periodLabel }}
-                </template>
-            </span>
+            <slot name="left-content">
+                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5" v-if="durationCount > 0">Total Harga</span>
+                <span class="text-lg font-extrabold text-[#0A2540] underline decoration-[#0A2540] underline-offset-2" :class="{ 'mt-0': durationCount > 0 }">
+                    {{ formatRupiah(price) }}
+                </span>
+                <span class="text-xs text-gray-500 font-medium mt-0.5 truncate max-w-[200px]">
+                    <template v-if="formattedDateRange && durationCount > 0">
+                        {{ durationCount }} {{ durationLabel }} · {{ formattedDateRange }}
+                    </template>
+                    <template v-else-if="durationCount > 0">
+                        untuk {{ durationCount }} {{ durationLabel }}
+                    </template>
+                    <template v-else>
+                        per {{ periodLabel }}
+                    </template>
+                </span>
+            </slot>
         </div>
-        <button 
-            @click="$emit('submit')" 
-            :disabled="disabled" 
-            class="bg-primary hover:bg-primary text-white font-bold py-3 px-8 rounded-xl shadow-md transition-colors text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed">
-            Pesan
-        </button>
+        
+        <slot name="right-content">
+            <button
+                @click="$emit('submit')"
+                :disabled="disabled"
+                class="bg-primary hover:bg-primary text-white font-bold py-3 px-8 rounded-xl shadow-md transition-colors text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed">
+                {{ buttonText }}
+            </button>
+        </slot>
     </div>
 </template>
