@@ -14,10 +14,11 @@ return new class extends Migration
         Schema::create('payments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('booking_id')->constrained()->onDelete('restrict');
-            $table->string('payment_method');
+            $table->string('payment_method')->nullable();
             $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending');
-            $table->date('payment_date');
-            $table->string('proof_of_payment');
+            $table->dateTime('expires_at')->nullable();
+            $table->date('payment_date')->nullable();
+            $table->string('proof_of_payment')->nullable();
             $table->timestamps();
         });
     }

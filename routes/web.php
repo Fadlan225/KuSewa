@@ -8,6 +8,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\BookingController;
+use App\Http\Controllers\PaymentController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -23,9 +24,7 @@ Route::middleware('auth')->group(function () {
 
 Route::resource('assets', AssetController::class)->only(['show']);
 
-Route::get('/notifikasi', function () {
-    return Inertia::render('Home/Notifikasi');
-});
+
 
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
@@ -33,9 +32,10 @@ Route::middleware(['auth', 'role:owner'])->group(function () {
 
 Route::middleware('auth')->group(function () {
     // ==========================
-    // Booking
+    // Booking & Payment
     // ==========================
     Route::resource('booking', BookingController::class);
+    Route::resource('payment', PaymentController::class);
 
     // ==========================
     // Favorite

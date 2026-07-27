@@ -10,11 +10,12 @@ class payment extends Model
         'booking_id',
         'payment_method',
         'payment_date',
+        'expires_at',
         'payment_status',
         'proof_of_payment'
     ];
 
-    public function bookings(){
+    public function booking(){
         return $this->belongsTo(booking::class);
     }
 }

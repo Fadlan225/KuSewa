@@ -81,8 +81,15 @@ class BookingController extends Controller
             'booking_status' => 'pending'
         ]);
 
-        // Karena belum ada halaman payment, sementara redirect ke beranda dengan pesan sukses
-        return redirect()->route('Home')->with('success', 'Booking berhasil dibuat! Menunggu pembayaran.');
+        // Buat record payment dengan expiry 24 jam
+        $payment = \App\Models\payment::create([
+            'booking_id' => $booking->id,
+            'payment_status' => 'pending',
+            'expires_at' => now()->addHours(24),
+        ]);
+
+        // Redirect ke halaman pembayaran
+        return redirect()->route('payment.show', $payment->id)->with('success', 'Booking berhasil dibuat! Selesaikan pembayaran Anda.');
     }
 
     /**
