@@ -9,6 +9,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\AktivitasController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -22,19 +23,27 @@ Route::middleware('auth')->group(function () {
     Route::delete('/search-logs/keyword', [HomeController::class, 'deleteSearchKeyword'])->name('search.deleteKeyword');
 });
 
-use App\Http\Controllers\AktivitasController;
-
-Route::middleware('auth')->group(function () {
-    Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas.index');
-});
-
 Route::resource('assets', AssetController::class)->only(['show']);
 
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });
 
+use App\Http\Controllers\ChatController;
+
 Route::middleware('auth')->group(function () {
+    Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
+    Route::post('/chat/start', [ChatController::class, 'startChat'])->name('chat.start');
+    
+    // API endpoints untuk Vue
+    Route::get('/api/chats', [ChatController::class, 'getChats'])->name('api.chats.index');
+    Route::get('/api/chats/{room}/messages', [ChatController::class, 'getMessages'])->name('api.chats.messages');
+    Route::post('/api/chats/{room}/messages', [ChatController::class, 'sendMessage'])->name('api.chats.send');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas.index');
+
     // ==========================
     // Booking & Payment
     // ==========================

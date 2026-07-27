@@ -127,26 +127,28 @@ onUnmounted(() => {
 
 <template>
     <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-            <button @click="goBack" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
-                <i class="fa-solid fa-arrow-left text-[#0A2540]"></i>
-            </button>
-
-            <!-- Desktop Scroll Menu -->
-            <div v-if="showSections" class="hidden md:flex gap-6 transition-all duration-300" :class="showDesktopNavMenu ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'">
-                <a v-for="section in sections" :key="section.id" :href="`#${section.id}`" class="text-sm font-bold text-gray-500 hover:text-[#0A2540] transition">
-                    {{ section.label }}
-                </a>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <button v-if="showShare" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors" @click="showShareUI = true">
-                    <i class="fa-solid fa-arrow-up-from-bracket text-[#0A2540]"></i>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full">
+            <slot name="content">
+                <button @click="goBack" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
+                    <i class="fa-solid fa-arrow-left text-[#0A2540]"></i>
                 </button>
-                <button v-if="showFavorite" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors" @click="$emit('favorite')">
-                    <i class="fa-heart" :class="isFavorited ? 'fa-solid text-red-500' : 'fa-regular text-[#0A2540]'"></i>
-                </button>
-            </div>
+
+                <!-- Desktop Scroll Menu -->
+                <div v-if="showSections" class="hidden md:flex gap-6 transition-all duration-300" :class="showDesktopNavMenu ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'">
+                    <a v-for="section in sections" :key="section.id" :href="`#${section.id}`" class="text-sm font-bold text-gray-500 hover:text-[#0A2540] transition">
+                        {{ section.label }}
+                    </a>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button v-if="showShare" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors" @click="showShareUI = true">
+                        <i class="fa-solid fa-arrow-up-from-bracket text-[#0A2540]"></i>
+                    </button>
+                    <button v-if="showFavorite" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors" @click="$emit('favorite')">
+                        <i class="fa-heart" :class="isFavorited ? 'fa-solid text-red-500' : 'fa-regular text-[#0A2540]'"></i>
+                    </button>
+                </div>
+            </slot>
         </div>
     </nav>
 

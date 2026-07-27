@@ -317,7 +317,7 @@ const initials = computed(() => {
                     <!-- Kotak Masuk -->
                     <Link
                         v-if="page.props.auth.user"
-                        href="/kotakmasuk"
+                        href="/chat"
                         :class="[
                             'relative text-sm font-semibold transition-colors duration-300',
                             isInbox

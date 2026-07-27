@@ -22,6 +22,32 @@ const props = defineProps({
 
 const page = usePage();
 
+const chatMessage = ref('Halo! Apakah ketersediaan aset ini masih ada?');
+
+const startChat = () => {
+    if (!page.props.auth?.user) {
+        window.location.href = '/login';
+        return;
+    }
+
+    router.post(route('chat.start'), {
+        asset_id: props.asset.id,
+        owner_profile_id: props.asset.owner_profile_id,
+        message: chatMessage.value
+    }, {
+        onSuccess: () => {
+            // Berhasil dialihkan ke halaman chat
+        },
+        onError: (err) => {
+            if(err.error) {
+                alert(err.error);
+            } else {
+                alert('Gagal memulai chat.');
+            }
+        }
+    });
+};
+
 const handleFavorite = async () => {
     if (!page.props.auth?.user) {
         window.location.href = '/login';
@@ -902,14 +928,14 @@ const handleTouchEnd = (e) => {
                     </div>
 
                     <!-- Hubungi Pemilik Card -->
-                    <div v-if="asset.owner_profile?.user?.phone" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <div v-if="asset.owner_profile" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                         <h3 class="text-xl font-bold text-[#0A2540] mb-4">Hubungi Pemilik</h3>
                         <div class="flex items-center gap-3 border-b-2 border-gray-800 pb-2 focus-within:border-[#FFC000] transition-colors">
                             <i class="fa-regular fa-comment-dots text-2xl text-[#FFC000]"></i>
-                            <input v-model="chatMessage" type="text" placeholder="Tanya sesuatu ke pemilik..." class="w-full bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
-                            <a :href="'https://wa.me/' + asset.owner_profile.user.phone + '?text=' + encodeURIComponent(chatMessage)" target="_blank" class="text-[#FFC000] font-bold text-sm hover:text-[#e6ad00] transition-colors whitespace-nowrap">
+                            <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu ke pemilik..." class="w-full bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
+                            <button @click="startChat" class="text-[#FFC000] font-bold text-sm hover:text-[#e6ad00] transition-colors whitespace-nowrap">
                                 kirim
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>

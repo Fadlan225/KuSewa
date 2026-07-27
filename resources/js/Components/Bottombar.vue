@@ -63,16 +63,16 @@ const isLoggedIn = computed(() => !!page.props.auth.user)
             </Link>
 
             <!-- Item Navigasi Kotak Masuk -->
-            <Link href="/kotakmasuk"
+            <Link :href="route('chat.index')"
                 v-if="page.props.auth.user"
                 class="relative flex flex-col items-center justify-center gap-1.5 h-full w-20 transition-colors duration-300"
-                :class="isActive('/kotakmasuk').value ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
+                :class="isActive('/chat').value ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
 
                 <i class="fa-solid fa-inbox text-xl relative z-10"></i>
                 <span class="text-[10px] font-bold relative z-10">Kotak Masuk</span>
 
                 <transition enter-active-class="transition opacity-0 duration-300" enter-to-class="opacity-100">
-                    <div v-if="isActive('/kotakmasuk').value" class="absolute inset-x-0 bottom-0 top-1 flex flex-col items-center">
+                    <div v-if="isActive('/chat').value" class="absolute inset-x-0 bottom-0 top-1 flex flex-col items-center">
                         <div class="w-full h-full rounded-t-lg" style="background: linear-gradient(to top, rgba(255, 192, 0, 0.03), transparent)"></div>
                         <div class="w-full h-1 bg-[#FFC000] rounded-t-full shadow-[0_0_10px_rgba(255,192,0,0.5)]"></div>
                     </div>

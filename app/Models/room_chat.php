@@ -25,6 +25,6 @@ class room_chat extends Model
     }
 
     public function messages(){
-        return $this->hasOne(message::class);
+        return $this->hasMany(message::class);
     }
 }

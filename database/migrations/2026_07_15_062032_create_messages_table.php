@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('messages', function (Blueprint $table) {
             $table->id();
             $table->foreignId('room_chat_id')->constrained()->onDelete('restrict');
-            $table->boolean('is_read');
-            $table->enum('message_type',['text','image','file']);
+            $table->foreignId('sender_id')->constrained('users')->onDelete('cascade');
+            $table->boolean('is_read')->default(false);
+            $table->enum('message_type',['text','image','file'])->default('text');
             $table->string('message');
             $table->timestamps();
         });
