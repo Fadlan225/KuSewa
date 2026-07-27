@@ -27,6 +27,10 @@ Route::get('/notifikasi', function () {
     return Inertia::render('Home/Notifikasi');
 });
 
+Route::get('/dashboardAdmin', function () {
+    return Inertia::render('Dashboard/Admin');
+});
+
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });
