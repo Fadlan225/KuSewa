@@ -27,9 +27,18 @@ Route::get('/notifikasi', function () {
     return Inertia::render('Home/Notifikasi');
 });
 
-Route::get('/dashboardAdmin', function () {
-    return Inertia::render('Dashboard/Admin');
-});
+
+    Route::get('/dashboard', function () { return Inertia::render('Admin/Dashboard'); })->name('admin.dashboard');
+    Route::get('/validasi-akun', function () { return Inertia::render('Admin/ValidasiAkun'); })->name('admin.validasi-akun');
+    Route::get('/validasi-aset', function () { return Inertia::render('Admin/ValidasiAset'); })->name('admin.validasi-aset');
+    Route::get('/validasi-pembayaran', function () { return Inertia::render('Admin/ValidasiPembayaran'); })->name('admin.validasi-pembayaran');
+    Route::get('/kelola-penyewa', function () { return Inertia::render('Admin/KelolaPenyewa'); })->name('admin.kelola-penyewa');
+    Route::get('/kelola-pemilik', function () { return Inertia::render('Admin/KelolaPemilik'); })->name('admin.kelola-pemilik');
+    Route::get('/promo', function () { return Inertia::render('Admin/Promo'); })->name('admin.promo');
+    Route::get('/pembayaran', function () { return Inertia::render('Admin/Pembayaran'); })->name('admin.pembayaran');
+    Route::get('/laporan', function () { return Inertia::render('Admin/Laporan'); })->name('admin.laporan');
+    Route::get('/notifikasi', function () { return Inertia::render('Admin/Notifikasi'); })->name('admin.notifikasi');
+
 
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
