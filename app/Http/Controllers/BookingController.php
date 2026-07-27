@@ -100,6 +100,7 @@ class BookingController extends Controller
         $booking = \App\Models\booking::with([
             'asset.firstImage',
             'asset.type.category',
+            'asset.ownerProfile.user',
             'payment',
             'user'
         ])->findOrFail($id);

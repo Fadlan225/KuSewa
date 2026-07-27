@@ -6,6 +6,7 @@ import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
 import Toast from '@/Components/UI/Toast.vue';
 import JsBarcode from 'jsbarcode';
+import QRCode from 'qrcode';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 
@@ -17,8 +18,10 @@ const props = defineProps({
 });
 
 const barcodeRef = ref(null);
+const qrcodeRef = ref(null);
 const ticketRef = ref(null);
 const isDownloading = ref(false);
+const activeCodeTab = ref('barcode');
 
 const isConfirmedAndPaid = computed(() => {
     // TIKET BOOKING ditunjukkan jika status booking dikonfirmasi/selesai DAN pembayaran sudah lunas
@@ -40,23 +43,38 @@ const isCancelled = computed(() => {
     return props.booking.booking_status === 'cancelled' || props.booking.booking_status === 'rejected';
 });
 
-const generateBarcode = () => {
+const generateCodes = async () => {
     if (barcodeRef.value && props.booking.booking_code) {
         JsBarcode(barcodeRef.value, props.booking.booking_code, {
             format: "CODE128",
             lineColor: "#000",
-            width: 2,
+            width: 1.5,
             height: 60,
             displayValue: false,
             margin: 0
         });
+    }
+
+    if (qrcodeRef.value && props.booking.booking_code) {
+        try {
+            await QRCode.toCanvas(qrcodeRef.value, props.booking.booking_code, {
+                width: 200,
+                margin: 1,
+                color: {
+                    dark: '#0A2540',
+                    light: '#F9FAFB'
+                }
+            });
+        } catch (err) {
+            console.error('Error generating QR code', err);
+        }
     }
 };
 
 onMounted(() => {
     if (isConfirmedAndPaid.value) {
         nextTick(() => {
-            generateBarcode();
+            generateCodes();
         });
     }
 });
@@ -88,24 +106,17 @@ const formatTime = (dateString) => {
     return d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
 };
 
-const dateRange = computed(() => {
-    return formatDate(props.booking.start_date);
-});
-
-const timeRange = computed(() => {
-    const start = formatTime(props.booking.start_date);
-    const end = formatTime(props.booking.end_date);
-    // Simple duration calc (in hours for simplicity, or just show start-end)
+const durationString = computed(() => {
     const startDate = new Date(props.booking.start_date);
     const endDate = new Date(props.booking.end_date);
-    let diff = Math.abs(endDate - startDate) / 36e5;
-    diff = Math.round(diff * 10) / 10;
+    let diff = Math.abs(endDate - startDate) / 36e5; // dalam jam
 
-    // Check rental unit
-    const unit = props.booking.asset?.type?.rental_unit;
-    if (unit === 'day') return `${start} - ${end} (${diff/24} Hari)`;
-    if (unit === 'month') return `${start} - ${end} (${Math.round(diff/24/30)} Bulan)`;
-    return `${start} - ${end} (${diff} Jam)`;
+    if (diff >= 8760) return `${Math.round(diff / 8760)} Tahun`;
+    if (diff >= 720) return `${Math.round(diff / 720)} Bulan`;
+    if (diff >= 168) return `${Math.round(diff / 168)} Minggu`;
+    if (diff >= 24) return `${Math.round(diff / 24)} Hari`;
+
+    return `${Math.round(diff * 10) / 10} Jam`;
 });
 
 const locationString = computed(() => {
@@ -136,7 +147,13 @@ const downloadTicketPDF = async () => {
     try {
         const imgData = await toPng(ticketRef.value, {
             pixelRatio: 2,
-            backgroundColor: '#ffffff'
+            backgroundColor: '#ffffff',
+            filter: (node) => {
+                if (node.classList && node.classList.contains('exclude-from-pdf')) {
+                    return false;
+                }
+                return true;
+            }
         });
 
         const width = ticketRef.value.offsetWidth;
@@ -147,7 +164,7 @@ const downloadTicketPDF = async () => {
             unit: 'px',
             format: [width, height]
         });
-        
+
         pdf.addImage(imgData, 'PNG', 0, 0, width, height);
         pdf.save(`Tiket-Booking-${props.booking.booking_code}.pdf`);
         showToast('Tiket berhasil diunduh!', 'success');
@@ -208,38 +225,38 @@ const copyCode = async () => {
                 <div class="px-4 py-2 drop-shadow-xl">
                     <!-- Ticket Container with CSS Mask -->
                     <div ref="ticketRef" class="w-full max-w-sm mx-auto bg-white ticket-shape flex flex-col relative">
-                        
+
                         <!-- Image Header (h-56 = 224px) -->
                         <div class="relative h-56 w-full bg-gray-200 shrink-0">
-                            <img :src="assetImage" 
-                                 :class="assetImage === '/no-image.svg' ? 'w-full h-full object-contain p-8 opacity-60' : 'w-full h-full object-cover'" 
-                                 alt="Asset Image" crossorigin="anonymous" 
+                            <img :src="assetImage"
+                                 :class="assetImage === '/no-image.svg' ? 'w-full h-full object-contain p-8 opacity-60' : 'w-full h-full object-cover'"
+                                 alt="Asset Image" crossorigin="anonymous"
                                  onerror="this.src='/no-image.svg'; this.className='w-full h-full object-contain p-8 opacity-60'" />
                             <div class="absolute inset-0 bg-gradient-to-t from-[#0A2540]/90 via-[#0A2540]/30 to-transparent"></div>
-    
+
                             <div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
                                 <div>
                                     <p class="text-white/80 text-[10px] uppercase font-bold tracking-[0.2em] mb-1">KODE BOOKING</p>
                                     <p class="text-white text-3xl font-black tracking-widest drop-shadow-sm">{{ booking.booking_code }}</p>
                                 </div>
                             </div>
-    
+
                             <!-- Logo Badge -->
                             <div class="absolute top-5 right-5 flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 shadow-sm">
                                 <span class="font-extrabold text-white text-xs tracking-tighter">kusewa</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" class="w-3.5 h-3.5 text-[#FFC000]"><path d="M0 144C0 117.5 21.5 96 48 96h416c26.5 0 48 21.5 48 48v64c0 35.3-28.7 64-64 64s-64 28.7-64 64 28.7 64 64 64 64 28.7 64 64v64c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48v-64c0-35.3 28.7-64 64-64s64-28.7 64-64-28.7-64-64-64-64-28.7-64-64v-64z"/></svg>
+                                <img src="/kusewa-logo.png" alt="Logo" class="h-4 w-auto object-contain drop-shadow-md">
                             </div>
                         </div>
-    
+
                         <!-- Dashed Separator placed exactly at 224px (cutouts) -->
                         <div class="w-full relative z-10 flex justify-center -my-[1px]">
                             <div class="w-full mx-6 border-t-[2.5px] border-dashed border-gray-300"></div>
                         </div>
-    
+
                         <!-- Details Body -->
                         <div class="p-6 pt-8 pb-8 bg-white relative">
-                        <div class="space-y-5">
-                            <div class="grid grid-cols-2 gap-y-5 gap-x-4">
+                        <div class="space-y-0">
+                            <div class="grid grid-cols-2 gap-y-5 gap-x-4 mb-4">
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Asset / Unit</p>
                                     <p class="font-bold text-[13px] text-[#0A2540] truncate pr-2">{{ booking.asset?.title }}</p>
@@ -248,45 +265,74 @@ const copyCode = async () => {
                                     <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Kapasitas</p>
                                     <p class="font-bold text-[13px] text-[#0A2540]">{{ booking.asset?.detail?.capacity ? booking.asset.detail.capacity + ' Orang' : 'Sesuai Ketentuan' }}</p>
                                 </div>
+                            </div>
 
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Tanggal</p>
-                                    <p class="font-bold text-[13px] text-[#0A2540] pr-2">{{ dateRange }}</p>
-                                </div>
-                                <div>
-                                    <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Waktu</p>
-                                    <p class="font-bold text-[13px] text-[#0A2540]">{{ timeRange }}</p>
+                            <div class="border-t border-gray-100 py-4">
+                                <div class="flex items-start justify-between">
+                                    <div>
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Waktu Mulai</p>
+                                        <p class="font-bold text-[12px] text-[#0A2540]">{{ formatDate(booking.start_date) }}</p>
+                                        <p class="text-[11px] text-gray-500 font-medium">Pukul {{ formatTime(booking.start_date) }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Waktu Selesai</p>
+                                        <p class="font-bold text-[12px] text-[#0A2540]">{{ formatDate(booking.end_date) }}</p>
+                                        <p class="text-[11px] text-gray-500 font-medium">Pukul {{ formatTime(booking.end_date) }}</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="border-t border-gray-100 pt-5">
-                                <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Lokasi</p>
-                                <p class="font-bold text-[13px] text-[#0A2540] leading-relaxed">{{ locationString || 'Lokasi tidak diketahui' }}</p>
-                            </div>
-
-                            <div class="flex items-center justify-between pt-1">
+                            <div class="flex items-center justify-between border-t border-gray-100 py-4">
                                 <div>
-                                    <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Penyewa</p>
-                                    <p class="font-bold text-[13px] text-[#0A2540]">{{ booking.user?.name || 'User' }}</p>
+                                    <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Durasi Sewa</p>
+                                    <p class="font-bold text-[13px] text-[#0A2540]">{{ durationString }}</p>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Status</p>
                                     <span class="px-2.5 py-1 bg-green-100 text-green-700 text-[10px] font-black tracking-wide rounded-md uppercase">Terverifikasi</span>
                                 </div>
                             </div>
+
+                            <div class="border-t border-gray-100 py-4">
+                                <div class="flex items-start justify-between mb-4">
+                                    <div>
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Penyewa</p>
+                                        <p class="font-bold text-[13px] text-[#0A2540]">{{ booking.user?.name || 'User' }}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Penyedia / Owner</p>
+                                        <p class="font-bold text-[13px] text-[#0A2540]">{{ booking.asset?.owner_profile?.user?.name || 'Owner' }}</p>
+                                        <a v-if="booking.asset?.owner_profile?.user?.phone" :href="'https://wa.me/' + booking.asset?.owner_profile?.user?.phone" target="_blank" class="text-[10px] font-bold text-green-500 hover:underline mt-0.5 inline-block"><i class="fa-brands fa-whatsapp mr-0.5"></i> {{ booking.asset.owner_profile.user.phone }}</a>
+                                    </div>
+                                </div>
+                                <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Lokasi Aset</p>
+                                <p class="font-bold text-[13px] text-[#0A2540] leading-relaxed">{{ locationString || 'Lokasi tidak diketahui' }}</p>
+                            </div>
                         </div>
 
-                        <!-- Barcode Area -->
+                        <!-- Code Area (Tabs) -->
                         <div class="mt-8 flex flex-col items-center justify-center p-5 bg-gray-50 rounded-2xl border border-gray-100/80">
-                            <svg ref="barcodeRef" class="w-full max-w-[240px] h-auto"></svg>
-                            <p class="text-[10px] text-gray-400 mt-2 font-medium">Tunjukkan tiket ini kepada pihak penyedia</p>
+                            <!-- Tabs -->
+                            <div class="flex items-center gap-1 mb-4 bg-gray-200/80 p-1 rounded-lg w-full max-w-[220px] exclude-from-pdf">
+                                <button @click="activeCodeTab = 'barcode'" :class="activeCodeTab === 'barcode' ? 'bg-white shadow-sm text-[#0A2540]' : 'text-gray-500 hover:text-gray-700'" class="flex-1 px-3 py-1.5 rounded-md text-xs font-bold transition-all">Barcode</button>
+                                <button @click="activeCodeTab = 'qrcode'" :class="activeCodeTab === 'qrcode' ? 'bg-white shadow-sm text-[#0A2540]' : 'text-gray-500 hover:text-gray-700'" class="flex-1 px-3 py-1.5 rounded-md text-xs font-bold transition-all">QR Code</button>
+                            </div>
+
+                            <div v-show="activeCodeTab === 'barcode'" class="w-full flex justify-center">
+                                <svg ref="barcodeRef" class="h-16"></svg>
+                            </div>
+                            <div v-show="activeCodeTab === 'qrcode'" class="w-full flex justify-center">
+                                <canvas ref="qrcodeRef" class="w-40 h-40 rounded-xl mix-blend-multiply"></canvas>
+                            </div>
+
+                            <p class="text-[10px] text-gray-400 mt-3 font-medium text-center">Tunjukkan {{ activeCodeTab === 'barcode' ? 'barcode' : 'QR code' }} ini kepada pihak penyedia</p>
                         </div>
                     </div>
                 </div>
                 </div>
 
                 <!-- Buttons -->
-                <div class="mt-5 space-y-3">
+                <div class="mt-5 space-y-3 max-w-sm mx-auto">
                     <button @click="downloadTicketPDF" :disabled="isDownloading" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] transition-all text-[#0A2540] font-bold py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i v-if="isDownloading" class="fa-solid fa-spinner fa-spin"></i>
                         <i v-else class="fa-solid fa-download"></i>
@@ -341,7 +387,7 @@ const copyCode = async () => {
                         <div class="mb-4">
                             <p class="font-bold text-sm text-[#0A2540]">{{ booking.asset?.title }}</p>
                             <p class="text-[11px] text-gray-500 mt-0.5 truncate">{{ locationString || 'Lokasi tidak diketahui' }}</p>
-                            <p class="text-[11px] text-gray-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i> {{ dateRange }} &bull; {{ timeRange }}</p>
+                            <p class="text-[11px] text-gray-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i> {{ formatDate(booking.start_date) }} &bull; {{ formatTime(booking.start_date) }} - {{ formatTime(booking.end_date) }}</p>
                         </div>
 
                         <div class="border-t border-dashed border-gray-200 my-4"></div>

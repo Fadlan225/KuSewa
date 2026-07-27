@@ -60,7 +60,14 @@ class AssetController extends Controller
         $asset->favorite_id = $favorite?->id;
         unset($asset->favorites);
 
-        $serviceFee = \Illuminate\Support\Facades\DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
+        $serviceFeeRecord = \Illuminate\Support\Facades\DB::table('service_fees')->first();
+        $serviceFee = $serviceFeeRecord ? [
+            'type' => $serviceFeeRecord->fee_type,
+            'value' => (float) $serviceFeeRecord->fee_value
+        ] : [
+            'type' => 'percentage',
+            'value' => 5
+        ];
 
         return inertia('Home/Assets/Show', [
             'asset' => $asset,

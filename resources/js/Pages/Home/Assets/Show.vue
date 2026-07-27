@@ -15,8 +15,8 @@ const props = defineProps({
         required: true,
     },
     serviceFee: {
-        type: Number,
-        default: 5
+        type: [Object, Number],
+        default: () => ({ type: 'percentage', value: 5 })
     }
 });
 
@@ -388,7 +388,14 @@ const subtotal = computed(() => {
 });
 
 const feeAmount = computed(() => {
-    return Math.round(subtotal.value * (props.serviceFee / 100));
+    if (props.serviceFee && typeof props.serviceFee === 'object') {
+        if (props.serviceFee.type === 'fixed') {
+            return Number(props.serviceFee.value);
+        }
+        return Math.round(subtotal.value * (Number(props.serviceFee.value) / 100));
+    }
+    // Fallback if passed as simple number
+    return Math.round(subtotal.value * (Number(props.serviceFee || 5) / 100));
 });
 
 const totalAmount = computed(() => {
@@ -500,7 +507,9 @@ const handleTouchEnd = (e) => {
                             <span>Informasi Kontak</span>
                             <template v-if="asset.owner_profile?.user?.phone">
                                 <span class="font-bold text-gray-300">·</span>
-                                <span>{{ asset.owner_profile.user.phone }}</span>
+                                <a :href="'https://wa.me/' + asset.owner_profile.user.phone" target="_blank" class="hover:underline text-[#0A2540] flex items-center gap-1 font-medium">
+                                    <i class="fa-brands fa-whatsapp text-green-500"></i> {{ asset.owner_profile.user.phone }}
+                                </a>
                             </template>
                         </div>
                     </div>
@@ -824,73 +833,87 @@ const handleTouchEnd = (e) => {
             </div>
 
             </div>
-
-            <!-- KANAN (Booking Sticky Card) -->
+            <!-- KANAN (Booking & Contact Cards) -->
             <div class="lg:col-span-1">
-                <div class="sticky top-24 bg-white shadow-2xl shadow-gray-200/50 rounded-2xl p-6 border border-gray-200">
-                    <!-- Price Header -->
-                    <div class="flex items-baseline gap-1 mb-6">
-                        <span class="text-3xl font-black text-[#0A2540]">{{ formatRupiah(lowestPrice?.price * priceMultiplier) }}</span>
-                        <span class="text-sm font-medium text-gray-500">/{{ rentalUnitLabel(activeScheduleMode) }}</span>
+                <div class="sticky top-24 flex flex-col gap-6">
+                    <!-- Booking Card -->
+                    <div class="bg-white shadow-2xl shadow-gray-200/50 rounded-2xl p-6 border border-gray-200">
+                        <!-- Price Header -->
+                        <div class="flex items-baseline gap-1 mb-6">
+                            <span class="text-3xl font-black text-[#0A2540]">{{ formatRupiah(lowestPrice?.price * priceMultiplier) }}</span>
+                            <span class="text-sm font-medium text-gray-500">/{{ rentalUnitLabel(activeScheduleMode) }}</span>
+                        </div>
+
+                        <!-- Date & Duration Box -->
+                        <div class="border border-gray-200 rounded-xl overflow-hidden mb-6">
+                            <div class="flex border-b border-gray-200">
+                                <!-- Mulai -->
+                                <div class="flex-1 p-3 border-r border-gray-200">
+                                    <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Mulai Sewa</p>
+                                    <p class="text-sm font-bold text-[#0A2540]">{{ startDate ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih Tanggal' }}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ startTime }}</p>
+                                </div>
+                                <!-- Selesai -->
+                                <div class="flex-1 p-3">
+                                    <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Selesai Sewa</p>
+                                    <p class="text-sm font-bold text-[#0A2540]">{{ (activeScheduleMode === 'hour' && startDate) ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (endDate ? endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-') }}</p>
+                                    <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ endTime }}</p>
+                                </div>
+                            </div>
+                            <div class="p-3 bg-gray-50 flex justify-between items-center">
+                                <span class="text-xs font-semibold text-gray-600">Durasi Sewa</span>
+                                <span class="text-sm font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(activeScheduleMode) }}</span>
+                            </div>
+                        </div>
+
+                        <button
+                            v-if="asset.units && asset.units.length > 0"
+                            @click="() => document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' })"
+                            class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg mb-4">
+                            Pilih Kamar
+                        </button>
+                        <button
+                            v-else
+                            @click="submitBooking"
+                            :disabled="asset.status !== 'active' || !lowestPrice || !startDate || durationCount === 0"
+                            class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
+                            Pesan Sekarang
+                        </button>
+
+                        <p v-if="asset.status !== 'active'" class="text-center text-red-500 text-xs font-bold mb-4">Aset ini sedang tidak tersedia.</p>
+
+                        <!-- Breakdown -->
+                        <div class="space-y-3 text-sm">
+                            <div class="flex justify-between text-gray-600">
+                                <span>Subtotal</span>
+                                <span class="font-semibold text-[#0A2540]">{{ formatRupiah(subtotal) }}</span>
+                            </div>
+                            <div class="flex justify-between text-gray-600">
+                                <span v-if="serviceFee?.type === 'fixed'">Biaya Layanan</span>
+                                <span v-else>Biaya Layanan ({{ serviceFee?.value ?? (typeof serviceFee === 'number' ? serviceFee : 5) }}%)</span>
+                                <span class="font-semibold text-[#0A2540]">{{ formatRupiah(feeAmount) }}</span>
+                            </div>
+                            <hr class="border-gray-200">
+                            <div class="flex justify-between font-extrabold text-base text-[#0A2540]">
+                                <span>Total</span>
+                                <span>{{ formatRupiah(totalAmount) }}</span>
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Date & Duration Box -->
-                    <div class="border border-gray-200 rounded-xl overflow-hidden mb-6">
-                        <div class="flex border-b border-gray-200">
-                            <!-- Mulai -->
-                            <div class="flex-1 p-3 border-r border-gray-200">
-                                <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Mulai Sewa</p>
-                                <p class="text-sm font-bold text-[#0A2540]">{{ startDate ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih Tanggal' }}</p>
-                                <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ startTime }}</p>
-                            </div>
-                            <!-- Selesai -->
-                            <div class="flex-1 p-3">
-                                <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Selesai Sewa</p>
-                                <p class="text-sm font-bold text-[#0A2540]">{{ (activeScheduleMode === 'hour' && startDate) ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (endDate ? endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-') }}</p>
-                                <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ endTime }}</p>
-                            </div>
-                        </div>
-                        <div class="p-3 bg-gray-50 flex justify-between items-center">
-                            <span class="text-xs font-semibold text-gray-600">Durasi Sewa</span>
-                            <span class="text-sm font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(activeScheduleMode) }}</span>
-                        </div>
-                    </div>
-
-                    <button
-                        v-if="asset.units && asset.units.length > 0"
-                        @click="() => document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' })"
-                        class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg mb-4">
-                        Pilih Kamar
-                    </button>
-                    <button
-                        v-else
-                        @click="submitBooking"
-                        :disabled="asset.status !== 'active' || !lowestPrice || !startDate || durationCount === 0"
-                        class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
-                        Pesan Sekarang
-                    </button>
-
-                    <p v-if="asset.status !== 'active'" class="text-center text-red-500 text-xs font-bold mb-4">Aset ini sedang tidak tersedia.</p>
-
-                    <!-- Breakdown -->
-                    <div class="space-y-3 text-sm">
-                        <div class="flex justify-between text-gray-600">
-                            <span>Subtotal</span>
-                            <span class="font-semibold text-[#0A2540]">{{ formatRupiah(subtotal) }}</span>
-                        </div>
-                        <div class="flex justify-between text-gray-600">
-                            <span>Biaya Layanan ({{ serviceFee }}%)</span>
-                            <span class="font-semibold text-[#0A2540]">{{ formatRupiah(feeAmount) }}</span>
-                        </div>
-                        <hr class="border-gray-200">
-                        <div class="flex justify-between font-extrabold text-base text-[#0A2540]">
-                            <span>Total</span>
-                            <span>{{ formatRupiah(totalAmount) }}</span>
+                    <!-- Hubungi Pemilik Card -->
+                    <div v-if="asset.owner_profile?.user?.phone" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                        <h3 class="text-xl font-bold text-[#0A2540] mb-4">Hubungi Pemilik</h3>
+                        <div class="flex items-center gap-3 border-b-2 border-gray-800 pb-2 focus-within:border-[#FFC000] transition-colors">
+                            <i class="fa-regular fa-comment-dots text-2xl text-[#FFC000]"></i>
+                            <input v-model="chatMessage" type="text" placeholder="Tanya sesuatu ke pemilik..." class="w-full bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
+                            <a :href="'https://wa.me/' + asset.owner_profile.user.phone + '?text=' + encodeURIComponent(chatMessage)" target="_blank" class="text-[#FFC000] font-bold text-sm hover:text-[#e6ad00] transition-colors whitespace-nowrap">
+                                kirim
+                            </a>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 

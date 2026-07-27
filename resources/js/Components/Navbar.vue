@@ -27,6 +27,12 @@ const hasOwnerProfile = computed(() => {
     return !!(user.owner_profile || user.ownerProfile || user.role === 'owner');
 });
 
+const userProfilePhoto = computed(() => {
+    const photo = page.props.auth.user?.profile_photo;
+    if (!photo) return null;
+    return photo.startsWith('http') || photo.startsWith('/storage/') ? photo : '/storage/' + photo;
+});
+
 // Data real dari props controller
 const searchHistory = computed(() => page.props.searchHistory || []);
 const trending = computed(() => page.props.trending || []);
@@ -647,31 +653,25 @@ const initials = computed(() => {
                             <button
                                 type="button"
                                 @click="isUserMenuOpen = !isUserMenuOpen"
-                                class="flex items-center gap-2 cursor-pointer px-3 py-1.5 rounded-full border transition-all duration-200 focus:outline-none"
+                                class="relative w-9 h-9 rounded-full border-2 transition-all duration-200 focus:outline-none overflow-hidden hover:scale-105"
                                 :class="[
                                     isCurrentlyTransparent
-                                        ? 'bg-white/10 hover:bg-white/20 border-white/30 text-white'
-                                        : 'bg-white hover:bg-gray-50 border-gray-200/90 text-[#0A2540] shadow-xs'
+                                        ? 'border-white/30 hover:border-white/70 shadow-md'
+                                        : 'border-gray-200 hover:border-gray-300 shadow-sm'
                                 ]"
                             >
                                 <!-- User Avatar / Initials -->
                                 <img
-                                    v-if="page.props.auth.user.profile_photo"
-                                    :src="page.props.auth.user.profile_photo"
-                                    class="w-6 h-6 rounded-full object-cover border border-gray-200"
+                                    v-if="userProfilePhoto"
+                                    :src="userProfilePhoto"
+                                    class="w-full h-full object-cover"
                                 />
                                 <div
                                     v-else
-                                    class="w-6 h-6 rounded-full bg-[#0A2540] text-white flex items-center justify-center font-bold text-xs"
+                                    class="w-full h-full bg-[#0A2540] text-white flex items-center justify-center font-bold text-sm"
                                 >
                                     {{ initials }}
                                 </div>
-
-                                <!-- Chevron Down Icon -->
-                                <i
-                                    class="fa-solid fa-chevron-down text-[10px] transition-transform duration-300 ml-0.5"
-                                    :class="{ 'rotate-180': isUserMenuOpen }"
-                                ></i>
                             </button>
 
                             <!-- Backdrop Overlay to Close Menu -->
