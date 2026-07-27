@@ -52,43 +52,41 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Upgrade Akun ke Owner
+    Route::get('/become-owner', [OwnerRegisterController::class, 'create'])->name('owner.register');
+    Route::post('/become-owner', [OwnerRegisterController::class, 'store'])->name('owner.register.store');
+    Route::get('/become-owner/verify/{id}', [OwnerRegisterController::class, 'verify'])
+        ->name('owner.register.verify')
+        ->middleware('signed');
 });
 
 
 // ==========================================
 // OWNER ROUTES (Khusus Pemilik Aset)
 // ==========================================
+// CATATAN: Jika role:owner masih bikin error saat testing, kamu bisa hilangkan 'role:owner' sementara.
 Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->group(function () {
 
     // Dashboard Owner
     Route::get('/dashboard', [OwnerDashboardController::class, 'index'])->name('dashboard');
 
-    // Manajemen Properti & Aset (CRUD)
-    Route::get('/properties', [PropertyController::class, 'index'])->name('property.index');
-    Route::get('/property/create', [PropertyController::class, 'create'])->name('property.create');
-    Route::post('/property/store', [PropertyController::class, 'store'])->name('property.store');
-    Route::get('/property/{property}/edit', [PropertyController::class, 'edit'])->name('property.edit');
-    Route::put('/property/{property}', [PropertyController::class, 'update'])->name('property.update');
-    Route::delete('/property/{property}', [PropertyController::class, 'destroy'])->name('property.destroy');
+    // Manajemen Properti (Menggunakan Resource Route standar Laravel)
+    // Ini otomatis mendaftarkan route:
+    // GET    /owner/property          -> owner.property.index
+    // GET    /owner/property/create   -> owner.property.create
+    // POST   /owner/property          -> owner.property.store
+    // GET    /owner/property/{id}/edit-> owner.property.edit
+    // PUT    /owner/property/{id}     -> owner.property.update
+    // DELETE /owner/property/{id}     -> owner.property.destroy
+    Route::resource('property', PropertyController::class);
+
+    // Monthly Payment
+    Route::get('/monthly-payment', [MonthlyPaymentController::class, 'index'])->name('MonthlyPayment');
+    Route::post('/monthly-payment', [MonthlyPaymentController::class, 'store'])->name('MonthlyPayment.store');
 
 });
 
 
 // Auth Routes (Login, Register, Reset Password)
 require __DIR__ . '/auth.php';
-
-Route::middleware('auth')->group(function () {
-    Route::get('/become-owner', [OwnerRegisterController::class, 'create'])->name('owner.register');
-    Route::post('/become-owner', [OwnerRegisterController::class, 'store'])->name('owner.register.store');
-
-    // Route verifikasi dari link email
-    Route::get('/become-owner/verify/{id}', [OwnerRegisterController::class, 'verify'])
-        ->name('owner.register.verify')
-        ->middleware('signed');
-});
-
-Route::middleware(['auth'])->prefix('owner')->name('owner.')->group(function () {
-    // Berikan nama route persis 'MonthlyPayment'
-    Route::get('/monthly-payment', [MonthlyPaymentController::class, 'index'])->name('MonthlyPayment');
-    Route::post('/monthly-payment', [MonthlyPaymentController::class, 'store'])->name('MonthlyPayment.store');
-});

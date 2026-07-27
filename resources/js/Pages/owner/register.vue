@@ -91,7 +91,7 @@ const submit = () => {
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <Link 
-                        href="/dashboard" 
+                        href="owner.dashboard" 
                         class="w-9 h-9 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-500 hover:text-[#0A2540] hover:border-slate-300 transition shadow-xs"
                     >
                         <i class="fa-solid fa-arrow-left text-xs"></i>

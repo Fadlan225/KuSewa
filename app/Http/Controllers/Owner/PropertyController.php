@@ -18,7 +18,8 @@ class PropertyController extends Controller
      */
     public function index(): Response
     {
-        $properties = Property::where('user_id', Auth::id())
+        // 1. Ambil data dari DB milik user login
+        $dbProperties = Property::where('user_id', Auth::id())
             ->latest()
             ->get()
             ->map(function ($item) {
@@ -38,8 +39,86 @@ class PropertyController extends Controller
                 ];
             });
 
+        // 2. Data Dummy Mockup (Dipakai hanya jika DB masih kosong untuk testing UI)
+        $dummyProperties = collect([
+            [
+                'id' => 1,
+                'title' => 'Kos Exclusive Samarinda Indah #01',
+                'category' => 'Kos',
+                'type' => 'Putra',
+                'price' => 1350000,
+                'rent_period' => 'Bulan',
+                'city' => 'Samarinda',
+                'address' => 'Jl. M. Yamin No. 12, Kel. Gunung Kelua',
+                'status' => 'Tersewa',
+                'tenant' => 'Ahmad Rizky',
+                'image' => 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=500&q=80',
+                'occupancy' => '1/1 Unit'
+            ],
+            [
+                'id' => 2,
+                'title' => 'Apartemen Orchard Tower Unit B12',
+                'category' => 'Apartemen',
+                'type' => 'Campur',
+                'price' => 3500000,
+                'rent_period' => 'Bulan',
+                'city' => 'Balikpapan',
+                'address' => 'Jl. Jend. Sudirman No. 88',
+                'status' => 'Tersedia',
+                'tenant' => null,
+                'image' => 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=500&q=80',
+                'occupancy' => '0/1 Unit'
+            ],
+            [
+                'id' => 3,
+                'title' => 'Honda Innova Reborn 2.4 V AT',
+                'category' => 'Kendaraan',
+                'type' => 'Mobil',
+                'price' => 450000,
+                'rent_period' => 'Hari',
+                'city' => 'Samarinda',
+                'address' => 'Jl. Pemilik Aset No. 3',
+                'status' => 'Tersewa',
+                'tenant' => 'Budi Kurniawan',
+                'image' => 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=500&q=80',
+                'occupancy' => 'Aktif'
+            ],
+            [
+                'id' => 4,
+                'title' => 'Kos Melati Clean & Cozyman #05',
+                'category' => 'Kos',
+                'type' => 'Putri',
+                'price' => 850000,
+                'rent_period' => 'Bulan',
+                'city' => 'Samarinda',
+                'address' => 'Jl. Pramuka 6 No. 44',
+                'status' => 'Tersedia',
+                'tenant' => null,
+                'image' => 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=500&q=80',
+                'occupancy' => '0/1 Unit'
+            ],
+            [
+                'id' => 5,
+                'title' => 'Rumah Kontrakan Minimalis A2',
+                'category' => 'Rumah Kontrakan',
+                'type' => 'Pasutri',
+                'price' => 25000000,
+                'rent_period' => 'Tahun',
+                'city' => 'Samarinda',
+                'address' => 'Jl. Juanda 8 Blok B',
+                'status' => 'Tersewa',
+                'tenant' => 'Rava Nanda',
+                'image' => 'https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=500&q=80',
+                'occupancy' => 'Tersewa s/d Des 2026'
+            ]
+        ]);
+
+        // 3. Jika DB tidak ada isinya, gunakan data dummy. Jika ada, gunakan DB asli.
+        $properties = $dbProperties->isNotEmpty() ? $dbProperties : $dummyProperties;
+
         return Inertia::render('owner/property/index', [
             'properties' => $properties,
+            'app_fee_percentage' => 5,
         ]);
     }
 
@@ -53,38 +132,10 @@ class PropertyController extends Controller
 
     /**
      * Simulation Route untuk pengajuan form (Hanya Frontend Mockup)
-     * Catatan: Jika nanti ingin simpan ke DB, alur validasi & simpan tinggal di-uncomment.
      */
     public function store(Request $request): RedirectResponse
     {
-        /*
-        // Opsi simpan asli ke database nantinya:
-        $validated = $request->validate([
-            'title'       => 'required|string|max:255',
-            'category'    => 'required|string',
-            'type'        => 'nullable|string',
-            'price'       => 'required|numeric|min:0',
-            'rent_period' => 'required|string',
-            'city'        => 'required|string',
-            'address'     => 'required|string',
-        ]);
-
-        Property::create([
-            'user_id'     => Auth::id(),
-            'title'       => $validated['title'],
-            'category'    => $validated['category'],
-            'type'        => $validated['type'] ?? null,
-            'price'       => $validated['price'],
-            'rent_period' => $validated['rent_period'],
-            'city'        => $validated['city'],
-            'address'     => $validated['address'],
-            'status'      => 'Tersedia',
-        ]);
-        */
-
-        // ✅ Perbaikan typo: 'owner.dasboard' -> 'owner.dashboard'
-        return redirect()->route('owner.dashboard')
-            ->with('success', 'MOCKUP UI: Pengajuan properti berhasil disimulasikan!');
+        return back()->with('success', 'Pengajuan properti berhasil disimulasikan!');
     }
 
     /**
