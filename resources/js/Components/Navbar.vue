@@ -291,7 +291,7 @@ const initials = computed(() => {
                     <!-- Aktivitas -->
                     <Link
                         v-if="page.props.auth.user"
-                        href="#"
+                        :href="route('aktivitas.index')"
                         :class="[
                             'relative text-sm font-semibold transition-colors duration-300',
                             isActivity
@@ -311,7 +311,7 @@ const initials = computed(() => {
                     <!-- Kotak Masuk -->
                     <Link
                         v-if="page.props.auth.user"
-                        href="#"
+                        href="/kotakmasuk"
                         :class="[
                             'relative text-sm font-semibold transition-colors duration-300',
                             isInbox

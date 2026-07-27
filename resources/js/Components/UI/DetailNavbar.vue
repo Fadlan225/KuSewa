@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import BottomSheet from './BottomSheet.vue';
+import Toast from './Toast.vue';
 
 const props = defineProps({
     backUrl: {
@@ -188,14 +189,7 @@ onUnmounted(() => {
     </BottomSheet>
 
     <!-- Copied Toast Notification -->
-    <Transition name="toast">
-        <div v-if="showCopiedToast" class="fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-3 bg-[#0A2540] text-white text-sm font-semibold px-5 py-3 rounded-2xl shadow-xl pointer-events-none whitespace-nowrap">
-            <div class="w-6 h-6 rounded-full bg-green-400 flex items-center justify-center shrink-0">
-                <i class="fa-solid fa-check text-white text-[10px]"></i>
-            </div>
-            Tautan berhasil disalin!
-        </div>
-    </Transition>
+    <Toast :show="showCopiedToast" message="Tautan berhasil disalin!" />
 </template>
 
 <style scoped>
@@ -206,19 +200,5 @@ onUnmounted(() => {
 .fade-enter-from,
 .fade-leave-to {
     opacity: 0;
-}
-
-/* Toast pop-up from below */
-.toast-enter-active,
-.toast-leave-active {
-    transition: opacity 0.25s ease, transform 0.25s ease;
-}
-.toast-enter-from {
-    opacity: 0;
-    transform: translateX(-50%) translateY(12px);
-}
-.toast-leave-to {
-    opacity: 0;
-    transform: translateX(-50%) translateY(12px);
 }
 </style>

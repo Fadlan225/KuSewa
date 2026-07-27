@@ -22,9 +22,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/search-logs/keyword', [HomeController::class, 'deleteSearchKeyword'])->name('search.deleteKeyword');
 });
 
+use App\Http\Controllers\AktivitasController;
+
+Route::middleware('auth')->group(function () {
+    Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas.index');
+});
+
 Route::resource('assets', AssetController::class)->only(['show']);
-
-
 
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
@@ -46,6 +50,8 @@ Route::middleware('auth')->group(function () {
     // ==========================
     // Profile
     // ==========================
+    Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

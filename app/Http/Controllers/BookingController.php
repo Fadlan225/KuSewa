@@ -97,7 +97,20 @@ class BookingController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $booking = \App\Models\booking::with([
+            'asset.firstImage',
+            'asset.type.category',
+            'payment',
+            'user'
+        ])->findOrFail($id);
+
+        if ($booking->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        return Inertia::render('Home/BookingPass', [
+            'booking' => $booking
+        ]);
     }
 
     /**

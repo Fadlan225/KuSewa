@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     user: {
@@ -35,6 +35,31 @@ const props = defineProps({
 // Image load error fallback state
 const imageError = ref(false);
 
+// Photo upload state
+const photoInput = ref(null);
+const uploadingPhoto = ref(false);
+
+const selectNewPhoto = () => {
+    photoInput.value.click();
+};
+
+const updatePhoto = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('photo', file);
+
+    uploadingPhoto.value = true;
+    router.post(route('profile.photo'), formData, {
+        preserveScroll: true,
+        preserveState: true,
+        onFinish: () => {
+            uploadingPhoto.value = false;
+        }
+    });
+};
+
 // Generate initials from user's name
 const initials = computed(() => {
     const name = props.user?.name ?? '';
@@ -47,7 +72,7 @@ const initials = computed(() => {
 
 // Mendefinisikan class FontAwesome untuk setiap menu
 const accountMenuItems = [
-    { label: 'Profile', icon: 'fa-regular fa-user', route: route('profile.edit') },
+    { label: 'Profile', icon: 'fa-regular fa-user', route: route('profile.settings') },
     { label: 'Favorite', icon: 'fa-regular fa-heart', route: route('favorites.index') },
     { label: 'Ulasan', icon: 'fa-regular fa-comment-dots', route: '#' },
     { label: 'Aktivitas', icon: 'fa-solid fa-chart-line', route: '#' },
@@ -70,33 +95,38 @@ const helpMenuItems = [
     <Head title="Profil" />
 
     <AppLayout>
-        <div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-4xl mx-auto pt-6 pb-24 md:pb-8 px-4 sm:px-6 lg:px-8 space-y-6">
             <!-- Hero Section -->
             <div class="bg-white p-6 shadow-md rounded-2xl flex flex-col md:flex-row items-center md:items-center space-y-6 md:space-y-0 md:space-x-6 relative">
 
                 <!-- Foto Profil / Initials -->
-                <div class="relative flex-shrink-0">
+                <div class="relative flex-shrink-0 group cursor-pointer" @click="selectNewPhoto">
                     <template v-if="user.avatar && !imageError">
                         <img
                             :src="user.avatar"
                             @error="imageError = true"
                             alt="Foto Profil"
-                            class="w-24 h-24 sm:w-20 sm:h-20 rounded-full border-2 border-dashed border-[#FFC000] object-cover shadow-sm"
+                            class="w-24 h-24 sm:w-20 sm:h-20 rounded-full border-2 border-dashed border-[#FFC000] object-cover shadow-sm transition-opacity duration-200 group-hover:opacity-80"
                         />
                     </template>
                     <div
                         v-else
-                        class="w-24 h-24 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#0A2540] to-[#466080] text-white flex items-center justify-center font-bold text-2xl sm:text-xl border-2 border-dashed border-[#FFC000] shadow-sm select-none"
+                        class="w-24 h-24 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#0A2540] to-[#466080] text-white flex items-center justify-center font-bold text-2xl sm:text-xl border-2 border-dashed border-[#FFC000] shadow-sm select-none transition-opacity duration-200 group-hover:opacity-80"
                     >
                         {{ initials }}
                     </div>
-                    <Link
-                        :href="route('profile.edit')"
-                        class="absolute -bottom-1 -right-1 bg-white px-2 py-0.5 rounded-full text-[10px] font-bold text-[#FFC000] border border-gray-100 shadow-xs hover:bg-[#F8F9FA] transition-colors"
-                    >
-                        Profil
-                    </Link>
+
+                    <!-- Loading overlay -->
+                    <div v-if="uploadingPhoto" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-spinner fa-spin text-white text-xl"></i>
+                    </div>
+
+                    <!-- Camera icon hover -->
+                    <div v-else class="absolute -bottom-0 -right-0 bg-white p-1.5 rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-[#FFC000] hover:scale-110 transition-transform">
+                        <i class="fa-solid fa-camera text-xs"></i>
+                    </div>
                 </div>
+                <input type="file" class="hidden" ref="photoInput" @change="updatePhoto" accept="image/*">
 
                 <!-- Informasi Profil -->
                 <div class="flex-grow text-center md:text-left w-full md:w-auto">
@@ -144,22 +174,22 @@ const helpMenuItems = [
 
                 <div class="grid grid-cols-3 gap-4 sm:gap-6 text-center">
                     <!-- Booking -->
-                    <div class="flex flex-col items-center group cursor-pointer">
+                    <Link :href="route('aktivitas.index', { status: 'Berlangsung' })" class="flex flex-col items-center group cursor-pointer">
                         <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-[#FFC000]/10 transition-colors duration-200">
                             <i class="fa-solid fa-clipboard-list text-2xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
                             <span v-if="bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ bookings_count }}</span>
                         </div>
                         <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Booking</p>
-                    </div>
+                    </Link>
 
                     <!-- Belum Bayar -->
-                    <div class="flex flex-col items-center group cursor-pointer">
+                    <Link :href="route('aktivitas.index', { status: 'Menunggu' })" class="flex flex-col items-center group cursor-pointer">
                         <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-red-50 transition-colors duration-200">
                             <i class="fa-solid fa-wallet text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors"></i>
                             <span v-if="unpaid_bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ unpaid_bookings_count }}</span>
                         </div>
                         <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-red-500 transition-colors">Belum Bayar</p>
-                    </div>
+                    </Link>
 
                     <!-- Aset Favorit -->
                     <Link :href="route('favorites.index')" class="flex flex-col items-center group cursor-pointer">

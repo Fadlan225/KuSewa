@@ -34,32 +34,26 @@ const closeModal = () => {
 
 <template>
     <section class="space-y-6">
-        <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Hapus Akun
-            </h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. Sebelum menghapus akun Anda, harap unduh data atau informasi apa pun yang ingin Anda simpan.
-            </p>
-        </header>
+        <p class="text-sm text-gray-600">
+            Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. Sebelum menghapus akun Anda, harap unduh data atau informasi apa pun yang ingin Anda simpan.
+        </p>
 
         <button
             type="button"
             @click="confirmUserDeletion"
-            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+            class="inline-flex items-center px-6 py-3 bg-red-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
         >
             Hapus Akun
         </button>
 
         <Teleport to="body" v-if="confirmingUserDeletion">
-            <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-                <div class="bg-white rounded-lg max-w-md w-full p-6 shadow-xl transform transition-all duration-300">
-                    <h2 class="text-lg font-medium text-gray-900">
+            <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+                <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-xl transform transition-all duration-300">
+                    <h2 class="text-lg font-bold text-gray-900">
                         Apakah Anda yakin ingin menghapus akun?
                     </h2>
 
-                    <p class="mt-1 text-sm text-gray-600">
+                    <p class="mt-2 text-sm text-gray-600">
                         Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. Silakan masukkan kata sandi Anda untuk mengonfirmasi bahwa Anda ingin menghapus akun secara permanen.
                     </p>
 
@@ -71,8 +65,8 @@ const closeModal = () => {
                             ref="passwordInput"
                             v-model="form.password"
                             type="password"
-                            class="mt-1 block w-3/4 border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-md shadow-sm"
-                            placeholder="Kata Sandi"
+                            class="block w-full border-gray-300 focus:border-red-500 focus:ring-red-500 rounded-xl shadow-sm px-4 py-2"
+                            placeholder="Masukkan Kata Sandi"
                             @keyup.enter="deleteUser"
                         />
 
@@ -81,11 +75,11 @@ const closeModal = () => {
                         </p>
                     </div>
 
-                    <div class="mt-6 flex justify-end gap-3">
+                    <div class="mt-8 flex justify-end gap-3 flex-col-reverse sm:flex-row">
                         <button
                             type="button"
                             @click="closeModal"
-                            class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150"
+                            class="inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none active:scale-95 transition ease-in-out duration-150"
                         >
                             Batal
                         </button>
@@ -94,7 +88,7 @@ const closeModal = () => {
                             type="button"
                             :disabled="form.processing"
                             @click="deleteUser"
-                            class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
+                            class="inline-flex items-center justify-center px-6 py-3 bg-red-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
                         >
                             Hapus Akun
                         </button>

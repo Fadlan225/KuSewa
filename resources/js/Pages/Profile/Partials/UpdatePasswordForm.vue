@@ -31,26 +31,16 @@ const updatePassword = () => {
 
 <template>
     <section>
-        <header>
-            <h2 class="text-lg font-medium text-gray-900">
-                Perbarui Kata Sandi
-            </h2>
-
-            <p class="mt-1 text-sm text-gray-600">
-                Pastikan akun Anda menggunakan kata sandi yang panjang dan acak untuk tetap aman.
-            </p>
-        </header>
-
-        <form @submit.prevent="updatePassword" class="mt-6 space-y-6">
+        <form @submit.prevent="updatePassword" class="space-y-6">
             <div>
-                <label for="current_password" class="block font-medium text-sm text-gray-700">Kata Sandi Saat Ini</label>
+                <label for="current_password" class="block font-medium text-sm text-gray-700 mb-1">Kata Sandi Saat Ini</label>
 
                 <input
                     id="current_password"
                     ref="currentPasswordInput"
                     v-model="form.current_password"
                     type="password"
-                    class="mt-1 block w-full border-gray-300 focus:border-[#466080] focus:ring-[#466080] rounded-md shadow-sm"
+                    class="block w-full border-gray-300 focus:border-[#0A2540] focus:ring-[#0A2540] rounded-xl shadow-sm px-4 py-2"
                     autocomplete="current-password"
                 />
 
@@ -60,14 +50,14 @@ const updatePassword = () => {
             </div>
 
             <div>
-                <label for="password" class="block font-medium text-sm text-gray-700">Kata Sandi Baru</label>
+                <label for="password" class="block font-medium text-sm text-gray-700 mb-1">Kata Sandi Baru</label>
 
                 <input
                     id="password"
                     ref="passwordInput"
                     v-model="form.password"
                     type="password"
-                    class="mt-1 block w-full border-gray-300 focus:border-[#466080] focus:ring-[#466080] rounded-md shadow-sm"
+                    class="block w-full border-gray-300 focus:border-[#0A2540] focus:ring-[#0A2540] rounded-xl shadow-sm px-4 py-2"
                     autocomplete="new-password"
                 />
 
@@ -77,13 +67,13 @@ const updatePassword = () => {
             </div>
 
             <div>
-                <label for="password_confirmation" class="block font-medium text-sm text-gray-700">Konfirmasi Kata Sandi</label>
+                <label for="password_confirmation" class="block font-medium text-sm text-gray-700 mb-1">Konfirmasi Kata Sandi</label>
 
                 <input
                     id="password_confirmation"
                     v-model="form.password_confirmation"
                     type="password"
-                    class="mt-1 block w-full border-gray-300 focus:border-[#466080] focus:ring-[#466080] rounded-md shadow-sm"
+                    class="block w-full border-gray-300 focus:border-[#0A2540] focus:ring-[#0A2540] rounded-xl shadow-sm px-4 py-2"
                     autocomplete="new-password"
                 />
 
@@ -92,26 +82,26 @@ const updatePassword = () => {
                 </p>
             </div>
 
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-4 pt-4">
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="inline-flex items-center px-4 py-2 bg-[#466080] border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-[#36506d] active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-[#466080] focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
+                    class="inline-flex items-center px-6 py-3 bg-[#0A2540] border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-[#0f3459] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
                 >
-                    Simpan
+                    Simpan Kata Sandi
                 </button>
 
                 <Transition
-                    enter-active-class="transition ease-in-out"
-                    enter-from-class="opacity-0"
-                    leave-active-class="transition ease-in-out"
-                    leave-to-class="opacity-0"
+                    enter-active-class="transition ease-in-out duration-300"
+                    enter-from-class="opacity-0 translate-y-2"
+                    leave-active-class="transition ease-in-out duration-300"
+                    leave-to-class="opacity-0 translate-y-2"
                 >
                     <p
                         v-if="form.recentlySuccessful"
-                        class="text-sm text-gray-600"
+                        class="text-sm font-bold text-green-600"
                     >
-                        Disimpan.
+                        Tersimpan.
                     </p>
                 </Transition>
             </div>
