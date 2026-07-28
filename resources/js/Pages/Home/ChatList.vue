@@ -1,7 +1,7 @@
 <template>
   <aside
     :class="[
-      'bg-white border-r flex-col w-full md:w-[350px] lg:w-[400px] shrink-0 transition-all shadow-sm z-10',
+      'bg-white border-r border-gray-200/70 flex-col w-full md:w-[350px] lg:w-[400px] shrink-0 transition-all shadow-sm z-10',
       isMobileChatOpen ? 'hidden md:flex' : 'flex'
     ]"
   >
@@ -21,8 +21,9 @@
 
     <!-- Chat List -->
     <div class="flex-1 overflow-y-auto">
-      <div
-        v-for="chat in chatList"
+      <template v-if="chatList && chatList.length > 0">
+        <div
+          v-for="chat in chatList"
         :key="chat.id"
         @click="$emit('selectChat', chat.id)"
         class="flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-200/70"
@@ -34,7 +35,7 @@
             <div v-else class="w-12 h-12 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-sm shrink-0">
                 {{ chat.avatarText }}
             </div>
-        </div> 
+        </div>
 
         <!-- Chat Info -->
         <div class="flex-1 min-w-0 flex flex-col justify-center border-b border-transparent h-full pb-1">
@@ -49,6 +50,8 @@
               <span v-if="chat.lastMessage && chat.isLastMessageSelf" class="shrink-0 text-[10px]">
                 <i :class="['fa-solid fa-check-double transition-colors duration-500 ease-in-out', chat.isLastMessageRead ? 'text-blue-600 read-bounce' : 'text-gray-400']"></i>
               </span>
+              <span v-if="chat.lastMessageType === 'image'" class="shrink-0"><i class="fa-solid fa-image"></i></span>
+              <span v-else-if="chat.lastMessageType === 'file'" class="shrink-0"><i class="fa-solid fa-file-lines"></i></span>
               <span class="truncate">{{ chat.lastMessage || 'Mulai percakapan baru' }}</span>
             </p>
             <!-- Unread Badge -->
@@ -57,6 +60,14 @@
             </span>
           </div>
         </div>
+        </div>
+      </template>
+
+      <!-- Empty State for Chat List -->
+      <div v-else class="flex flex-col items-center justify-center h-full px-6 text-center pt-24 pb-8">
+        <img src="/no-chat.svg" alt="No Chat" class="w-48 h-48 mb-6 opacity-80" onerror="this.src='/images/dummy-map.png'" />
+        <h3 class="text-gray-800 font-semibold text-lg mb-1">Belum Ada Percakapan</h3>
+        <p class="text-gray-500 text-sm">Mulai diskusi dengan penyewa atau pemilik aset sekarang.</p>
       </div>
     </div>
   </aside>
