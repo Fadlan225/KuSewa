@@ -30,9 +30,14 @@ class ChatController extends Controller
         $chats = room_chat::with(['user', 'ownerProfile.user', 'asset.images', 'messages' => function($q) {
                 $q->latest()->limit(1);
             }])
-            ->where('user_id', $userId)
-            ->orWhereHas('ownerProfile', function ($query) use ($userId) {
-                $query->where('user_id', $userId);
+            ->withCount(['messages as unread' => function($q) use ($userId) {
+                $q->where('sender_id', '!=', $userId)->where('is_read', false);
+            }])
+            ->where(function($q) use ($userId) {
+                $q->where('user_id', $userId)
+                  ->orWhereHas('ownerProfile', function ($query) use ($userId) {
+                      $query->where('user_id', $userId);
+                  });
             })
             ->get()
             ->map(function ($chat) use ($userId) {
@@ -40,20 +45,23 @@ class ChatController extends Controller
                 $isOwner = $chat->ownerProfile->user_id === $userId;
                 $contact = $isOwner ? $chat->user : $chat->ownerProfile->user;
 
-                // Hitung pesan yang belum dibaca dari lawan bicara
-                $unread = $chat->messages->where('sender_id', '!=', $userId)->where('is_read', 0)->count();
+                // Hitung pesan yang belum dibaca dari lawan bicara (menggunakan hasil withCount)
+                $unread = $chat->unread;
                 $lastMsg = $chat->messages->first();
 
                 // Format sesuai kebutuhan UI frontend (Chat.vue dan FloatingChat.vue)
                 return [
                     'id' => $chat->id,
                     'name' => $contact->name,
+                    'isContactOwner' => !$isOwner,
                     'avatarText' => strtoupper(substr($contact->name, 0, 2)),
                     'avatar' => !empty($contact->profile_photo) ? asset('storage/'.$contact->profile_photo) : null,
                     'assetName' => $chat->asset->title ?? 'Aset Dihapus',
                     'assetImage' => $chat->asset->images->first() ? $chat->asset->images->first()->image_url : null,
                     'isOnline' => true, // Dummy untuk UI
                     'lastMessage' => $lastMsg ? $lastMsg->message : '',
+                    'isLastMessageSelf' => $lastMsg ? $lastMsg->sender_id === $userId : false,
+                    'isLastMessageRead' => $lastMsg ? (bool)$lastMsg->is_read : false,
                     'time' => $lastMsg ? $lastMsg->created_at->format('H:i') : '',
                     'unread' => $unread
                 ];
@@ -84,7 +92,8 @@ class ChatController extends Controller
                 'isSender' => $msg->sender_id === $userId,
                 'isSelf' => $msg->sender_id === $userId, // alias untuk Vue
                 'time' => $msg->created_at->format('H:i'),
-                'dateLabel' => $this->formatDateLabel($msg->created_at)
+                'dateLabel' => $this->formatDateLabel($msg->created_at),
+                'isRead' => (bool)$msg->is_read
             ];
         });
 
@@ -142,7 +151,8 @@ class ChatController extends Controller
                 'isSender' => true,
                 'isSelf' => true,
                 'time' => $msg->created_at->format('H:i'),
-                'dateLabel' => $this->formatDateLabel($msg->created_at)
+                'dateLabel' => $this->formatDateLabel($msg->created_at),
+                'isRead' => false
             ]
         ]);
     }

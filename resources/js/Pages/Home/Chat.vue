@@ -110,9 +110,8 @@ const fetchChats = async () => {
       const roomId = urlParams.get('room_id');
       if (roomId) {
         selectChat(parseInt(roomId));
-      } else {
-        selectChat(chatList.value[0].id);
       }
+      // Dihapus agar chat tidak otomatis terbuka yang menyebabkan pesan langsung 'terbaca'
     }
   } catch (error) {
     console.error('Error fetching chats:', error);
@@ -151,26 +150,35 @@ const sendMessage = async () => {
   const text = newMessage.value.trim();
   newMessage.value = '';
 
+  const tempId = Date.now();
   messages.value.push({
-    id: Date.now(),
+    id: tempId,
     text: text,
     isSelf: true,
     time: 'Baru saja',
-    dateLabel: 'Hari Ini'
+    dateLabel: 'Hari Ini',
+    status: 'sending',
+    isRead: false
   });
   scrollToBottom();
 
   try {
     const response = await axios.post(`/api/chats/${activeChatId.value}/messages`, { message: text });
     
-    const lastMsg = messages.value[messages.value.length - 1];
-    if (lastMsg) {
-      lastMsg.id = response.data.message.id;
-      lastMsg.time = response.data.message.time;
+    const sentMsg = messages.value.find(m => m.id === tempId);
+    if (sentMsg) {
+      sentMsg.id = response.data.message.id;
+      sentMsg.time = response.data.message.time;
+      sentMsg.isRead = response.data.message.isRead;
+      sentMsg.status = 'sent';
     }
     await fetchChats();
   } catch (error) {
     console.error('Error sending message:', error);
+    const failedMsg = messages.value.find(m => m.id === tempId);
+    if (failedMsg) {
+      failedMsg.status = 'failed';
+    }
   }
 };
 

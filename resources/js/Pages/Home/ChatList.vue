@@ -25,7 +25,7 @@
         v-for="chat in chatList"
         :key="chat.id"
         @click="$emit('selectChat', chat.id)"
-        class="flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-100/50"
+        class="flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-200/70"
         :class="{'bg-gray-100': activeChatId === chat.id}"
       >
         <!-- Avatar -->
@@ -34,19 +34,26 @@
             <div v-else class="w-12 h-12 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-sm shrink-0">
                 {{ chat.avatarText }}
             </div>
-        </div>
+        </div> 
 
         <!-- Chat Info -->
         <div class="flex-1 min-w-0 flex flex-col justify-center border-b border-transparent h-full pb-1">
           <div class="flex justify-between items-center mb-0.5">
-            <span class="font-semibold text-[15px] text-gray-900 truncate">{{ chat.name }}</span>
+            <span class="font-semibold text-[15px] text-gray-900 truncate">
+              {{ chat.name }} <template v-if="chat.assetName && chat.isContactOwner">- {{ chat.assetName }}</template>
+            </span>
             <span class="text-[12px] text-gray-500">{{ chat.time }}</span>
           </div>
           <div class="flex justify-between items-center">
-            <p class="text-[13px] text-gray-600 truncate pr-2 flex-1">{{ chat.lastMessage || 'Mulai percakapan baru' }}</p>
+            <p class="text-[13px] text-gray-600 truncate pr-2 flex-1 flex items-center gap-1">
+              <span v-if="chat.lastMessage && chat.isLastMessageSelf" class="shrink-0 text-[10px]">
+                <i :class="['fa-solid fa-check-double transition-colors duration-500 ease-in-out', chat.isLastMessageRead ? 'text-blue-600 read-bounce' : 'text-gray-400']"></i>
+              </span>
+              <span class="truncate">{{ chat.lastMessage || 'Mulai percakapan baru' }}</span>
+            </p>
             <!-- Unread Badge -->
             <span v-if="chat.unread" class="bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shrink-0">
-              {{ chat.unread }}
+              {{ chat.unread > 99 ? '99+' : chat.unread }}
             </span>
           </div>
         </div>
@@ -72,3 +79,14 @@ defineProps({
 });
 defineEmits(['selectChat']);
 </script>
+
+<style scoped>
+@keyframes pop-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+.read-bounce {
+  animation: pop-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+</style>

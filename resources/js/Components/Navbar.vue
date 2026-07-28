@@ -7,7 +7,7 @@ import { useHomeSearch } from '@/Composables/useHomeSearch';
 const isHome = computed(() => route().current('Home'));
 const isBantuan = computed(() => route().current('Bantuan.*'));
 const isActivity = computed(() => route().current('aktivitas.*'));
-const isKotakMasuk = computed(() => route().current('kotakmasuk.*'));
+const isKotakMasuk = computed(() => route().current('chat.*'));
 const isInbox = isKotakMasuk;
 
 const props = defineProps({

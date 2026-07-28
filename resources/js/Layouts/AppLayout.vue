@@ -5,6 +5,7 @@ import Navbar from '@/Components/Navbar.vue';
 import Footer from '@/Components/Footer.vue';
 import Bottombar from '@/Components/Bottombar.vue';
 import GlobalLoading from "@/Components/GlobalLoading.vue";
+import FloatingChat from '@/Components/UI/FloatingChat.vue';
 
 defineProps({
     transparentNavbar: {
@@ -35,6 +36,8 @@ defineProps({
         </main>
 
         <Bottombar v-if="!hideBottombar" />
+        
+        <FloatingChat />
 
         <!-- <Footer /> -->
     </div>

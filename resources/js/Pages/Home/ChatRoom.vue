@@ -25,8 +25,10 @@
           </div>
 
           <div class="flex-1 min-w-0 cursor-pointer">
-            <h2 class="font-semibold text-gray-900 text-[15px] leading-tight truncate">{{ activeChat.name }}</h2>
-            <p class="text-[12px] text-gray-500 flex items-center gap-1 mt-0.5 truncate">
+            <h2 class="font-semibold text-gray-900 text-[15px] leading-tight truncate">
+              {{ activeChat.name }} <template v-if="activeChat.assetName && activeChat.isContactOwner">- {{ activeChat.assetName }}</template>
+            </h2>
+            <p v-if="activeChat.assetName && !activeChat.isContactOwner" class="text-[12px] text-gray-500 flex items-center gap-1 mt-0.5 truncate">
               {{ activeChat.assetName }}
             </p>
           </div>
@@ -48,7 +50,12 @@
                   {{ activeChat.avatarText }}
               </div>
               <div class="flex-1 min-w-0 flex flex-col justify-center">
-                <h2 class="font-semibold text-gray-900 text-[14px] leading-tight truncate">{{ activeChat.name }}</h2>
+                <h2 class="font-semibold text-gray-900 text-[14px] leading-tight truncate">
+                  {{ activeChat.name }} <template v-if="activeChat.assetName && activeChat.isContactOwner">- {{ activeChat.assetName }}</template>
+                </h2>
+                <p v-if="activeChat.assetName && !activeChat.isContactOwner" class="text-[11px] text-gray-500 truncate mt-0.5">
+                  {{ activeChat.assetName }}
+                </p>
               </div>
             </div>
           </template>
@@ -98,7 +105,11 @@
                   {{ msg.text }}
                   <div class="text-[10px] text-gray-700 ml-3 float-right mt-2 flex items-center gap-1">
                       {{ msg.time }}
-                      <i class="fa-solid fa-check-double text-blue-600"></i>
+                      <i :class="[
+                        'fa-solid transition-colors duration-500 ease-in-out',
+                        (msg.status === 'failed' || msg.status === 'sending') ? 'fa-check text-gray-500' :
+                        (msg.isRead ? 'fa-check-double text-blue-600 read-bounce' : 'fa-check-double text-gray-500')
+                      ]"></i>
                   </div>
                 </div>
               </div>
@@ -211,5 +222,13 @@ const handleSend = () => {
 /* Safe area for mobile bottoms */
 .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0.5rem);
+}
+@keyframes pop-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+.read-bounce {
+  animation: pop-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 </style>

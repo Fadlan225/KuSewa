@@ -10,7 +10,7 @@
           v-if="totalUnreadCount > 0 && !isChatOpen"
           class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center border-2 border-white shadow-xs"
         >
-          {{ totalUnreadCount }}
+          {{ totalUnreadCount > 99 ? '99+' : totalUnreadCount }}
         </span>
 
         <svg v-if="!isChatOpen" class="w-7 h-7 text-slate-950 transition-transform group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -38,14 +38,14 @@
                /* FULLSCREEN MOBILE */
                inset-0 w-full h-full bg-white flex flex-col
                /* POPUP DESKTOP */
-               md:inset-auto md:bottom-24 md:right-6 md:w-96 md:h-[520px] md:rounded-2xl md:shadow-2xl md:border md:border-black/10 md:overflow-hidden"
+               md:inset-auto md:bottom-24 md:right-6 md:w-96 md:h-[520px] md:max-h-[calc(100vh-120px)] md:rounded-2xl md:shadow-2xl md:border md:border-black/10 md:overflow-hidden"
       >
 
         <!-- VIEW 1: DAFTAR KONTAK -->
         <template v-if="activeContactId === null">
           <div class="bg-[#ffc000] p-4 text-slate-950 flex items-center justify-between shadow-xs">
             <div>
-              <h3 class="font-extrabold text-sm md:text-base leading-tight">Pesan & Support</h3>
+              <h3 class="font-extrabold text-sm md:text-base leading-tight">Kotak Masuk</h3>
               <p class="text-[10px] md:text-xs font-medium text-slate-800/80">Pilih kontak untuk memulai chat</p>
             </div>
             <button
@@ -80,10 +80,20 @@
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center justify-between mb-0.5">
-                  <h4 class="font-bold text-xs md:text-sm text-slate-900 truncate">{{ contact.name }}</h4>
+                  <h4 class="font-bold text-xs md:text-sm text-slate-900 truncate">
+                    {{ contact.name }} <template v-if="contact.assetName && contact.isContactOwner">- {{ contact.assetName }}</template>
+                  </h4>
                   <span class="text-[10px] text-slate-400 font-mono">{{ contact.time }}</span>
                 </div>
-                <p class="text-xs text-slate-500 truncate leading-tight">{{ contact.lastMessage }}</p>
+                <p class="text-xs text-slate-500 truncate leading-tight flex items-center gap-1">
+                  <span v-if="contact.lastMessage && contact.isLastMessageSelf" class="shrink-0 text-[10px]">
+                    <i :class="['fa-solid fa-check-double transition-colors duration-500 ease-in-out', contact.isLastMessageRead ? 'text-blue-600 read-bounce' : 'text-slate-400']"></i>
+                  </span>
+                  <span class="truncate">{{ contact.lastMessage }}</span>
+                </p>
+              </div>
+              <div v-if="contact.unread" class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
+                {{ contact.unread > 99 ? '99+' : contact.unread }}
               </div>
             </div>
           </div>
@@ -97,7 +107,9 @@
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
               </button>
               <div>
-                <h3 class="font-bold text-xs md:text-sm leading-tight text-slate-900">{{ currentContact?.name }}</h3>
+                <h3 class="font-bold text-xs md:text-sm leading-tight text-slate-900">
+                  {{ currentContact?.name }} <template v-if="currentContact?.assetName && currentContact?.isContactOwner">- {{ currentContact?.assetName }}</template>
+                </h3>
                 <p class="text-[10px] font-medium text-slate-800/80">{{ currentContact?.isOnline ? 'Online' : 'Offline' }}</p>
               </div>
             </div>
@@ -111,7 +123,16 @@
               <div class="max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs md:text-sm leading-relaxed" :class="msg.isSender ? 'bg-[#ffc000] text-slate-950 font-medium' : 'bg-white text-slate-800 border border-slate-200'">
                 {{ msg.text }}
               </div>
-              <span class="text-[9px] text-slate-400 mt-0.5 px-1 font-mono">{{ msg.time }}</span>
+              <div class="flex items-center gap-1 mt-0.5 px-1 justify-end">
+                <span class="text-[9px] text-slate-400 font-mono">{{ msg.time }}</span>
+                <template v-if="msg.isSender || msg.isSelf">
+                  <i :class="[
+                    'fa-solid text-[9px] transition-colors duration-500 ease-in-out',
+                    (msg.status === 'failed' || msg.status === 'sending') ? 'fa-check text-slate-400' :
+                    (msg.isRead ? 'fa-check-double text-blue-600 read-bounce' : 'fa-check-double text-slate-400')
+                  ]"></i>
+                </template>
+              </div>
             </div>
           </div>
 
@@ -166,7 +187,7 @@ const fetchMessages = async (roomId) => {
   try {
     const response = await axios.get(`/api/chats/${roomId}/messages`);
     currentMessages.value = response.data.messages;
-    
+
     // Update unread count di kontak
     const contact = contacts.value.find(c => c.id === roomId);
     if (contact) {
@@ -185,31 +206,40 @@ const openContactChat = async (id) => {
 
 const sendChatMessage = async () => {
   if (!newChatMessage.value.trim() || !activeContactId.value) return
-  
+
   const text = newChatMessage.value.trim();
   newChatMessage.value = '';
-  
+
+  const tempId = Date.now();
   // Optimistic UI update
   currentMessages.value.push({
-    id: Date.now(),
+    id: tempId,
     text: text,
     isSender: true,
     isSelf: true,
-    time: 'Baru saja'
+    time: 'Baru saja',
+    status: 'sending',
+    isRead: false
   });
   nextTick(() => { if (chatContainer.value) chatContainer.value.scrollTop = chatContainer.value.scrollHeight })
-  
+
   try {
     const response = await axios.post(`/api/chats/${activeContactId.value}/messages`, { message: text });
     // Replace with real message data
-    const lastMsg = currentMessages.value[currentMessages.value.length - 1];
-    if (lastMsg) {
-      lastMsg.id = response.data.message.id;
-      lastMsg.time = response.data.message.time;
+    const sentMsg = currentMessages.value.find(m => m.id === tempId);
+    if (sentMsg) {
+      sentMsg.id = response.data.message.id;
+      sentMsg.time = response.data.message.time;
+      sentMsg.isRead = response.data.message.isRead;
+      sentMsg.status = 'sent';
     }
     await fetchContacts(); // Refresh contact list to show last message
   } catch (error) {
     console.error('Error sending message:', error);
+    const failedMsg = currentMessages.value.find(m => m.id === tempId);
+    if (failedMsg) {
+      failedMsg.status = 'failed';
+    }
   }
 }
 
@@ -243,3 +273,14 @@ onMounted(() => {
 
 defineExpose({ openChatFromBottombar, closeChat })
 </script>
+
+<style scoped>
+@keyframes pop-bounce {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(1); }
+}
+.read-bounce {
+  animation: pop-bounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+</style>
