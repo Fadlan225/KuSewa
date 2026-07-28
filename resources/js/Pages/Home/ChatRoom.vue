@@ -553,8 +553,13 @@ const handleAction = (action) => {
         emit('deleteMessage', msg.id);
     } else if (action === 'copy') {
         if (msg.text) {
-            navigator.clipboard.writeText(msg.text);
-            displayToast('Pesan berhasil disalin', 'success');
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(msg.text)
+                    .then(() => displayToast('Pesan berhasil disalin', 'success'))
+                    .catch(() => fallbackCopy(msg.text));
+            } else {
+                fallbackCopy(msg.text);
+            }
         } else {
             displayToast('Tidak ada teks untuk disalin', 'error');
         }
@@ -571,6 +576,28 @@ const viewerIndex = ref(0);
 const showToast = ref(false);
 const toastMessage = ref('');
 const toastType = ref('error');
+
+const fallbackCopy = (text) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if(successful) {
+            displayToast('Pesan berhasil disalin', 'success');
+        } else {
+            displayToast('Gagal menyalin pesan', 'error');
+        }
+    } catch (err) {
+        displayToast('Gagal menyalin pesan', 'error');
+    }
+    document.body.removeChild(textArea);
+};
 
 const displayToast = (msg, type = 'error') => {
     toastMessage.value = msg;

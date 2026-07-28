@@ -137,7 +137,7 @@
                   <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
                   <span>{{ msg.error_text }}</span>
                 </div>
-                
+
                 <div :class="{'opacity-60': msg.status === 'policy_error'}">
                     <div v-if="msg.replyTo" class="bg-black/5 border-l-4 p-2 rounded-r-lg mb-2 text-xs cursor-pointer opacity-80" :class="msg.isSender ? 'border-yellow-700' : 'border-gray-400'">
                         <div class="font-semibold mb-0.5" :class="msg.isSender ? 'text-yellow-900' : 'text-gray-700'">{{ msg.replyTo.sender_name }}</div>
@@ -151,14 +151,14 @@
                             msg.attachments.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
                         ]">
                             <div v-for="(att, idx) in msg.attachments.slice(0, 4)" :key="att.id" class="relative" :class="{'col-span-2': msg.attachments.length === 3 && idx === 0}">
-                                <img 
-                                    :src="att.file_url" 
-                                    class="w-full object-cover rounded-md" 
+                                <img
+                                    :src="att.file_url"
+                                    class="w-full object-cover rounded-md"
                                     :class="[
                                         msg.status === 'policy_error' ? 'cursor-default' : 'cursor-pointer',
                                         msg.attachments.length === 3 && idx === 0 ? 'aspect-[2/1]' : 'aspect-square'
                                     ]"
-                                    @click="msg.status !== 'policy_error' && openViewer(att.file_url)" 
+                                    @click="msg.status !== 'policy_error' && openViewer(att.file_url)"
                                 />
                                 <div v-if="idx === 3 && msg.attachments.length > 4" class="absolute inset-0 bg-black/60 flex items-center justify-center rounded-md text-white font-bold text-sm" :class="msg.status === 'policy_error' ? 'cursor-default' : 'cursor-pointer'" @click="msg.status !== 'policy_error' && openViewer(att.file_url)">
                                     +{{ msg.attachments.length - 4 }}
@@ -196,7 +196,7 @@
                 </template>
               </div>
             </div>
-            
+
             <!-- Typing Indicator -->
             <div v-if="isTyping" class="flex flex-col items-start mb-2 animate-fade-in-up">
               <div class="bg-white border border-slate-200 px-3 py-2.5 rounded-2xl relative w-fit">
@@ -222,19 +222,27 @@
           </div>
 
           <form @submit.prevent="sendChatMessage" class="p-3 bg-white flex items-center gap-2 shrink-0 transition-all" :class="{'pt-1': replyingToMessage || editingMessageId}">
-            <input v-model="newChatMessage" @input="handleTyping" type="text" placeholder="Tulis pesan..." class="flex-1 bg-slate-100 text-slate-800 text-xs md:text-sm px-4 py-2.5 rounded-full border-0 focus:ring-2 focus:ring-[#ffc000]" />
+            <input v-model="newChatMessage" @input="handleTyping" type="text" placeholder="Ketik pesan..." class="flex-1 bg-slate-100 text-slate-800 text-xs md:text-sm px-4 py-2.5 rounded-full border-0 focus:ring-2 focus:ring-[#ffc000]" />
             <button type="submit" :disabled="!newChatMessage.trim()" class="w-9 h-9 rounded-full bg-[#ffc000] text-slate-950 flex items-center justify-center disabled:opacity-40">
-              <svg class="w-4 h-4 translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              <i class="fa-solid fa-paper-plane text-[15px] -ml-0.5"></i>
             </button>
           </form>
         </template>
+
+        <!-- Message Info Modal -->
+        <MessageInfoModal
+            :show="messageInfo !== null"
+            :message="messageInfo"
+            :isAbsolute="true"
+            @close="messageInfo = null"
+        />
 
       </div>
     </Transition>
 
     <!-- Context Menu Overlay & Menu -->
-    <div v-if="contextMenu.show" 
-         class="fixed inset-0 z-[100]" 
+    <div v-if="contextMenu.show"
+         class="fixed inset-0 z-[9999999]"
          @click="closeContextMenu"
          @touchstart="closeContextMenu">
         <div class="fixed bg-white border border-gray-200 shadow-xl rounded-lg py-1 w-44 text-xs text-gray-700 overflow-hidden"
@@ -269,11 +277,11 @@
         @close="showViewer = false"
     />
 
-    <!-- Message Info Modal -->
-    <MessageInfoModal 
-        :show="messageInfo !== null"
-        :message="messageInfo"
-        @close="messageInfo = null"
+    <!-- Toast Component -->
+    <Toast
+        :show="showToast"
+        :message="toastMessage"
+        :type="toastType"
     />
   </div>
 </template>
@@ -284,6 +292,7 @@ import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import ImageViewerModal from '@/Components/UI/ImageViewerModal.vue'
 import MessageInfoModal from '@/Components/UI/MessageInfoModal.vue'
+import Toast from '@/Components/UI/Toast.vue'
 
 const emit = defineEmits(['update:isOpen'])
 
@@ -351,15 +360,15 @@ const cancelLongPress = () => {
 const openContextMenu = (e, msg, isTouch = false) => {
     if (msg.isDeleted || msg.status === 'policy_error') return;
     if (longPressTimer) clearTimeout(longPressTimer);
-    
+
     let clientX = e.clientX;
     let clientY = e.clientY;
-    
+
     if (isTouch && e.touches) {
         clientX = e.touches[0].clientX;
         clientY = e.touches[0].clientY;
     }
-    
+
     contextMenu.value = {
         show: true,
         x: clientX,
@@ -393,7 +402,7 @@ const cancelReplyOrEdit = () => {
 const handleAction = async (action) => {
     const msg = contextMenu.value.message;
     closeContextMenu();
-    
+
     if (action === 'info') {
         messageInfo.value = msg;
     } else if (action === 'reply') {
@@ -420,7 +429,15 @@ const handleAction = async (action) => {
         }
     } else if (action === 'copy') {
         if (msg.text) {
-            navigator.clipboard.writeText(msg.text);
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(msg.text)
+                    .then(() => displayToast('Pesan berhasil disalin', 'success'))
+                    .catch(() => fallbackCopy(msg.text));
+            } else {
+                fallbackCopy(msg.text);
+            }
+        } else {
+            displayToast('Tidak ada teks untuk disalin', 'error');
         }
     }
 };
@@ -532,7 +549,7 @@ const sendChatMessage = async () => {
   scrollToBottom()
 
   try {
-    const response = await axios.post(`/api/chats/${activeContactId.value}/messages`, { 
+    const response = await axios.post(`/api/chats/${activeContactId.value}/messages`, {
         message: text,
         reply_to_id: replyToId
     });
@@ -561,6 +578,41 @@ const sendChatMessage = async () => {
   }
 }
 
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref('error')
+
+const fallbackCopy = (text) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    textArea.style.top = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+        const successful = document.execCommand('copy');
+        if(successful) {
+            displayToast('Pesan berhasil disalin', 'success');
+        } else {
+            displayToast('Gagal menyalin pesan', 'error');
+        }
+    } catch (err) {
+        displayToast('Gagal menyalin pesan', 'error');
+    }
+    document.body.removeChild(textArea);
+};
+
+const displayToast = (msg, type = 'error') => {
+    toastMessage.value = msg;
+    toastType.value = type;
+    showToast.value = true;
+    setTimeout(() => {
+        showToast.value = false;
+    }, 3000);
+};
+
 const openChatFromBottombar = () => {
   isChatOpen.value = true
   activeContactId.value = null
@@ -586,9 +638,9 @@ watch(activeContactId, (newId, oldId) => {
   if (oldId && chatChannel) {
     window.Echo.leave('chat.' + oldId);
   }
-  
+
   isTyping.value = false;
-  
+
   if (newId) {
       chatChannel = window.Echo.private('chat.' + newId)
         .listen('MessageSent', (e) => {

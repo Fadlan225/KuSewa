@@ -1,5 +1,5 @@
 <template>
-  <div v-if="show && message" class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" @click="close">
+  <div v-if="show && message" :class="[isAbsolute ? 'absolute z-[9999999]' : 'fixed z-[200]', 'inset-0 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm']" @click="close">
     <div class="bg-white w-full max-w-md rounded-2xl overflow-hidden shadow-xl flex flex-col" @click.stop>
       <!-- Header -->
       <div class="flex items-center px-4 py-4 bg-white border-b border-gray-100 shadow-sm">
@@ -83,6 +83,10 @@ const props = defineProps({
     message: {
         type: Object,
         default: null
+    },
+    isAbsolute: {
+        type: Boolean,
+        default: false
     }
 });
 
