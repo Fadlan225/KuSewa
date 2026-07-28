@@ -29,6 +29,13 @@ Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });
 
+Route::get('/bantuan', function () {
+    return Inertia::render('Home/Bantuan/PusatBantuan');
+});
+Route::get('/hubungi-kami', function () {
+    return Inertia::render('Home/Bantuan/HubungiKami');
+});
+
 use App\Http\Controllers\ChatController;
 
 Route::middleware('auth')->group(function () {
