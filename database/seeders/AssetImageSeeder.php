@@ -47,7 +47,7 @@ class AssetImageSeeder extends Seeder
         $totalImages = 0;
 
         foreach ($assets as $asset) {
-            $folder = strtolower(str_replace(' ', '_', $asset->type_name));
+            $folder = $asset->type_name;
             $files  = glob($imagePath . '/' . $folder . '/*') ?: [];
 
             $imagesPool = collect($files)->shuffle()->values();

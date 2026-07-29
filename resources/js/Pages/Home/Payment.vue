@@ -30,7 +30,7 @@
 
             <!-- iOS GROUPED LIST -->
             <div class="bg-white rounded-2xl border border-black/5 shadow-xs overflow-hidden divide-y divide-black/5">
-              
+
               <!-- TRANSFER BANK (Dynamic from DB) -->
               <div>
                 <div class="w-full p-4 flex items-center justify-between bg-slate-50/80">
@@ -67,7 +67,7 @@
                   </div>
                 </div>
               </div>
-              
+
             </div>
           </div>
 
@@ -77,7 +77,7 @@
 
             <!-- CARD SESUAI GAMBAR -->
             <div class="bg-white rounded-2xl p-5 border border-black/5 shadow-xs space-y-6 sticky top-24">
-              
+
               <!-- Title / Harga -->
               <div>
                 <h2 class="text-2xl font-black text-slate-900 tracking-tight">
@@ -229,7 +229,7 @@ const handlePayment = () => {
     alert('Waktu pembayaran telah habis.');
     return;
   }
-  
+
   isLoading.value = true
   setTimeout(() => {
     isLoading.value = false

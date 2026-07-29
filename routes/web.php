@@ -10,6 +10,7 @@ use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\AktivitasController;
+use App\Http\Controllers\ChatController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -29,12 +30,14 @@ Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });
 
-use App\Http\Controllers\ChatController;
+Route::get('/confirm-payment', function(){
+    return Inertia::render('Home/Confirm-Payment');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat/start', [ChatController::class, 'startChat'])->name('chat.start');
-    
+
     // API endpoints untuk Vue
     Route::get('/api/chats', [ChatController::class, 'getChats'])->name('api.chats.index');
     Route::get('/api/chats/{room}/messages', [ChatController::class, 'getMessages'])->name('api.chats.messages');

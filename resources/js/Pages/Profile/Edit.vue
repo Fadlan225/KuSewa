@@ -75,7 +75,7 @@ const accountMenuItems = [
     { label: 'Profile', icon: 'fa-regular fa-user', route: route('profile.settings') },
     { label: 'Favorite', icon: 'fa-regular fa-heart', route: route('favorites.index') },
     { label: 'Ulasan', icon: 'fa-regular fa-comment-dots', route: '#' },
-    { label: 'Aktivitas', icon: 'fa-solid fa-chart-line', route: '#' },
+    { label: 'Aktivitas', icon: 'fa-solid fa-chart-line', route: route('aktivitas.index') },
     { label: 'Terakhir di lihat', icon: 'fa-regular fa-clock', route: '#' },
 ];
 
@@ -164,7 +164,7 @@ const helpMenuItems = [
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-lg sm:text-xl font-bold text-[#0A2540]">Pesanan Saya</h2>
                     <Link
-                        href="#"
+                        :href="route('aktivitas.index')"
                         class="text-xs sm:text-sm font-semibold text-[#466080] hover:text-[#0A2540] transition-colors flex items-center space-x-1"
                     >
                         <span>Lihat Riwayat Pesanan</span>

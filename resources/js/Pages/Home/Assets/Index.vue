@@ -4,6 +4,7 @@ import { router, usePage, Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue';
 import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
+import axios from 'axios';
 
 const page = usePage();
 
@@ -48,10 +49,7 @@ const {
 
 const maxLimit = 16000000;
 
-// On mount, hydrate filters from Inertia page props
-onMounted(() => {
-    hydrateFilters(props.filters);
-});
+// Filters hydrated in the main onMounted block below
 
 
 const isSortOpenDesktop = ref(false);
@@ -95,7 +93,53 @@ watch(activeThumb, (newVal, oldVal) => {
 // UI State
 const isLoading = ref(false);
 
-const assetData = computed(() => props.assets.data || []);
+const assetData = ref(props.assets.data || []);
+const nextUrl = ref(props.assets.next_page_url || (props.assets.links && props.assets.links.next));
+const isLoadingMore = ref(false);
+const loadMoreTarget = ref(null);
+
+watch(() => props.assets, (newAssets) => {
+    assetData.value = newAssets.data || [];
+    nextUrl.value = newAssets.next_page_url || (newAssets.links && newAssets.links.next);
+}, { deep: true });
+
+const loadMore = async () => {
+    if (!nextUrl.value || isLoadingMore.value) return;
+    isLoadingMore.value = true;
+    try {
+        const response = await axios.get(nextUrl.value, {
+            headers: {
+                'X-Inertia': 'true',
+                'X-Inertia-Version': page.version
+            }
+        });
+        const newAssets = response.data.props.assets;
+        assetData.value = [...assetData.value, ...newAssets.data];
+        nextUrl.value = newAssets.next_page_url || (newAssets.links && newAssets.links.next);
+    } catch (e) {
+        console.error('Gagal memuat lebih banyak data', e);
+    } finally {
+        isLoadingMore.value = false;
+    }
+};
+
+onMounted(() => {
+    hydrateFilters(props.filters);
+
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && nextUrl.value && !isLoadingMore.value) {
+            loadMore();
+        }
+    }, {
+        rootMargin: '100px',
+        threshold: 0.1
+    });
+
+    watch(loadMoreTarget, (el) => {
+        if (el) observer.observe(el);
+    }, { immediate: true });
+});
+
 const hasActiveFilters = computed(() => {
     return keywordQuery.value || selectedAssets.value.length > 0 || startDate.value || endDate.value || selectedFacilities.value.length > 0 || minPrice.value > 0 || maxPrice.value < maxLimit;
 });
@@ -165,7 +209,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                 
                 <!-- SIDEBAR KIRI (DESKTOP) -->
-                <div class="hidden lg:block lg:col-span-3 space-y-6">
+                <div class="hidden lg:block lg:col-span-3 space-y-6 lg:sticky lg:top-[140px] h-fit">
                     
                     <!-- Dummy Map -->
                     <div class="bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden relative">
@@ -267,6 +311,14 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                                 :asset="asset"
                             :categoryName="asset.type?.category?.name || asset.category?.name || 'Lainnya'"
                             />
+                            
+                            <!-- Intersection Observer Target for Infinite Scroll -->
+                            <div ref="loadMoreTarget" class="h-4 w-full"></div>
+                            
+                            <!-- Loading Indicator -->
+                            <div v-if="isLoadingMore" class="flex justify-center items-center py-6">
+                                <div class="w-8 h-8 border-4 border-[#FFC000] border-t-transparent rounded-full animate-spin"></div>
+                            </div>
                         </div>
 
                         <!-- ========== EMPTY STATE (3 KONDISI) ========== -->
