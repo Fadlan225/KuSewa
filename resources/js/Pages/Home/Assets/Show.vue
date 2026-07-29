@@ -17,7 +17,11 @@ const props = defineProps({
     serviceFee: {
         type: [Object, Number],
         default: () => ({ type: 'percentage', value: 5 })
-    }
+    },
+    assetView: {
+        type: Object,
+        default: null,
+    },
 });
 
 const page = usePage();

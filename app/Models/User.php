@@ -54,4 +54,8 @@ class User extends Authenticatable
     public function searchLogs(){
         return $this->hasMany(search_log::class);
     }
+
+    public function assetViews(){
+        return $this->hasMany(AssetView::class);
+    }
 }

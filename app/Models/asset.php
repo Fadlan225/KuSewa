@@ -76,4 +76,8 @@ class asset extends Model
     public function units(){
         return $this->hasMany(asset_units::class);
     }
+
+    public function views(){
+        return $this->hasMany(AssetView::class);
+    }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 use App\Models\asset;
+use App\Models\AssetView;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AssetController extends Controller
 {
@@ -60,18 +62,43 @@ class AssetController extends Controller
         $asset->favorite_id = $favorite?->id;
         unset($asset->favorites);
 
-        $serviceFeeRecord = \Illuminate\Support\Facades\DB::table('service_fees')->first();
+        // ==========================================
+        // Tracking view — hanya untuk user login
+        // ==========================================
+        $assetView = null;
+        if (auth()->check()) {
+            $assetView = AssetView::where('user_id', auth()->id())
+                ->where('asset_id', $asset->id)
+                ->first();
+
+            if ($assetView) {
+                // Sudah pernah lihat — increment view_count
+                $assetView->increment('view_count');
+                $assetView->update(['last_viewed' => now()]);
+            } else {
+                // Pertama kali lihat — buat record baru
+                $assetView = AssetView::create([
+                    'user_id'     => auth()->id(),
+                    'asset_id'    => $asset->id,
+                    'view_count'  => 1,
+                    'last_viewed' => now(),
+                ]);
+            }
+        }
+
+        $serviceFeeRecord = DB::table('service_fees')->first();
         $serviceFee = $serviceFeeRecord ? [
-            'type' => $serviceFeeRecord->fee_type,
+            'type'  => $serviceFeeRecord->fee_type,
             'value' => (float) $serviceFeeRecord->fee_value
         ] : [
-            'type' => 'percentage',
+            'type'  => 'percentage',
             'value' => 5
         ];
 
         return inertia('Home/Assets/Show', [
-            'asset' => $asset,
-            'serviceFee' => $serviceFee
+            'asset'      => $asset,
+            'serviceFee' => $serviceFee,
+            'assetView'  => $assetView,
         ]);
     }
 
