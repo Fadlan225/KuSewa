@@ -83,13 +83,13 @@ class ProfileController extends Controller
             })
             ->count();
 
-        // Unpaid Bookings Count: Bookings that are not rejected and have no payment or pending payment
+        // Unpaid Bookings Count: Bookings that are confirmed and need payment
         $unpaidBookingsCount = $user->bookings()
-            ->where('booking_status', '!=', 'rejected')
+            ->where('booking_status', 'confirmed')
             ->where(function ($query) {
                 $query->whereDoesntHave('payment')
                     ->orWhereHas('payment', function ($q) {
-                        $q->where('payment_status', '!=', 'paid');
+                        $q->where('payment_status', 'pending');
                     });
             })
             ->count();

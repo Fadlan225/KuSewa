@@ -10,7 +10,7 @@ defineProps({
 <template>
     <div
         v-if="layout === 'vertical'"
-        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col animate-pulse rounded-2xl shadow-md bg-white overflow-hidden"
+        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col animate-pulse rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden"
     >
         <div class="aspect-[3/2] w-full bg-gray-200 relative overflow-hidden">
             <div class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
@@ -24,21 +24,19 @@ defineProps({
 
     <div
         v-else
-        class="w-full snap-start flex flex-row animate-pulse rounded-2xl shadow-sm border border-gray-100 bg-white overflow-hidden"
+        class="bg-white rounded-xl shadow-sm border border-gray-100 flex flex-row p-2.5 md:p-3 items-center gap-3 md:gap-4 w-full animate-pulse"
     >
-        <div class="w-[120px] sm:w-[200px] lg:w-[240px] flex-shrink-0 aspect-[4/3] sm:aspect-[3/2] bg-gray-200 relative overflow-hidden">
+        <div class="w-16 h-16 md:w-20 md:h-20 bg-slate-200 rounded-lg shrink-0 relative overflow-hidden">
             <div class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
         </div>
-        <div class="flex flex-col flex-grow p-3 sm:p-4 gap-3 bg-white sm:flex-row">
-            <div class="flex flex-col flex-grow justify-between gap-1.5">
-                <div class="h-5 rounded bg-gray-200 w-3/4"></div>
-                <div class="h-4 rounded bg-gray-200 w-1/3 mt-1"></div>
-                <div class="h-3 rounded bg-gray-200 w-1/2 mt-2"></div>
-            </div>
-            <div class="sm:w-[200px] flex flex-col justify-end sm:justify-between sm:border-l border-gray-100 sm:pl-4 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0">
-                <div class="h-5 rounded bg-gray-200 w-1/2 ml-auto sm:ml-0"></div>
-                <div class="h-8 rounded bg-gray-200 w-full sm:w-24 ml-auto mt-2 sm:mt-0"></div>
-            </div>
+        <div class="flex-1 space-y-2 py-1">
+            <div class="h-3 bg-slate-200 rounded w-16"></div>
+            <div class="h-4 bg-slate-200 rounded w-3/4"></div>
+            <div class="h-3 bg-slate-200 rounded w-1/2"></div>
+        </div>
+        <div class="shrink-0 flex flex-col items-end gap-2 py-1">
+            <div class="h-4 bg-slate-200 rounded w-16"></div>
+            <div class="h-6 w-6 bg-slate-200 rounded-full mt-2"></div>
         </div>
     </div>
 </template>

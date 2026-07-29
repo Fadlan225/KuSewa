@@ -9,7 +9,11 @@ const props = defineProps({
     asset: Object,
     selectedPricing: Object,
     serviceFee: Number,
-    requestParams: Object
+    requestParams: Object,
+    bankAccounts: {
+        type: Array,
+        default: () => []
+    }
 })
 
 const page = usePage()
@@ -19,14 +23,19 @@ const form = useForm({
   asset_id: props.asset?.id || null,
   pricing_id: props.requestParams?.pricing_id || null,
   namaPemesan: user?.name || '',
+  booker_name: user?.name || '',
+  booker_phone: user?.phone || '',
+  booker_email: user?.email || '',
   phone: user?.phone || '',
   email: user?.email || '',
   untukSaya: true,
   namaTamu: user?.name || '',
+  guest_name: user?.name || '',
   startDate: props.requestParams?.date_start?.split(' ')[0] || '',
   endDate: props.requestParams?.date_end?.split(' ')[0] || '',
   duration: props.requestParams?.duration ? Number(props.requestParams.duration) : 1,
-  rental_mode: props.requestParams?.rental_mode || 'day'
+  rental_mode: props.requestParams?.rental_mode || 'day',
+  payment_method: props.bankAccounts?.length ? props.bankAccounts[0].id : null
 })
 
 const priceMultiplier = computed(() => {
@@ -65,6 +74,12 @@ const displayRentalUnit = computed(() => {
 })
 
 const submitBooking = () => {
+    // Sync snapshot fields before submitting
+    form.booker_name = form.namaPemesan
+    form.booker_phone = form.phone
+    form.booker_email = form.email
+    form.guest_name = form.untukSaya ? form.namaPemesan : form.namaTamu
+
     form.post(route('booking.store'), {
         preserveScroll: true,
         onSuccess: () => console.log('Booking submitted successfully!'),
@@ -72,17 +87,31 @@ const submitBooking = () => {
     });
 }
 
+// Jika untukSaya dicentang, guest_name selalu = namaPemesan
+watch(() => form.untukSaya, (val) => {
+    if (val) {
+        form.namaTamu = form.namaPemesan
+    }
+})
+
+// Jika namaPemesan berubah dan untukSaya dicentang, update namaTamu juga
+watch(() => form.namaPemesan, (val) => {
+    if (form.untukSaya) {
+        form.namaTamu = val
+    }
+})
+
 </script>
 
 <template>
     <AppLayout :hideBottombar="true" :hideNavbar="true">
-        <DetailNavbar 
-            :showSections="false" 
-            :showShare="false" 
-            :showFavorite="false" 
+        <DetailNavbar
+            :showSections="false"
+            :showShare="false"
+            :showFavorite="false"
             :backUrl="asset?.id ? `/assets/${asset.id}` : '/'"
         />
-        <div class="min-h-screen bg-slate-50/60 text-slate-800 font-sans antialiased pb-16">
+        <div class="min-h-screen bg-slate-50/60 text-slate-800 font-sans antialiased pb-28 lg:pb-16">
             <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
@@ -120,14 +149,12 @@ const submitBooking = () => {
                         <p class="text-sm font-semibold text-slate-800">{{ user?.name || 'User' }}</p>
                     </div>
                     </div>
-                    <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">Aktif</span>
                 </div>
 
                 <!-- Section: Data Pemesan -->
                 <section class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-5">
                     <div class="border-b border-slate-100 pb-4">
                     <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <span class="w-2 h-5 bg-[#ffc000] rounded-full inline-block"></span>
                         Data Pemesan
                     </h2>
                     <p class="text-xs text-slate-400 mt-1">Pastikan data sesuai dengan kartu identitas resmi Anda.</p>
@@ -163,26 +190,67 @@ const submitBooking = () => {
 
                 <!-- Section: Informasi Tamu -->
                 <section class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+                    <div class="border-b border-slate-100 pb-4">
                     <h2 class="text-base font-bold text-slate-900 flex items-center gap-2">
-                    <span class="w-2 h-5 bg-slate-800 rounded-full inline-block"></span>
-                    Nama Tamu Menginap
+                    Nama Tamu Menggunakan
                     </h2>
+                    <p class="text-xs text-slate-400 mt-1">Orang yang akan menggunakan aset ini.</p>
+                    </div>
                     <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nama Lengkap Tamu*</label>
-                    <input type="text" v-model="form.namaTamu" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#ffc000] focus:ring-4 focus:ring-[#ffc000]/20 transition-all text-sm outline-none bg-slate-50/50 focus:bg-white" />
+                    <input
+                        type="text"
+                        v-model="form.namaTamu"
+                        :disabled="form.untukSaya"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#ffc000] focus:ring-4 focus:ring-[#ffc000]/20 transition-all text-sm outline-none"
+                        :class="form.untukSaya ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-50/50 focus:bg-white'"
+                    />
+                    <span v-if="form.untukSaya" class="text-[11px] text-slate-400 mt-1 block flex items-center gap-1">
+                        <i class="fa-solid fa-lock text-[9px]"></i>
+                        Diisi otomatis sesuai data pemesan.
+                    </span>
                     </div>
                 </section>
 
-                <!-- Section: Fasilitas Utama -->
-                <section class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4" v-if="asset?.detail?.facility && asset.detail.facility.length">
-                    <h2 class="text-base font-bold text-slate-900">Fasilitas Utama</h2>
-                    <div class="divide-y divide-slate-100">
-                    <div v-for="facility in asset.detail.facility" :key="facility" class="py-3 flex items-center justify-between text-sm">
-                        <div class="flex items-center gap-3">
-                        <span class="text-base text-emerald-500">✓</span>
-                        <span class="text-xs font-medium text-slate-700 capitalize">{{ facility.replace(/_/g, ' ') }}</span>
+                <!-- Section: Metode Pembayaran -->
+                <section class="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+                    <h2 class="text-base font-bold text-slate-900">Metode Pembayaran</h2>
+                    <div class="bg-white rounded-2xl border border-black/5 shadow-xs overflow-hidden divide-y divide-black/5">
+                        <!-- TRANSFER BANK -->
+                        <div>
+                            <div class="w-full p-4 flex items-center justify-between bg-slate-50/80">
+                                <div class="flex items-center gap-3.5">
+                                    <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center border-[#ffc000] bg-[#ffc000]">
+                                        <svg class="w-3 h-3 text-slate-950 stroke-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    </div>
+                                    <span class="text-sm font-semibold text-slate-900">Transfer Bank</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Sub-items Bank -->
+                            <div class="px-4 pb-4 pt-1 space-y-2 bg-slate-50/50">
+                                <div v-for="bank in bankAccounts" :key="bank.id"
+                                     @click="form.payment_method = bank.id"
+                                     :class="form.payment_method === bank.id ? 'bg-white ring-2 ring-[#ffc000] shadow-xs' : 'bg-white/60 hover:bg-white border border-black/5'"
+                                     class="p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-4 h-4 rounded-full border flex items-center justify-center"
+                                             :class="form.payment_method === bank.id ? 'border-[#ffc000] bg-[#ffc000]' : 'border-slate-300'">
+                                            <div v-if="form.payment_method === bank.id" class="w-1.5 h-1.5 rounded-full bg-slate-950"></div>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs font-semibold text-slate-800">{{ bank.bank_name }}</span>
+                                            <span class="text-[10px] text-slate-500">{{ bank.account_holder }}</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-[11px] font-bold text-slate-400 font-mono">{{ bank.account_number }}</span>
+                                </div>
+                                <!-- Empty State -->
+                                <div v-if="bankAccounts.length === 0" class="text-center text-xs text-slate-500 py-4">
+                                    Belum ada metode pembayaran yang tersedia.
+                                </div>
+                            </div>
                         </div>
-                    </div>
                     </div>
                 </section>
 
@@ -193,12 +261,6 @@ const submitBooking = () => {
 
                 <!-- Order Summary Card -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-xl shadow-slate-200/50 space-y-5">
-                    
-                    <div class="flex items-baseline gap-1 mb-4">
-                        <span class="text-2xl font-black text-[#0A2540]">Rp {{ Number((props.selectedPricing?.price || asset?.default_pricing?.price || 0) * priceMultiplier).toLocaleString('id-ID') }}</span>
-                        <span class="text-sm font-medium text-slate-400">/{{ displayRentalUnit }}</span>
-                    </div>
-
                     <div class="border border-slate-200 rounded-xl overflow-hidden">
                         <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
                             <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
@@ -216,7 +278,7 @@ const submitBooking = () => {
                         </div>
                     </div>
 
-                    <button @click="submitBooking" :disabled="form.processing" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] text-[#0A2540] font-extrabold py-3.5 rounded-xl transition-all text-sm mt-4 disabled:opacity-50">
+                    <button @click="submitBooking" :disabled="form.processing || !form.payment_method" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] text-[#0A2540] font-extrabold py-3.5 rounded-xl transition-all text-sm mt-4 disabled:opacity-50 hidden lg:block">
                         {{ form.processing ? 'Memproses...' : 'Pesan Sekarang' }}
                     </button>
 
@@ -244,12 +306,12 @@ const submitBooking = () => {
             </div>
             </main>
 
-            <DetailBottomBar 
+            <DetailBottomBar
                 :price="totalPrice"
                 :durationCount="form.duration"
                 :durationLabel="displayRentalUnit"
-                :disabled="false"
-                buttonText="Bayar"
+                :disabled="form.processing || !form.payment_method"
+                buttonText="Pesan"
                 @submit="submitBooking"
             />
 

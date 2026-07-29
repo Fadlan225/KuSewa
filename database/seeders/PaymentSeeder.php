@@ -11,8 +11,9 @@ class PaymentSeeder extends Seeder
      * Payment untuk setiap booking:
      * - completed → payment_status = 'paid'
      * - confirmed → payment_status = 'paid'
-     * - cancelled → payment_status = 'failed'
-     * - pending   → tidak ada payment (belum bayar)
+     * - active    → payment_status = 'paid'
+     * - cancelled → payment_status = 'rejected' atau 'expired'
+     * - pending   → beberapa dengan 'verifying', sisanya tidak ada payment
      */
     public function run(): void
     {
@@ -21,7 +22,7 @@ class PaymentSeeder extends Seeder
         \DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         $bookings = DB::table('bookings')
-            ->whereIn('booking_status', ['completed', 'confirmed', 'cancelled'])
+            ->whereIn('booking_status', ['completed', 'confirmed', 'active', 'cancelled', 'pending'])
             ->orderBy('id')
             ->get();
 
@@ -30,34 +31,52 @@ class PaymentSeeder extends Seeder
             return;
         }
 
-        $methods = ['transfer_bank', 'transfer_bank', 'transfer_bank', 'qris', 'qris', 'virtual_account'];
+        $methods = ['BCA', 'BCA', 'Mandiri', 'BRI', 'BNI', 'QRIS'];
         $batch   = [];
 
         foreach ($bookings as $booking) {
-            if ($booking->booking_status === 'pending') continue;
+            // Booking pending: hanya sebagian yang punya payment verifying, sisanya skip
+            if ($booking->booking_status === 'pending') {
+                if (rand(1, 3) === 1) { // 1/3 chance punya pembayaran verifying
+                    $batch[] = [
+                        'booking_id'       => $booking->id,
+                        'payment_method'   => $methods[array_rand($methods)],
+                        'payment_status'   => 'verifying',
+                        'payment_date'     => now()->format('Y-m-d'),
+                        'proof_of_payment' => 'proofs/bukti_' . $booking->id . '.jpg',
+                        'expires_at'       => date('Y-m-d H:i:s', strtotime($booking->created_at . ' +24 hours')),
+                        'created_at'       => $booking->created_at,
+                        'updated_at'       => now(),
+                    ];
+                }
+                continue;
+            }
 
             $status = match ($booking->booking_status) {
                 'completed' => 'paid',
                 'confirmed' => 'paid',
-                'cancelled' => 'failed',
+                'active'    => 'paid',
+                'cancelled' => (rand(0, 1) ? 'rejected' : 'expired'),
                 default     => 'pending',
             };
 
             $paymentDate = match ($booking->booking_status) {
                 'completed' => date('Y-m-d', strtotime($booking->start_date . ' -1 day')),
                 'confirmed' => date('Y-m-d', strtotime($booking->start_date . ' -' . rand(1, 3) . ' day')),
+                'active'    => date('Y-m-d', strtotime($booking->start_date . ' -1 day')),
                 'cancelled' => date('Y-m-d', strtotime($booking->created_at . ' +1 day')),
                 default     => now()->format('Y-m-d'),
             };
 
             $batch[] = [
-                'booking_id'      => $booking->id,
-                'payment_method'  => $methods[array_rand($methods)],
-                'payment_status'  => $status,
-                'payment_date'    => $paymentDate,
-                'proof_of_payment' => 'payments/bukti_' . $booking->id . '.jpg',
-                'created_at'      => $paymentDate,
-                'updated_at'      => now(),
+                'booking_id'       => $booking->id,
+                'payment_method'   => $methods[array_rand($methods)],
+                'payment_status'   => $status,
+                'payment_date'     => $paymentDate,
+                'proof_of_payment' => 'proofs/bukti_' . $booking->id . '.jpg',
+                'expires_at'       => date('Y-m-d H:i:s', strtotime($booking->created_at . ' +24 hours')),
+                'created_at'       => $paymentDate,
+                'updated_at'       => now(),
             ];
         }
 

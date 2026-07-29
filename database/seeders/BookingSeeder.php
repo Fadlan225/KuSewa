@@ -41,11 +41,12 @@ class BookingSeeder extends Seeder
             return;
         }
 
-        // Distribusi status
+        // Distribusi status: pending=10%, confirmed=15%, active=10%, completed=55%, cancelled=10%
         $statusPool = array_merge(
             array_fill(0, 60,  'pending'),
-            array_fill(0, 120, 'confirmed'),
-            array_fill(0, 360, 'completed'),
+            array_fill(0, 90,  'confirmed'),
+            array_fill(0, 60,  'active'),
+            array_fill(0, 330, 'completed'),
             array_fill(0, 60,  'cancelled')
         );
         shuffle($statusPool);
@@ -86,6 +87,10 @@ class BookingSeeder extends Seeder
                 'asset_id'       => $asset->id,
                 'asset_unit_id'  => null,
                 'booking_code'   => 'BK' . strtoupper(substr(md5($i . $asset->id . time()), 0, 8)),
+                'booker_name'    => $customer->name,
+                'booker_phone'   => $customer->phone ?? '08' . rand(100000000, 999999999),
+                'booker_email'   => $customer->email,
+                'guest_name'     => $customer->name,
                 'user_id'        => $customer->id,
                 'start_date'     => $startDate->format('Y-m-d'),
                 'end_date'       => $endDate->format('Y-m-d'),

@@ -36,11 +36,18 @@ class BookingController extends Controller
 
         $serviceFee = \Illuminate\Support\Facades\DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
 
+        // Fetch bank accounts for the asset owner
+        $bankAccounts = \App\Models\bank_account::where('owner_profile_id', $asset->owner_profile_id)->get();
+        if ($bankAccounts->isEmpty()) {
+            $bankAccounts = \App\Models\bank_account::all();
+        }
+
         return Inertia::render('Home/Booking', [
             'asset' => $asset,
             'selectedPricing' => $selectedPricing,
             'serviceFee' => $serviceFee,
-            'requestParams' => $request->all()
+            'requestParams' => $request->all(),
+            'bankAccounts' => $bankAccounts
         ]);
     }
 
@@ -56,6 +63,11 @@ class BookingController extends Controller
             'endDate' => 'required|date|after_or_equal:startDate',
             'duration' => 'required|integer|min:1',
             'rental_mode' => 'nullable|string',
+            'payment_method' => 'required',
+            'booker_name' => 'required|string|max:255',
+            'booker_phone' => 'required|string|max:20',
+            'booker_email' => 'required|email|max:255',
+            'guest_name' => 'required|string|max:255',
         ]);
 
         $asset = \App\Models\asset::with('type')->findOrFail($validated['asset_id']);
@@ -72,6 +84,10 @@ class BookingController extends Controller
             'asset_id' => $validated['asset_id'],
             'asset_unit_id' => $pricing->asset_unit_id,
             'booking_code' => 'BK-' . strtoupper(uniqid()),
+            'booker_name' => $validated['booker_name'],
+            'booker_phone' => $validated['booker_phone'],
+            'booker_email' => $validated['booker_email'],
+            'guest_name' => $validated['guest_name'],
             'user_id' => auth()->id(),
             'start_date' => $validated['startDate'],
             'end_date' => $validated['endDate'],
@@ -84,6 +100,7 @@ class BookingController extends Controller
         // Buat record payment dengan expiry 24 jam
         $payment = \App\Models\payment::create([
             'booking_id' => $booking->id,
+            'payment_method' => $validated['payment_method'],
             'payment_status' => 'pending',
             'expires_at' => now()->addHours(24),
         ]);
@@ -101,6 +118,7 @@ class BookingController extends Controller
             'asset.firstImage',
             'asset.type.category',
             'asset.ownerProfile.user',
+            'assetUnit',
             'payment',
             'user'
         ])->findOrFail($id);

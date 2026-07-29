@@ -183,7 +183,7 @@ const helpMenuItems = [
                     </Link>
 
                     <!-- Belum Bayar -->
-                    <Link :href="route('aktivitas.index', { status: 'Menunggu' })" class="flex flex-col items-center group cursor-pointer">
+                    <Link :href="route('aktivitas.index', { status: 'Belum Bayar' })" class="flex flex-col items-center group cursor-pointer">
                         <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-red-50 transition-colors duration-200">
                             <i class="fa-solid fa-wallet text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors"></i>
                             <span v-if="unpaid_bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ unpaid_bookings_count }}</span>
@@ -222,26 +222,15 @@ const helpMenuItems = [
                         <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200"></i>
                     </Link>
 
-                    <!-- Dashboard (Owner) atau Profile Bisnis (User) -->
+                    <!-- Profile Bisnis (Bagi yang belum jadi mitra) -->
                     <Link
-                        v-if="user.is_owner"
-                        href="#"
-                        class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group"
-                    >
-                        <div class="flex items-center space-x-4">
-                            <i class="fa-solid fa-border-all text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors"></i>
-                            <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Dashboard</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200"></i>
-                    </Link>
-                    <Link
-                        v-else
+                        v-if="!user.is_owner"
                         href="#"
                         class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group"
                     >
                         <div class="flex items-center space-x-4">
                             <i class="fa-solid fa-briefcase text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors"></i>
-                            <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Profile Bisnis</span>
+                            <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Buka Bisnis / Jadi Mitra</span>
                         </div>
                         <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200"></i>
                     </Link>

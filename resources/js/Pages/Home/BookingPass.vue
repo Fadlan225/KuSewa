@@ -24,23 +24,48 @@ const isDownloading = ref(false);
 const activeCodeTab = ref('barcode');
 
 const isConfirmedAndPaid = computed(() => {
-    // TIKET BOOKING ditunjukkan jika status booking dikonfirmasi/selesai DAN pembayaran sudah lunas
-    // (Atau jika booking status completed)
-    return (props.booking.booking_status === 'confirmed' || props.booking.booking_status === 'completed') &&
-           (props.booking.payment?.payment_status === 'paid' || props.booking.payment?.payment_status === 'success');
+    // Tiket ditampilkan jika booking confirmed/active/completed DAN payment paid
+    return (['confirmed', 'active', 'completed'].includes(props.booking.booking_status)) &&
+           (props.booking.payment?.payment_status === 'paid');
+});
+
+// Sudah kirim bukti, menunggu konfirmasi owner
+const isVerifying = computed(() => {
+    return props.booking.payment?.payment_status === 'verifying';
+});
+
+// Belum ada bukti pembayaran, perlu bayar
+const isNeedPayment = computed(() => {
+    return !isCancelled.value &&
+           !isConfirmedAndPaid.value &&
+           !isVerifying.value &&
+           props.booking.payment?.payment_status === 'pending';
+});
+
+// Ditolak owner
+const isRejected = computed(() => {
+    return props.booking.payment?.payment_status === 'rejected';
+});
+
+// Expired
+const isExpired = computed(() => {
+    return props.booking.payment?.payment_status === 'expired';
+});
+
+const isCancelled = computed(() => {
+    return props.booking.booking_status === 'cancelled';
 });
 
 const assetImage = computed(() => {
     const firstImgObj = props.booking.asset?.first_image || props.booking.asset?.firstImage;
     const img = firstImgObj?.image_url || firstImgObj?.image;
     if (img) {
-        return img.startsWith('http') ? img : '/storage/' + img;
+        if (img.startsWith('http')) return img;
+        if (img.startsWith('/assets/') || img.startsWith('/storage/')) return img;
+        if (img.startsWith('assets/')) return '/' + img;
+        return img.startsWith('/') ? '/storage' + img : '/storage/' + img;
     }
-    return '/no-image.svg'; // Local fallback
-});
-
-const isCancelled = computed(() => {
-    return props.booking.booking_status === 'cancelled' || props.booking.booking_status === 'rejected';
+    return '/no-image.svg';
 });
 
 const generateCodes = async () => {
@@ -119,11 +144,27 @@ const durationString = computed(() => {
     return `${Math.round(diff * 10) / 10} Jam`;
 });
 
+const assetTitle = computed(() => {
+    let title = props.booking.asset?.title || '';
+    let unitName = props.booking.asset_unit?.name || props.booking.assetUnit?.name;
+    if (unitName) {
+        title += ' - ' + unitName;
+    }
+    return title;
+});
+
 const locationString = computed(() => {
     const city = props.booking.asset?.city || '';
     const address = props.booking.asset?.address || '';
     return [city, address].filter(Boolean).join(', ');
 });
+
+const formatCapacity = (cap) => {
+    if (!cap) return 'Sesuai Ketentuan';
+    const capStr = String(cap).trim();
+    if (capStr.toLowerCase().includes('orang')) return capStr;
+    return `${capStr} Orang`;
+};
 
 const showCopiedToast = ref(false);
 const toastMessage = ref('Kode berhasil disalin!');
@@ -259,11 +300,11 @@ const copyCode = async () => {
                             <div class="grid grid-cols-2 gap-y-5 gap-x-4 mb-4">
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Asset / Unit</p>
-                                    <p class="font-bold text-[13px] text-[#0A2540] truncate pr-2">{{ booking.asset?.title }}</p>
+                                    <p class="font-bold text-[13px] text-[#0A2540] truncate pr-2">{{ assetTitle }}</p>
                                 </div>
                                 <div>
                                     <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Kapasitas</p>
-                                    <p class="font-bold text-[13px] text-[#0A2540]">{{ booking.asset?.detail?.capacity ? booking.asset.detail.capacity + ' Orang' : 'Sesuai Ketentuan' }}</p>
+                                    <p class="font-bold text-[13px] text-[#0A2540]">{{ formatCapacity(booking.asset?.detail?.capacity) }}</p>
                                 </div>
                             </div>
 
@@ -302,7 +343,7 @@ const copyCode = async () => {
                                     <div class="text-right">
                                         <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Penyedia / Owner</p>
                                         <p class="font-bold text-[13px] text-[#0A2540]">{{ booking.asset?.owner_profile?.user?.name || 'Owner' }}</p>
-                                        <a v-if="booking.asset?.owner_profile?.user?.phone" :href="'https://wa.me/' + booking.asset?.owner_profile?.user?.phone" target="_blank" class="text-[10px] font-bold text-green-500 hover:underline mt-0.5 inline-block"><i class="fa-brands fa-whatsapp mr-0.5"></i> {{ booking.asset.owner_profile.user.phone }}</a>
+                                        <a v-if="booking.asset?.owner_profile?.user?.phone" :href="'https://wa.me/' + booking.asset?.owner_profile?.user?.phone" target="_blank" class="text-[10px] font-bold text-green-500 hover:underline mt-0.5 inline-flex items-center gap-1"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="w-3 h-3 fill-current"><path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z"/></svg> {{ booking.asset.owner_profile.user.phone }}</a>
                                     </div>
                                 </div>
                                 <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 font-semibold">Lokasi Aset</p>
@@ -331,8 +372,8 @@ const copyCode = async () => {
                 </div>
                 </div>
 
-                <!-- Buttons -->
-                <div class="mt-5 space-y-3 max-w-sm mx-auto">
+                <!-- Buttons (Desktop) -->
+                <div class="mt-5 space-y-3 max-w-sm mx-auto hidden md:block">
                     <button @click="downloadTicketPDF" :disabled="isDownloading" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] transition-all text-[#0A2540] font-bold py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <i v-if="isDownloading" class="fa-solid fa-spinner fa-spin"></i>
                         <i v-else class="fa-solid fa-download"></i>
@@ -349,7 +390,7 @@ const copyCode = async () => {
                 <div class="flex flex-col items-center mt-6 text-center px-2">
                     <!-- Illustration -->
                     <div class="relative w-32 h-32 mb-6">
-                        <div class="absolute inset-0 rounded-full animate-pulse" :class="isCancelled ? 'bg-red-500/20' : 'bg-[#FFC000]/20'"></div>
+                        <div class="absolute inset-0 rounded-full" :class="isCancelled ? 'bg-red-500/20' : 'bg-[#FFC000]/20'"></div>
                         <div class="absolute inset-4 bg-white rounded-full shadow-sm flex items-center justify-center border-4" :class="isCancelled ? 'border-red-500' : 'border-[#FFC000]'">
                             <i v-if="isCancelled" class="fa-solid fa-xmark text-5xl text-red-500"></i>
                             <i v-else class="fa-regular fa-clock text-4xl text-[#0A2540]"></i>
@@ -385,7 +426,7 @@ const copyCode = async () => {
                         </div>
 
                         <div class="mb-4">
-                            <p class="font-bold text-sm text-[#0A2540]">{{ booking.asset?.title }}</p>
+                            <p class="font-bold text-sm text-[#0A2540]">{{ assetTitle }}</p>
                             <p class="text-[11px] text-gray-500 mt-0.5 truncate">{{ locationString || 'Lokasi tidak diketahui' }}</p>
                             <p class="text-[11px] text-gray-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i> {{ formatDate(booking.start_date) }} &bull; {{ formatTime(booking.start_date) }} - {{ formatTime(booking.end_date) }}</p>
                         </div>
@@ -430,27 +471,54 @@ const copyCode = async () => {
                         </div>
                     </div>
 
-                    <button v-if="isCancelled" @click="router.get('/aktivitas')" class="mt-2 bg-white border border-gray-300 hover:bg-gray-50 text-[#0A2540] font-bold py-3.5 px-8 rounded-xl shadow-sm transition-colors text-sm tracking-wide w-full">
+                    <button v-if="isCancelled" @click="router.get('/aktivitas')" class="mt-2 hidden md:block bg-[#FFC000] hover:bg-[#ebd000] text-[#0A2540] font-bold py-3.5 px-8 rounded-xl shadow-sm transition-colors text-sm tracking-wide w-full">
                         Kembali ke Aktivitas
                     </button>
                 </div>
             </template>
         </div>
 
-        <!-- BOTTOM DETAIL (Mobile Only for Pending Status) -->
-        <DetailBottomBar v-if="!isConfirmedAndPaid && !isCancelled" :price="Number(booking.total)" buttonText="Bayar" @submit="router.get(`/payment/${booking.payment?.id}`)">
+        <!-- BOTTOM BAR: Dibatalkan / Ditolak / Expired -->
+        <DetailBottomBar v-if="isCancelled || isRejected || isExpired" hideLeftContent>
+            <template #right-content>
+                <button @click="router.get('/aktivitas')" class="w-full bg-[#FFC000] hover:bg-[#ebd000] text-[#0A2540] font-bold py-3 px-6 rounded-xl shadow-md transition-colors text-sm tracking-wide flex items-center justify-center gap-2">
+                    Kembali ke Aktivitas
+                </button>
+            </template>
+        </DetailBottomBar>
+
+        <!-- BOTTOM BAR: Belum Bayar (payment pending) -->
+        <DetailBottomBar v-if="isNeedPayment" :price="Number(booking.total)" buttonText="Bayar Sekarang" @submit="router.get(`/payment/${booking.payment?.id}`)">
             <template #left-content>
                 <div class="flex flex-col">
                     <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5">Total Harga</span>
                     <span class="text-lg font-extrabold text-[#0A2540]">{{ formatPrice(booking.total) }}</span>
-                    <a href="https://wa.me/6281234567890" target="_blank" class="mt-1 text-xs text-green-600 font-bold hover:underline flex items-center gap-1">
-                        <i class="fa-brands fa-whatsapp"></i> Hubungi Admin
-                    </a>
                 </div>
             </template>
             <template #right-content>
                 <button @click="router.get(`/payment/${booking.payment?.id}`)" class="bg-[#FFC000] hover:bg-[#ebd000] text-[#0A2540] font-bold py-3 px-8 rounded-xl shadow-md transition-colors text-sm tracking-wide">
-                    Bayar
+                    Bayar Sekarang
+                </button>
+            </template>
+        </DetailBottomBar>
+
+        <!-- BOTTOM BAR: Bukti Dikirim, Menunggu Verifikasi Owner -->
+        <DetailBottomBar v-if="isVerifying" hideLeftContent>
+            <template #right-content>
+                <div class="w-full flex items-center justify-center gap-2.5 py-3 px-6 bg-amber-50 border border-amber-200 rounded-xl">
+                    <i class="fa-regular fa-clock text-amber-500 animate-pulse"></i>
+                    <span class="text-sm font-bold text-amber-700">Menunggu Konfirmasi Owner</span>
+                </div>
+            </template>
+        </DetailBottomBar>
+
+        <!-- BOTTOM BAR: Tiket Aktif - Download -->
+        <DetailBottomBar v-if="isConfirmedAndPaid" hideLeftContent>
+            <template #right-content>
+                <button @click="downloadTicketPDF" :disabled="isDownloading" class="w-full bg-[#FFC000] hover:bg-[#ebd000] text-[#0A2540] font-bold py-3 px-6 rounded-xl shadow-md transition-colors text-sm tracking-wide flex items-center justify-center gap-2 disabled:opacity-50">
+                    <i v-if="isDownloading" class="fa-solid fa-spinner fa-spin"></i>
+                    <i v-else class="fa-solid fa-download"></i>
+                    {{ isDownloading ? 'Mengunduh...' : 'Download Tiket' }}
                 </button>
             </template>
         </DetailBottomBar>

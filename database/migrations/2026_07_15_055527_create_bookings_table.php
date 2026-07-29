@@ -16,13 +16,17 @@ return new class extends Migration
             $table->foreignId('asset_id')->nullable()->constrained()->onDelete('restrict');
             $table->foreignId('asset_unit_id')->nullable()->constrained()->onDelete('restrict');
             $table->string('booking_code');
+            $table->string('booker_name');
+            $table->string('booker_phone');
+            $table->string('booker_email');
+            $table->string('guest_name');
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
             $table->decimal('subtotal',15,2);
             $table->decimal('service_fee',15,2);
             $table->decimal('total',15,2);
-            $table->enum('booking_status', ['pending','confirmed','completed', 'cancelled'])->default('pending');
+            $table->enum('booking_status', ['pending','confirmed','active','completed', 'cancelled'])->default('pending');
             $table->timestamps();
         });
     }

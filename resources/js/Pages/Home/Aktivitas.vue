@@ -20,7 +20,7 @@ onMounted(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.has('status')) {
         const s = params.get('status');
-        if (['Semua', 'Berlangsung', 'Menunggu', 'Selesai', 'Dibatalkan'].includes(s)) {
+        if (['Semua', 'Berlangsung', 'Belum Bayar', 'Menunggu', 'Selesai', 'Dibatalkan'].includes(s)) {
             activeFilter.value = s;
         }
     }
@@ -149,11 +149,25 @@ const activitiesBase = ref(
     const bs = b.booking_status;
     const ps = b.payment?.payment_status;
 
-    if (bs === 'cancelled' || bs === 'rejected') {
+    if (bs === 'cancelled') {
       category = 'Dibatalkan';
-      statusText = bs === 'cancelled' ? 'Dibatalkan' : 'Ditolak';
+      statusText = 'Dibatalkan';
       statusIcon = 'fas fa-times-circle';
       statusColor = '#EF4444';
+      currentStepIndex = -1;
+      progressPercent = 0;
+    } else if (ps === 'rejected') {
+      category = 'Dibatalkan';
+      statusText = 'Pembayaran Ditolak';
+      statusIcon = 'fas fa-times-circle';
+      statusColor = '#EF4444';
+      currentStepIndex = -1;
+      progressPercent = 0;
+    } else if (ps === 'expired') {
+      category = 'Dibatalkan';
+      statusText = 'Kadaluarsa';
+      statusIcon = 'fas fa-clock';
+      statusColor = '#9CA3AF';
       currentStepIndex = -1;
       progressPercent = 0;
     } else if (bs === 'completed') {
@@ -163,24 +177,42 @@ const activitiesBase = ref(
       statusColor = '#10B981';
       currentStepIndex = 4;
       progressPercent = 100;
+    } else if (bs === 'active') {
+      category = 'Berlangsung';
+      statusText = 'Sedang Digunakan';
+      statusIcon = 'fas fa-circle-dot';
+      statusColor = '#10B981';
+      currentStepIndex = 3;
+      progressPercent = 80;
+    } else if (bs === 'confirmed' && ps === 'paid') {
+      category = 'Berlangsung';
+      statusText = 'Dikonfirmasi - Siap Digunakan';
+      statusIcon = 'fas fa-circle-dot';
+      statusColor = '#10B981';
+      currentStepIndex = 2;
+      progressPercent = 65;
+    } else if (ps === 'verifying') {
+      category = 'Menunggu';
+      statusText = 'Menunggu Verifikasi Pembayaran';
+      statusIcon = 'fas fa-hourglass-half';
+      statusColor = '#F59E0B';
+      currentStepIndex = 2;
+      progressPercent = 50;
+    } else if (bs === 'confirmed' && (!ps || ps === 'pending')) {
+      category = 'Belum Bayar';
+      statusText = 'Menunggu Pembayaran';
+      statusIcon = 'fas fa-credit-card';
+      statusColor = '#F59E0B';
+      currentStepIndex = 1;
+      progressPercent = 40;
     } else {
-      if (bs === 'pending') {
-        currentStepIndex = 0;
-        progressPercent = 15;
-      } else if (bs === 'confirmed') {
-        if (!ps || ps === 'pending') {
-          currentStepIndex = 1;
-          progressPercent = 40;
-          statusText = 'Menunggu Pembayaran';
-        } else if (ps === 'paid') {
-          category = 'Berlangsung';
-          currentStepIndex = 2;
-          progressPercent = 65;
-          statusText = 'Menunggu Check In / Digunakan';
-          statusIcon = 'fas fa-circle-dot';
-          statusColor = '#10B981';
-        }
-      }
+      // bs === 'pending'
+      category = 'Menunggu';
+      statusText = 'Menunggu Konfirmasi';
+      statusIcon = 'fas fa-clock';
+      statusColor = '#F59E0B';
+      currentStepIndex = 0;
+      progressPercent = 15;
     }
 
     let actions = [];
@@ -194,8 +226,20 @@ const activitiesBase = ref(
 
     // Default Images
     let images = [];
-    if (b.asset?.first_image?.image_url) {
-      images.push('/storage/' + b.asset.first_image.image_url);
+    const firstImg = b.asset?.first_image || b.asset?.firstImage;
+    const imgStr = firstImg?.image_url || firstImg?.image;
+    if (imgStr) {
+      if (imgStr.startsWith('http')) {
+        images.push(imgStr);
+      } else if (imgStr.startsWith('/assets/') || imgStr.startsWith('/storage/')) {
+        images.push(imgStr);
+      } else if (imgStr.startsWith('assets/')) {
+        images.push('/' + imgStr);
+      } else if (imgStr.startsWith('/')) {
+        images.push('/storage' + imgStr);
+      } else {
+        images.push('/storage/' + imgStr);
+      }
     }
     if (images.length === 0) {
       images.push('https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=300&q=80');
@@ -237,6 +281,7 @@ const filterTabs = computed(() => {
   return [
     { name: 'Semua', count: activitiesBase.value.length },
     { name: 'Berlangsung', count: activitiesBase.value.filter(a => a.category === 'Berlangsung').length },
+    { name: 'Belum Bayar', count: activitiesBase.value.filter(a => a.category === 'Belum Bayar').length },
     { name: 'Menunggu', count: activitiesBase.value.filter(a => a.category === 'Menunggu').length },
     { name: 'Selesai', count: activitiesBase.value.filter(a => a.category === 'Selesai').length },
     { name: 'Dibatalkan', count: activitiesBase.value.filter(a => a.category === 'Dibatalkan').length }
@@ -496,114 +541,55 @@ const processCancellation = () => {
                     <div
                       v-for="item in group.items"
                       :key="item.id"
-                      class="bg-white rounded-2xl p-0 shadow-sm border border-gray-100 hover:shadow-md transition-shadow relative flex flex-col md:flex-row overflow-hidden group"
+                      class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-row overflow-hidden group p-2.5 md:p-3 items-center gap-3 md:gap-4 select-none [-webkit-touch-callout:none]"
                     >
-                      <!-- LABEL POJOK KIRI ATAS (ABSOLUTE) -->
-                      <div class="absolute top-0 left-0 bg-[#0A2540] text-white text-[10px] font-bold px-3 py-1.5 rounded-br-xl z-10 uppercase tracking-wide shadow-sm pointer-events-none">
-                        {{ item.type }}
-                      </div>
-                      
-                      <!-- IKON FAVORIT (ABSOLUTE) -->
-                      <button 
-                        @click.stop.prevent="toggleFavorite(item)"
-                        class="absolute top-3 left-auto right-3 md:right-auto md:left-[180px] w-7 h-7 bg-black/20 hover:bg-black/40 text-white rounded-full flex items-center justify-center z-10 backdrop-blur-sm transition-transform active:scale-110"
-                        :class="item.isPendingFavorite ? 'opacity-70 pointer-events-none' : ''"
-                      >
-                        <i :class="item.isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" class="text-sm transition-colors" :style="item.isFavorite ? 'color: #ff4d6d;' : 'color: white;'"></i>
-                      </button>
-
-                      <!-- BAGIAN KIRI: Gambar Utama Saja -->
-                      <div class="flex flex-row md:flex-row h-[160px] md:h-[200px] shrink-0 overflow-hidden relative cursor-pointer" @click="router.get(`/booking/${item.id}`)">
-                        <div class="w-full md:w-[220px] h-full relative">
-                          <img :src="item.images[0]" class="w-full h-full object-cover md:rounded-l-2xl group-hover:scale-105 transition-transform duration-500" alt="Main" onerror="this.src='https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=300&q=80'" />
-                          <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent md:hidden"></div>
-                        </div>
+                      <!-- Gambar -->
+                      <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-lg overflow-hidden cursor-pointer bg-slate-100" @click="router.get(`/booking/${item.id}`)">
+                        <img :src="item.images[0]" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" alt="Main" onerror="this.src='https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=300&q=80'" />
                       </div>
 
-                      <!-- BAGIAN TENGAH: Info & Timeline -->
-                      <div class="flex-1 p-4 md:p-5 flex flex-col justify-between">
-                        <div>
-                          <div class="flex flex-wrap items-start justify-between gap-2 mb-1.5">
-                            <h3 class="font-bold text-lg text-[#0A2540] line-clamp-1 cursor-pointer hover:text-[#FFC000]" @click="router.get(`/booking/${item.id}`)">
-                                {{ item.name }}
-                            </h3>
-                          </div>
+                      <!-- Konten Info & Progress -->
+                      <div class="flex-1 min-w-0 flex flex-col justify-center">
+                        <h3 class="font-bold text-sm md:text-base text-[#0A2540] truncate cursor-pointer hover:text-[#FFC000]" @click="router.get(`/booking/${item.id}`)">
+                            {{ item.name }}
+                        </h3>
 
-                          <div class="flex items-center gap-2 mb-3">
-                             <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-[10px] font-bold uppercase">{{ item.type }}</span>
-                             <div class="flex items-center text-[#FFC000] text-[11px] gap-0.5" v-if="item.rating">
-                               <i class="fas fa-star"></i> <span class="text-gray-700 font-medium ml-0.5">{{ item.rating }}</span>
-                             </div>
+                        <!-- Progress Bar Minimalis -->
+                        <div v-if="item.progress" class="mt-1.5 md:mt-2 w-full max-w-sm">
+                          <div class="flex justify-between items-center mb-1">
+                             <span class="text-[9px] md:text-[10px] font-bold" :style="{ color: item.statusColor }">{{ item.status }}</span>
                           </div>
-                        </div>
-
-                        <!-- Progress Timeline Horizontal -->
-                        <div v-if="item.progress" class="mt-4 pt-4 border-t border-gray-100">
-                          <div class="flex justify-between items-center mb-4">
-                             <p class="text-xs font-bold text-gray-700 flex items-center gap-1.5">
-                                <i class="far fa-calendar-alt text-[#0A2540]"></i> <span class="font-medium truncate max-w-[150px] md:max-w-none">{{ item.dateString }}</span>
-                             </p>
-                             <span class="text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-1 shrink-0" :style="{ backgroundColor: item.statusColor + '20', color: item.statusColor }">
-                                <i :class="item.statusIcon"></i> {{ item.status }}
-                             </span>
-                          </div>
-                          <div class="flex items-center justify-between relative max-w-full pb-3 md:pb-5">
-                            <div class="absolute left-2 right-2 top-2 h-1 bg-gray-100 rounded-full"></div>
-                            <div class="absolute left-2 top-2 h-1 bg-[#10B981] transition-all rounded-full" :style="{ width: item.progressPercent + '%' }"></div>
-
-                            <div v-for="(step, index) in item.progressSteps" :key="index" class="flex flex-col items-center z-10 relative">
-                              <div
-                                :class="[
-                                  'w-4 h-4 md:w-5 md:h-5 rounded-full flex items-center justify-center text-[8px] font-bold border-[3px] transition-colors',
-                                  index <= item.currentStepIndex
-                                    ? 'bg-[#10B981] border-white text-white shadow-sm'
-                                    : 'bg-gray-200 border-white text-transparent'
-                                ]"
-                              >
-                                <i class="fas fa-check text-[7px]" v-if="index <= item.currentStepIndex"></i>
-                              </div>
-                              <span
-                                :class="[
-                                  'absolute top-6 text-[8px] md:text-[9px] text-center leading-tight w-14 md:w-16 font-semibold hidden md:block',
-                                  index <= item.currentStepIndex ? 'text-[#0A2540]' : 'text-gray-400'
-                                ]"
-                              >
-                                {{ step }}
-                              </span>
-                            </div>
+                          <div class="w-full h-1.5 md:h-2 bg-gray-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-[#10B981] transition-all" :style="{ width: item.progressPercent + '%' }"></div>
                           </div>
                         </div>
                       </div>
 
-                      <!-- BAGIAN KANAN: Harga & Aksi -->
-                      <div class="md:w-[200px] md:border-l border-gray-100 p-4 flex flex-row md:flex-col items-center md:items-end justify-between md:justify-center shrink-0 bg-[#F8F9FA]/50 gap-3 md:gap-0">
-                        
-                        <div class="mb-0 md:mb-5 text-left md:text-right w-full">
-                          <p class="text-[10px] text-gray-400 font-medium tracking-wide uppercase mb-0.5">Total Bayar</p>
-                          <p class="font-extrabold text-lg md:text-xl text-[#FFC000] leading-none">{{ item.totalPrice }}</p>
+                      <!-- Harga & Aksi -->
+                      <div class="shrink-0 flex flex-col items-end justify-between self-stretch py-0.5">
+                        <div class="text-right mb-2 md:mb-0">
+                          <p class="font-extrabold text-xs md:text-sm text-[#FFC000] leading-none">{{ item.totalPrice }}</p>
                         </div>
 
-                        <div class="flex flex-col gap-2 w-1/2 md:w-full items-end md:items-stretch">
+                        <div class="flex gap-1.5 md:gap-2 mt-auto">
                           <button
                             v-for="(action, idx) in item.actions"
                             :key="idx"
                             @click="handleActionClick(action, item)"
                             :class="[
-                              'w-full transition-all text-center flex justify-center items-center gap-1.5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm shadow-sm active:scale-95',
+                              'px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold transition-all shadow-sm active:scale-95',
                               action.primary
-                                ? 'bg-[#FFC000] text-[#0A2540] hover:bg-[#e6ad00] font-bold'
-                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold'
+                                ? 'bg-[#FFC000] text-[#0A2540] hover:bg-[#e6ad00]'
+                                : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                             ]"
                           >
-                            <i v-if="!action.primary && action.actionId === 'cancel'" class="fas fa-trash-alt text-[10px] md:text-xs text-red-500"></i>
                             {{ action.label }}
                           </button>
-                          <button v-if="item.actions.length === 0" @click="router.get(`/booking/${item.id}`)" class="w-full transition-all text-center flex justify-center items-center gap-1.5 py-2 md:py-2.5 rounded-xl text-xs md:text-sm font-semibold bg-white border border-[#0A2540] text-[#0A2540] hover:bg-[#0A2540] hover:text-white shadow-sm active:scale-95">
-                            Lihat Detail
+                          <button v-if="item.actions.length === 0" @click="router.get(`/booking/${item.id}`)" class="px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold transition-all shadow-sm active:scale-95 bg-white border border-[#0A2540] text-[#0A2540] hover:bg-[#0A2540] hover:text-white">
+                            Detail
                           </button>
                         </div>
                       </div>
-
                     </div>
                   </div>
                 </div>

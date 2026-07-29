@@ -242,181 +242,85 @@ const rentalUnitLabel = (unit) => {
 <template>
     <div
         ref="elRef"
-        class="w-full snap-start flex flex-row bg-white rounded-2xl shadow-sm hover:shadow-md border border-gray-100 transition-shadow duration-300 overflow-hidden"
+        class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-row overflow-hidden group p-2.5 md:p-3 items-center gap-3 md:gap-4 select-none [-webkit-touch-callout:none] w-full cursor-pointer"
+        @click="navigateToAsset"
     >
         <!-- Skeleton sebelum masuk viewport -->
-        <AssetCardSkeleton v-if="!isIntersecting" />
+        <div v-if="!isIntersecting" class="flex flex-row w-full animate-pulse items-center gap-3 md:gap-4">
+            <div class="w-16 h-16 md:w-20 md:h-20 bg-slate-200 rounded-lg shrink-0"></div>
+            <div class="flex-1 space-y-2">
+                <div class="w-16 h-3 bg-slate-200 rounded"></div>
+                <div class="w-3/4 h-4 bg-slate-200 rounded"></div>
+                <div class="w-1/2 h-3 bg-slate-200 rounded"></div>
+            </div>
+            <div class="shrink-0 flex flex-col items-end gap-2">
+                <div class="w-16 h-4 bg-slate-200 rounded"></div>
+                <div class="w-6 h-6 bg-slate-200 rounded-full mt-2"></div>
+            </div>
+        </div>
 
-        <!-- Konten kartu asli – TANPA <Link> agar tidak konflik di mobile -->
-        <div v-else class="w-full h-full flex flex-row group cursor-pointer">
-
-            <!-- ═══ AREA GAMBAR ═══
-                 Memisahkan touch (mobile) dan click (desktop) agar double-tap stabil
-            -->
+        <template v-else>
+            <!-- ═══ AREA GAMBAR ═══ -->
             <div
-                class="w-[140px] sm:w-[220px] lg:w-[260px] flex-shrink-0 aspect-[1/1] sm:aspect-[4/3] lg:aspect-[16/9] relative bg-slate-100 overflow-hidden"
-                @touchstart.passive="onTouchStart"
-                @touchend="onTouchEnd"
-                @click="onMouseClick"
+                class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-lg overflow-hidden bg-slate-100"
+                @touchstart.passive.stop="onTouchStart"
+                @touchend.stop="onTouchEnd"
             >
-                <!-- Skeleton gambar download -->
-                <div
-                    v-if="img1 && !imageLoaded && !asset.imageError"
-                    class="absolute inset-0 bg-gradient-to-br from-slate-200 via-slate-100 to-slate-200 animate-pulse z-20 pointer-events-none"
-                >
-                    <div class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
+                <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
+                    <i class="fa-solid fa-image text-xl"></i>
                 </div>
+                <img v-else :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" loading="lazy" />
 
-                <!-- 0 Image / Error -->
-                <div v-if="!img1 || asset.imageError" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-300 z-0">
-                    <i class="fa-solid fa-image text-3xl mb-1"></i>
-                    <span class="text-[10px] font-medium">No Image</span>
-                </div>
-
-                <!-- 1 Image Layout (or Mobile Fallback) -->
-                <div v-if="imageCount >= 1" class="absolute inset-0 w-full h-full z-0" :class="imageCount > 1 ? 'block sm:hidden' : ''">
-                    <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                </div>
-
-                <!-- 2 Image Layout (Desktop Only) -->
-                <div v-if="imageCount === 2" class="absolute inset-0 w-full h-full grid-cols-2 gap-0.5 z-0 bg-white hidden sm:grid">
-                    <div class="h-full overflow-hidden relative">
-                        <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                    </div>
-                    <div class="h-full overflow-hidden relative">
-                        <img :src="img2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                    </div>
-                </div>
-
-                <!-- 3 Image Layout (Desktop Only) -->
-                <div v-if="imageCount >= 3" class="absolute inset-0 w-full h-full grid-cols-3 gap-0.5 z-0 bg-white hidden sm:grid">
-                    <div class="col-span-2 h-full overflow-hidden relative">
-                        <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                    </div>
-                    <div class="col-span-1 grid grid-rows-2 gap-0.5 h-full">
-                        <div class="h-full overflow-hidden relative">
-                            <img :src="img2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                        </div>
-                        <div class="h-full overflow-hidden relative">
-                            <img :src="img3" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Gradients overlay -->
-                <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-10"></div>
-                <div class="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/30 to-transparent pointer-events-none z-10"></div>
-
-                <!-- Badge Kategori -->
-                <div class="absolute top-0 left-0 max-w-[90%] truncate z-20 bg-[#0A2540] text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-br-lg uppercase tracking-wider pointer-events-none">
-                    {{ categoryName }}
-                </div>
-
-                <!-- ❤️ Tombol Favorit
-                     Semua event touch di-stop agar TIDAK bubbling ke div gambar di atas
-                     (mencegah konflik @touchend="onTouchEnd" dan @click="navigateToAsset")
-                -->
-                <button
-                    class="absolute top-2.5 right-2.5 z-30 text-white drop-shadow-md flex items-center justify-center transition-transform active:scale-125"
-                    :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
-                    @touchstart.stop
-                    @touchend.stop
-                    @pointerdown.stop
-                    @click.stop.prevent="toggleFavorite"
-                >
-                    <i
-                        :class="isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"
-                        class="text-lg sm:text-xl drop-shadow transition-all duration-200"
-                        :style="isFavorite ? 'color: #ff4d6d;' : 'color: white;'"
-                    ></i>
-                </button>
-
-                <!-- Rating -->
-                <div
-                    v-if="asset.reviews_avg_rating"
-                    class="absolute bottom-2 right-2 z-20 bg-[#FFC000] size-7 sm:size-8 rounded-full text-[10px] sm:text-[11px] font-bold text-white flex items-center justify-center shadow-md pointer-events-none"
-                >
-                    {{ Number(asset.reviews_avg_rating).toFixed(1) }}
-                </div>
-
-                <!-- 💖 Floating Hearts (TikTok style, spammable) -->
+                <!-- Animasi Hati TikTok -->
                 <TransitionGroup name="heart-fly" tag="div" class="absolute inset-0 pointer-events-none z-30">
-                    <div
-                        v-for="heart in hearts"
-                        :key="heart.id"
-                        class="heart-particle absolute"
-                        :style="{
-                            left: heart.x + 'px',
-                            top: heart.y + 'px',
-                            '--drift': heart.drift + 'px',
-                            '--angle': heart.angle + 'deg',
-                            fontSize: heart.size + 'px',
-                        }"
-                    ><i class="fa-solid fa-heart text-red-500"></i></div>
+                    <div v-for="heart in hearts" :key="heart.id" class="heart-particle absolute" :style="{ left: heart.x + 'px', top: heart.y + 'px', '--drift': heart.drift + 'px', '--angle': heart.angle + 'deg', fontSize: heart.size + 'px' }"><i class="fa-solid fa-heart text-red-500"></i></div>
                 </TransitionGroup>
             </div>
 
-            <!-- ═══ AREA TEKS – klik navigasi ═══ -->
-            <div
-                class="flex flex-col sm:flex-row flex-grow p-3 sm:p-4 gap-3 bg-white min-w-0"
-                @click="navigateToAsset"
-            >
-                <!-- Kiri: Detail Aset -->
-                <div class="flex flex-col flex-grow justify-between gap-1.5 min-w-0">
-                    <div>
-                        <h3 class="font-semibold text-base sm:text-lg leading-tight text-[#0A2540] group-hover:text-[#FFC000] transition-colors line-clamp-1">
-                            {{ asset.title }}
-                        </h3>
-
-                        <div class="flex items-center gap-2 mt-1">
-                            <span class="px-2 py-0.5 bg-[#6C757D]/10 text-[#6C757D] rounded text-[10px] sm:text-xs font-bold">{{ categoryName }}</span>
-                            <div v-if="asset.reviews_avg_rating" class="flex items-center gap-1 text-[#FFC000]">
-                                <i class="fa-solid fa-star text-[10px] sm:text-xs" v-for="n in Math.round(asset.reviews_avg_rating)" :key="n"></i>
-                            </div>
-                        </div>
-
-                        <div class="text-[11px] sm:text-xs text-gray-500 font-medium flex items-center gap-1.5 truncate mt-2">
-                            <i class="fa-solid fa-location-dot text-[12px] sm:text-[13px] text-[#FFC000] flex-shrink-0"></i>
-                            <span class="truncate">
-                                {{ [asset.city, asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
-                            </span>
-                        </div>
-                        
-                        <div v-if="asset.detail?.facility?.length" class="flex flex-wrap items-center gap-1.5 mt-2">
-                            <span v-for="fac in asset.detail.facility.slice(0, 3)" :key="fac" class="px-2 py-0.5 bg-[#F8F9FA] text-[#6C757D] rounded border border-[#6C757D]/20 text-[9px] sm:text-[10px] font-semibold truncate max-w-[80px] sm:max-w-[100px]">
-                                {{ fac }}
-                            </span>
-                            <span v-if="asset.detail.facility.length > 3" class="px-2 py-0.5 bg-[#F8F9FA] text-[#6C757D] rounded border border-[#6C757D]/20 text-[9px] sm:text-[10px] font-semibold">
-                                +{{ asset.detail.facility.length - 3 }}
-                            </span>
-                        </div>
-                    </div>
-
-                    <div v-if="asset.reviews_count" class="mt-2 text-[10px] sm:text-xs font-medium text-[#0A2540]">
-                        <span class="text-[#FFC000]"><i class="fa-solid fa-star"></i> {{ Number(asset.reviews_avg_rating).toFixed(1) }}</span>
-                        ({{ asset.reviews_count }} ulasan)
+            <!-- ═══ AREA TEKS ═══ -->
+            <div class="flex-1 min-w-0 flex flex-col justify-center">
+                <div class="flex items-center gap-1.5 mb-1">
+                    <span class="px-1.5 py-0.5 bg-[#6C757D]/10 text-[#6C757D] rounded text-[9px] font-bold">{{ categoryName }}</span>
+                    <div v-if="asset.reviews_avg_rating" class="flex items-center gap-0.5 text-[#FFC000] text-[9px] font-bold">
+                        <i class="fa-solid fa-star"></i> {{ Number(asset.reviews_avg_rating).toFixed(1) }}
                     </div>
                 </div>
 
-                <!-- Kanan: Harga -->
-                <div class="sm:w-[200px] shrink-0 flex flex-col justify-end sm:justify-between sm:border-l border-[#6C757D]/20 sm:pl-4 mt-2 sm:mt-0 pt-2 sm:pt-0 border-t sm:border-t-0 min-w-0">
-                    <div class="font-bold text-base sm:text-lg text-[#FFC000] leading-tight text-right sm:text-left truncate">
-                        <template v-if="asset.default_pricing">
-                            {{ formatRupiah(asset.default_pricing.price) }}
-                            <span class="text-[10px] font-normal text-[#0A2540] block sm:inline">
-                            /{{ rentalUnitLabel(asset.type?.rental_unit) }}
-                        </span>
-                        </template>
-                        <span v-else class="text-sm font-medium text-gray-400">Hubungi Pemilik</span>
-                    </div>
+                <h3 class="font-bold text-sm md:text-base text-[#0A2540] truncate group-hover:text-[#FFC000] transition-colors">
+                    {{ asset.title }}
+                </h3>
 
-                    <button class="mt-2 sm:mt-0 w-full sm:w-auto bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] text-[11px] sm:text-xs font-bold py-1.5 sm:py-2 px-4 rounded-lg transition-all self-end">
-                        Pesan
-                    </button>
+                <div class="text-[10px] md:text-xs text-gray-500 font-medium truncate mt-0.5">
+                    <i class="fa-solid fa-location-dot text-[#FFC000] mr-0.5"></i>
+                    {{ [asset.city, asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
                 </div>
             </div>
 
-        </div>
+            <!-- ═══ HARGA & AKSI ═══ -->
+            <div class="shrink-0 flex flex-col items-end justify-between self-stretch py-0.5">
+                <div class="text-right mb-2 md:mb-0">
+                    <p class="font-extrabold text-xs md:text-sm text-[#FFC000] leading-none">
+                        <template v-if="asset.default_pricing">
+                            {{ formatRupiah(asset.default_pricing.price) }}
+                        </template>
+                        <template v-else>
+                            Hubungi
+                        </template>
+                    </p>
+                    <p v-if="asset.default_pricing" class="text-[9px] md:text-[10px] text-gray-400 mt-1">
+                        /{{ rentalUnitLabel(asset.type?.rental_unit) }}
+                    </p>
+                </div>
+
+                <button
+                    class="mt-auto z-30 flex items-center justify-center transition-transform active:scale-125"
+                    :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
+                    @click.stop.prevent="toggleFavorite"
+                >
+                    <i :class="isFavorite ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-gray-400'" class="text-lg md:text-xl drop-shadow-sm transition-all duration-200"></i>
+                </button>
+            </div>
+        </template>
     </div>
 </template>
 

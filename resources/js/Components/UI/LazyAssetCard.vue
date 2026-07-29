@@ -243,7 +243,7 @@ const periodLabel = {
     <!-- Container kartu -->
     <div
         ref="elRef"
-        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col bg-white rounded-2xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 overflow-hidden"
     >
         <!-- Skeleton sebelum masuk viewport -->
         <AssetCardSkeleton v-if="!isIntersecting" />
@@ -275,43 +275,12 @@ const periodLabel = {
                 </div>
 
                 <!-- 1 Image Layout -->
-                <div v-else-if="imageCount === 1" class="absolute inset-0 w-full h-full z-0">
+                <div v-else class="absolute inset-0 w-full h-full z-0">
                     <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :class="imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'" loading="lazy" decoding="async" />
                 </div>
 
-                <!-- 2 Image Layout -->
-                <div v-else-if="imageCount === 2" class="absolute inset-0 w-full h-full grid grid-cols-2 gap-0.5 z-0 bg-white">
-                    <div class="h-full overflow-hidden relative">
-                        <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :class="imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'" loading="lazy" />
-                    </div>
-                    <div class="h-full overflow-hidden relative">
-                        <img :src="img2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                    </div>
-                </div>
-
-                <!-- 3 Image Layout -->
-                <div v-else-if="imageCount >= 3" class="absolute inset-0 w-full h-full grid grid-cols-3 gap-0.5 z-0 bg-white">
-                    <div class="col-span-2 h-full overflow-hidden relative">
-                        <img :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" :class="imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'" loading="lazy" />
-                    </div>
-                    <div class="col-span-1 grid grid-rows-2 gap-0.5 h-full">
-                        <div class="h-full overflow-hidden relative">
-                            <img :src="img2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                        </div>
-                        <div class="h-full overflow-hidden relative">
-                            <img :src="img3" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Gradients overlay -->
-                <div class="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none z-10"></div>
-                <div class="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/30 to-transparent pointer-events-none z-10"></div>
-
-                <!-- Badge Kategori -->
-                <div class="absolute top-0 left-0 z-20 bg-[#0A2540] text-white text-[10px] sm:text-[11px] font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-br-lg uppercase tracking-wider pointer-events-none">
-                    {{ categoryName }}
-                </div>
+                <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10"></div>
 
                 <!-- ❤️ Tombol Favorit
                      Semua event touch di-stop agar TIDAK bubbling ke div gambar di atas
@@ -359,26 +328,17 @@ const periodLabel = {
 
             <!-- ═══ AREA TEKS – klik navigasi ═══ -->
             <div
-                class="flex flex-col flex-grow p-3 sm:p-4 gap-1.5 sm:gap-2 bg-white"
+                class="flex flex-col flex-grow p-2.5 sm:p-3 gap-1 bg-white"
                 @click="navigateToAsset"
             >
                 <h3 class="font-semibold text-sm sm:text-[15px] leading-tight text-[#0A2540] group-hover:text-[#FFC000] transition-colors line-clamp-1">
                     {{ asset.title }}
                 </h3>
 
-                <div class="text-[11px] sm:text-xs text-gray-500 font-medium flex items-center gap-1.5 truncate">
+                <div class="text-[11px] sm:text-xs text-gray-500 font-medium flex items-center gap-1.5 truncate mt-0.5">
                     <i class="fa-solid fa-location-dot text-[12px] sm:text-[13px] text-[#FFC000] flex-shrink-0"></i>
                     <span class="truncate">
                         {{ [asset.city, asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
-                    </span>
-                </div>
-                
-                <div v-if="asset.detail?.facility?.length" class="flex flex-wrap items-center gap-1 mt-1.5">
-                    <span v-for="fac in asset.detail.facility.slice(0, 3)" :key="fac" class="px-1.5 py-0.5 bg-[#F8F9FA] text-[#6C757D] rounded border border-[#6C757D]/20 text-[9px] sm:text-[10px] font-medium truncate max-w-[70px] sm:max-w-[90px]">
-                        {{ fac }}
-                    </span>
-                    <span v-if="asset.detail.facility.length > 3" class="px-1.5 py-0.5 bg-[#F8F9FA] text-[#6C757D] rounded border border-[#6C757D]/20 text-[9px] sm:text-[10px] font-medium">
-                        +{{ asset.detail.facility.length - 3 }}
                     </span>
                 </div>
 

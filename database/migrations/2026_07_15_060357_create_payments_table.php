@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('booking_id')->constrained()->onDelete('restrict');
             $table->string('payment_method')->nullable();
-            $table->enum('payment_status', ['pending', 'paid', 'failed'])->default('pending');
+            $table->enum('payment_status', ['pending', 'verifying','paid', 'rejected', 'expired'])->default('pending');
             $table->dateTime('expires_at')->nullable();
             $table->date('payment_date')->nullable();
             $table->string('proof_of_payment')->nullable();

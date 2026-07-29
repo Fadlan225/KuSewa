@@ -22,7 +22,7 @@ const props = defineProps({
 
 const page = usePage();
 
-const chatMessage = ref('Halo! Apakah ketersediaan aset ini masih ada?');
+const chatMessage = ref('Halo, apakah masih tersedia?');
 
 const startChat = () => {
     if (!page.props.auth?.user) {
@@ -30,10 +30,12 @@ const startChat = () => {
         return;
     }
 
+    const messageToSend = chatMessage.value.trim() || 'Halo, masih tersedia?';
+
     router.post(route('chat.start'), {
         asset_id: props.asset.id,
         owner_profile_id: props.asset.owner_profile_id,
-        message: chatMessage.value
+        message: messageToSend
     }, {
         onSuccess: () => {
             // Berhasil dialihkan ke halaman chat
@@ -153,10 +155,18 @@ const getSpecKeys = computed(() => {
 // Form Booking (persiapan)
 const form = useForm({
     asset_id: props.asset.id,
-    pricing_id: lowestPrice.value ? lowestPrice.value.id : null,
+    pricing_id: (props.asset.pricings && props.asset.pricings.length > 0) && lowestPrice.value ? lowestPrice.value.id : null,
 });
 
+const showDateError = ref(false);
+
 const submitBooking = () => {
+    // Mencegah booking jika memiliki unit tapi belum pilih unit
+    if (props.asset.units && props.asset.units.length > 0 && !form.pricing_id) {
+        document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+    }
+
     let date_start = null;
     let date_end = null;
 
@@ -190,20 +200,27 @@ const submitBooking = () => {
 
 const handleUnitSelect = ({ unit_id, pricing_id, price }) => {
     form.pricing_id = pricing_id;
-    
+
     // Validasi tanggal jika belum diisi atau tidak ada durasi
     if (!startDate.value || durationCount.value === 0) {
-        // Tampilkan pesan error dan auto-scroll ke kalender
-        alert('Silakan pilih tanggal sewa terlebih dahulu.');
+        showDateError.value = true;
         const calendarEl = document.getElementById('kalender-sewa');
         if (calendarEl) {
             calendarEl.scrollIntoView({ behavior: 'smooth' });
         }
         return;
     }
-    
+
     // Jika valid, lanjutkan ke submit booking
     submitBooking();
+};
+
+const handleBottomBarSubmit = () => {
+    if (props.asset.units && props.asset.units.length > 0) {
+        document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        submitBooking();
+    }
 };
 
 // Menghitung distribusi rating (5 bintang sampai 1 bintang)
@@ -283,6 +300,11 @@ watch([startDate, durationMonths], () => {
         const d = new Date(startDate.value);
         d.setMonth(d.getMonth() + durationMonths.value);
         endDate.value = d;
+    }
+    
+    // Clear error message if user has started to pick dates
+    if (startDate.value) {
+        showDateError.value = false;
     }
 });
 
@@ -541,6 +563,20 @@ const handleTouchEnd = (e) => {
                     </div>
                 </div>
 
+                <!-- Hubungi Pemilik Card (MOBILE ONLY) -->
+                <div v-if="asset.owner_profile" class="block lg:hidden mt-6 pb-8 border-b border-gray-200">
+                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+                        <h3 class="text-lg font-bold text-[#0A2540] mb-4">Hubungi Pemilik</h3>
+                        <div class="flex items-center gap-3 border-b-2 border-gray-800 pb-2 focus-within:border-[#FFC000] transition-colors">
+                            <i class="fa-regular fa-comment-dots text-xl text-[#FFC000]"></i>
+                            <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu ke pemilik..." class="w-full bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
+                            <button @click="startChat" class="text-[#FFC000] font-bold text-sm hover:text-[#e6ad00] transition-colors whitespace-nowrap">
+                                kirim
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Spesifikasi Tambahan (JSON) -->
                 <div v-if="getSpecKeys.length > 0" class="py-6 border-b border-gray-200">
                     <h3 class="text-lg font-bold mb-4">Informasi Umum</h3>
@@ -588,13 +624,13 @@ const handleTouchEnd = (e) => {
                 <div id="kalender-sewa" class="pb-10 border-b border-gray-200">
                     <!-- Toggle Sewa Harian / Bulanan (Khusus Apartemen) -->
                     <div v-if="asset.type?.name === 'Apartemen'" class="flex items-center gap-2 mb-6 bg-slate-100 p-1.5 rounded-xl w-fit">
-                        <button 
+                        <button
                             @click="selectedRentalMode = 'night'"
                             class="px-5 py-2 rounded-lg text-sm font-bold transition-all"
                             :class="activeScheduleMode === 'night' ? 'bg-white text-[#0A2540] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
                             Sewa Harian
                         </button>
-                        <button 
+                        <button
                             @click="selectedRentalMode = 'month'"
                             class="px-5 py-2 rounded-lg text-sm font-bold transition-all"
                             :class="activeScheduleMode === 'month' ? 'bg-white text-[#0A2540] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
@@ -607,7 +643,14 @@ const handleTouchEnd = (e) => {
                         <span v-else-if="nightsCount && activeScheduleMode === 'day'">{{ nightsCount }} malam di {{ asset.title || 'Kota ini' }}</span>
                         <span v-else>Pilih tanggal sewa</span>
                     </h2>
-                    <p class="text-sm text-gray-500 mb-8">{{ formattedDateRange }}</p>
+
+                    <!-- Error Alert -->
+                    <div v-if="showDateError" class="mt-3 mb-2 text-red-500 font-bold text-sm bg-red-50 p-3.5 rounded-xl border border-red-200 flex items-center gap-2">
+                        <i class="fa-solid fa-circle-exclamation text-lg"></i>
+                        Silakan pilih tanggal penyewaan terlebih dahulu!
+                    </div>
+
+                    <p class="text-sm text-gray-500 mb-8 mt-1">{{ formattedDateRange }}</p>
 
                     <div class="bg-white rounded-2xl relative w-full overflow-hidden touch-pan-y" @touchstart.passive="handleTouchStart" @touchend.passive="handleTouchEnd">
                         <!-- Header Bulan (Hanya untuk kalender grid) -->
@@ -750,8 +793,8 @@ const handleTouchEnd = (e) => {
             <!-- SEKSI PEMILIHAN UNIT (Jika ada units) -->
             <div v-if="asset.units && asset.units.length > 0" id="pilihan-kamar" class="py-10 border-b border-gray-200">
                 <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Pilihan Kamar / Unit</h2>
-                <AssetUnitList 
-                    :units="asset.units" 
+                <AssetUnitList
+                    :units="asset.units"
                     :rentalUnitLabel="rentalUnitLabel(activeScheduleMode)"
                     :priceMultiplier="priceMultiplier"
                     :durationCount="durationCount"
@@ -759,116 +802,12 @@ const handleTouchEnd = (e) => {
                 />
             </div>
 
-            <!-- SEKSI ULASAN -->
-            <div id="ulasan" class="mt-12 mb-10">
-                <!-- Judul Seksi -->
-                <div class="mb-6">
-                    <span class="text-primary font-extrabold text-[11px] tracking-widest uppercase">
-                        Kepuasan Pelanggan
-                    </span>
-                    <h2 class="text-3xl sm:text-4xl font-extrabold text-secondary mt-1">
-                        Apa Kata Mereka?
-                    </h2>
-                </div>
-
-                <!-- Container Utama: Summary & Daftar Ulasan -->
-                <div class="flex flex-col gap-8">
-
-                    <!-- CARD SUMMARY (Rating Keseluruhan) -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-xl flex flex-col sm:flex-row items-center sm:items-stretch gap-6 sm:gap-0">
-
-                        <!-- Sisi Kiri: Rata-rata -->
-                        <div class="flex flex-col items-center justify-center sm:pr-8 sm:border-r border-gray-100 min-w-[150px]">
-                            <!-- Tampilkan rating atau strip jika belum ada ulasan -->
-                            <span class="text-5xl font-black text-[#0A2540] tracking-tighter">
-                                {{ asset.reviews_avg_rating ? parseFloat(asset.reviews_avg_rating).toFixed(1) : '-' }}
-                            </span>
-
-                            <!-- Bintang Rata-rata -->
-                            <div class="flex items-center gap-1 mt-3">
-                                <i v-for="i in 5" :key="i"
-                                class="fa-solid fa-star text-sm"
-                                :class="i <= Math.round(asset.reviews_avg_rating || 0) ? 'text-[#FFC000]' : 'text-gray-200'">
-                                </i>
-                            </div>
-
-                            <span class="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">
-                                {{ asset.reviews_count || 0 }} Penilaian
-                            </span>
-                        </div>
-
-                        <!-- Sisi Kanan: Progress Bar Breakdown -->
-                        <div class="flex-grow sm:pl-8 flex flex-col justify-center gap-2 w-full">
-                            <div v-for="item in reviewDistribution" :key="item.star" class="flex items-center gap-3 text-sm">
-                                <div class="flex items-center gap-1 w-8 justify-end text-gray-500 font-medium text-xs">
-                                    {{ item.star }} <i class="fa-solid fa-star text-[#FFC000] text-[10px]"></i>
-                                </div>
-
-                                <!-- Progress Bar dinamis -->
-                                <div class="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden">
-                                    <div class="h-full bg-[#FFC000] rounded-full transition-all duration-500" :style="{ width: item.percentage + '%' }"></div>
-                                </div>
-
-                                <!-- Jumlah ulasan per bintang -->
-                                <div class="w-4 text-xs font-medium text-gray-400 text-right">{{ item.count }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div v-if="asset.reviews && asset.reviews.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-                        <!-- Card Individual Ulasan -->
-                        <div v-for="review in asset.reviews" :key="review.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                            <!-- Header Card Ulasan: Profil & Bintang -->
-                            <div class="flex items-start justify-between mb-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
-                                        <!-- Inisial Nama atau Foto -->
-                                        <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" class="w-full h-full object-cover" />
-                                        <span v-else>{{ review.user?.name?.charAt(0) || 'U' }}</span>
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-[#0A2540] text-sm">{{ review.user?.name || 'Anonim' }}</p>
-                                        <p class="text-xs text-gray-500">{{ formatDate(review.created_at) }}</p>
-                                    </div>
-                                </div>
-                                <!-- Bintang Ulasan User -->
-                                <div class="flex gap-0.5">
-                                    <i v-for="i in 5" :key="i" class="fa-solid fa-star text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'"></i>
-                                </div>
-                            </div>
-
-                            <!-- Teks Ulasan -->
-                            <p class="text-sm text-gray-600 leading-relaxed">
-                                "{{ review.review }}"
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <!-- EMPTY STATE (Jika belum ada ulasan) -->
-                    <div v-else class="flex flex-col items-center justify-center py-16 text-center">
-                        <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
-                            <i class="fa-solid fa-star text-2xl text-gray-200"></i>
-                        </div>
-                        <h3 class="text-[#0A2540] font-bold text-lg mb-1">Belum Ada Ulasan</h3>
-                        <p class="text-sm text-gray-500">Jadilah yang pertama memberikan ulasan!</p>
-                    </div>
-
-                </div>
-            </div>
-
             </div>
             <!-- KANAN (Booking & Contact Cards) -->
-            <div class="lg:col-span-1">
+            <div class="lg:col-span-1 lg:row-span-2 order-2 lg:order-2">
                 <div class="sticky top-24 flex flex-col gap-6">
                     <!-- Booking Card -->
                     <div class="bg-white shadow-2xl shadow-gray-200/50 rounded-2xl p-6 border border-gray-200">
-                        <!-- Price Header -->
-                        <div class="flex items-baseline gap-1 mb-6">
-                            <span class="text-3xl font-black text-[#0A2540]">{{ formatRupiah(lowestPrice?.price * priceMultiplier) }}</span>
-                            <span class="text-sm font-medium text-gray-500">/{{ rentalUnitLabel(activeScheduleMode) }}</span>
-                        </div>
 
                         <!-- Date & Duration Box -->
                         <div class="border border-gray-200 rounded-xl overflow-hidden mb-6">
@@ -903,7 +842,7 @@ const handleTouchEnd = (e) => {
                             @click="submitBooking"
                             :disabled="asset.status !== 'active' || !lowestPrice || !startDate || durationCount === 0"
                             class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
-                            Pesan Sekarang
+                            Booking Sekarang
                         </button>
 
                         <p v-if="asset.status !== 'active'" class="text-center text-red-500 text-xs font-bold mb-4">Aset ini sedang tidak tersedia.</p>
@@ -927,8 +866,8 @@ const handleTouchEnd = (e) => {
                         </div>
                     </div>
 
-                    <!-- Hubungi Pemilik Card -->
-                    <div v-if="asset.owner_profile" class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                    <!-- Hubungi Pemilik Card (DESKTOP ONLY) -->
+                    <div v-if="asset.owner_profile" class="hidden lg:block bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                         <h3 class="text-xl font-bold text-[#0A2540] mb-4">Hubungi Pemilik</h3>
                         <div class="flex items-center gap-3 border-b-2 border-gray-800 pb-2 focus-within:border-[#FFC000] transition-colors">
                             <i class="fa-regular fa-comment-dots text-2xl text-[#FFC000]"></i>
@@ -937,6 +876,107 @@ const handleTouchEnd = (e) => {
                                 kirim
                             </button>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEKSI ULASAN -->
+            <div class="lg:col-span-2 lg:col-start-1 order-3 lg:order-3">
+                <div id="ulasan" class="mt-8 mb-10">
+                    <!-- Judul Seksi -->
+                    <div class="mb-6">
+                        <span class="text-primary font-extrabold text-[11px] tracking-widest uppercase">
+                            Kepuasan Pelanggan
+                        </span>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-secondary mt-1">
+                            Apa Kata Mereka?
+                        </h2>
+                    </div>
+
+                    <!-- Container Utama: Summary & Daftar Ulasan -->
+                    <div class="flex flex-col gap-8">
+
+                        <!-- CARD SUMMARY (Rating Keseluruhan) -->
+                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-xl flex flex-col sm:flex-row items-center sm:items-stretch gap-6 sm:gap-0">
+
+                            <!-- Sisi Kiri: Rata-rata -->
+                            <div class="flex flex-col items-center justify-center sm:pr-8 sm:border-r border-gray-100 min-w-[150px]">
+                                <!-- Tampilkan rating atau strip jika belum ada ulasan -->
+                                <span class="text-5xl font-black text-[#0A2540] tracking-tighter">
+                                    {{ asset.reviews_avg_rating ? parseFloat(asset.reviews_avg_rating).toFixed(1) : '-' }}
+                                </span>
+
+                                <!-- Bintang Rata-rata -->
+                                <div class="flex items-center gap-1 mt-3">
+                                    <i v-for="i in 5" :key="i"
+                                    class="fa-solid fa-star text-sm"
+                                    :class="i <= Math.round(asset.reviews_avg_rating || 0) ? 'text-[#FFC000]' : 'text-gray-200'">
+                                    </i>
+                                </div>
+
+                                <span class="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">
+                                    {{ asset.reviews_count || 0 }} Penilaian
+                                </span>
+                            </div>
+
+                            <!-- Sisi Kanan: Progress Bar Breakdown -->
+                            <div class="flex-grow sm:pl-8 flex flex-col justify-center gap-2 w-full">
+                                <div v-for="item in reviewDistribution" :key="item.star" class="flex items-center gap-3 text-sm">
+                                    <div class="flex items-center gap-1 w-8 justify-end text-gray-500 font-medium text-xs">
+                                        {{ item.star }} <i class="fa-solid fa-star text-[#FFC000] text-[10px]"></i>
+                                    </div>
+
+                                    <!-- Progress Bar dinamis -->
+                                    <div class="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden">
+                                        <div class="h-full bg-[#FFC000] rounded-full transition-all duration-500" :style="{ width: item.percentage + '%' }"></div>
+                                    </div>
+
+                                    <!-- Jumlah ulasan per bintang -->
+                                    <div class="w-4 text-xs font-medium text-gray-400 text-right">{{ item.count }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="asset.reviews && asset.reviews.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <!-- Card Individual Ulasan -->
+                            <div v-for="review in asset.reviews" :key="review.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                <!-- Header Card Ulasan: Profil & Bintang -->
+                                <div class="flex items-start justify-between mb-3">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
+                                            <!-- Inisial Nama atau Foto -->
+                                            <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" class="w-full h-full object-cover" />
+                                            <span v-else>{{ review.user?.name?.charAt(0) || 'U' }}</span>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-[#0A2540] text-sm">{{ review.user?.name || 'Anonim' }}</p>
+                                            <p class="text-xs text-gray-500">{{ formatDate(review.created_at) }}</p>
+                                        </div>
+                                    </div>
+                                    <!-- Bintang Ulasan User -->
+                                    <div class="flex gap-0.5">
+                                        <i v-for="i in 5" :key="i" class="fa-solid fa-star text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'"></i>
+                                    </div>
+                                </div>
+
+                                <!-- Teks Ulasan -->
+                                <p class="text-sm text-gray-600 leading-relaxed">
+                                    "{{ review.review }}"
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <!-- EMPTY STATE (Jika belum ada ulasan) -->
+                        <div v-else class="flex flex-col items-center justify-center py-16 text-center">
+                            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
+                                <i class="fa-solid fa-star text-2xl text-gray-200"></i>
+                            </div>
+                            <h3 class="text-[#0A2540] font-bold text-lg mb-1">Belum Ada Ulasan</h3>
+                            <p class="text-sm text-gray-500">Jadilah yang pertama memberikan ulasan!</p>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -950,8 +990,9 @@ const handleTouchEnd = (e) => {
         :durationLabel="rentalUnitLabel(activeScheduleMode)"
         :formattedDateRange="formattedDateRange"
         :periodLabel="rentalUnitLabel(activeScheduleMode)"
-        :disabled="asset.status !== 'active' || !asset.pricings.length || !startDate || durationCount === 0"
-        @submit="submitBooking"
+        :disabled="asset.status !== 'active' || (!asset.pricings?.length && !asset.units?.length) || !startDate || durationCount === 0"
+        :buttonText="(asset.units && asset.units.length > 0) ? 'Pilih Kamar' : 'Booking'"
+        @submit="handleBottomBarSubmit"
     />
 
     </AppLayout>

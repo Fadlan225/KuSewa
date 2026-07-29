@@ -23,11 +23,43 @@ class PaymentController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Store payment confirmation (upload proof, set date).
      */
     public function store(Request $request)
     {
-        //
+        $request->validate([
+            'payment_id'       => 'required|exists:payments,id',
+            'proof_of_payment' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        $payment = \App\Models\payment::with('booking')->findOrFail($request->payment_id);
+
+        // Pastikan milik user yang login
+        if ($payment->booking->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        // Simpan file bukti
+        $path = $request->file('proof_of_payment')->store('proofs', 'public');
+
+        // Simpan nama bank sebagai payment_method (bukan ID)
+        $bankName = null;
+        if ($payment->payment_method) {
+            $bank = \App\Models\bank_account::find($payment->payment_method);
+            $bankName = $bank ? $bank->bank_name : $payment->payment_method;
+        }
+
+        $payment->update([
+            'proof_of_payment' => $path,
+            'payment_date'     => now()->toDateString(),
+            'payment_status'   => 'verifying',  // Owner perlu konfirmasi dulu
+            'payment_method'   => $bankName ?? $payment->payment_method,
+        ]);
+
+        // Booking status tetap 'pending' sampai owner konfirmasi
+
+        return redirect()->route('booking.show', $payment->booking_id)
+            ->with('success', 'Bukti pembayaran berhasil dikirim! Kami akan memverifikasi segera.');
     }
 
     /**
@@ -41,17 +73,12 @@ class PaymentController extends Controller
             'booking.user'
         ])->findOrFail($id);
 
-        // Ambil rekening bank milik owner aset tersebut
-        $bankAccounts = \App\Models\bank_account::where('owner_profile_id', $payment->booking->asset->owner_profile_id)->get();
-
-        // Jika owner belum memasukkan bank, tampilkan semua (opsional / fallback)
-        if ($bankAccounts->isEmpty()) {
-            $bankAccounts = \App\Models\bank_account::all();
-        }
+        // Cari bank berdasarkan payment_method (yang mana ID dari bank_account)
+        $selectedBank = \App\Models\bank_account::find($payment->payment_method);
 
         return \Inertia\Inertia::render('Home/Payment', [
             'payment' => $payment,
-            'bankAccounts' => $bankAccounts
+            'selectedBank' => $selectedBank
         ]);
     }
 
