@@ -106,7 +106,9 @@ const filteredProperties = computed(() => {
                             item.address.toLowerCase().includes(searchQuery.value.toLowerCase());
         
         const matchesCategory = selectedCategory.value === 'Semua' || item.category === selectedCategory.value;
-        const matchesStatus = selectedStatus.value === 'Semua' || item.status === selectedStatus.value;
+        const matchesStatus = selectedStatus.value === 'Semua'
+            || item.status === selectedStatus.value
+            || item.verification_status === selectedStatus.value;
 
         return matchesSearch && matchesCategory && matchesStatus;
     });
@@ -116,6 +118,17 @@ const filteredProperties = computed(() => {
 const totalUnit = computed(() => propertyList.value.length);
 const totalTersewa = computed(() => propertyList.value.filter(p => p.status === 'Tersewa').length);
 const totalTersedia = computed(() => propertyList.value.filter(p => p.status === 'Tersedia').length);
+const verificationLabel = (status) => ({ pending: 'Menunggu Verifikasi', approved: 'Terverifikasi', rejected: 'Ditolak' }[status] || 'Menunggu Verifikasi');
+const verificationClass = (status) => ({
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    rejected: 'bg-rose-50 text-rose-700 border-rose-200',
+}[status] || 'bg-amber-50 text-amber-700 border-amber-200');
+const verificationIcon = (status) => ({
+    pending: 'fa-clock',
+    approved: 'fa-circle-check',
+    rejected: 'fa-circle-xmark',
+}[status] || 'fa-clock');
 </script>
 
 <template>
@@ -223,6 +236,9 @@ const totalTersedia = computed(() => propertyList.value.filter(p => p.status ===
                                 <option value="Semua">Semua Status</option>
                                 <option value="Tersewa">Tersewa</option>
                                 <option value="Tersedia">Tersedia</option>
+                                <option value="pending">Menunggu Verifikasi</option>
+                                <option value="approved">Terverifikasi</option>
+                                <option value="rejected">Ditolak</option>
                             </select>
 
                             <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/60">
@@ -281,15 +297,9 @@ const totalTersedia = computed(() => propertyList.value.filter(p => p.status ===
                                 </div>
 
                                 <div class="absolute top-3 right-3">
-                                    <span 
-                                        :class="[
-                                            'text-[10px] font-black px-2.5 py-1 rounded-lg shadow-xs border backdrop-blur-md',
-                                            item.status === 'Tersewa' 
-                                                ? 'bg-emerald-500/90 text-white border-emerald-400' 
-                                                : 'bg-amber-400/90 text-[#0A2540] border-amber-300'
-                                        ]"
-                                    >
-                                        {{ item.status }}
+                                    <span :class="['text-[10px] font-black px-2.5 py-1 rounded-lg shadow-xs border backdrop-blur-md', verificationClass(item.verification_status)]">
+                                        <i :class="['fa-solid mr-1', verificationIcon(item.verification_status)]"></i>
+                                        {{ verificationLabel(item.verification_status) }}
                                     </span>
                                 </div>
                             </div>
@@ -305,6 +315,10 @@ const totalTersedia = computed(() => propertyList.value.filter(p => p.status ===
                                 </h3>
 
                                 <p class="text-[11px] text-slate-400 line-clamp-1">{{ item.address }}</p>
+
+                                <p v-if="item.verification_status === 'rejected' && item.verification_note" class="text-[11px] text-rose-600 bg-rose-50 rounded-lg p-2">
+                                    Catatan admin: {{ item.verification_note }}
+                                </p>
 
                                 <div v-if="item.tenant" class="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
                                     <span class="text-slate-400">Penyewa:</span>
@@ -379,15 +393,9 @@ const totalTersedia = computed(() => propertyList.value.filter(p => p.status ===
                                         <span class="text-[10px] font-normal text-slate-400">/{{ item.rent_period }}</span>
                                     </td>
                                     <td class="p-4">
-                                        <span 
-                                            :class="[
-                                                'text-[10px] font-bold px-2.5 py-0.5 rounded-full border',
-                                                item.status === 'Tersewa' 
-                                                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
-                                                    : 'bg-amber-50 text-amber-700 border-amber-200'
-                                            ]"
-                                        >
-                                            {{ item.status }}
+                                        <span :class="['text-[10px] font-bold px-2.5 py-0.5 rounded-full border', verificationClass(item.verification_status)]">
+                                            <i :class="['fa-solid mr-1', verificationIcon(item.verification_status)]"></i>
+                                            {{ verificationLabel(item.verification_status) }}
                                         </span>
                                     </td>
                                     <td class="p-4 text-right">

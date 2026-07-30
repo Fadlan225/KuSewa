@@ -12,6 +12,7 @@ use App\Http\Controllers\Owner\PropertyController;
 use App\Http\Controllers\Owner\WorkspaceController;
 use App\Http\Controllers\OwnerRegisterController;
 use App\Http\Controllers\Owner\MonthlyPaymentController;
+use App\Http\Controllers\Admin\PropertyVerificationController;
 
 // ==========================================
 // PUBLIC ROUTES (Dapat diakses siapapun)
@@ -92,6 +93,12 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::get('/settings', [WorkspaceController::class, 'settings'])->name('settings');
     Route::get('/help', [WorkspaceController::class, 'help'])->name('help');
 
+});
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/properties/verification', [PropertyVerificationController::class, 'index'])->name('properties.verification.index');
+    Route::patch('/properties/{property}/approve', [PropertyVerificationController::class, 'approve'])->name('properties.approve');
+    Route::patch('/properties/{property}/reject', [PropertyVerificationController::class, 'reject'])->name('properties.reject');
 });
 
 

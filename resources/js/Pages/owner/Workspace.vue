@@ -20,6 +20,22 @@ const props = defineProps({
 const activeFaq = ref(null);
 const formatCurrency = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
 const statusLabel = computed(() => ({ pending: 'Menunggu', confirmed: 'Dikonfirmasi', completed: 'Selesai', cancelled: 'Dibatalkan', verified: 'Terverifikasi', rejected: 'Ditolak' }[props.status] || props.status));
+const bookingStatusClass = (status) => ({
+    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    confirmed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    active: 'bg-blue-50 text-blue-700 border-blue-200',
+    completed: 'bg-sky-50 text-sky-700 border-sky-200',
+    cancelled: 'bg-slate-100 text-slate-600 border-slate-200',
+    rejected: 'bg-rose-50 text-rose-700 border-rose-200',
+}[status] || 'bg-slate-100 text-slate-600 border-slate-200');
+const bookingStatusIcon = (status) => ({
+    pending: 'fa-clock',
+    confirmed: 'fa-circle-check',
+    active: 'fa-circle-play',
+    completed: 'fa-flag-checkered',
+    cancelled: 'fa-ban',
+    rejected: 'fa-circle-xmark',
+}[status] || 'fa-circle-info');
 </script>
 
 <template>
@@ -39,7 +55,7 @@ const statusLabel = computed(() => ({ pending: 'Menunggu', confirmed: 'Dikonfirm
 
                 <section v-if="type === 'bookings'" class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
                     <div class="p-5 border-b border-slate-100 flex justify-between"><h2 class="font-bold text-slate-800">Daftar Pesanan</h2><span class="text-xs text-slate-400">{{ bookings.length }} pesanan</span></div>
-                    <div v-if="bookings.length" class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-left text-xs text-slate-400"><tr><th class="p-4">Kode</th><th class="p-4">Aset & Penyewa</th><th class="p-4">Periode</th><th class="p-4">Total</th><th class="p-4">Status</th></tr></thead><tbody><tr v-for="booking in bookings" :key="booking.code" class="border-t border-slate-100"><td class="p-4 font-bold text-[#0A2540]">{{ booking.code }}</td><td class="p-4"><p class="font-semibold">{{ booking.asset }}</p><p class="text-xs text-slate-400">{{ booking.tenant }}</p></td><td class="p-4 text-slate-500">{{ booking.period }}</td><td class="p-4 font-bold">{{ formatCurrency(booking.total) }}</td><td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700">{{ booking.status }}</span></td></tr></tbody></table></div>
+                    <div v-if="bookings.length" class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-left text-xs text-slate-400"><tr><th class="p-4">Kode</th><th class="p-4">Aset & Penyewa</th><th class="p-4">Periode</th><th class="p-4">Total</th><th class="p-4">Status</th></tr></thead><tbody><tr v-for="booking in bookings" :key="booking.code" class="border-t border-slate-100"><td class="p-4 font-bold text-[#0A2540]">{{ booking.code }}</td><td class="p-4"><p class="font-semibold">{{ booking.asset }}</p><p class="text-xs text-slate-400">{{ booking.tenant }}</p></td><td class="p-4 text-slate-500">{{ booking.period }}</td><td class="p-4 font-bold">{{ formatCurrency(booking.total) }}</td><td class="p-4"><span :class="['inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-bold', bookingStatusClass(booking.status)]"><i :class="['fa-solid mr-1', bookingStatusIcon(booking.status)]"></i>{{ booking.status }}</span></td></tr></tbody></table></div>
                     <div v-else class="p-12 text-center"><i class="fa-solid fa-receipt text-3xl text-slate-200"></i><p class="mt-3 font-bold text-slate-700">Belum ada pesanan</p><p class="mt-1 text-sm text-slate-400">Pesanan dari aset Anda akan tampil di halaman ini.</p></div>
                 </section>
 

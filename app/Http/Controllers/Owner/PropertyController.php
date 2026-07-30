@@ -33,6 +33,8 @@ class PropertyController extends Controller
                     'city' => $item->city,
                     'address' => $item->address,
                     'status' => $item->status,
+                    'verification_status' => $item->verification_status,
+                    'verification_note' => $item->verification_note,
                     'tenant' => $item->tenant,
                     'image' => $item->image ? Storage::url($item->image) : 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=500&q=80',
                     'occupancy' => $item->occupancy ?? ($item->status === 'Tersewa' ? 'Tersewa' : '0/1 Unit'),
@@ -152,10 +154,11 @@ class PropertyController extends Controller
             'city' => $validated['kota'],
             'address' => $validated['alamat_lengkap'].', '.$validated['kecamatan'],
             'status' => 'Tersedia',
+            'verification_status' => 'pending',
         ]);
 
         return redirect()->route('owner.property.index')
-            ->with('success', 'Properti berhasil ditambahkan.');
+            ->with('success', 'Properti berhasil diajukan dan menunggu verifikasi admin.');
     }
 
     /**
