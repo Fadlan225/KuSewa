@@ -113,11 +113,8 @@ class PropertyController extends Controller
             ]
         ]);
 
-        // 3. Jika DB tidak ada isinya, gunakan data dummy. Jika ada, gunakan DB asli.
-        $properties = $dbProperties->isNotEmpty() ? $dbProperties : $dummyProperties;
-
         return Inertia::render('owner/property/index', [
-            'properties' => $properties,
+            'properties' => $dbProperties,
             'app_fee_percentage' => 5,
         ]);
     }
@@ -130,12 +127,35 @@ class PropertyController extends Controller
         return Inertia::render('owner/property/create');
     }
 
-    /**
-     * Simulation Route untuk pengajuan form (Hanya Frontend Mockup)
-     */
     public function store(Request $request): RedirectResponse
     {
-        return back()->with('success', 'Pengajuan properti berhasil disimulasikan!');
+        $validated = $request->validate([
+            'nama_properti' => 'required|string|max:255',
+            'kategori' => 'required|string|max:255',
+            'tipe_sewa' => 'required|in:Harian,Bulanan,Tahunan',
+            'alamat_lengkap' => 'required|string|max:1000',
+            'kota' => 'required|string|max:255',
+            'kecamatan' => 'required|string|max:255',
+            'harga_sewa' => 'required|numeric|min:0',
+        ]);
+
+        Property::create([
+            'user_id' => Auth::id(),
+            'title' => $validated['nama_properti'],
+            'category' => $validated['kategori'] === 'Kos & Rumah' ? 'Kos' : $validated['kategori'],
+            'price' => $validated['harga_sewa'],
+            'rent_period' => match ($validated['tipe_sewa']) {
+                'Harian' => 'Hari',
+                'Tahunan' => 'Tahun',
+                default => 'Bulan',
+            },
+            'city' => $validated['kota'],
+            'address' => $validated['alamat_lengkap'].', '.$validated['kecamatan'],
+            'status' => 'Tersedia',
+        ]);
+
+        return redirect()->route('owner.property.index')
+            ->with('success', 'Properti berhasil ditambahkan.');
     }
 
     /**
@@ -170,7 +190,17 @@ class PropertyController extends Controller
             'city' => 'required|string',
             'address' => 'required|string',
             'status' => 'required|in:Tersedia,Tersewa,Maintenance',
+            'tenant' => 'nullable|string|max:255',
+            'image' => 'nullable|image|max:2048',
         ]);
+
+        if ($request->hasFile('image')) {
+            if ($property->image) {
+                Storage::disk('public')->delete($property->image);
+            }
+
+            $validated['image'] = $request->file('image')->store('properties', 'public');
+        }
 
         $property->update($validated);
 

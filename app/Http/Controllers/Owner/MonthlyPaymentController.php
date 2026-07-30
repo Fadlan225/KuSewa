@@ -28,7 +28,7 @@ class MonthlyPaymentController extends Controller
             'status' => 'Belum Dibayar', // Pilihan status: 'Belum Dibayar', 'Menunggu Verifikasi', 'Lunas'
         ];
 
-        return Inertia::render('Owner/MonthlyPayment', [
+        return Inertia::render('owner/MonthlyPayment', [
             'billInfo' => $billInfo
         ]);
     }
@@ -41,11 +41,11 @@ class MonthlyPaymentController extends Controller
         // 1. Validasi Input
         $request->validate([
             'payment_method' => 'required|string|in:qris,bca,mandiri,manual',
-            'payment_proof' => 'required|image|mimes:jpeg,png,jpg,pdf|max:2048', // Maksimal 2MB
+            'payment_proof' => 'required|file|mimes:jpeg,png,jpg,pdf|max:2048', // Maksimal 2MB
         ], [
             'payment_method.required' => 'Pilih metode pembayaran terlebih dahulu.',
             'payment_proof.required' => 'Harap unggah bukti transfer/pembayaran Anda.',
-            'payment_proof.image' => 'File harus berupa gambar atau PDF.',
+            'payment_proof.mimes' => 'File harus berupa gambar JPG, PNG, atau PDF.',
             'payment_proof.max' => 'Ukuran file maksimal adalah 2MB.',
         ]);
 

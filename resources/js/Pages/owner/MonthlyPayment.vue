@@ -1,8 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
-
-const page = usePage();
+import { Head, Link, useForm } from '@inertiajs/vue3';
+import Sidebar from '@/Components/sidebar.vue';
 
 const props = defineProps({
     billInfo: {
@@ -18,16 +17,14 @@ const props = defineProps({
     }
 });
 
-const user = computed(() => page.props.auth?.user || {
-    name: 'Budi Santoso',
-    email: 'owner@kusewa.id'
-});
-
 // Method & State Pembayaran
 const selectedMethod = ref('qris');
-const isUploading = ref(false);
 const paymentProof = ref(null);
 const isSubmitted = ref(false);
+const form = useForm({
+    payment_method: 'qris',
+    payment_proof: null,
+});
 
 const paymentMethods = [
     { id: 'qris', name: 'QRIS (BCA, Mandiri, GoPay, OVO, ShopeePay)', icon: 'fa-qrcode', type: 'Instant' },
@@ -43,16 +40,17 @@ const totalPayment = computed(() => {
 const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-        paymentProof.value = URL.createObjectURL(file);
+        paymentProof.value = file.name;
+        form.payment_proof = file;
     }
 };
 
 const submitPayment = () => {
-    isUploading.value = true;
-    setTimeout(() => {
-        isUploading.value = false;
-        isSubmitted.value = true;
-    }, 1200);
+    form.payment_method = selectedMethod.value;
+    form.post(route('owner.monthly-payment.store'), {
+        forceFormData: true,
+        onSuccess: () => { isSubmitted.value = true; },
+    });
 };
 </script>
 
@@ -61,52 +59,7 @@ const submitPayment = () => {
 
     <div class="min-h-screen bg-[#F3F5F8] text-slate-700 font-sans flex antialiased selection:bg-[#FFC000]/30">
 
-        <!-- ==================== SIDEBAR ==================== -->
-        <aside class="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between p-4 shrink-0 hidden lg:flex">
-            <div class="space-y-6">
-                <!-- Brand Logo -->
-                <div class="flex items-center justify-between px-2 py-1">
-                    <Link :href="route('Home')" class="flex items-center gap-1.5">
-                        <span class="font-black text-2xl tracking-tight text-[#0A2540]">
-                            kusewa<span class="text-[#FFC000]">.id</span>
-                        </span>
-                    </Link>
-                    <span class="text-[9px] font-black text-[#0A2540] bg-[#FFC000]/20 px-2 py-0.5 rounded-md uppercase">Owner</span>
-                </div>
-
-                <!-- Profile Switcher -->
-                <div class="flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50/50">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-8 h-8 rounded-lg bg-[#0A2540] text-[#FFC000] flex items-center justify-center font-black text-xs">
-                            {{ user.name.charAt(0) }}
-                        </div>
-                        <div class="min-w-0">
-                            <h4 class="text-xs font-bold text-slate-800 truncate">{{ user.name }}</h4>
-                            <p class="text-[10px] text-slate-400 truncate">{{ user.email }}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Navigation List -->
-                <nav class="space-y-1 text-xs">
-                    <Link :href="route('owner.dashboard')" class="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition">
-                        <i class="fa-solid fa-house-chimney text-slate-400"></i>
-                        <span>Dashboard</span>
-                    </Link>
-                    <Link href="#" class="flex items-center justify-between px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition">
-                        <div class="flex items-center gap-3">
-                            <i class="fa-solid fa-building text-slate-400"></i>
-                            <span>Properti & Aset</span>
-                        </div>
-                    </Link>
-                    <!-- Active Menu: Biaya Bulanan -->
-                    <Link href="#" class="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-100 text-[#0A2540] font-bold transition">
-                        <i class="fa-solid fa-credit-card text-[#0A2540]"></i>
-                        <span>Biaya Bulanan</span>
-                    </Link>
-                </nav>
-            </div>
-        </aside>
+        <Sidebar />
 
         <!-- ==================== MAIN CONTENT ==================== -->
         <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
@@ -233,7 +186,7 @@ const submitPayment = () => {
                             <p class="text-[10px] text-slate-400">Format yang didukung: JPG, PNG, PDF (Maks. 2MB)</p>
 
                             <div class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition relative">
-                                <input type="file" @change="handleFileUpload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                                <input type="file" @change="handleFileUpload" accept="image/jpeg,image/png,application/pdf" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
                                 <div v-if="!paymentProof" class="space-y-1">
                                     <i class="fa-solid fa-cloud-arrow-up text-slate-400 text-xl"></i>
                                     <p class="text-xs font-bold text-slate-600">Klik atau Drop file di sini</p>
@@ -243,13 +196,15 @@ const submitPayment = () => {
                                     <span class="text-xs font-bold text-slate-700">Bukti berhasil dipilih</span>
                                 </div>
                             </div>
+                            <p v-if="form.errors.payment_proof" class="text-xs text-rose-600">{{ form.errors.payment_proof }}</p>
+                            <p v-if="isSubmitted" class="text-xs text-emerald-600 font-semibold">Bukti pembayaran berhasil dikirim untuk diverifikasi.</p>
 
                             <button 
                                 @click="submitPayment" 
-                                :disabled="isUploading || isSubmitted"
+                                :disabled="form.processing || isSubmitted"
                                 class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] text-xs font-black py-3 rounded-xl transition shadow-xs flex items-center justify-center gap-2 disabled:opacity-50"
                             >
-                                <i v-if="isUploading" class="fa-solid fa-spinner animate-spin"></i>
+                                <i v-if="form.processing" class="fa-solid fa-spinner animate-spin"></i>
                                 <span>{{ isSubmitted ? 'Memproses Verifikasi...' : 'Konfirmasi Pembayaran' }}</span>
                             </button>
                         </div>

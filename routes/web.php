@@ -9,6 +9,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\OwnerDashboardController;
 use App\Http\Controllers\Owner\PropertyController;
+use App\Http\Controllers\Owner\WorkspaceController;
 use App\Http\Controllers\OwnerRegisterController;
 use App\Http\Controllers\Owner\MonthlyPaymentController;
 
@@ -82,8 +83,14 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::resource('property', PropertyController::class);
 
     // Monthly Payment
-    Route::get('/monthly-payment', [MonthlyPaymentController::class, 'index'])->name('MonthlyPayment');
-    Route::post('/monthly-payment', [MonthlyPaymentController::class, 'store'])->name('MonthlyPayment.store');
+    Route::get('/monthly-payment', [MonthlyPaymentController::class, 'index'])->name('monthly-payment');
+    Route::post('/monthly-payment', [MonthlyPaymentController::class, 'store'])->name('monthly-payment.store');
+
+    Route::get('/bookings', [WorkspaceController::class, 'bookings'])->name('bookings');
+    Route::get('/finance', [WorkspaceController::class, 'finance'])->name('finance');
+    Route::get('/verification', [WorkspaceController::class, 'verification'])->name('verification');
+    Route::get('/settings', [WorkspaceController::class, 'settings'])->name('settings');
+    Route::get('/help', [WorkspaceController::class, 'help'])->name('help');
 
 });
 

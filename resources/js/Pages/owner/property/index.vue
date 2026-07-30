@@ -86,9 +86,8 @@ const defaultProperties = [
     }
 ];
 
-// Gabungkan data: Jika dari Laravel kosong, pakai dummy dulu
 const propertyList = computed(() => {
-    return (props.properties && props.properties.length > 0) ? props.properties : defaultProperties;
+    return props.properties || [];
 });
 
 // State Filter & View Mode
