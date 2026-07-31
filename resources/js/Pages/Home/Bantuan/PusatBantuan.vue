@@ -3,6 +3,8 @@ import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref } from 'vue';
 
+const showGuideModal = ref(false);
+
 const faqs = ref([
     {
         question: 'Bagaimana cara mendaftar sebagai penyewa?',
@@ -15,7 +17,7 @@ const faqs = ref([
         isOpen: false
     },
     {
-        question: 'Bagaimana jika properti atau baliho yang saya sewa bermasalah?',
+        question: 'Bagaimana jika properti yang saya sewa bermasalah?',
         answer: 'Anda dapat langsung melaporkan masalah tersebut melalui menu "Hubungi Kami" atau menghubungi pemilik langsung melalui fitur obrolan (chat) di dalam aplikasi.',
         isOpen: false
     },
@@ -57,43 +59,11 @@ const toggleFaq = (index) => {
         </div>
 
         <!-- Main Content -->
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-8 relative z-20 pb-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 relative z-20 pb-20">
             
-            <!-- Kategori Bantuan -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-16">
-                <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-6 text-center transition-all cursor-pointer border border-gray-100 group hover:-translate-y-1">
-                    <div class="w-14 h-14 mx-auto bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-user-shield"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-900 mb-1">Akun & Profil</h3>
-                    <p class="text-xs text-gray-500">Kelola informasi akun Anda</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-6 text-center transition-all cursor-pointer border border-gray-100 group hover:-translate-y-1">
-                    <div class="w-14 h-14 mx-auto bg-green-50 text-green-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:bg-green-600 group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-credit-card"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-900 mb-1">Pembayaran</h3>
-                    <p class="text-xs text-gray-500">Panduan transaksi sewa</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-6 text-center transition-all cursor-pointer border border-gray-100 group hover:-translate-y-1">
-                    <div class="w-14 h-14 mx-auto bg-orange-50 text-orange-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:bg-orange-600 group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-house-chimney"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-900 mb-1">Sewa Properti</h3>
-                    <p class="text-xs text-gray-500">Tata cara & aturan sewa</p>
-                </div>
-                <div class="bg-white rounded-xl shadow-md hover:shadow-lg p-6 text-center transition-all cursor-pointer border border-gray-100 group hover:-translate-y-1">
-                    <div class="w-14 h-14 mx-auto bg-purple-50 text-purple-600 rounded-full flex items-center justify-center text-2xl mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                        <i class="fa-solid fa-sign-hanging"></i>
-                    </div>
-                    <h3 class="font-bold text-gray-900 mb-1">Sewa Baliho</h3>
-                    <p class="text-xs text-gray-500">Ketentuan sewa baliho</p>
-                </div>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-8">
+            <div class="flex flex-col md:grid md:grid-cols-3 gap-8">
                 <!-- FAQ Section -->
-                <div class="md:col-span-2 space-y-6">
+                <div class="md:col-span-2 space-y-6 order-2 md:order-1">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-[#0A2540] text-xl shadow-sm">
                             <i class="fa-solid fa-circle-question"></i>
@@ -115,47 +85,14 @@ const toggleFaq = (index) => {
                 </div>
 
                 <!-- Panduan & Kontak -->
-                <div class="space-y-6">
-                    <!-- Panduan Singkat -->
-                    <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                        <h3 class="text-lg font-bold text-[#0A2540] mb-4 flex items-center gap-2">
-                            <i class="fa-solid fa-book text-[var(--color-primary)]"></i> Panduan Singkat
-                        </h3>
-                        <ul class="space-y-3">
-                            <li>
-                                <a href="#" class="group flex items-start gap-3">
-                                    <div class="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                        <i class="fa-solid fa-play text-[10px]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Cara Booking Properti</h4>
-                                        <p class="text-xs text-gray-500">Video tutorial 2 menit</p>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="group flex items-start gap-3">
-                                    <div class="w-6 h-6 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                        <i class="fa-solid fa-play text-[10px]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">Verifikasi Akun Pemilik</h4>
-                                        <p class="text-xs text-gray-500">Video tutorial 3 menit</p>
-                                    </div>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="#" class="group flex items-start gap-3">
-                                    <div class="w-6 h-6 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-gray-600 group-hover:text-white transition-colors">
-                                        <i class="fa-regular fa-file-pdf text-[10px]"></i>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-sm font-semibold text-gray-800 group-hover:text-gray-900 transition-colors">Buku Panduan PDF</h4>
-                                        <p class="text-xs text-gray-500">Unduh panduan lengkap</p>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
+                <div class="space-y-6 order-1 md:order-2 mb-8 md:mb-0">
+                    <!-- Kategori Bantuan (Panduan) -->
+                    <div @click="showGuideModal = true" class="bg-white rounded-xl shadow-md hover:shadow-lg p-6 sm:p-8 text-center transition-all cursor-pointer border border-gray-100 group hover:-translate-y-1">
+                        <div class="w-16 h-16 mx-auto bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                            <i class="fa-solid fa-book-open"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-900 mb-2 text-xl">Panduan Pembayaran & Sewa</h3>
+                        <p class="text-sm text-gray-500">Ketuk untuk melihat panduan lengkap mengenai tata cara pembayaran dan penyewaan properti.</p>
                     </div>
 
                     <!-- Hubungi Kami Banner -->
@@ -163,13 +100,88 @@ const toggleFaq = (index) => {
                         <i class="fa-solid fa-headset absolute -right-4 -bottom-4 text-7xl text-white opacity-10"></i>
                         <h3 class="text-lg font-bold mb-2">Masih Butuh Bantuan?</h3>
                         <p class="text-sm text-blue-100 mb-6">Tim dukungan kami siap membantu Anda menyelesaikan masalah dengan cepat.</p>
-                        <Link href="/hubungin-kami" class="inline-block bg-[var(--color-primary)] text-[#0A2540] font-bold py-2.5 px-6 rounded-lg w-full hover:bg-yellow-400 transition-colors shadow-sm">
+                        <Link href="/hubungi-kami" class="inline-block bg-[var(--color-primary)] text-[#0A2540] font-bold py-2.5 px-6 rounded-lg w-full hover:bg-yellow-400 transition-colors shadow-sm">
                             <i class="fa-solid fa-phone-volume mr-2"></i> Hubungi Kami
                         </Link>
                     </div>
                 </div>
             </div>
             
+        </div>
+
+        <!-- Modal Panduan Pembayaran & Sewa -->
+        <div v-if="showGuideModal" class="fixed inset-0 z-[60] flex items-start justify-center p-4 sm:p-6 pt-24 sm:pt-28">  
+            <div class="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" @click="showGuideModal = false"></div>
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col transform transition-all">
+                <div class="flex items-center justify-between p-5 sm:p-6 border-b border-gray-100 bg-white">
+                    <h2 class="text-lg sm:text-xl font-bold text-[#0A2540] flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-[var(--color-primary)]"></i> Panduan Pembayaran & Sewa
+                    </h2>
+                    <button @click="showGuideModal = false" class="text-gray-400 hover:text-red-500 bg-gray-100 hover:bg-red-50 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="p-5 sm:p-6 overflow-y-auto custom-scrollbar">
+                    <div class="space-y-6 sm:space-y-8">
+                        <!-- Panduan Pembayaran -->
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-credit-card text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3">Panduan Pembayaran</h3>
+                                <ul class="space-y-3 text-sm sm:text-base text-gray-600">
+                                    <li class="flex items-start gap-3">
+                                        <i class="fa-solid fa-check-circle text-green-500 mt-1 shrink-0"></i>
+                                        <span>Pilih metode pembayaran yang tersedia (Transfer Bank, E-Wallet, Kartu Kredit).</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <i class="fa-solid fa-check-circle text-green-500 mt-1 shrink-0"></i>
+                                        <span>Pastikan melakukan pembayaran sebelum batas waktu (jatuh tempo) yang telah ditentukan agar pesanan tidak dibatalkan otomatis.</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <i class="fa-solid fa-check-circle text-green-500 mt-1 shrink-0"></i>
+                                        <span>Setelah berhasil, sistem akan secara otomatis memverifikasi pembayaran Anda, dan status sewa akan diperbarui.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Panduan Sewa -->
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-house-chimney text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3">Panduan Sewa</h3>
+                                <ul class="space-y-3 text-sm sm:text-base text-gray-600">
+                                    <li class="flex items-start gap-3">
+                                        <i class="fa-solid fa-circle-check text-orange-500 mt-1 shrink-0"></i>
+                                        <span>Gunakan fitur pencarian untuk menemukan properti yang sesuai dengan kriteria dan lokasi yang Anda inginkan.</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <i class="fa-solid fa-circle-check text-orange-500 mt-1 shrink-0"></i>
+                                        <span>Periksa dengan teliti ketersediaan jadwal, rincian harga, serta fasilitas atau spesifikasi yang ditawarkan.</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <i class="fa-solid fa-circle-check text-orange-500 mt-1 shrink-0"></i>
+                                        <span>Ajukan penyewaan (booking) dan tunggu konfirmasi atau persetujuan dari pemilik aset.</span>
+                                    </li>
+                                    <li class="flex items-start gap-3">
+                                        <i class="fa-solid fa-circle-check text-orange-500 mt-1 shrink-0"></i>
+                                        <span>Untuk baliho, pastikan Anda juga menyiapkan desain materi iklan sesuai dengan ukuran dan ketentuan dari pemilik.</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 sm:p-6 border-t border-gray-100 flex justify-end bg-gray-50">
+                    <button @click="showGuideModal = false" class="bg-[var(--color-primary)] hover:bg-yellow-400 text-[#0A2540] px-6 py-2.5 rounded-lg font-bold transition-colors shadow-sm text-sm sm:text-base w-full sm:w-auto">
+                        <i class="fa-solid fa-check mr-2"></i> Mengerti
+                    </button>
+                </div>
+            </div>
         </div>
     </AppLayout>
 </template>
