@@ -60,18 +60,30 @@ const toggleMenu = (key) => {
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Pengguna & Akun</p>
                 
-                <Link href="#" class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-user-gear w-5 text-center text-slate-400"></i>
+                <Link
+                    :href="route('admin.pengajuan-akun')"
+                    class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 font-semibold transition-all duration-200"
+                    :class="isActive('admin.pengajuan-akun') ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+                >
+                    <i class="fa-solid fa-file-lines w-5 text-center" :class="isActive('admin.pengajuan-akun') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
                     <span>Kelola Pengajuan Akun</span>
                 </Link>
 
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-users w-5 text-center text-slate-400"></i>
+                <Link
+                    :href="route('admin.user-accounts')"
+                    class="flex items-center gap-3 rounded-xl px-3.5 py-2 font-semibold transition-all duration-200"
+                    :class="isActive('admin.user-accounts') ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+                >
+                    <i class="fa-solid fa-users w-5 text-center" :class="isActive('admin.user-accounts') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
                     <span>Akun Penyewa & Pemilik</span>
                 </Link>
 
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-user-shield w-5 text-center text-slate-400"></i>
+                <Link
+                    :href="route('admin.admin-accounts')"
+                    class="flex items-center gap-3 rounded-xl px-3.5 py-2 font-semibold transition-all duration-200"
+                    :class="isActive('admin.admin-accounts') ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'"
+                >
+                    <i class="fa-solid fa-user-shield w-5 text-center" :class="isActive('admin.admin-accounts') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
                     <span>Akun Administrator</span>
                 </Link>
             </div>
@@ -87,7 +99,7 @@ const toggleMenu = (key) => {
 
                 <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
                     <i class="fa-solid fa-building w-5 text-center text-slate-400"></i>
-                    <span>Aset Properti & Baliho</span>
+                    <span>Aset Properti</span>
                 </Link>
 
                 <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
