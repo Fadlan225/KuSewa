@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\payment;
+use App\Models\bank_account;
+use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
@@ -32,7 +35,7 @@ class PaymentController extends Controller
             'proof_of_payment' => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
         ]);
 
-        $payment = \App\Models\payment::with('booking')->findOrFail($request->payment_id);
+        $payment = payment::with('booking')->findOrFail($request->payment_id);
 
         // Pastikan milik user yang login
         if ($payment->booking->user_id !== auth()->id()) {
@@ -45,7 +48,7 @@ class PaymentController extends Controller
         // Simpan nama bank sebagai payment_method (bukan ID)
         $bankName = null;
         if ($payment->payment_method) {
-            $bank = \App\Models\bank_account::find($payment->payment_method);
+            $bank = bank_account::find($payment->payment_method);
             $bankName = $bank ? $bank->bank_name : $payment->payment_method;
         }
 
@@ -67,16 +70,16 @@ class PaymentController extends Controller
      */
     public function show(string $id)
     {
-        $payment = \App\Models\payment::with([
+        $payment = payment::with([
             'booking.asset',
             'booking.assetUnit',
             'booking.user'
         ])->findOrFail($id);
 
         // Cari bank berdasarkan payment_method (yang mana ID dari bank_account)
-        $selectedBank = \App\Models\bank_account::find($payment->payment_method);
+        $selectedBank = bank_account::find($payment->payment_method);
 
-        return \Inertia\Inertia::render('Home/Payment', [
+        return Inertia::render('Home/Payment', [
             'payment' => $payment,
             'selectedBank' => $selectedBank
         ]);
@@ -106,3 +109,4 @@ class PaymentController extends Controller
         //
     }
 }
+

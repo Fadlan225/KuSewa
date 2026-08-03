@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\asset_category;
+
 use App\Models\Favorite;
 use Inertia\Inertia;
 
@@ -41,7 +43,7 @@ class FavoriteController extends Controller
         })->filter()->values();
 
         $categoriesList = collect(['Semua'])->merge(
-            \App\Models\asset_category::pluck('name')
+            asset_category::pluck('name')
         )->values();
 
         return Inertia::render('Home/Favorite', [
@@ -121,3 +123,4 @@ class FavoriteController extends Controller
         return response()->json(['success' => true]);
     }
 }
+

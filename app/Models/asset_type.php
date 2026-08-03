@@ -33,9 +33,6 @@ class asset_type extends Model
         return $this->hasMany(asset_type_facility::class, 'asset_type_id');
     }
 
-    /**
-     * Seluruh fasilitas yang boleh dipilih untuk level asset (scope = 'asset')
-     */
     public function allowedFacilities()
     {
         return $this->belongsToMany(facility::class, 'asset_type_facilities')
@@ -44,9 +41,6 @@ class asset_type extends Model
                     ->withTimestamps();
     }
 
-    /**
-     * Seluruh fasilitas yang boleh dipilih untuk level unit (scope = 'unit')
-     */
     public function allowedUnitFacilities()
     {
         return $this->belongsToMany(facility::class, 'asset_type_facilities')

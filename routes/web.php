@@ -11,6 +11,7 @@ use App\Http\Controllers\BookingController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\AktivitasController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\Api\HomeAssetController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -19,7 +20,7 @@ Route::get('/search', [HomeController::class, 'search'])->name('assets.search');
 Route::get('/search/suggest', [HomeController::class, 'suggest'])->name('search.suggest');
 
 // API for Home
-Route::get('/api/home/nearby-assets', [\App\Http\Controllers\Api\HomeAssetController::class, 'nearby'])->name('api.home.nearby-assets');
+Route::get('/api/home/nearby-assets', [HomeAssetController::class, 'nearby'])->name('api.home.nearby-assets');
 
 Route::middleware('auth')->group(function () {
     Route::post('/search-logs', [HomeController::class, 'logSearch'])->name('search.log');

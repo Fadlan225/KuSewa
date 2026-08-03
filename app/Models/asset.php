@@ -93,4 +93,20 @@ class asset extends Model
         return $this->belongsToMany(facility::class, 'asset_facilities')
                     ->withTimestamps();
     }
+
+    public function scopeWithCommonRelations($query)
+    {
+        return $query->with([
+            'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
+            'defaultPricing:id,asset_id,price',
+            'type:id,name,allow_units,rental_unit,category_id',
+            'favorites' => function ($q) {
+                if (auth()->check()) {
+                    $q->select(['id', 'user_id', 'asset_id'])->where('user_id', auth()->id());
+                } else {
+                    $q->whereRaw('1=0');
+                }
+            }
+        ]);
+    }
 }

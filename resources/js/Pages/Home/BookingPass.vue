@@ -102,19 +102,7 @@ onMounted(() => {
             generateCodes();
         });
     }
-
-    // Intercept native back button
-    window.history.pushState(null, null, window.location.href);
-    window.addEventListener('popstate', onPopState);
 });
-
-onUnmounted(() => {
-    window.removeEventListener('popstate', onPopState);
-});
-
-const onPopState = (event) => {
-    router.visit(route('aktivitas.index'));
-};
 
 const goBack = () => {
     router.visit(route('aktivitas.index'));

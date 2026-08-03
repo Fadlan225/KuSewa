@@ -4,6 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\asset;
+use App\Models\asset_pricing;
+use App\Models\bank_account;
+use App\Models\booking;
+use App\Models\asset_units;
+use App\Models\payment;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
@@ -23,7 +31,7 @@ class BookingController extends Controller
         $assetId = $request->query('asset');
         $pricingId = $request->query('pricing_id');
         
-        $asset = \App\Models\asset::with([
+        $asset = asset::with([
             'firstImage',
             'type.category',
             'defaultPricing'
@@ -33,22 +41,22 @@ class BookingController extends Controller
         $selectedPricing = null;
         $unitId = null;
         if ($pricingId) {
-            $selectedPricing = \App\Models\asset_pricing::find($pricingId);
+            $selectedPricing = asset_pricing::find($pricingId);
             $unitId = $selectedPricing?->asset_unit_id;
         }
 
-        $serviceFee = \Illuminate\Support\Facades\DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
+        $serviceFee = DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
 
         // Fetch bank accounts for the asset owner
-        $bankAccounts = \App\Models\bank_account::where('owner_profile_id', $asset->owner_profile_id)->get();
+        $bankAccounts = bank_account::where('owner_profile_id', $asset->owner_profile_id)->get();
         if ($bankAccounts->isEmpty()) {
-            $bankAccounts = \App\Models\bank_account::all();
+            $bankAccounts = bank_account::all();
         }
 
         // Fetch booked dates — scoped ke unit jika ada, atau asset-level jika tidak ada unit
         $bookedDates = collect();
         if ($asset->units->isEmpty()) {
-            $bookedDates = \App\Models\booking::where('asset_id', $assetId)
+            $bookedDates = booking::where('asset_id', $assetId)
                 ->when(
                     $unitId !== null,
                     fn ($q) => $q->where('asset_unit_id', $unitId),  // Unit-level: only this unit
@@ -70,8 +78,8 @@ class BookingController extends Controller
                 ->get()
                 ->map(function ($booking) {
                     return [
-                        'from' => \Carbon\Carbon::parse($booking->start_date)->format('Y-m-d'),
-                        'to' => \Carbon\Carbon::parse($booking->end_date)->format('Y-m-d'),
+                        'from' => Carbon::parse($booking->start_date)->format('Y-m-d'),
+                        'to' => Carbon::parse($booking->end_date)->format('Y-m-d'),
                     ];
                 });
         }
@@ -106,16 +114,17 @@ class BookingController extends Controller
         ]);
 
         try {
-            $payment = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            $payment = DB::transaction(function () use ($validated) {
 
-                $asset = \App\Models\asset::with('type')->findOrFail($validated['asset_id']);
-                $pricing = \App\Models\asset_pricing::findOrFail($validated['pricing_id']);
+                // Kunci baris aset ini selama transaksi untuk mencegah Race Condition (Booking berbarengan)
+                $asset = asset::with('type')->lockForUpdate()->findOrFail($validated['asset_id']);
+                $pricing = asset_pricing::findOrFail($validated['pricing_id']);
 
                 // Tentukan scope overlap: per unit (Studio/Hotel) atau per asset (Villa/Rumah)
                 $unitId = $pricing->asset_unit_id;
                 
-                $parsedStartDate = \Carbon\Carbon::parse($validated['startDate']);
-                $parsedEndDate = \Carbon\Carbon::parse($validated['endDate']);
+                $parsedStartDate = Carbon::parse($validated['startDate']);
+                $parsedEndDate = Carbon::parse($validated['endDate']);
                 
                 // Jika mode 'day' atau 'month', booking mencakup keseluruhan hari (hingga 23:59:59)
                 // Ini penting agar overlap terdeteksi saat orang lain memesan di hari terakhir (checkout day).
@@ -125,7 +134,7 @@ class BookingController extends Controller
                     $parsedEndDate->endOfDay();
                 }
 
-                $overlappingBookingsCount = \App\Models\booking::where('asset_id', $validated['asset_id'])
+                $overlappingBookingsCount = booking::where('asset_id', $validated['asset_id'])
                     ->when(
                         $unitId !== null,
                         fn ($q) => $q->where('asset_unit_id', $unitId),
@@ -150,7 +159,7 @@ class BookingController extends Controller
 
                 $maxQuantity = 1;
                 if ($unitId) {
-                    $unit = \App\Models\asset_units::find($unitId);
+                    $unit = asset_units::find($unitId);
                     if ($unit) {
                         $maxQuantity = $unit->quantity;
                     }
@@ -163,17 +172,17 @@ class BookingController extends Controller
                 $priceMultiplier = ($asset->type->rental_unit === 'night' && ($validated['rental_mode'] ?? '') === 'month') ? 30 : 1;
                 $subtotal = ($pricing->price * $priceMultiplier) * $validated['duration'];
 
-                $serviceFeePercent = \Illuminate\Support\Facades\DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
+                $serviceFeePercent = DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
                 $serviceFee = $subtotal * ($serviceFeePercent / 100);
                 $total = $subtotal + $serviceFee;
 
                 $unitName = null;
                 if ($pricing->asset_unit_id) {
-                    $unit = \App\Models\asset_units::find($pricing->asset_unit_id);
+                    $unit = asset_units::find($pricing->asset_unit_id);
                     if ($unit) $unitName = $unit->name;
                 }
 
-                $booking = \App\Models\booking::create([
+                $booking = booking::create([
                     'asset_id' => $validated['asset_id'],
                     'asset_unit_id' => $pricing->asset_unit_id,
                     'asset_name' => $asset->title,
@@ -192,7 +201,7 @@ class BookingController extends Controller
                     'booking_status' => 'pending'
                 ]);
 
-                $payment = \App\Models\payment::create([
+                $payment = payment::create([
                     'booking_id' => $booking->id,
                     'payment_method' => $validated['payment_method'],
                     'payment_status' => 'pending',
@@ -228,7 +237,7 @@ class BookingController extends Controller
      */
     public function show(string $id)
     {
-        $booking = \App\Models\booking::with([
+        $booking = booking::with([
             'asset.firstImage',
             'asset.type.category',
             'asset.ownerProfile.user',
@@ -270,3 +279,4 @@ class BookingController extends Controller
         //
     }
 }
+

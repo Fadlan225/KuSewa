@@ -281,8 +281,11 @@ const rentalUnitLabel = (unit) => {
             <div class="flex-1 min-w-0 flex flex-col justify-center">
                 <div class="flex items-center gap-1.5 mb-1">
                     <span class="px-1.5 py-0.5 bg-[#6C757D]/10 text-[#6C757D] rounded text-[9px] font-bold">{{ categoryName }}</span>
-                    <div v-if="asset.reviews_avg_rating" class="flex items-center gap-0.5 text-[#FFC000] text-[9px] font-bold">
-                        <i class="fa-solid fa-star"></i> {{ Number(asset.reviews_avg_rating).toFixed(1) }}
+                    <div v-if="asset.reviews_avg_rating" class="flex items-center gap-1 text-[#FFC000] text-[9px] font-bold">
+                        <div class="flex items-center gap-0.5">
+                            <i class="fa-solid fa-star"></i> {{ Number(asset.reviews_avg_rating).toFixed(1) }}
+                        </div>
+                        <span v-if="asset.reviews_count" class="text-gray-400 font-medium">({{ asset.reviews_count }})</span>
                     </div>
                 </div>
 
@@ -292,7 +295,7 @@ const rentalUnitLabel = (unit) => {
 
                 <div class="text-[10px] md:text-xs text-gray-500 font-medium truncate mt-0.5">
                     <i class="fa-solid fa-location-dot text-[#FFC000] mr-0.5"></i>
-                    {{ [asset.city, asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
+                    {{ [asset.subdistrict, asset.city].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
                 </div>
             </div>
 

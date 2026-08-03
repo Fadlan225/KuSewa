@@ -19,9 +19,6 @@ class facility extends Model
         return $this->belongsTo(facility_category::class, 'facility_category_id');
     }
 
-    /**
-     * Alias pendek untuk eager loading 'facilities.category'
-     */
     public function category()
     {
         return $this->belongsTo(facility_category::class, 'facility_category_id');

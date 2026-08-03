@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\asset;
 
 class HomeAssetController extends Controller
 {
@@ -16,15 +17,23 @@ class HomeAssetController extends Controller
             return response()->json([]);
         }
 
-        $haversine = "(6371 * acos(cos(radians(?)) 
-                        * cos(radians(latitude)) 
-                        * cos(radians(longitude) - radians(?)) 
-                        + sin(radians(?)) 
+        // Radius filter dalam KM (misal 50 KM) untuk Bounding Box
+        $radius = 50;
+        $latDiff = $radius / 111.045;
+        $lngDiff = $radius / (111.045 * cos(deg2rad($lat)));
+
+        $haversine = "(6371 * acos(cos(radians(?))
+                        * cos(radians(latitude))
+                        * cos(radians(longitude) - radians(?))
+                        + sin(radians(?))
                         * sin(radians(latitude))))";
 
-        $assets = \App\Models\asset::select('assets.*')
+        $assets = asset::select('assets.*')
             ->selectRaw("{$haversine} AS distance", [$lat, $lng, $lat])
+            ->whereBetween('latitude', [$lat - $latDiff, $lat + $latDiff])
+            ->whereBetween('longitude', [$lng - $lngDiff, $lng + $lngDiff])
             ->where('status', 'active')
+            ->having('distance', '<=', $radius)
             ->orderBy('distance')
             ->limit(10)
             ->with([
@@ -39,6 +48,7 @@ class HomeAssetController extends Controller
                     }
                 }
             ])
+            ->withCount('reviews')
             ->withAvg('reviews as reviews_avg_rating', 'rating')
             ->get()
             ->map(function ($asset) {

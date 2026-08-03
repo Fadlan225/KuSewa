@@ -307,7 +307,7 @@ class ChatController extends Controller
             return response()->json(['error' => 'Pesan hanya dapat diedit dalam waktu 5 menit setelah dikirim.'], 403);
         }
 
-        $hasReplies = \App\Models\message::where('reply_to_id', $message->id)->exists();
+        $hasReplies = message::where('reply_to_id', $message->id)->exists();
         if ($hasReplies) {
             return response()->json(['error' => 'Pesan yang sudah dibalas tidak dapat diedit'], 403);
         }
@@ -435,3 +435,4 @@ class ChatController extends Controller
         return redirect()->route('chat.index', ['room_id' => $room->id]);
     }
 }
+

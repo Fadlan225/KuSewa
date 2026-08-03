@@ -3,10 +3,14 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\AssetView;
+use App\Models\favorite;
+
 use Illuminate\Support\Facades\Cache;
 use App\Models\asset_category;
 use App\Models\asset_type;
 use App\Models\asset;
+use App\Models\asset_pricing;
 use App\Models\search_log;
 use App\Models\booking;
 
@@ -73,8 +77,8 @@ class HomeController extends Controller
      */
     private function getPriceDistribution($assetIds = null): array
     {
-        $query = \App\Models\asset_pricing::orderBy('id');
-        
+        $query = asset_pricing::orderBy('id');
+
         if ($assetIds !== null) {
             $query->whereIn('asset_id', $assetIds);
         } else {
@@ -99,7 +103,7 @@ class HomeController extends Controller
                 $priceDistribution[$idx]++;
             }
         }
-        
+
         return $priceDistribution;
     }
 
@@ -132,27 +136,14 @@ class HomeController extends Controller
             return $asset;
         };
 
-        $withCommonRelations = [
-            'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
-            'defaultPricing:id,asset_id,price',
-            'type:id,name,allow_units,rental_unit,category_id',
-            'favorites' => function ($q) {
-                if (auth()->check()) {
-                    $q->select(['id', 'user_id', 'asset_id'])->where('user_id', auth()->id());
-                } else {
-                    $q->whereRaw('1=0');
-                }
-            }
-        ];
-
         // 2. Populer Minggu Ini
         $popularAssets = asset::where('status', 'active')
-            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
+            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
             ->withCount(['bookings', 'views', 'favorites', 'reviews'])
             ->withAvg('reviews as reviews_avg_rating', 'rating')
             ->orderByRaw('((IFNULL(bookings_count, 0) * 5) + (IFNULL(views_count, 0) * 1) + (IFNULL(favorites_count, 0) * 3) + (IFNULL(reviews_count, 0) * 2) + (IFNULL(reviews_avg_rating, 0) * 2)) DESC')
             ->limit(10)
-            ->with($withCommonRelations)
+            ->withCommonRelations()
             ->get()
             ->map($mapAsset);
 
@@ -166,7 +157,7 @@ class HomeController extends Controller
 
         // 3. Terakhir Dilihat (Perlu login)
         if (auth()->check()) {
-            $viewedAssetIds = \App\Models\AssetView::where('user_id', auth()->id())
+            $viewedAssetIds = AssetView::where('user_id', auth()->id())
                 ->orderByDesc('last_viewed')
                 ->limit(10)
                 ->pluck('asset_id');
@@ -174,9 +165,10 @@ class HomeController extends Controller
             if ($viewedAssetIds->isNotEmpty()) {
                 $viewedAssets = asset::whereIn('id', $viewedAssetIds)
                     ->where('status', 'active')
-                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
-                    ->with($withCommonRelations)
-                    ->withAvg('reviews as reviews_avg_rating', 'rating')
+                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
+                    ->withCommonRelations()
+                    ->withCount('reviews')
+            ->withAvg('reviews as reviews_avg_rating', 'rating')
                     ->get();
 
                 // Urutkan kembali sesuai dengan urutan id di array viewedAssetIds
@@ -196,7 +188,7 @@ class HomeController extends Controller
 
         // 4. Karena anda menyukai (Perlu login)
         if (auth()->check()) {
-            $favTypes = \App\Models\favorite::where('favorites.user_id', auth()->id())
+            $favTypes = favorite::where('favorites.user_id', auth()->id())
                 ->join('assets', 'assets.id', '=', 'favorites.asset_id')
                 ->join('asset_types', 'asset_types.id', '=', 'assets.asset_type_id')
                 ->select('asset_types.id', 'asset_types.name', \DB::raw('count(*) as count'))
@@ -208,11 +200,11 @@ class HomeController extends Controller
             foreach ($favTypes as $favType) {
                 $recommendedAssets = asset::where('asset_type_id', $favType->id)
                     ->where('status', 'active')
-                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
+                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
                     ->orderByDesc('id')
-                    ->limit(10)
-                    ->with($withCommonRelations)
-                    ->withAvg('reviews as reviews_avg_rating', 'rating')
+                    ->withCommonRelations()
+                    ->withCount('reviews')
+            ->withAvg('reviews as reviews_avg_rating', 'rating')
                     ->get()
                     ->map($mapAsset);
 
@@ -230,12 +222,13 @@ class HomeController extends Controller
 
         // 5. Rating tertinggi
         $topRatedAssets = asset::where('status', 'active')
-            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
+            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
+            ->withCount('reviews')
             ->withAvg('reviews as reviews_avg_rating', 'rating')
             ->havingRaw('reviews_avg_rating > 0')
             ->orderByDesc('reviews_avg_rating')
             ->limit(10)
-            ->with($withCommonRelations)
+            ->withCommonRelations()
             ->get()
             ->map($mapAsset);
 
@@ -255,14 +248,15 @@ class HomeController extends Controller
             ->whereHas('types.assets', fn($q) => $q->where('status', 'active'))
             ->get();
 
-        $categories->each(function ($category) use (&$sections, $mapAsset, $withCommonRelations) {
+        $categories->each(function ($category) use (&$sections, $mapAsset) {
             $typeIds = $category->types->pluck('id');
 
             $categoryAssets = asset::whereIn('asset_type_id', $typeIds)
                 ->where('status', 'active')
-                ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
-                ->with($withCommonRelations)
-                ->withAvg('reviews as reviews_avg_rating', 'rating')
+                ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
+                ->withCommonRelations()
+                ->withCount('reviews')
+            ->withAvg('reviews as reviews_avg_rating', 'rating')
                 ->latest('id')
                 ->limit(10)
                 ->get()
@@ -315,7 +309,7 @@ class HomeController extends Controller
         $query = asset::where('status', 'active')
             ->select([
                 'id', 'asset_type_id', 'owner_profile_id',
-                'title', 'slug', 'city', 'address', 'status', 'detail'
+                'title', 'slug', 'city', 'subdistrict', 'address', 'status', 'detail'
             ])
             ->with([
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
@@ -327,6 +321,7 @@ class HomeController extends Controller
                         ->where('user_id', auth()->id());
                 }
             ])
+            ->withCount('reviews')
             ->withAvg('reviews as reviews_avg_rating', 'rating');
 
         // Filter keyword
@@ -413,14 +408,14 @@ class HomeController extends Controller
         // Sorting
         if ($sort === 'price_asc') {
             $query->orderBy(
-                \App\Models\asset_pricing::select('price')
+                asset_pricing::select('price')
                     ->whereColumn('asset_id', 'assets.id')
                     ->limit(1),
                 'asc'
             );
         } elseif ($sort === 'price_desc') {
             $query->orderBy(
-                \App\Models\asset_pricing::select('price')
+                asset_pricing::select('price')
                     ->whereColumn('asset_id', 'assets.id')
                     ->limit(1),
                 'desc'
@@ -598,7 +593,7 @@ class HomeController extends Controller
     private function getFacilitiesByType()
     {
         return Cache::remember('facilities_by_type_v2', 3600, function () {
-            return \App\Models\asset_type::select(['id', 'name'])
+            return asset_type::select(['id', 'name'])
                 ->with([
                     'allowedFacilities' => fn($q) => $q
                         ->select(['facilities.id', 'facilities.name', 'facilities.facility_category_id'])
@@ -623,3 +618,5 @@ class HomeController extends Controller
         });
     }
 }
+
+

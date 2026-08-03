@@ -5,6 +5,8 @@ use App\Models\asset;
 use App\Models\AssetView;
 
 use Illuminate\Http\Request;
+use App\Models\booking;
+
 use Illuminate\Support\Facades\DB;
 
 class AssetController extends Controller
@@ -138,7 +140,7 @@ class AssetController extends Controller
         //   Pengecekan aktual dilakukan di backend saat booking.store.
         $bookedDates = collect();
         if ($asset->units->isEmpty()) {
-            $bookedDates = \App\Models\booking::where('asset_id', $asset->id)
+            $bookedDates = booking::where('asset_id', $asset->id)
                 ->whereNull('asset_unit_id')
                 ->where('end_date', '>=', now()->format('Y-m-d'))
                 ->whereNotIn('booking_status', ['cancelled', 'rejected'])
@@ -194,3 +196,4 @@ class AssetController extends Controller
         //
     }
 }
+

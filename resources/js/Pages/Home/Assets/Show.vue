@@ -8,7 +8,11 @@ import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
 import AssetGallery from '@/Components/UI/AssetGallery.vue';
 import AssetUnitList from '@/Components/UI/AssetUnitList.vue';
 import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
+import AssetHostProfile from '@/Components/UI/AssetHostProfile.vue';
+import AssetSpecifications from '@/Components/UI/AssetSpecifications.vue';
+import AssetReviews from '@/Components/UI/AssetReviews.vue';
 
+import AssetCalendar from '@/Components/UI/AssetCalendar.vue';
 import flatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
 import { Indonesian } from "flatpickr/dist/l10n/id.js";
@@ -34,33 +38,7 @@ const props = defineProps({
 
 const page = usePage();
 
-const chatMessage = ref('Halo, apakah masih tersedia?');
 
-const startChat = () => {
-    if (!page.props.auth?.user) {
-        window.location.href = '/login';
-        return;
-    }
-
-    const messageToSend = chatMessage.value.trim() || 'Halo, masih tersedia?';
-
-    router.post(route('chat.start'), {
-        asset_id: props.asset.id,
-        owner_profile_id: props.asset.owner_profile_id,
-        message: messageToSend
-    }, {
-        onSuccess: () => {
-            // Berhasil dialihkan ke halaman chat
-        },
-        onError: (err) => {
-            if(err.error) {
-                alert(err.error);
-            } else {
-                alert('Gagal memulai chat.');
-            }
-        }
-    });
-};
 
 const handleFavorite = async () => {
     if (!page.props.auth?.user) {
@@ -177,54 +155,7 @@ const facilitiesGrouped = computed(() => {
     return Object.values(groups);
 });
 
-// Spesifikasi tambahan dari field `detail` JSON (bukan fasilitas)
-const specification = computed(() => {
-    const d = props.asset.detail || {};
-    // Hapus key lama yang sudah tidak relevan
-    const cleaned = { ...d };
-    delete cleaned.facility;
-    delete cleaned.fasilitas;
-    return cleaned;
-});
 
-// Map nama kunci teknis ke label manusiawi
-const specKeyLabels = {
-    luas_bangunan:    'Luas Bangunan',
-    luas_tanah:       'Luas Tanah',
-    jumlah_lantai:    'Jumlah Lantai',
-    kapasitas:        'Kapasitas',
-    jumlah_kamar:     'Jumlah Kamar',
-    jumlah_kamar_mandi: 'Kamar Mandi',
-    daya_listrik:     'Daya Listrik',
-    lebar:            'Lebar',
-    panjang:          'Panjang',
-    tinggi:           'Tinggi',
-    berat_maksimal:   'Berat Maksimal',
-    visibility:       'Visibilitas',
-    visibility_tinggi:'Visibilitas Tinggi',
-    visibility_rendah:'Visibilitas Rendah',
-    ukuran_billboard: 'Ukuran Billboard',
-    slot_tersedia:    'Slot Tersedia',
-    total_slot:       'Total Slot',
-    jam_operasional:  'Jam Operasional',
-    area:             'Area',
-    kondisi:          'Kondisi',
-    sertifikat:       'Sertifikat',
-    tahun_dibangun:   'Tahun Dibangun',
-};
-
-const formatSpecKey = (key) => {
-    return specKeyLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-};
-
-const formatSpecValue = (key, val) => {
-    if (typeof val === 'boolean') return val ? 'Ya' : 'Tidak';
-    if (val === true || val === 'true') return 'Ya';
-    if (val === false || val === 'false') return 'Tidak';
-    return val;
-};
-
-const getSpecKeys = computed(() => Object.keys(specification.value));
 
 const selectedUnitId = ref(null);
 
@@ -240,7 +171,7 @@ const showDateError = ref(false);
 const submitBooking = () => {
     // Mencegah booking jika memiliki unit tapi belum pilih unit
     if (props.asset.units && props.asset.units.length > 0 && !form.pricing_id) {
-        document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('pilihan-unit')?.scrollIntoView({ behavior: 'smooth' });
         return;
     }
 
@@ -301,48 +232,22 @@ const handleUnitSelect = ({ unit_id, pricing_id, price }) => {
 
 const handleBottomBarSubmit = () => {
     if (props.asset.units && props.asset.units.length > 0) {
-        document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('pilihan-unit')?.scrollIntoView({ behavior: 'smooth' });
     } else {
         submitBooking();
     }
 };
 
-// Menghitung distribusi rating (5 bintang sampai 1 bintang)
-const reviewDistribution = computed(() => {
-    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    if (props.asset.reviews) {
-        props.asset.reviews.forEach(r => {
-            const rating = Math.round(r.rating);
-            if (counts[rating] !== undefined) {
-                counts[rating]++;
-            }
-        });
-    }
-    const total = props.asset.reviews?.length || 0;
 
-    return [5, 4, 3, 2, 1].map(star => {
-        const count = counts[star];
-        const percentage = total > 0 ? (count / total) * 100 : 0;
-        return { star, count, percentage };
-    });
-});
-
-const showAllReviews = ref(false);
-
-const visibleReviews = computed(() => {
-    if (!props.asset.reviews) return [];
-    if (showAllReviews.value) return props.asset.reviews;
-    return props.asset.reviews.slice(0, 6);
-});
 
 // ==========================================
 // KALENDER SEWA (Sama seperti Search/Filter)
 // ==========================================
-const daysOfWeek = ['Min', 'Sn', 'Sl', 'R', 'Km', 'J', 'Sb'];
+
 const startDate = ref(null);
 const endDate = ref(null);
-const calendarPage = ref(0);
-const transitionName = ref('slide-left');
+
+
 
 const selectedRentalMode = ref(null);
 
@@ -425,156 +330,6 @@ watch([startDate, durationMonths], ([newStart, newDuration]) => {
     }
 });
 
-const monthsData = computed(() => {
-    const today = new Date();
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-
-    const data = [];
-    let generatedCount = 0;
-
-    for (let i = 0; generatedCount < 12; i++) {
-        // Prevent infinite loop jika semua full booked sampai 3 tahun ke depan
-        if (i > 36) break;
-
-        const d = new Date(currentYear, currentMonth + i, 1);
-        const year = d.getFullYear();
-        const month = d.getMonth();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-        const firstDayOfWeek = d.getDay();
-        const title = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
-
-        const weeks = [];
-        let currentWeek = new Array(firstDayOfWeek).fill(null);
-
-        for (let date = 1; date <= daysInMonth; date++) {
-            currentWeek.push(date);
-            if (currentWeek.length === 7) {
-                weeks.push(currentWeek);
-                currentWeek = [];
-            }
-        }
-        if (currentWeek.length > 0) {
-            while (currentWeek.length < 7) currentWeek.push(null);
-            weeks.push(currentWeek);
-        }
-
-        // Filter minggu yang memiliki setidaknya 1 tanggal tersedia (bukan past & bukan booked)
-        const availableWeeks = weeks.filter(week => {
-            return week.some(date => {
-                if (date === null) return false;
-                return !(isPastDate(year, month, date) || isDateBooked(year, month, date));
-            });
-        });
-
-        // Hanya masukkan bulan jika ada minimal 1 minggu yang tersedia
-        if (availableWeeks.length > 0) {
-            data.push({
-                year,
-                month,
-                title,
-                weeks: availableWeeks
-            });
-            generatedCount++;
-        }
-    }
-    return data;
-});
-
-const nextMonth = () => {
-    if (calendarPage.value < monthsData.value.length - 2) {
-        transitionName.value = 'slide-left';
-        calendarPage.value++;
-    }
-};
-
-const prevMonth = () => {
-    if (calendarPage.value > 0) {
-        transitionName.value = 'slide-right';
-        calendarPage.value--;
-    }
-};
-
-const selectDate = (year, month, date) => {
-    const selected = new Date(year, month, date);
-
-    // Blokir tanggal masa lalu
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    if (selected < today) return;
-
-    // Blokir tanggal yang sudah dibooking
-    if (isDateBooked(year, month, date)) return;
-
-    if (activeScheduleMode.value === 'hour' || activeScheduleMode.value === 'month') {
-        startDate.value = selected;
-    } else {
-        if (!startDate.value || (startDate.value && endDate.value)) {
-            startDate.value = selected;
-            endDate.value = null;
-        } else if (selected < startDate.value) {
-            // Cek apakah ada booked date di antara selected dan startDate
-            let hasBookedBetween = false;
-            if (props.bookedDates && props.bookedDates.length > 0) {
-                let tempDate = new Date(selected);
-                while (tempDate <= startDate.value) {
-                    if (isDateBooked(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate())) {
-                        hasBookedBetween = true;
-                        break;
-                    }
-                    tempDate.setDate(tempDate.getDate() + 1);
-                }
-            }
-            if (hasBookedBetween) {
-                startDate.value = selected; // Reset ke tanggal ini saja
-            } else {
-                endDate.value = startDate.value;
-                startDate.value = selected;
-            }
-        } else if (selected > startDate.value) {
-            // Cek apakah ada booked date di antara startDate dan selected
-            let hasBookedBetween = false;
-            if (props.bookedDates && props.bookedDates.length > 0) {
-                let tempDate = new Date(startDate.value);
-                while (tempDate <= selected) {
-                    if (isDateBooked(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate())) {
-                        hasBookedBetween = true;
-                        break;
-                    }
-                    tempDate.setDate(tempDate.getDate() + 1);
-                }
-            }
-            if (hasBookedBetween) {
-                startDate.value = selected; // reset
-            } else {
-                endDate.value = selected;
-            }
-        }
-    }
-};
-
-const isPastDate = (year, month, date) => {
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const check = new Date(year, month, date);
-    return check < today;
-};
-
-const isDateBooked = (year, month, date) => {
-    if (!props.bookedDates || props.bookedDates.length === 0) return false;
-    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-    const checkDate = new Date(formattedDate);
-    checkDate.setHours(0,0,0,0);
-
-    return props.bookedDates.some(booked => {
-        const from = new Date(booked.from);
-        from.setHours(0,0,0,0);
-        const to = new Date(booked.to);
-        to.setHours(0,0,0,0);
-        return checkDate >= from && checkDate <= to;
-    });
-};
-
 const flatpickrConfig = computed(() => {
     // Akses durationMonths.value di sini secara langsung agar Vue melacak dependency-nya!
     // Jika diakses di dalam closure, Vue TIDAK akan melacaknya.
@@ -641,25 +396,6 @@ const flatpickrConfig = computed(() => {
         }
     };
 });
-
-const isStartDate = (year, month, date) => {
-    if (!startDate.value) return false;
-    return startDate.value.getFullYear() === year && startDate.value.getMonth() === month && startDate.value.getDate() === date;
-};
-
-
-
-const isEndDate = (year, month, date) => {
-    if (!endDate.value) return false;
-    return endDate.value.getFullYear() === year && endDate.value.getMonth() === month && endDate.value.getDate() === date;
-};
-
-const isInRange = (year, month, date) => {
-    if (activeScheduleMode.value === 'hour') return false;
-    if (!startDate.value || !endDate.value) return false;
-    const current = new Date(year, month, date);
-    return current > startDate.value && current < endDate.value;
-};
 
 const clearDates = () => {
     startDate.value = null;
@@ -761,14 +497,7 @@ const formattedDateRange = computed(() => {
 });
 
 // Calendar Touch Gestures
-const touchStartX = ref(0);
-const touchEndX = ref(0);
-const handleTouchStart = (e) => { touchStartX.value = e.changedTouches[0].screenX; };
-const handleTouchEnd = (e) => {
-    touchEndX.value = e.changedTouches[0].screenX;
-    if (touchEndX.value < touchStartX.value - 50) nextMonth();
-    if (touchEndX.value > touchStartX.value + 50) prevMonth();
-};
+
 
 </script>
 
@@ -818,65 +547,9 @@ const handleTouchEnd = (e) => {
             <!-- KIRI (Detail) -->
             <div class="lg:col-span-2 space-y-10">
 
-                <!-- Info Host -->
-                <div class="flex items-center gap-4 pb-8 border-b border-gray-200">
-                    <div class="w-14 h-14 rounded-full overflow-hidden shrink-0">
-                        <img
-                            v-if="asset.owner_profile?.user?.profile_photo"
-                            :src="asset.owner_profile.user.profile_photo"
-                            class="w-full h-full object-cover"
-                        />
-                        <div
-                            v-else
-                            class="w-full h-full flex items-center justify-center bg-[#0A2540] text-white font-bold text-lg uppercase tracking-wider"
-                        >
-                            {{ asset.owner_profile?.user?.name ? asset.owner_profile.user.name.substring(0, 2) : 'AN' }}
-                        </div>
-                    </div>
+                <AssetHostProfile :assetId="asset.id" :ownerProfile="asset.owner_profile" />
 
-                    <div>
-                        <h2 class="flex items-center gap-1.5 text-lg font-extrabold text-[#0A2540]">
-                            Pemilik Aset : {{ asset.owner_profile?.user?.name || 'Anonim' }}
-                            <svg v-if="asset.owner_profile?.status === 'verified'" class="w-[18px] h-[18px] text-green-500" viewBox="0 0 24 24" fill="currentColor" title="Terverifikasi">
-                                <path d="M23 11.99l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2-3.4.14-3.4-.14-1.89 3.2-3.61.82.34 3.69L1 11.99l2.44 2.79-.34 3.69 3.61.82 1.89 3.2 3.4-.14 3.4.14 1.89-3.2 3.61-.82-.34-3.69L23 11.99zm-13.06 5.86l-4.59-4.58 1.41-1.41 3.18 3.18 8.18-8.18 1.41 1.41-9.59 9.58z"/>
-                            </svg>
-                        </h2>
-                        <div class="text-sm text-gray-500 mt-0.5 flex flex-wrap items-center gap-x-1">
-                            <span>Informasi Kontak</span>
-                            <template v-if="asset.owner_profile?.user?.phone">
-                                <span class="font-bold text-gray-300">·</span>
-                                <a :href="'https://wa.me/' + asset.owner_profile.user.phone" target="_blank" class="hover:underline text-[#0A2540] flex items-center gap-1 font-medium">
-                                    <i class="fa-brands fa-whatsapp text-green-500"></i> {{ asset.owner_profile.user.phone }}
-                                </a>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Hubungi Pemilik Card (MOBILE ONLY) -->
-                <div v-if="asset.owner_profile" class="block lg:hidden mt-6 pb-8 border-b border-gray-200">
-                    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-                        <h3 class="text-lg font-bold text-[#0A2540] mb-4">Hubungi Pemilik</h3>
-                        <div class="flex items-center gap-3 border-b-2 border-gray-800 pb-2 focus-within:border-[#FFC000] transition-colors">
-                            <i class="fa-regular fa-comment-dots text-xl text-[#FFC000]"></i>
-                            <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu ke pemilik..." class="w-full bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
-                            <button @click="startChat" class="text-[#FFC000] font-bold text-sm hover:text-[#e6ad00] transition-colors whitespace-nowrap">
-                                kirim
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Spesifikasi Tambahan (JSON) -->
-                <div v-if="getSpecKeys.length > 0" class="py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold mb-4">Informasi Umum</h3>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
-                        <div v-for="key in getSpecKeys" :key="key" class="flex flex-col">
-                            <span class="text-gray-500 text-sm mb-1">{{ formatSpecKey(key) }}</span>
-                            <span class="font-bold text-[#0A2540]">{{ formatSpecValue(key, specification[key]) }}</span>
-                        </div>
-                    </div>
-                </div>
+                <AssetSpecifications :detail="asset.detail" />
 
                 <!-- Deskripsi -->
                 <div class="py-6 border-b border-gray-200">
@@ -920,129 +593,25 @@ const handleTouchEnd = (e) => {
                 </div>
 
                 <!-- SEKSI PEMILIHAN TANGGAL (KALENDER) -->
-                <div id="kalender-sewa" class="pb-10 border-b border-gray-200">
-                    <!-- Toggle Sewa Harian / Bulanan (Khusus Apartemen) -->
-                    <div v-if="asset.type?.name === 'Apartemen'" class="flex items-center gap-2 mb-6 bg-slate-100 p-1.5 rounded-xl w-fit">
-                        <button
-                            @click="selectedRentalMode = 'night'"
-                            class="px-5 py-2 rounded-lg text-sm font-bold transition-all"
-                            :class="activeScheduleMode === 'night' ? 'bg-white text-[#0A2540] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
-                            Sewa Harian
-                        </button>
-                        <button
-                            @click="selectedRentalMode = 'month'"
-                            class="px-5 py-2 rounded-lg text-sm font-bold transition-all"
-                            :class="activeScheduleMode === 'month' ? 'bg-white text-[#0A2540] shadow-sm' : 'text-slate-500 hover:text-slate-700'">
-                            Sewa Bulanan
-                        </button>
-                    </div>
-                    <h2 class="text-2xl font-extrabold text-[#0A2540] mb-1">
-                        <span v-if="activeScheduleMode === 'hour' && startDate">Jadwal sewa untuk {{ asset.title || 'Aset ini' }}</span>
-                        <span v-else-if="activeScheduleMode === 'month' && startDate">{{ durationMonths }} Bulan di {{ asset.title || 'Sini' }}</span>
-                        <span v-else-if="nightsCount && activeScheduleMode === 'day'">{{ nightsCount }} malam di {{ asset.title || 'Kota ini' }}</span>
-                        <span v-else>Pilih tanggal sewa</span>
-                    </h2>
-
-                    <!-- Error Alert -->
-                    <div v-if="showDateError" class="mt-3 mb-2 text-red-500 font-bold text-sm bg-red-50 p-3.5 rounded-xl border border-red-200 flex items-center gap-2">
-                        <i class="fa-solid fa-circle-exclamation text-lg"></i>
-                        Silakan pilih tanggal penyewaan terlebih dahulu!
-                    </div>
-
-                    <p class="text-sm text-gray-500 mb-8 mt-1">{{ formattedDateRange }}</p>
-
-                    <div class="bg-white rounded-2xl relative w-full overflow-hidden touch-pan-y" @touchstart.passive="handleTouchStart" @touchend.passive="handleTouchEnd">
-                        <!-- Header Bulan (Hanya untuk kalender grid) -->
-                        <div v-if="['day', 'night'].includes(activeScheduleMode)" class="flex justify-between items-center mb-10 px-2 pt-6">
-                            <button @click="prevMonth" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition" :class="calendarPage === 0 ? 'opacity-30 cursor-not-allowed' : ''">
-                                <i class="fa-solid fa-chevron-left text-[#0A2540] text-sm"></i>
-                            </button>
-                            <div class="flex gap-8 w-full px-4">
-                                <h3 class="flex-1 text-center text-[15px] font-bold text-[#0A2540]">{{ monthsData[calendarPage]?.title }}</h3>
-                                <h3 class="flex-1 text-center text-[15px] font-bold text-[#0A2540] hidden sm:block">{{ monthsData[calendarPage + 1]?.title }}</h3>
-                            </div>
-                            <button @click="nextMonth" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
-                                <i class="fa-solid fa-chevron-right text-[#0A2540] text-sm"></i>
-                            </button>
-                        </div>
-
-                        <!-- Grid Kalender (Hanya untuk Day/Night) -->
-                        <div v-if="['day', 'night'].includes(activeScheduleMode)" class="relative overflow-hidden min-h-[280px]">
-                            <transition :name="transitionName" mode="out-in">
-                                <div :key="calendarPage" class="flex gap-12 sm:px-4 w-full">
-                                    <!-- Kalender Bulan Kiri -->
-                                    <div class="flex-1">
-                                        <div class="grid grid-cols-7 gap-y-6 mb-1">
-                                            <div v-for="day in daysOfWeek" :key="'d1-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
-
-                                            <template v-for="(week, wIdx) in monthsData[calendarPage]?.weeks" :key="'w1-'+wIdx">
-                                                <div v-for="(date, dIdx) in week" :key="'d1-'+wIdx+'-'+dIdx" class="relative flex justify-center items-center h-10">
-                                                    <template v-if="date">
-                                                        <!-- KONEKTOR RENTANG -->
-                                                        <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                                        <div v-else-if="isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                                        <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-
-                                                        <!-- BULATAN TANGGAL -->
-                                                        <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
-                                                            :class="[
-                                                                (isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
-                                                                { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                                'text-[#1A1A1A]': isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                                'text-[#0A2540]': !isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                                'bg-red-50 text-red-300': isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date) }
-                                                            ]"
-                                                            @click="!(isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date)) && selectDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)">
-                                                            <span>{{ date }}</span>
-                                                        </div>
-
-                                                        <!-- TANDA MULAI & SELESAI -->
-                                                        <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                                        <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
-                                                    </template>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-
-                                    <!-- Kalender Bulan Kanan (Hanya Desktop) -->
-                                    <div class="flex-1 hidden sm:block">
-                                        <div class="grid grid-cols-7 gap-y-6 mb-1">
-                                            <div v-for="day in daysOfWeek" :key="'d2-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
-
-                                            <template v-for="(week, wIdx) in monthsData[calendarPage + 1]?.weeks" :key="'w2-'+wIdx">
-                                                <div v-for="(date, dIdx) in week" :key="'d2-'+wIdx+'-'+dIdx" class="relative flex justify-center items-center h-10">
-                                                    <template v-if="date">
-                                                        <!-- KONEKTOR RENTANG -->
-                                                        <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                                        <div v-else-if="isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                                        <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-
-                                                        <!-- BULATAN TANGGAL -->
-                                                        <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
-                                                            :class="[
-                                                                (isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
-                                                                { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                                'text-[#1A1A1A]': isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                                'text-[#0A2540]': !isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                                'bg-red-50 text-red-300': isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) }
-                                                            ]"
-                                                            @click="!(isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)) && selectDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)">
-                                                            <span>{{ date }}</span>
-                                                        </div>
-
-                                                        <!-- TANDA MULAI & SELESAI -->
-                                                        <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                                        <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
-                                                    </template>
-                                                </div>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-                            </transition>
-                        </div>
-
+                <AssetCalendar
+                    :assetTitle="asset.title"
+                    :assetType="asset.type?.name"
+                    :bookedDates="bookedDates"
+                    :startDate="startDate"
+                    :endDate="endDate"
+                    :selectedRentalMode="selectedRentalMode"
+                    :activeScheduleMode="activeScheduleMode"
+                    :startTime="startTime"
+                    :endTime="endTime"
+                    :durationMonths="durationMonths"
+                    :nightsCount="nightsCount"
+                    :showDateError="showDateError"
+                    :formattedDateRange="formattedDateRange"
+                    @update:startDate="startDate = $event"
+                    @update:endDate="endDate = $event"
+                    @update:selectedRentalMode="selectedRentalMode = $event"
+                    @clearError="showDateError = false"
+                >
                         <!-- UI KHUSUS HOUR (Jam) -->
                         <div v-if="activeScheduleMode === 'hour'" class="pt-6">
                             <div class="mb-6">
@@ -1096,12 +665,11 @@ const handleTouchEnd = (e) => {
                                 Kosongkan tanggal
                             </button>
                         </div>
-                    </div>
-                </div>
+                </AssetCalendar>
 
             <!-- SEKSI PEMILIHAN UNIT (Jika ada units) -->
-            <div v-if="asset.units && asset.units.length > 0" id="pilihan-kamar" class="py-10 border-b border-gray-200">
-                <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Pilihan Unit</h2>
+            <div v-if="asset.units && asset.units.length > 0" id="pilihan-unit" class="py-10 border-b border-gray-200">
+                <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Unit</h2>
                 <AssetUnitList
                     :units="asset.units"
                     :rentalUnitLabel="rentalUnitLabel(activeScheduleMode)"
@@ -1149,9 +717,9 @@ const handleTouchEnd = (e) => {
 
                         <button
                             v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
-                            @click="() => document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' })"
+                            @click="() => document.getElementById('pilihan-unit')?.scrollIntoView({ behavior: 'smooth' })"
                             class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg mb-4">
-                            Pilih Kamar
+                            Pilih Unit
                         </button>
                         <button
                             v-else
@@ -1212,92 +780,11 @@ const handleTouchEnd = (e) => {
                     <!-- Container Utama: Summary & Daftar Ulasan -->
                     <div class="flex flex-col gap-8">
 
-                        <!-- CARD SUMMARY (Rating Keseluruhan) -->
-                        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 max-w-xl flex flex-col sm:flex-row items-center sm:items-stretch gap-6 sm:gap-0">
-
-                            <!-- Sisi Kiri: Rata-rata -->
-                            <div class="flex flex-col items-center justify-center sm:pr-8 sm:border-r border-gray-100 min-w-[150px]">
-                                <!-- Tampilkan rating atau strip jika belum ada ulasan -->
-                                <span class="text-5xl font-black text-[#0A2540] tracking-tighter">
-                                    {{ asset.reviews_avg_rating ? parseFloat(asset.reviews_avg_rating).toFixed(1) : '-' }}
-                                </span>
-
-                                <!-- Bintang Rata-rata -->
-                                <div class="flex items-center gap-1 mt-3">
-                                    <i v-for="i in 5" :key="i"
-                                    class="fa-solid fa-star text-sm"
-                                    :class="i <= Math.round(asset.reviews_avg_rating || 0) ? 'text-[#FFC000]' : 'text-gray-200'">
-                                    </i>
-                                </div>
-
-                                <span class="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">
-                                    {{ asset.reviews_count || 0 }} Penilaian
-                                </span>
-                            </div>
-
-                            <!-- Sisi Kanan: Progress Bar Breakdown -->
-                            <div class="flex-grow sm:pl-8 flex flex-col justify-center gap-2 w-full">
-                                <div v-for="item in reviewDistribution" :key="item.star" class="flex items-center gap-3 text-sm">
-                                    <div class="flex items-center gap-1 w-8 justify-end text-gray-500 font-medium text-xs">
-                                        {{ item.star }} <i class="fa-solid fa-star text-[#FFC000] text-[10px]"></i>
-                                    </div>
-
-                                    <!-- Progress Bar dinamis -->
-                                    <div class="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden">
-                                        <div class="h-full bg-[#FFC000] rounded-full transition-all duration-500" :style="{ width: item.percentage + '%' }"></div>
-                                    </div>
-
-                                    <!-- Jumlah ulasan per bintang -->
-                                    <div class="w-4 text-xs font-medium text-gray-400 text-right">{{ item.count }}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div v-if="asset.reviews && asset.reviews.length > 0">
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <!-- Card Individual Ulasan -->
-                                <div v-for="review in visibleReviews" :key="review.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                    <!-- Header Card Ulasan: Profil & Bintang -->
-                                    <div class="flex items-start justify-between mb-3">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-10 h-10 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
-                                                <!-- Inisial Nama atau Foto -->
-                                                <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" class="w-full h-full object-cover" />
-                                                <span v-else>{{ review.user?.name?.charAt(0) || 'U' }}</span>
-                                            </div>
-                                            <div>
-                                                <p class="font-bold text-[#0A2540] text-sm">{{ review.user?.name || 'Anonim' }}</p>
-                                                <p class="text-xs text-gray-500">{{ formatDate(review.created_at) }}</p>
-                                            </div>
-                                        </div>
-                                        <!-- Bintang Ulasan User -->
-                                        <div class="flex gap-0.5">
-                                            <i v-for="i in 5" :key="i" class="fa-solid fa-star text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'"></i>
-                                        </div>
-                                    </div>
-
-                                    <!-- Teks Ulasan -->
-                                    <p class="text-sm text-gray-600 leading-relaxed">
-                                        "{{ review.review }}"
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div v-if="asset.reviews.length > 6 && !showAllReviews" class="mt-8">
-                                <button @click="showAllReviews = true" class="px-6 py-3 rounded-lg border border-black bg-white hover:bg-gray-50 text-[#222222] font-semibold text-[15px] transition-colors inline-block">
-                                    Tampilkan ke-{{ asset.reviews.length }} ulasan
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- EMPTY STATE (Jika belum ada ulasan) -->
-                        <div v-else class="flex flex-col items-center justify-center py-16 text-center">
-                            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
-                                <i class="fa-solid fa-star text-2xl text-gray-200"></i>
-                            </div>
-                            <h3 class="text-[#0A2540] font-bold text-lg mb-1">Belum Ada Ulasan</h3>
-                            <p class="text-sm text-gray-500">Jadilah yang pertama memberikan ulasan!</p>
-                        </div>
+                        <AssetReviews
+                            :reviews="asset.reviews"
+                            :reviewsCount="asset.reviews_count"
+                            :averageRating="asset.reviews_avg_rating"
+                        />
 
                     </div>
                 </div>
@@ -1313,26 +800,9 @@ const handleTouchEnd = (e) => {
         :formattedDateRange="formattedDateRange"
         :periodLabel="rentalUnitLabel(activeScheduleMode)"
         :disabled="asset.status !== 'active' || (!asset.pricings?.length && !asset.units?.length) || !startDate || durationCount === 0"
-        :buttonText="(asset.units && asset.units.length > 0) ? 'Pilih Kamar' : 'Booking'"
+        :buttonText="(asset.units && asset.units.length > 0) ? 'Pilih Unit' : 'Booking'"
         @submit="handleBottomBarSubmit"
     />
 
     </AppLayout>
 </template>
-
-<style scoped>
-.no-scrollbar::-webkit-scrollbar { display: none; }
-.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-/* Calendar Animations */
-.slide-left-enter-active,
-.slide-left-leave-active,
-.slide-right-enter-active,
-.slide-right-leave-active {
-    transition: all 0.2s ease-out;
-}
-.slide-left-enter-from { opacity: 0; transform: translateX(30px); }
-.slide-left-leave-to { opacity: 0; transform: translateX(-30px); }
-.slide-right-enter-from { opacity: 0; transform: translateX(-30px); }
-.slide-right-leave-to { opacity: 0; transform: translateX(30px); }
-</style>
