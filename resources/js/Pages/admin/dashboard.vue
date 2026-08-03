@@ -1,186 +1,331 @@
 ﻿<script setup>
-import { Head } from '@inertiajs/vue3';
-import AdminSidebar from '@/Pages/admin/AdminSidebar.vue';
+import { ref } from 'vue';
+import { Head, usePage } from '@inertiajs/vue3';
+import AdminSidebar from '@/Components/AdminSidebar.vue';
+
+const page = usePage();
+
+const props = defineProps({
+    admin: {
+        type: Object,
+        default: () => ({
+            name: 'Super Admin',
+            role: 'Administrator Utama',
+            email: 'admin@kusewa.id'
+        })
+    },
+    stats: {
+        type: Object,
+        default: () => ({
+            totalUsers: 1420,
+            totalProperties: 354,
+            pendingApprovals: 12,
+            monthlyRevenue: 'Rp 145.200.000'
+        })
+    }
+});
+
+// Tab Aktif Kategori Manajemen Admin
+const activeTab = ref('Overview');
+const tabs = ['Overview', 'Verifikasi Aset', 'Pengguna', 'Laporan Keuangan'];
+
+// Mock Data Log Aktivitas & Verifikasi Terbaru di kusewa.id
+const recentActivities = ref([
+    { title: 'Pendaftaran Owner Baru', desc: 'Ahmad Fauzi mengajukan akun Owner', time: '10 menit lalu', type: 'user', status: 'Pending' },
+    { title: 'Listing Kos Baru', desc: 'Kos Griya Mawar #02 (Samarinda)', time: '25 menit lalu', type: 'property', status: 'Review' },
+    { title: 'Pencairan Dana (Withdrawal)', desc: 'Owner Budi Santoso mengajukan Rp 4.500.000', time: '1 jam lalu', type: 'finance', status: 'Diproses' },
+    { title: 'Pengaduan Sewa', desc: 'Kendala fasilitas AC di Apt Orchard B12', time: '3 jam lalu', type: 'report', status: 'Open' },
+    { title: 'Verifikasi NIK Sukses', desc: 'Validasi otomatis Dukcapil untuk NIK 6471...', time: '5 jam lalu', type: 'system', status: 'Selesai' },
+]);
 </script>
 
 <template>
-    <Head title="Admin Dashboard" />
+    <Head title="Admin Dashboard - kusewa.id" />
 
-    <div class="min-h-screen bg-[#F8FAFC] text-slate-800 antialiased">
-        <div class="mx-auto flex min-h-screen max-w-[1600px] gap-6 p-4 lg:p-6">
-            <!-- Sidebar Component -->
+    <!-- Layout Utama Admin -->
+    <div class="h-screen bg-[#F3F5F8] text-slate-700 font-sans flex antialiased selection:bg-[#FFC000]/30 overflow-hidden">
+
+        <!-- ==================== SIDEBAR COMPONENT ==================== -->
+        <div class="h-full flex-shrink-0">
             <AdminSidebar />
-
-            <!-- Main Content Area -->
-            <main class="flex-1 space-y-6 overflow-hidden">
-                <!-- Top Navbar / Header -->
-                <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <nav class="text-xs text-slate-400">
-                            <span>Administrator</span> / <span class="font-medium text-slate-700">Dashboard Statistik</span>
-                        </nav>
-                        <h1 class="mt-1 text-xl font-bold text-slate-900">Sistem Pengelolaan Aset</h1>
-                    </div>
-
-                    <!-- Header Action Controls -->
-                    <div class="flex items-center gap-3">
-                        <div class="relative">
-                            <input
-                                type="text"
-                                placeholder="Cari aset, user, transaksi..."
-                                class="w-56 rounded-xl border border-slate-200 bg-white py-1.5 pl-3 pr-8 text-xs text-slate-700 placeholder-slate-400 transition focus:border-[#FFC000] focus:outline-none focus:ring-1 focus:ring-[#FFC000]"
-                            />
-                        </div>
-                        <button class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 transition hover:bg-slate-100">
-                            <i class="fa-regular fa-bell text-sm"></i>
-                            <span class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#FFC000]"></span>
-                        </button>
-                        <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
-                            <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 font-bold text-xs text-white">
-                                AD
-                            </div>
-                            <span class="text-xs font-semibold text-slate-700">Admin</span>
-                        </div>
-                    </div>
-                </header>
-
-                <!-- Key Stat Cards (Sesuai Spesifikasi Dokumen) -->
-                <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <!-- Total Pendapatan Biaya Layanan -->
-                    <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-xs font-medium text-slate-400">Pendapatan Layanan</p>
-                                <h3 class="mt-1 text-xl font-bold text-slate-900">Rp 48.500.000</h3>
-                            </div>
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-[#FFC000] shadow-sm">
-                                <i class="fa-solid fa-wallet text-sm"></i>
-                            </div>
-                        </div>
-                        <div class="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2.5 text-[11px]">
-                            <span class="font-bold text-emerald-600">+12%</span>
-                            <span class="text-slate-400">dari bulan lalu</span>
-                        </div>
-                    </div>
-
-                    <!-- Total Aset Tersedia (Properti & Baliho) -->
-                    <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-xs font-medium text-slate-400">Aset Aktif / Tersedia</p>
-                                <h3 class="mt-1 text-xl font-bold text-slate-900">1,248 Aset</h3>
-                            </div>
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
-                                <i class="fa-solid fa-building text-sm"></i>
-                            </div>
-                        </div>
-                        <div class="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2.5 text-[11px]">
-                            <span class="text-slate-500 font-medium">850 Properti</span>
-                            <span class="text-slate-300">•</span>
-                            <span class="text-slate-500 font-medium">398 Baliho</span>
-                        </div>
-                    </div>
-
-                    <!-- Menunggu Validasi -->
-                    <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-xs font-medium text-slate-400">Menunggu Validasi</p>
-                                <h3 class="mt-1 text-xl font-bold text-slate-900">18 Pengajuan</h3>
-                            </div>
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFC000] text-slate-950 shadow-sm">
-                                <i class="fa-solid fa-clock-rotate-left text-sm"></i>
-                            </div>
-                        </div>
-                        <div class="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2.5 text-[11px]">
-                            <span class="font-bold text-amber-600">Perlu tindakan admin</span>
-                        </div>
-                    </div>
-
-                    <!-- Total User Terdaftar -->
-                    <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <p class="text-xs font-medium text-slate-400">Pengguna Terdaftar</p>
-                                <h3 class="mt-1 text-xl font-bold text-slate-900">3,420 User</h3>
-                            </div>
-                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
-                                <i class="fa-solid fa-users text-sm"></i>
-                            </div>
-                        </div>
-                        <div class="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2.5 text-[11px]">
-                            <span class="font-bold text-emerald-600">2,800 Penyewa</span>
-                            <span class="text-slate-300">•</span>
-                            <span class="font-bold text-slate-600">620 Pemilik</span>
-                        </div>
-                    </div>
-                </section>
-
-                <!-- Visual Charts Section (Grafik Transaksi & Pengguna) -->
-                <section class="grid gap-6 xl:grid-cols-3">
-                    <!-- Grafik Transaksi Bulanan -->
-                    <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100 xl:col-span-2">
-                        <div class="flex items-center justify-between pb-3">
-                            <div>
-                                <h3 class="text-sm font-bold text-slate-800">Statistik Transaksi Bulanan</h3>
-                                <p class="text-xs text-slate-400">Ringkasan transaksi berhasil, pending, dan ditolak</p>
-                            </div>
-                            <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">Tahun 2026</span>
-                        </div>
-                        
-                        <!-- Visual representation of line chart -->
-                        <div class="mt-2 flex h-48 w-full items-center justify-center rounded-xl bg-slate-50 p-2">
-                            <svg viewBox="0 0 500 120" class="h-full w-full text-[#FFC000]" fill="none" stroke="currentColor" stroke-width="3">
-                                <path d="M10 100 L70 80 L130 85 L190 40 L250 55 L310 20 L370 45 L430 15 L490 35" stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        
-                        <div class="mt-4 flex items-center justify-around border-t border-slate-100 pt-3 text-xs text-slate-500">
-                            <div class="flex items-center gap-2">
-                                <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Transaksi Berhasil (88%)
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="h-2.5 w-2.5 rounded-full bg-[#FFC000]"></span> Menunggu Validasi (8%)
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="h-2.5 w-2.5 rounded-full bg-rose-500"></span> Ditolak (4%)
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Ringkasan Aset Paling Banyak Disewa -->
-                    <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
-                        <h3 class="text-sm font-bold text-slate-800">Aset Populer & Disewa</h3>
-                        <p class="text-xs text-slate-400 mb-4">Properti & Baliho dengan booking tertinggi</p>
-
-                        <div class="space-y-3.5 text-xs">
-                            <div class="flex items-center justify-between rounded-xl bg-slate-50 p-3">
-                                <div>
-                                    <p class="font-bold text-slate-800">Baliho Sudirman Sp. 4</p>
-                                    <p class="text-[10px] text-slate-400">Kategori: Baliho Digital</p>
-                                </div>
-                                <span class="rounded-md bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">42 Kali Sewa</span>
-                            </div>
-
-                            <div class="flex items-center justify-between rounded-xl bg-slate-50 p-3">
-                                <div>
-                                    <p class="font-bold text-slate-800">Ruko Executive Block A</p>
-                                    <p class="text-[10px] text-slate-400">Kategori: Properti Usaha</p>
-                                </div>
-                                <span class="rounded-md bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">28 Kali Sewa</span>
-                            </div>
-
-                            <div class="flex items-center justify-between rounded-xl bg-slate-50 p-3">
-                                <div>
-                                    <p class="font-bold text-slate-800">Gedung Serbaguna Utama</p>
-                                    <p class="text-[10px] text-slate-400">Kategori: Properti Acara</p>
-                                </div>
-                                <span class="rounded-md bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">19 Kali Sewa</span>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-            </main>
         </div>
+
+        <!-- ==================== MAIN CONTENT ==================== -->
+        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
+
+            <!-- TOPBAR HEADER -->
+            <header class="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-30 shrink-0">
+                <div class="flex items-center gap-3 w-1/3">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                    <input type="text" placeholder="Cari data user, properti, atau sistem..." class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400" />
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <button class="relative p-2 text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-bell text-sm"></i>
+                        <span class="w-1.5 h-1.5 bg-rose-500 rounded-full absolute top-2 right-2"></span>
+                    </button>
+
+                    <div class="h-6 w-[1px] bg-slate-200"></div>
+
+                    <!-- Admin Profile Info -->
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-xl bg-[#0A2540] text-[#FFC000] flex items-center justify-center font-black text-xs shadow-xs">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div class="text-left leading-tight hidden sm:block">
+                            <p class="text-xs font-bold text-slate-800">{{ admin.name }}</p>
+                            <p class="text-[10px] text-amber-600 font-semibold">● Full Access</p>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- BODY CONTENT AREA -->
+            <div class="p-6 space-y-5 max-w-[1400px] w-full mx-auto">
+
+                <!-- TITLE ROW & QUICK ACTION -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-[#0A2540] text-[#FFC000] flex items-center justify-center font-black text-base shadow-sm">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+                        <div>
+                            <h1 class="text-base font-bold text-slate-900 tracking-tight">Panel Kontrol Administrator</h1>
+                            <p class="text-[11px] text-slate-400">Pantau seluruh aktivitas platform, verifikasi aset, dan pengguna kusewa.id</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 text-xs">
+                        <button class="bg-[#0A2540] hover:bg-slate-800 active:scale-95 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
+                            <i class="fa-solid fa-download text-xs text-[#FFC000]"></i>
+                            <span>Export Laporan</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TABS CATEGORY -->
+                <div class="flex items-center gap-6 border-b border-slate-200/80 pb-1 text-xs font-medium">
+                    <button 
+                        v-for="tab in tabs" 
+                        :key="tab"
+                        @click="activeTab = tab"
+                        :class="[
+                            'pb-2 transition relative',
+                            activeTab === tab ? 'text-[#0A2540] font-bold border-b-2 border-[#0A2540]' : 'text-slate-400 hover:text-slate-600'
+                        ]"
+                    >
+                        {{ tab }}
+                    </button>
+                </div>
+
+                <!-- TOP ANALYTICS SECTION: 4 METRICS + SYSTEM HEALTH -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    
+                    <!-- 4 Metric Cards Grid (6 Cols) -->
+                    <div class="lg:col-span-6 grid grid-cols-2 gap-4">
+                        
+                        <!-- Card 1 -->
+                        <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
+                            <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="mt-4">
+                                <span class="text-[11px] font-medium text-slate-400 block">Total Pengguna</span>
+                                <span class="text-xl font-extrabold text-slate-900">{{ stats.totalUsers }} Akun</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
+                            <div class="w-8 h-8 rounded-full bg-amber-50 text-[#0A2540] flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-city text-[#FFC000]"></i>
+                            </div>
+                            <div class="mt-4">
+                                <span class="text-[11px] font-medium text-slate-400 block">Total Listing Properti</span>
+                                <span class="text-xl font-extrabold text-slate-900">{{ stats.totalProperties }} Unit</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
+                            <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <div class="mt-4">
+                                <span class="text-[11px] font-medium text-slate-400 block">Menunggu Verifikasi</span>
+                                <span class="text-xl font-extrabold text-slate-900">{{ stats.pendingApprovals }} Item</span>
+                            </div>
+                        </div>
+
+                        <!-- Card 4 -->
+                        <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
+                            <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div class="mt-4">
+                                <span class="text-[11px] font-medium text-slate-400 block">Omset Platform (Bulan Ini)</span>
+                                <span class="text-base font-extrabold text-slate-900">{{ stats.monthlyRevenue }}</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- System Health & Quick Actions Card (6 Cols) -->
+                    <div class="lg:col-span-6 bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Status Infrastruktur Sistem</h3>
+                                </div>
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">
+                                    Optimal (99.9%)
+                                </span>
+                            </div>
+
+                            <!-- Server Metrics Bars -->
+                            <div class="space-y-3 text-xs">
+                                <div>
+                                    <div class="flex justify-between text-[11px] mb-1">
+                                        <span class="text-slate-500">Penggunaan CPU Server</span>
+                                        <span class="font-bold text-slate-700">24%</span>
+                                    </div>
+                                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="bg-[#0A2540] h-full rounded-full" style="width: 24%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between text-[11px] mb-1">
+                                        <span class="text-slate-500">Kapasitas Database MySQL</span>
+                                        <span class="font-bold text-slate-700">42.8 GB / 100 GB</span>
+                                    </div>
+                                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="bg-amber-500 h-full rounded-full" style="width: 43%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between text-[11px] mb-1">
+                                        <span class="text-slate-500">Storage Gambar & Berkas (Cloud)</span>
+                                        <span class="font-bold text-slate-700">180 GB / 500 GB</span>
+                                    </div>
+                                    <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                                        <div class="bg-blue-600 h-full rounded-full" style="width: 36%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 text-[11px]">
+                            <span class="text-slate-400">Sinkronisasi Terakhir: Baru saja</span>
+                            <button class="text-[#0A2540] font-bold hover:underline flex items-center gap-1">
+                                <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                                <span>Clear Cache</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- BOTTOM 2-COLUMN SECTION: LIVE ACTIVITIES & MODERATION QUEUE -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    
+                    <!-- Col 1: Aktivitas Terbaru Sistem (7 Cols) -->
+                    <div class="lg:col-span-7 bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Log Aktivitas & Tiket Masuk</h3>
+                                <button class="text-[11px] font-bold text-[#0A2540] hover:underline">Lihat Semua Log</button>
+                            </div>
+
+                            <div class="divide-y divide-slate-100">
+                                <div v-for="(act, index) in recentActivities" :key="index" class="py-3 flex items-center justify-between text-xs">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-xs shrink-0 font-bold">
+                                            <i :class="[
+                                                'fa-solid',
+                                                act.type === 'user' ? 'fa-user-plus text-blue-600' :
+                                                act.type === 'property' ? 'fa-house-chimney text-amber-600' :
+                                                act.type === 'finance' ? 'fa-wallet text-emerald-600' :
+                                                act.type === 'report' ? 'fa-triangle-exclamation text-rose-500' : 'fa-check text-slate-600'
+                                            ]"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-800">{{ act.title }}</p>
+                                            <p class="text-[10px] text-slate-400">{{ act.desc }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right shrink-0">
+                                        <span class="text-[10px] font-semibold text-slate-400 block mb-1">{{ act.time }}</span>
+                                        <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
+                                            {{ act.status }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Col 2: Tindakan Cepat Admin (5 Cols) -->
+                    <div class="lg:col-span-5 bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider mb-1">Aksi Moderasi Cepat</h3>
+                            <p class="text-[10px] text-slate-400 mb-4">Pintasan tugas penting untuk menjaga keamanan platform</p>
+
+                            <div class="space-y-2.5 text-xs">
+                                <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                                            <i class="fa-solid fa-id-card"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Validasi Identitas Pemilik</p>
+                                            <p class="text-[10px] text-slate-400">3 NIK baru menunggu pencocokan Dukcapil</p>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                                </button>
+
+                                <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                            <i class="fa-solid fa-building-shield"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Review Listing Properti</p>
+                                            <p class="text-[10px] text-slate-400">5 Kos & Rumah baru diunggah owner</p>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                                </button>
+
+                                <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Persetujuan Withdrawal</p>
+                                            <p class="text-[10px] text-slate-400">4 Permintaan pencairan dana sewa</p>
+                                        </div>
+                                    </div>
+                                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 mt-4 border-t border-slate-100 text-[11px] flex items-center justify-between text-slate-400">
+                            <span>kusewa.id Security Engine</span>
+                            <span class="font-bold text-emerald-600">Secure Protocol Active</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </main>
+
     </div>
 </template>
