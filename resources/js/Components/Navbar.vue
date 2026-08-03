@@ -28,6 +28,8 @@ const hasOwnerProfile = computed(() => {
     return !!(user.owner_profile || user.ownerProfile || user.role === 'owner');
 });
 
+const isAdmin = computed(() => page.props.auth.user?.role === 'admin');
+
 // Data real dari props controller
 const searchHistory = computed(() => page.props.searchHistory || []);
 const trending = computed(() => page.props.trending || []);
@@ -748,6 +750,19 @@ const handleStartSewakan = () => {
                                         >
                                             <i class="fa-solid fa-chart-pie text-[#FFC000] text-sm"></i>
                                             <span class="text-sm">Dashboard Owner</span>
+                                            <i class="fa-solid fa-arrow-right text-[#FFC000] text-xs"></i>
+                                        </Link>
+                                    </template>
+
+                                    <template v-if="isAdmin">
+                                        <div class="h-px bg-gray-100 my-2"></div>
+                                        <Link
+                                            :href="route('admin.dashboard')"
+                                            @click="isUserMenuOpen = false"
+                                            class="flex items-center gap-3 py-2.5 px-4 bg-[#0A2540] hover:bg-[#113a63] text-white rounded-xl font-bold text-xs transition shadow-sm my-1 w-full justify-center"
+                                        >
+                                            <i class="fa-solid fa-shield-halved text-[#FFC000] text-sm"></i>
+                                            <span class="text-sm">Dashboard Admin</span>
                                             <i class="fa-solid fa-arrow-right text-[#FFC000] text-xs"></i>
                                         </Link>
                                     </template>
