@@ -7,7 +7,6 @@ use Inertia\Inertia;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\FavoriteController;
-use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\OwnerDashboardController;
 use App\Http\Controllers\Owner\PropertyController;
 use App\Http\Controllers\OwnerRegisterController;
@@ -55,6 +54,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
+});
+
 
 // ==========================================
 // OWNER ROUTES (Khusus Pemilik Aset)
@@ -72,12 +75,6 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::put('/property/{property}', [PropertyController::class, 'update'])->name('property.update');
     Route::delete('/property/{property}', [PropertyController::class, 'destroy'])->name('property.destroy');
 
-});
-
-// ==========================================
-// ADMIN ROUTES (Khusus Admin Sistem)
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 });
 
 

@@ -1,111 +1,186 @@
-<script setup>
-import { computed } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
-
-const page = usePage();
-const props = defineProps({
-    stats: Object,
-    recentBookings: Array,
-    user: Object,
-});
-
-const user = computed(() => page.props.auth?.user || props.user || {});
+﻿<script setup>
+import { Head } from '@inertiajs/vue3';
+import AdminSidebar from '@/Pages/admin/AdminSidebar.vue';
 </script>
 
 <template>
-    <Head title="Admin Dashboard - kusewa.id" />
+    <Head title="Admin Dashboard" />
 
-    <div class="min-h-screen bg-slate-100 text-slate-900 px-4 py-6 lg:px-8">
-        <div class="max-w-[1360px] mx-auto space-y-6">
-            <section class="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-800 antialiased">
+        <div class="mx-auto flex min-h-screen max-w-[1600px] gap-6 p-4 lg:p-6">
+            <!-- Sidebar Component -->
+            <AdminSidebar />
+
+            <!-- Main Content Area -->
+            <main class="flex-1 space-y-6 overflow-hidden">
+                <!-- Top Navbar / Header -->
+                <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h1 class="text-2xl font-bold text-slate-900">Dashboard Admin</h1>
-                        <p class="text-sm text-slate-500 mt-1">Ringkasan sistem untuk tim admin.</p>
-                    </div>
-                    <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Total Pengguna</p>
-                            <p class="mt-3 text-2xl font-extrabold text-slate-900">{{ stats.total_users }}</p>
-                        </div>
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Total Pemilik</p>
-                            <p class="mt-3 text-2xl font-extrabold text-slate-900">{{ stats.total_owners }}</p>
-                        </div>
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Total Aset</p>
-                            <p class="mt-3 text-2xl font-extrabold text-slate-900">{{ stats.total_assets }}</p>
-                        </div>
-                        <div class="rounded-2xl bg-slate-50 p-4">
-                            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Pendapatan</p>
-                            <p class="mt-3 text-2xl font-extrabold text-slate-900">Rp {{ stats.total_revenue.toLocaleString() }}</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section class="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-                <div class="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                    <div class="flex items-center justify-between gap-4">
-                        <div>
-                            <h2 class="text-lg font-bold text-slate-900">Statistik Penting</h2>
-                            <p class="text-sm text-slate-500 mt-1">Monitoring cepat untuk status sistem.</p>
-                        </div>
-                        <Link href="/" class="text-sm font-semibold text-[#FFC000] hover:text-[#e6ad00]">Lihat situs</Link>
+                        <nav class="text-xs text-slate-400">
+                            <span>Administrator</span> / <span class="font-medium text-slate-700">Dashboard Statistik</span>
+                        </nav>
+                        <h1 class="mt-1 text-xl font-bold text-slate-900">Sistem Pengelolaan Aset</h1>
                     </div>
 
-                    <div class="mt-6 grid gap-4 sm:grid-cols-2">
-                        <div class="rounded-3xl bg-[#0A2540] p-5 text-white">
-                            <p class="text-xs uppercase tracking-[0.2em] text-slate-300">Owner Verifikasi Pending</p>
-                            <p class="mt-4 text-3xl font-bold">{{ stats.pending_owner_verifications }}</p>
+                    <!-- Header Action Controls -->
+                    <div class="flex items-center gap-3">
+                        <div class="relative">
+                            <input
+                                type="text"
+                                placeholder="Cari aset, user, transaksi..."
+                                class="w-56 rounded-xl border border-slate-200 bg-white py-1.5 pl-3 pr-8 text-xs text-slate-700 placeholder-slate-400 transition focus:border-[#FFC000] focus:outline-none focus:ring-1 focus:ring-[#FFC000]"
+                            />
                         </div>
-                        <div class="rounded-3xl bg-[#FFC000]/10 p-5 text-[#0A2540]">
-                            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Pemesanan Pending</p>
-                            <p class="mt-4 text-3xl font-bold">{{ stats.pending_bookings }}</p>
+                        <button class="relative flex h-9 w-9 items-center justify-center rounded-xl bg-white border border-slate-200 text-slate-600 transition hover:bg-slate-100">
+                            <i class="fa-regular fa-bell text-sm"></i>
+                            <span class="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#FFC000]"></span>
+                        </button>
+                        <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
+                            <div class="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 font-bold text-xs text-white">
+                                AD
+                            </div>
+                            <span class="text-xs font-semibold text-slate-700">Admin</span>
                         </div>
                     </div>
-                </div>
+                </header>
 
-                <div class="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                    <h2 class="text-lg font-bold text-slate-900">Aksi Cepat</h2>
-                    <div class="mt-4 space-y-3 text-sm text-slate-600">
-                        <p>• Kelola pengguna, verifikasi owner, dan periksa aset.</p>
-                        <p>• Gunakan rute admin di URL <span class="font-semibold">/admin/dashboard</span>.</p>
-                        <p>• Pastikan user memiliki <span class="font-semibold">role = admin</span>.</p>
+                <!-- Key Stat Cards (Sesuai Spesifikasi Dokumen) -->
+                <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                    <!-- Total Pendapatan Biaya Layanan -->
+                    <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">Pendapatan Layanan</p>
+                                <h3 class="mt-1 text-xl font-bold text-slate-900">Rp 48.500.000</h3>
+                            </div>
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-[#FFC000] shadow-sm">
+                                <i class="fa-solid fa-wallet text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2.5 text-[11px]">
+                            <span class="font-bold text-emerald-600">+12%</span>
+                            <span class="text-slate-400">dari bulan lalu</span>
+                        </div>
                     </div>
-                </div>
-            </section>
 
-            <section class="rounded-3xl bg-white p-6 shadow-sm border border-slate-200">
-                <div class="flex items-center justify-between gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-900">Transaksi Terbaru</h2>
-                        <p class="text-sm text-slate-500 mt-1">5 pemesanan terbaru dari sistem.</p>
+                    <!-- Total Aset Tersedia (Properti & Baliho) -->
+                    <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">Aset Aktif / Tersedia</p>
+                                <h3 class="mt-1 text-xl font-bold text-slate-900">1,248 Aset</h3>
+                            </div>
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
+                                <i class="fa-solid fa-building text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2.5 text-[11px]">
+                            <span class="text-slate-500 font-medium">850 Properti</span>
+                            <span class="text-slate-300">•</span>
+                            <span class="text-slate-500 font-medium">398 Baliho</span>
+                        </div>
                     </div>
-                    <span class="text-sm font-semibold text-slate-600">Admin: {{ user.name }}</span>
-                </div>
 
-                <div class="mt-6 overflow-hidden rounded-3xl border border-slate-200">
-                    <table class="min-w-full text-left text-sm">
-                        <thead class="bg-slate-50 text-slate-500 uppercase tracking-[0.18em] text-xs">
-                            <tr>
-                                <th class="px-4 py-4">Kode</th>
-                                <th class="px-4 py-4">Aset</th>
-                                <th class="px-4 py-4">Status</th>
-                                <th class="px-4 py-4">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody class="bg-white divide-y divide-slate-200">
-                            <tr v-for="booking in props.recentBookings" :key="booking.code">
-                                <td class="px-4 py-4 font-semibold text-slate-900">{{ booking.code }}</td>
-                                <td class="px-4 py-4 text-slate-600">{{ booking.asset }}</td>
-                                <td class="px-4 py-4 text-slate-700">{{ booking.status }}</td>
-                                <td class="px-4 py-4 font-semibold text-slate-900">Rp {{ booking.total.toLocaleString() }}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                    <!-- Menunggu Validasi -->
+                    <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">Menunggu Validasi</p>
+                                <h3 class="mt-1 text-xl font-bold text-slate-900">18 Pengajuan</h3>
+                            </div>
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFC000] text-slate-950 shadow-sm">
+                                <i class="fa-solid fa-clock-rotate-left text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2.5 text-[11px]">
+                            <span class="font-bold text-amber-600">Perlu tindakan admin</span>
+                        </div>
+                    </div>
+
+                    <!-- Total User Terdaftar -->
+                    <div class="rounded-2xl bg-white p-4 shadow-sm border border-slate-100">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <p class="text-xs font-medium text-slate-400">Pengguna Terdaftar</p>
+                                <h3 class="mt-1 text-xl font-bold text-slate-900">3,420 User</h3>
+                            </div>
+                            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white shadow-sm">
+                                <i class="fa-solid fa-users text-sm"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-center gap-1 border-t border-slate-100 pt-2.5 text-[11px]">
+                            <span class="font-bold text-emerald-600">2,800 Penyewa</span>
+                            <span class="text-slate-300">•</span>
+                            <span class="font-bold text-slate-600">620 Pemilik</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Visual Charts Section (Grafik Transaksi & Pengguna) -->
+                <section class="grid gap-6 xl:grid-cols-3">
+                    <!-- Grafik Transaksi Bulanan -->
+                    <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100 xl:col-span-2">
+                        <div class="flex items-center justify-between pb-3">
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-800">Statistik Transaksi Bulanan</h3>
+                                <p class="text-xs text-slate-400">Ringkasan transaksi berhasil, pending, dan ditolak</p>
+                            </div>
+                            <span class="rounded-lg bg-slate-100 px-2.5 py-1 text-[11px] font-semibold text-slate-600">Tahun 2026</span>
+                        </div>
+                        
+                        <!-- Visual representation of line chart -->
+                        <div class="mt-2 flex h-48 w-full items-center justify-center rounded-xl bg-slate-50 p-2">
+                            <svg viewBox="0 0 500 120" class="h-full w-full text-[#FFC000]" fill="none" stroke="currentColor" stroke-width="3">
+                                <path d="M10 100 L70 80 L130 85 L190 40 L250 55 L310 20 L370 45 L430 15 L490 35" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        
+                        <div class="mt-4 flex items-center justify-around border-t border-slate-100 pt-3 text-xs text-slate-500">
+                            <div class="flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-emerald-500"></span> Transaksi Berhasil (88%)
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-[#FFC000]"></span> Menunggu Validasi (8%)
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="h-2.5 w-2.5 rounded-full bg-rose-500"></span> Ditolak (4%)
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ringkasan Aset Paling Banyak Disewa -->
+                    <div class="rounded-2xl bg-white p-5 shadow-sm border border-slate-100">
+                        <h3 class="text-sm font-bold text-slate-800">Aset Populer & Disewa</h3>
+                        <p class="text-xs text-slate-400 mb-4">Properti & Baliho dengan booking tertinggi</p>
+
+                        <div class="space-y-3.5 text-xs">
+                            <div class="flex items-center justify-between rounded-xl bg-slate-50 p-3">
+                                <div>
+                                    <p class="font-bold text-slate-800">Baliho Sudirman Sp. 4</p>
+                                    <p class="text-[10px] text-slate-400">Kategori: Baliho Digital</p>
+                                </div>
+                                <span class="rounded-md bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">42 Kali Sewa</span>
+                            </div>
+
+                            <div class="flex items-center justify-between rounded-xl bg-slate-50 p-3">
+                                <div>
+                                    <p class="font-bold text-slate-800">Ruko Executive Block A</p>
+                                    <p class="text-[10px] text-slate-400">Kategori: Properti Usaha</p>
+                                </div>
+                                <span class="rounded-md bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">28 Kali Sewa</span>
+                            </div>
+
+                            <div class="flex items-center justify-between rounded-xl bg-slate-50 p-3">
+                                <div>
+                                    <p class="font-bold text-slate-800">Gedung Serbaguna Utama</p>
+                                    <p class="text-[10px] text-slate-400">Kategori: Properti Acara</p>
+                                </div>
+                                <span class="rounded-md bg-amber-100 px-2 py-1 text-[10px] font-bold text-amber-800">19 Kali Sewa</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
         </div>
     </div>
 </template>
