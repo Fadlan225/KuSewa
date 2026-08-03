@@ -65,9 +65,9 @@
                 </div>
                 <h4 class="font-medium text-gray-800 text-[15px] leading-tight mb-1">{{ activeChat.assetName }}</h4>
                 <p class="text-sm text-[#FFC000] font-bold mb-3">{{ activeChat.price }}</p>
-                <Link :href="route('assets.show', { asset: activeChat.assetId || 1 })" class="block text-center w-full border border-gray-200 text-gray-700 text-sm font-medium py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                <a :href="route('assets.show', { asset: activeChat.assetSlug || 1 })" target="_blank" class="block text-center w-full border border-gray-200 text-gray-700 text-sm font-medium py-2 rounded-lg hover:bg-gray-50 transition-colors">
                     Lihat Aset
-                </Link>
+                </a>
             </div>
         </div>
       </aside>

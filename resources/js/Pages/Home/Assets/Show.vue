@@ -9,6 +9,10 @@ import AssetGallery from '@/Components/UI/AssetGallery.vue';
 import AssetUnitList from '@/Components/UI/AssetUnitList.vue';
 import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
 
+import flatPickr from 'vue-flatpickr-component';
+import 'flatpickr/dist/flatpickr.css';
+import { Indonesian } from "flatpickr/dist/l10n/id.js";
+
 const props = defineProps({
     asset: {
         type: Object,
@@ -22,6 +26,10 @@ const props = defineProps({
         type: Object,
         default: null,
     },
+    bookedDates: {
+        type: Array,
+        default: () => []
+    }
 });
 
 const page = usePage();
@@ -142,24 +150,89 @@ const lowestPrice = computed(() => {
     return allPricings.reduce((min, p) => p.price < min.price ? p : min, allPricings[0]);
 });
 
-// Fasilitas & Spesifikasi
-const specification = computed(() => props.asset.detail || {});
-const facilities = computed(() => {
-    return Array.isArray(specification.value.facility)
-        ? specification.value.facility
-        : (specification.value.fasilitas || []);
+import FasilitasModal from './Fasilitas.vue';
+
+// ── Fasilitas & Spesifikasi ────────────────────────────────────────────────
+// Sistem BARU: fasilitas dari relasi belongsToMany (asset_facilities pivot)
+const assetFacilities = computed(() => props.asset.facilities || []);
+
+const showFasilitasModal = ref(false);
+
+const topFacilities = computed(() => {
+    let flat = [];
+    assetFacilities.value.forEach(f => {
+        flat.push(f);
+    });
+    return flat.slice(0, 10);
 });
-const getSpecKeys = computed(() => {
-    const spec = { ...specification.value };
-    delete spec.facility;
-    delete spec.fasilitas;
-    return Object.keys(spec);
+
+// Grup fasilitas per kategori untuk tampilan yang rapi
+const facilitiesGrouped = computed(() => {
+    const groups = {};
+    assetFacilities.value.forEach(f => {
+        const catName = f.category?.name || 'Lainnya';
+        if (!groups[catName]) groups[catName] = { name: catName, icon: f.category?.icon || 'list', facilities: [] };
+        groups[catName].facilities.push(f);
+    });
+    return Object.values(groups);
 });
+
+// Spesifikasi tambahan dari field `detail` JSON (bukan fasilitas)
+const specification = computed(() => {
+    const d = props.asset.detail || {};
+    // Hapus key lama yang sudah tidak relevan
+    const cleaned = { ...d };
+    delete cleaned.facility;
+    delete cleaned.fasilitas;
+    return cleaned;
+});
+
+// Map nama kunci teknis ke label manusiawi
+const specKeyLabels = {
+    luas_bangunan:    'Luas Bangunan',
+    luas_tanah:       'Luas Tanah',
+    jumlah_lantai:    'Jumlah Lantai',
+    kapasitas:        'Kapasitas',
+    jumlah_kamar:     'Jumlah Kamar',
+    jumlah_kamar_mandi: 'Kamar Mandi',
+    daya_listrik:     'Daya Listrik',
+    lebar:            'Lebar',
+    panjang:          'Panjang',
+    tinggi:           'Tinggi',
+    berat_maksimal:   'Berat Maksimal',
+    visibility:       'Visibilitas',
+    visibility_tinggi:'Visibilitas Tinggi',
+    visibility_rendah:'Visibilitas Rendah',
+    ukuran_billboard: 'Ukuran Billboard',
+    slot_tersedia:    'Slot Tersedia',
+    total_slot:       'Total Slot',
+    jam_operasional:  'Jam Operasional',
+    area:             'Area',
+    kondisi:          'Kondisi',
+    sertifikat:       'Sertifikat',
+    tahun_dibangun:   'Tahun Dibangun',
+};
+
+const formatSpecKey = (key) => {
+    return specKeyLabels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+};
+
+const formatSpecValue = (key, val) => {
+    if (typeof val === 'boolean') return val ? 'Ya' : 'Tidak';
+    if (val === true || val === 'true') return 'Ya';
+    if (val === false || val === 'false') return 'Tidak';
+    return val;
+};
+
+const getSpecKeys = computed(() => Object.keys(specification.value));
+
+const selectedUnitId = ref(null);
 
 // Form Booking (persiapan)
 const form = useForm({
     asset_id: props.asset.id,
-    pricing_id: (props.asset.pricings && props.asset.pricings.length > 0) && lowestPrice.value ? lowestPrice.value.id : null,
+    pricing_id: null,
+    asset_unit_id: null,
 });
 
 const showDateError = ref(false);
@@ -174,19 +247,25 @@ const submitBooking = () => {
     let date_start = null;
     let date_end = null;
 
+    // Helper to safely format local date as YYYY-MM-DD
+    const toLocalDateStr = (d) => {
+        if (!d) return null;
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    };
+
     if (startDate.value) {
         if (activeScheduleMode.value === 'hour') {
-            date_start = `${startDate.value.toISOString().split('T')[0]} ${startTime.value}:00`;
-            date_end = `${startDate.value.toISOString().split('T')[0]} ${endTime.value}:00`;
+            date_start = `${toLocalDateStr(startDate.value)} ${startTime.value}:00`;
+            date_end = `${toLocalDateStr(startDate.value)} ${endTime.value}:00`;
         } else if (activeScheduleMode.value === 'month') {
-            date_start = startDate.value.toISOString().split('T')[0] + ' 00:00:00';
+            date_start = toLocalDateStr(startDate.value) + ' 00:00:00';
             if (endDate.value) {
-                date_end = endDate.value.toISOString().split('T')[0] + ' 23:59:59';
+                date_end = toLocalDateStr(endDate.value) + ' 23:59:59';
             }
         } else {
-            date_start = startDate.value.toISOString().split('T')[0] + ' 00:00:00';
+            date_start = toLocalDateStr(startDate.value) + ' 00:00:00';
             if (endDate.value) {
-                date_end = endDate.value.toISOString().split('T')[0] + ' 23:59:59';
+                date_end = toLocalDateStr(endDate.value) + ' 23:59:59';
             }
         }
     }
@@ -204,6 +283,8 @@ const submitBooking = () => {
 
 const handleUnitSelect = ({ unit_id, pricing_id, price }) => {
     form.pricing_id = pricing_id;
+    form.asset_unit_id = unit_id;
+    selectedUnitId.value = unit_id;
 
     // Validasi tanggal jika belum diisi atau tidak ada durasi
     if (!startDate.value || durationCount.value === 0) {
@@ -215,8 +296,7 @@ const handleUnitSelect = ({ unit_id, pricing_id, price }) => {
         return;
     }
 
-    // Jika valid, lanjutkan ke submit booking
-    submitBooking();
+    // Biarkan pengguna tetap di posisinya (tidak scroll otomatis ke atas)
 };
 
 const handleBottomBarSubmit = () => {
@@ -245,6 +325,14 @@ const reviewDistribution = computed(() => {
         const percentage = total > 0 ? (count / total) * 100 : 0;
         return { star, count, percentage };
     });
+});
+
+const showAllReviews = ref(false);
+
+const visibleReviews = computed(() => {
+    if (!props.asset.reviews) return [];
+    if (showAllReviews.value) return props.asset.reviews;
+    return props.asset.reviews.slice(0, 6);
 });
 
 // ==========================================
@@ -299,15 +387,40 @@ const minTime = computed(() => {
     return '00:00';
 });
 
-watch([startDate, durationMonths], () => {
-    if (activeScheduleMode.value === 'month' && startDate.value) {
-        const d = new Date(startDate.value);
-        d.setMonth(d.getMonth() + durationMonths.value);
+watch([startDate, durationMonths], ([newStart, newDuration]) => {
+    if (activeScheduleMode.value === 'month' && newStart) {
+        // Validasi: apakah startDate yang dipilih + durasi baru akan overlap dengan booking yang ada?
+        if (props.bookedDates && props.bookedDates.length > 0) {
+            const checkStart = new Date(newStart);
+            checkStart.setHours(0, 0, 0, 0);
+            const checkEnd = new Date(checkStart);
+            checkEnd.setMonth(checkEnd.getMonth() + (newDuration || 1));
+            checkEnd.setHours(23, 59, 59, 0);
+
+            const isNowInvalid = props.bookedDates.some(booked => {
+                const from = new Date(booked.from);
+                from.setHours(0, 0, 0, 0);
+                const to = new Date(booked.to);
+                to.setHours(23, 59, 59, 0);
+                return checkStart <= to && checkEnd >= from;
+            });
+
+            if (isNowInvalid) {
+                // Tanggal yang dipilih tidak lagi valid dengan durasi baru — reset
+                startDate.value = null;
+                endDate.value = null;
+                return;
+            }
+        }
+
+        // Hitung & set end date berdasarkan start + durasi
+        const d = new Date(newStart);
+        d.setMonth(d.getMonth() + (newDuration || 1));
         endDate.value = d;
     }
-    
-    // Clear error message if user has started to pick dates
-    if (startDate.value) {
+
+    // Hilangkan error jika user sudah mulai memilih tanggal
+    if (newStart) {
         showDateError.value = false;
     }
 });
@@ -318,7 +431,12 @@ const monthsData = computed(() => {
     const currentYear = today.getFullYear();
 
     const data = [];
-    for (let i = 0; i < 12; i++) {
+    let generatedCount = 0;
+
+    for (let i = 0; generatedCount < 12; i++) {
+        // Prevent infinite loop jika semua full booked sampai 3 tahun ke depan
+        if (i > 36) break;
+
         const d = new Date(currentYear, currentMonth + i, 1);
         const year = d.getFullYear();
         const month = d.getMonth();
@@ -326,13 +444,39 @@ const monthsData = computed(() => {
         const firstDayOfWeek = d.getDay();
         const title = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
 
-        data.push({
-            year,
-            month,
-            title,
-            daysInMonth,
-            emptyDaysStart: firstDayOfWeek
+        const weeks = [];
+        let currentWeek = new Array(firstDayOfWeek).fill(null);
+
+        for (let date = 1; date <= daysInMonth; date++) {
+            currentWeek.push(date);
+            if (currentWeek.length === 7) {
+                weeks.push(currentWeek);
+                currentWeek = [];
+            }
+        }
+        if (currentWeek.length > 0) {
+            while (currentWeek.length < 7) currentWeek.push(null);
+            weeks.push(currentWeek);
+        }
+
+        // Filter minggu yang memiliki setidaknya 1 tanggal tersedia (bukan past & bukan booked)
+        const availableWeeks = weeks.filter(week => {
+            return week.some(date => {
+                if (date === null) return false;
+                return !(isPastDate(year, month, date) || isDateBooked(year, month, date));
+            });
         });
+
+        // Hanya masukkan bulan jika ada minimal 1 minggu yang tersedia
+        if (availableWeeks.length > 0) {
+            data.push({
+                year,
+                month,
+                title,
+                weeks: availableWeeks
+            });
+            generatedCount++;
+        }
     }
     return data;
 });
@@ -359,6 +503,9 @@ const selectDate = (year, month, date) => {
     today.setHours(0,0,0,0);
     if (selected < today) return;
 
+    // Blokir tanggal yang sudah dibooking
+    if (isDateBooked(year, month, date)) return;
+
     if (activeScheduleMode.value === 'hour' || activeScheduleMode.value === 'month') {
         startDate.value = selected;
     } else {
@@ -366,24 +513,141 @@ const selectDate = (year, month, date) => {
             startDate.value = selected;
             endDate.value = null;
         } else if (selected < startDate.value) {
-            startDate.value = selected;
+            // Cek apakah ada booked date di antara selected dan startDate
+            let hasBookedBetween = false;
+            if (props.bookedDates && props.bookedDates.length > 0) {
+                let tempDate = new Date(selected);
+                while (tempDate <= startDate.value) {
+                    if (isDateBooked(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate())) {
+                        hasBookedBetween = true;
+                        break;
+                    }
+                    tempDate.setDate(tempDate.getDate() + 1);
+                }
+            }
+            if (hasBookedBetween) {
+                startDate.value = selected; // Reset ke tanggal ini saja
+            } else {
+                endDate.value = startDate.value;
+                startDate.value = selected;
+            }
         } else if (selected > startDate.value) {
-            endDate.value = selected;
+            // Cek apakah ada booked date di antara startDate dan selected
+            let hasBookedBetween = false;
+            if (props.bookedDates && props.bookedDates.length > 0) {
+                let tempDate = new Date(startDate.value);
+                while (tempDate <= selected) {
+                    if (isDateBooked(tempDate.getFullYear(), tempDate.getMonth(), tempDate.getDate())) {
+                        hasBookedBetween = true;
+                        break;
+                    }
+                    tempDate.setDate(tempDate.getDate() + 1);
+                }
+            }
+            if (hasBookedBetween) {
+                startDate.value = selected; // reset
+            } else {
+                endDate.value = selected;
+            }
         }
     }
 };
+
+const isPastDate = (year, month, date) => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const check = new Date(year, month, date);
+    return check < today;
+};
+
+const isDateBooked = (year, month, date) => {
+    if (!props.bookedDates || props.bookedDates.length === 0) return false;
+    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+    const checkDate = new Date(formattedDate);
+    checkDate.setHours(0,0,0,0);
+
+    return props.bookedDates.some(booked => {
+        const from = new Date(booked.from);
+        from.setHours(0,0,0,0);
+        const to = new Date(booked.to);
+        to.setHours(0,0,0,0);
+        return checkDate >= from && checkDate <= to;
+    });
+};
+
+const flatpickrConfig = computed(() => {
+    // Akses durationMonths.value di sini secara langsung agar Vue melacak dependency-nya!
+    // Jika diakses di dalam closure, Vue TIDAK akan melacaknya.
+    const currentDuration = durationMonths.value || 1;
+    const bookedRanges = props.bookedDates || [];
+
+    const disableFn = (date) => {
+        if (bookedRanges.length === 0) return false;
+
+        // Buat salinan, jangan pernah mutasi objek `date` dari flatpickr!
+        const checkStart = new Date(date);
+        checkStart.setHours(0, 0, 0, 0);
+
+        if (activeScheduleMode.value === 'month') {
+            // Mode bulan: hitung end date berdasarkan durasi, lalu cek overlap
+            const checkEnd = new Date(checkStart);
+            checkEnd.setMonth(checkEnd.getMonth() + currentDuration);
+            checkEnd.setHours(23, 59, 59, 0);
+
+            return bookedRanges.some(booked => {
+                const from = new Date(booked.from);
+                from.setHours(0, 0, 0, 0);
+                const to = new Date(booked.to);
+                to.setHours(23, 59, 59, 0);
+                // Overlap: A mulai sebelum B selesai DAN A selesai setelah B mulai
+                return checkStart <= to && checkEnd >= from;
+            });
+        }
+
+        // Mode jam (hour): cek apakah tanggal itu sendiri berada dalam range booking
+        return bookedRanges.some(booked => {
+            const from = new Date(booked.from);
+            from.setHours(0, 0, 0, 0);
+            const to = new Date(booked.to);
+            to.setHours(0, 0, 0, 0);
+            return checkStart >= from && checkStart <= to;
+        });
+    };
+
+    const firstAvailableDate = new Date();
+    firstAvailableDate.setHours(0, 0, 0, 0);
+
+    let foundAvailable = false;
+    for (let i = 0; i < 365 * 3; i++) { // Cari hingga 3 tahun ke depan
+        if (!disableFn(firstAvailableDate)) {
+            foundAvailable = true;
+            break;
+        }
+        firstAvailableDate.setDate(firstAvailableDate.getDate() + 1);
+    }
+
+    return {
+        disable: [disableFn],
+        minDate: "today",
+        locale: Indonesian,
+        altInput: true,
+        altFormat: "d M Y",
+        dateFormat: "Y-m-d",
+        disableMobile: "true",
+        onOpen: function(selectedDates, dateStr, instance) {
+            if (selectedDates.length === 0 && foundAvailable) {
+                instance.jumpToDate(firstAvailableDate);
+            }
+        }
+    };
+});
 
 const isStartDate = (year, month, date) => {
     if (!startDate.value) return false;
     return startDate.value.getFullYear() === year && startDate.value.getMonth() === month && startDate.value.getDate() === date;
 };
 
-const isPastDate = (year, month, date) => {
-    const selected = new Date(year, month, date);
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    return selected < today;
-};
+
 
 const isEndDate = (year, month, date) => {
     if (!endDate.value) return false;
@@ -433,10 +697,26 @@ const priceMultiplier = computed(() => {
     return (props.asset.type?.rental_unit === 'night' && activeScheduleMode.value === 'month') ? 30 : 1;
 });
 
+const activePrice = computed(() => {
+    if (form.pricing_id) {
+        let found = null;
+        if (props.asset.units && props.asset.units.length > 0) {
+            props.asset.units.forEach(unit => {
+                const p = unit.pricings?.find(pr => pr.id === form.pricing_id);
+                if (p) found = p;
+            });
+        } else if (props.asset.pricings && props.asset.pricings.length > 0) {
+            found = props.asset.pricings.find(p => p.id === form.pricing_id);
+        }
+        if (found) return found;
+    }
+    return lowestPrice.value;
+});
+
 const subtotal = computed(() => {
-    if (!lowestPrice.value) return 0;
+    if (!activePrice.value) return 0;
     const count = durationCount.value || 1;
-    return lowestPrice.value.price * priceMultiplier.value * count;
+    return activePrice.value.price * priceMultiplier.value * count;
 });
 
 const feeAmount = computed(() => {
@@ -452,6 +732,12 @@ const feeAmount = computed(() => {
 
 const totalAmount = computed(() => {
     return subtotal.value + feeAmount.value;
+});
+
+const selectedUnitName = computed(() => {
+    if (!selectedUnitId.value || !props.asset.units) return null;
+    const unit = props.asset.units.find(u => u.id === selectedUnitId.value);
+    return unit ? unit.name : null;
 });
 
 const formattedDateRange = computed(() => {
@@ -502,7 +788,7 @@ const handleTouchEnd = (e) => {
             <div class="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-600">
                 <div class="flex items-center gap-1">
                     <i class="fa-solid fa-location-dot text-gray-400"></i>
-                    <span class="underline decoration-gray-300">{{ asset.city }}, {{ asset.province }}</span>
+                    <span class="underline decoration-gray-300">{{ asset.city }}, {{ asset.province }}, {{ asset.country }}</span>
                 </div>
 
                 <div class="flex items-center gap-1">
@@ -586,8 +872,8 @@ const handleTouchEnd = (e) => {
                     <h3 class="text-lg font-bold mb-4">Informasi Umum</h3>
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
                         <div v-for="key in getSpecKeys" :key="key" class="flex flex-col">
-                            <span class="text-gray-500 text-sm capitalize mb-1">{{ key.replace(/_/g, ' ') }}</span>
-                            <span class="font-bold text-[#0A2540]">{{ specification[key] }}</span>
+                            <span class="text-gray-500 text-sm mb-1">{{ formatSpecKey(key) }}</span>
+                            <span class="font-bold text-[#0A2540]">{{ formatSpecValue(key, specification[key]) }}</span>
                         </div>
                     </div>
                 </div>
@@ -601,20 +887,29 @@ const handleTouchEnd = (e) => {
                 </div>
 
                 <!-- Fasilitas Utama -->
-                <div id="fasilitas" v-if="facilities.length > 0" class="py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold mb-4">Fasilitas Utama</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div v-for="(fac, idx) in facilities" :key="idx" class="flex items-center gap-3 text-gray-700 font-medium">
-                            <i class="fa-solid fa-check text-green-500"></i>
-                            <span class="capitalize">{{ fac }}</span>
+                <div id="fasilitas" v-if="assetFacilities.length > 0" class="py-8 border-b border-gray-200">
+                    <h3 class="text-[22px] font-semibold text-[#222222] mb-6">Fasilitas yang ditawarkan</h3>
+
+                    <!-- Grid Top Facilities -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
+                        <div v-for="fac in topFacilities" :key="fac.id" class="flex items-center gap-4">
+                            <i :class="['fa-solid text-[18px] text-[#222222] w-6 text-center shrink-0', 'fa-' + (fac.category?.icon || 'check')]"></i>
+                            <span class="text-[15px] text-[#222222]">{{ fac.name }}</span>
                         </div>
                     </div>
+
+                    <button @click="showFasilitasModal = true" class="mt-8 px-6 py-3 rounded-lg border border-black bg-white hover:bg-gray-50 text-[#222222] font-semibold text-[15px] transition-colors inline-block">
+                        Tampilkan ke-{{ assetFacilities.length }} fasilitas
+                    </button>
                 </div>
+
+                <!-- Modal Fasilitas -->
+                <FasilitasModal :show="showFasilitasModal" :facilitiesGrouped="facilitiesGrouped" @close="showFasilitasModal = false" />
 
                 <!-- Lokasi Map Placeholder -->
                 <div id="lokasi" class="py-6 border-b border-gray-200">
                     <h3 class="text-lg font-bold mb-4">Lokasi</h3>
-                    <p class="text-gray-600 mb-4">{{ asset.address }}, {{ asset.city }}, {{ asset.province }}</p>
+                    <p class="text-gray-600 mb-4">{{ [asset.address, asset.subdistrict, asset.city, asset.province, asset.country].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
                     <div class="w-full h-64 bg-gray-200 rounded-xl overflow-hidden relative flex items-center justify-center">
                         <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://map.viamichelin.com/map/carte?map=viamichelin&z=10&lat=-0.502&lon=117.153&width=800&height=400&format=png&version=latest&layer=background')"></div>
                         <div class="z-10 flex flex-col items-center bg-white/90 p-4 rounded-xl shadow-lg">
@@ -679,30 +974,34 @@ const handleTouchEnd = (e) => {
                                     <div class="flex-1">
                                         <div class="grid grid-cols-7 gap-y-6 mb-1">
                                             <div v-for="day in daysOfWeek" :key="'d1-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
-                                            <div v-for="i in monthsData[calendarPage]?.emptyDaysStart" :key="'e1-'+i"></div>
-                                            <div v-for="date in monthsData[calendarPage]?.daysInMonth" :key="'d1-'+date" class="relative flex justify-center items-center h-10">
 
-                                                <!-- KONEKTOR RENTANG -->
-                                                <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                            <template v-for="(week, wIdx) in monthsData[calendarPage]?.weeks" :key="'w1-'+wIdx">
+                                                <div v-for="(date, dIdx) in week" :key="'d1-'+wIdx+'-'+dIdx" class="relative flex justify-center items-center h-10">
+                                                    <template v-if="date">
+                                                        <!-- KONEKTOR RENTANG -->
+                                                        <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                                        <div v-else-if="isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
+                                                        <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
 
-                                                <!-- BULATAN TANGGAL -->
-                                                <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
-                                                    :class="[
-                                                        isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
-                                                        { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                          'text-[#1A1A1A]': isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                          'text-[#0A2540]': !isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) }
-                                                    ]"
-                                                    @click="!isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && selectDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)">
-                                                    <span>{{ date }}</span>
+                                                        <!-- BULATAN TANGGAL -->
+                                                        <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
+                                                            :class="[
+                                                                (isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
+                                                                { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
+                                                                'text-[#1A1A1A]': isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
+                                                                'text-[#0A2540]': !isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isInRange(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
+                                                                'bg-red-50 text-red-300': isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date) }
+                                                            ]"
+                                                            @click="!(isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date)) && selectDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)">
+                                                            <span>{{ date }}</span>
+                                                        </div>
+
+                                                        <!-- TANDA MULAI & SELESAI -->
+                                                        <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
+                                                        <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                                    </template>
                                                 </div>
-
-                                                <!-- TANDA MULAI & SELESAI -->
-                                                <div v-if="isStartDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                                <div v-else-if="isEndDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
-                                            </div>
+                                            </template>
                                         </div>
                                     </div>
 
@@ -710,30 +1009,34 @@ const handleTouchEnd = (e) => {
                                     <div class="flex-1 hidden sm:block">
                                         <div class="grid grid-cols-7 gap-y-6 mb-1">
                                             <div v-for="day in daysOfWeek" :key="'d2-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
-                                            <div v-for="i in monthsData[calendarPage + 1]?.emptyDaysStart" :key="'e2-'+i"></div>
-                                            <div v-for="date in monthsData[calendarPage + 1]?.daysInMonth" :key="'d2-'+date" class="relative flex justify-center items-center h-10">
 
-                                                <!-- KONEKTOR RENTANG -->
-                                                <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                                <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                            <template v-for="(week, wIdx) in monthsData[calendarPage + 1]?.weeks" :key="'w2-'+wIdx">
+                                                <div v-for="(date, dIdx) in week" :key="'d2-'+wIdx+'-'+dIdx" class="relative flex justify-center items-center h-10">
+                                                    <template v-if="date">
+                                                        <!-- KONEKTOR RENTANG -->
+                                                        <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                                        <div v-else-if="isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
+                                                        <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
 
-                                                <!-- BULATAN TANGGAL -->
-                                                <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
-                                                    :class="[
-                                                        isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
-                                                        { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                          'text-[#1A1A1A]': isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                          'text-[#0A2540]': !isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) }
-                                                    ]"
-                                                    @click="!isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && selectDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)">
-                                                    <span>{{ date }}</span>
+                                                        <!-- BULATAN TANGGAL -->
+                                                        <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
+                                                            :class="[
+                                                                (isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
+                                                                { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
+                                                                'text-[#1A1A1A]': isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
+                                                                'text-[#0A2540]': !isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isInRange(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
+                                                                'bg-red-50 text-red-300': isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) }
+                                                            ]"
+                                                            @click="!(isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)) && selectDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)">
+                                                            <span>{{ date }}</span>
+                                                        </div>
+
+                                                        <!-- TANDA MULAI & SELESAI -->
+                                                        <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
+                                                        <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                                    </template>
                                                 </div>
-
-                                                <!-- TANDA MULAI & SELESAI -->
-                                                <div v-if="isStartDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                                <div v-else-if="isEndDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)" class="absolute -bottom-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
-                                            </div>
+                                            </template>
                                         </div>
                                     </div>
                                 </div>
@@ -744,7 +1047,7 @@ const handleTouchEnd = (e) => {
                         <div v-if="activeScheduleMode === 'hour'" class="pt-6">
                             <div class="mb-6">
                                 <label class="block text-sm font-bold text-[#0A2540] mb-2">Tanggal Sewa</label>
-                                <input type="date" :min="todayString" v-model="simpleDateString" class="w-full sm:w-1/2 border border-gray-200 rounded-xl p-3 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000]" />
+                                <flat-pickr v-model="simpleDateString" :config="flatpickrConfig" class="w-full sm:w-1/2 border border-gray-200 rounded-xl p-3 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] placeholder:text-gray-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
                             </div>
 
                             <h4 class="text-sm font-bold text-[#0A2540] mb-4">Tentukan Waktu (Jam)</h4>
@@ -768,16 +1071,18 @@ const handleTouchEnd = (e) => {
 
                         <!-- UI KHUSUS MONTH (Bulan) -->
                         <div v-if="activeScheduleMode === 'month'" class="pt-6">
-                            <div class="mb-8">
-                                <label class="block text-sm font-bold text-[#0A2540] mb-2">Mulai Dari Tanggal</label>
-                                <input type="date" :min="todayString" v-model="simpleDateString" class="w-full sm:w-1/2 border border-gray-200 rounded-xl p-3 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000]" />
-                            </div>
-
                             <div class="mb-4">
                                 <label class="block text-xs font-bold text-[#6C757D] mb-2 text-center">Durasi Sewa (Bulan)</label>
                                 <CircularMonthSlider v-model="durationMonths" />
                             </div>
-                            <div v-if="endDate" class="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
+
+                            <div class="mb-8">
+                                <label class="block text-sm font-bold text-[#0A2540] mb-2">Mulai Dari Tanggal</label>
+                                <p class="text-[11px] text-[#6C757D] mb-2">Tanggal yang diarsir tidak tersedia berdasarkan durasi <strong>{{ durationMonths }} bulan</strong> yang dipilih.</p>
+                                <flat-pickr v-model="simpleDateString" :config="flatpickrConfig" class="w-full sm:w-1/2 border border-gray-200 rounded-xl p-3 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] placeholder:text-gray-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
+                            </div>
+
+                            <div v-if="endDate" class="mt-2 p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
                                 <span class="text-sm text-gray-500 font-medium">Tanggal Selesai :</span>
                                 <span class="text-sm font-bold text-[#0A2540]">
                                     {{ endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
@@ -796,12 +1101,15 @@ const handleTouchEnd = (e) => {
 
             <!-- SEKSI PEMILIHAN UNIT (Jika ada units) -->
             <div v-if="asset.units && asset.units.length > 0" id="pilihan-kamar" class="py-10 border-b border-gray-200">
-                <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Pilihan Kamar / Unit</h2>
+                <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Pilihan Unit</h2>
                 <AssetUnitList
                     :units="asset.units"
                     :rentalUnitLabel="rentalUnitLabel(activeScheduleMode)"
                     :priceMultiplier="priceMultiplier"
                     :durationCount="durationCount"
+                    :startDate="startDate ? startDate.toISOString() : null"
+                    :endDate="endDate ? endDate.toISOString() : null"
+                    :selectedUnitId="selectedUnitId"
                     @select="handleUnitSelect"
                 />
             </div>
@@ -829,14 +1137,18 @@ const handleTouchEnd = (e) => {
                                     <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ endTime }}</p>
                                 </div>
                             </div>
-                            <div class="p-3 bg-gray-50 flex justify-between items-center">
+                            <div class="p-3 bg-gray-50 flex justify-between items-center border-b border-gray-200">
                                 <span class="text-xs font-semibold text-gray-600">Durasi Sewa</span>
                                 <span class="text-sm font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(activeScheduleMode) }}</span>
+                            </div>
+                            <div v-if="selectedUnitName" class="p-3 bg-[#FFC000]/10 flex justify-between items-center">
+                                <span class="text-xs font-semibold text-[#0A2540]">Unit Terpilih</span>
+                                <span class="text-sm font-extrabold text-[#0A2540] truncate max-w-[150px]">{{ selectedUnitName }}</span>
                             </div>
                         </div>
 
                         <button
-                            v-if="asset.units && asset.units.length > 0"
+                            v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
                             @click="() => document.getElementById('pilihan-kamar')?.scrollIntoView({ behavior: 'smooth' })"
                             class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg mb-4">
                             Pilih Kamar
@@ -844,7 +1156,7 @@ const handleTouchEnd = (e) => {
                         <button
                             v-else
                             @click="submitBooking"
-                            :disabled="asset.status !== 'active' || !lowestPrice || !startDate || durationCount === 0"
+                            :disabled="asset.status !== 'active' || !activePrice || !startDate || durationCount === 0"
                             class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
                             Booking Sekarang
                         </button>
@@ -941,35 +1253,41 @@ const handleTouchEnd = (e) => {
                             </div>
                         </div>
 
-                        <div v-if="asset.reviews && asset.reviews.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div v-if="asset.reviews && asset.reviews.length > 0">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Card Individual Ulasan -->
+                                <div v-for="review in visibleReviews" :key="review.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+                                    <!-- Header Card Ulasan: Profil & Bintang -->
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
+                                                <!-- Inisial Nama atau Foto -->
+                                                <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" class="w-full h-full object-cover" />
+                                                <span v-else>{{ review.user?.name?.charAt(0) || 'U' }}</span>
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-[#0A2540] text-sm">{{ review.user?.name || 'Anonim' }}</p>
+                                                <p class="text-xs text-gray-500">{{ formatDate(review.created_at) }}</p>
+                                            </div>
+                                        </div>
+                                        <!-- Bintang Ulasan User -->
+                                        <div class="flex gap-0.5">
+                                            <i v-for="i in 5" :key="i" class="fa-solid fa-star text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'"></i>
+                                        </div>
+                                    </div>
 
-                            <!-- Card Individual Ulasan -->
-                            <div v-for="review in asset.reviews" :key="review.id" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                                <!-- Header Card Ulasan: Profil & Bintang -->
-                                <div class="flex items-start justify-between mb-3">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
-                                            <!-- Inisial Nama atau Foto -->
-                                            <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" class="w-full h-full object-cover" />
-                                            <span v-else>{{ review.user?.name?.charAt(0) || 'U' }}</span>
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-[#0A2540] text-sm">{{ review.user?.name || 'Anonim' }}</p>
-                                            <p class="text-xs text-gray-500">{{ formatDate(review.created_at) }}</p>
-                                        </div>
-                                    </div>
-                                    <!-- Bintang Ulasan User -->
-                                    <div class="flex gap-0.5">
-                                        <i v-for="i in 5" :key="i" class="fa-solid fa-star text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'"></i>
-                                    </div>
+                                    <!-- Teks Ulasan -->
+                                    <p class="text-sm text-gray-600 leading-relaxed">
+                                        "{{ review.review }}"
+                                    </p>
                                 </div>
-
-                                <!-- Teks Ulasan -->
-                                <p class="text-sm text-gray-600 leading-relaxed">
-                                    "{{ review.review }}"
-                                </p>
                             </div>
 
+                            <div v-if="asset.reviews.length > 6 && !showAllReviews" class="mt-8">
+                                <button @click="showAllReviews = true" class="px-6 py-3 rounded-lg border border-black bg-white hover:bg-gray-50 text-[#222222] font-semibold text-[15px] transition-colors inline-block">
+                                    Tampilkan ke-{{ asset.reviews.length }} ulasan
+                                </button>
+                            </div>
                         </div>
 
                         <!-- EMPTY STATE (Jika belum ada ulasan) -->

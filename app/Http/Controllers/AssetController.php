@@ -48,8 +48,33 @@ class AssetController extends Controller
             'favorites' => function ($query) {
                 $query->where('user_id', auth()->id());
             },
+            // Fasilitas sistem baru (via pivot asset_facilities)
+            'facilities:id,name,facility_category_id',
+            'facilities.category:id,name,icon',
             'units.pricings',
-            'units.images.gallery_category'
+            'units.images.gallery_category',
+            // Fasilitas tambahan per unit
+            'units.facilities:id,name,facility_category_id',
+            'units.facilities.category:id,name,icon',
+            // Bookings aktif per unit untuk cek sisa ketersediaan
+            'units.bookings' => function ($query) {
+                $query->where('end_date', '>=', now()->format('Y-m-d'))
+                      ->whereNotIn('booking_status', ['cancelled', 'rejected'])
+                      ->where(function ($q) {
+                          $q->where('booking_status', '!=', 'pending')
+                            ->orWhere(function ($q2) {
+                                $q2->where('booking_status', 'pending')
+                                   ->whereHas('payment', function ($q3) {
+                                       $q3->whereNotIn('payment_status', ['expired', 'failed', 'cancelled'])
+                                          ->where(function ($q4) {
+                                              $q4->where('payment_status', '!=', 'pending')
+                                                 ->orWhere('expires_at', '>', now());
+                                          });
+                                   });
+                            });
+                      })
+                      ->select('id', 'asset_unit_id', 'start_date', 'end_date', 'booking_status');
+            },
         ])
         ->loadAvg('reviews', 'rating')
         ->loadCount([
@@ -84,6 +109,18 @@ class AssetController extends Controller
                     'last_viewed' => now(),
                 ]);
             }
+
+            // Batasi jumlah riwayat dilihat maksimum 100 aset per user
+            $viewCount = AssetView::where('user_id', auth()->id())->count();
+            if ($viewCount > 100) {
+                $oldestViews = AssetView::where('user_id', auth()->id())
+                    ->orderBy('last_viewed', 'asc')
+                    ->limit($viewCount - 100)
+                    ->get();
+                foreach ($oldestViews as $oldView) {
+                    $oldView->delete();
+                }
+            }
         }
 
         $serviceFeeRecord = DB::table('service_fees')->first();
@@ -95,10 +132,41 @@ class AssetController extends Controller
             'value' => 5
         ];
 
+        // Fetch booked dates for the calendar on Detail page.
+        // - Asset TANPA unit (Villa, Rumah): tampilkan tanggal yang sudah diblokir di level asset.
+        // - Asset DENGAN unit (Hotel, Studio): kembalikan kosong, karena user belum pilih unit.
+        //   Pengecekan aktual dilakukan di backend saat booking.store.
+        $bookedDates = collect();
+        if ($asset->units->isEmpty()) {
+            $bookedDates = \App\Models\booking::where('asset_id', $asset->id)
+                ->whereNull('asset_unit_id')
+                ->where('end_date', '>=', now()->format('Y-m-d'))
+                ->whereNotIn('booking_status', ['cancelled', 'rejected'])
+                ->where(function ($q) {
+                    $q->where('booking_status', '!=', 'pending')
+                      ->orWhere(function ($q2) {
+                          $q2->where('booking_status', 'pending')
+                             ->whereHas('payment', function ($q3) {
+                                 $q3->where('payment_status', 'pending')
+                                    ->where('expires_at', '>', now());
+                             });
+                      });
+                })
+                ->select('start_date', 'end_date')
+                ->get()
+                ->map(function ($booking) {
+                    return [
+                        'from' => \Carbon\Carbon::parse($booking->start_date)->format('Y-m-d'),
+                        'to' => \Carbon\Carbon::parse($booking->end_date)->format('Y-m-d'),
+                    ];
+                });
+        }
+
         return inertia('Home/Assets/Show', [
-            'asset'      => $asset,
-            'serviceFee' => $serviceFee,
-            'assetView'  => $assetView,
+            'asset'       => $asset,
+            'serviceFee'  => $serviceFee,
+            'bookedDates' => $bookedDates,
+            'assetView'   => $assetView,
         ]);
     }
 

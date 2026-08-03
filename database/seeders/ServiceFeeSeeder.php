@@ -11,8 +11,8 @@ class ServiceFeeSeeder extends Seeder
     {
         DB::table('service_fees')->insert([
             [
-                'fee_type'  => 'percentage',
-                'fee_value' => 5.00,
+                'fee_type'  => 'fixed',
+                'fee_value' => 5000,
                 'created_at' => now(),
                 'updated_at' => now(),
             ],

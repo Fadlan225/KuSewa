@@ -27,7 +27,7 @@ watch(isKeywordSheetOpen, (v) => { if (v) keywordSheetMounted.value = true; });
 watch(isLokasiFullScreen, (v) => { if (v) lokasiSheetMounted.value = true; });
 
 const props = defineProps({
-    categories: { type: Array, default: () => [] }
+    sections: { type: Array, default: () => [] }
 });
 </script>
 
@@ -43,7 +43,7 @@ const props = defineProps({
         <Suspense><LokasiSearchSheet  v-if="lokasiSheetMounted" /></Suspense>
 
         <main class="w-full max-w-7xl mx-auto pb-24">
-            <AssetList :categories="props.categories" />
+            <AssetList :sections="props.sections" />
         </main>
 
     </AppLayout>

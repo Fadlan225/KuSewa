@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class AssetSeeder extends Seeder
 {
@@ -61,18 +62,23 @@ class AssetSeeder extends Seeder
                 $city         = $cities[$assetNum % count($cities)];
                 $fac          = $facs[$assetNum % count($facs)];
 
+                $title = "{$type->name} {$city} " . ($typeIdx * $assetsPerType + $n);
                 $batch[] = [
                     'owner_profile_id' => $ownerProfile->id,
                     'asset_type_id'    => $type->id,
-                    'title'            => "{$type->name} {$city} " . ($typeIdx * $assetsPerType + $n),
+                    'title'            => $title,
+                    'slug'             => Str::slug($title),
                     'description'      => "Tersedia {$type->name} untuk disewa di {$city}. Lokasi strategis, kondisi baik, siap huni/pakai. Fasilitas lengkap sesuai kebutuhan.",
                     'detail'           => json_encode([
                         'capacity' => rand(2, 200) . ' orang',
                         'facility' => $fac,
                         'luas'     => rand(20, 500) . ' m²',
                     ]),
+                    'country'     => 'Indonesia',
                     'province'    => 'Kalimantan Timur',
                     'city'        => $city,
+                    'subdistrict' => 'Kecamatan ' . $city,
+                    'postal_code' => '75000',
                     'address'     => "Jl. {$type->name} No. " . ($typeIdx * 10 + $n) . ", {$city}",
                     'latitude'    => number_format(-0.5022 + (($assetNum * 7) % 200 - 100) / 1000, 6),
                     'longitude'   => number_format(117.1536 + (($assetNum * 13) % 200 - 100) / 1000, 6),

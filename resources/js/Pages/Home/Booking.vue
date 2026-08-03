@@ -2,8 +2,11 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue'
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue'
-import { computed, watch } from 'vue'
+import { computed, watch, ref } from 'vue'
 import { usePage, useForm } from '@inertiajs/vue3'
+import flatPickr from 'vue-flatpickr-component'
+import 'flatpickr/dist/flatpickr.css'
+import { Indonesian } from "flatpickr/dist/l10n/id.js"
 
 const props = defineProps({
     asset: Object,
@@ -13,11 +16,21 @@ const props = defineProps({
     bankAccounts: {
         type: Array,
         default: () => []
+    },
+    bookedDates: {
+        type: Array,
+        default: () => []
     }
 })
 
 const page = usePage()
 const user = page.props.auth?.user
+
+// Tentukan mode sewa sebelum form diinisialisasi
+const rentalMode = props.requestParams?.rental_mode || props.asset?.type?.rental_unit || 'day';
+
+// Pesan error inline untuk booking conflict / error lainnya
+const bookingError = ref('')
 
 const form = useForm({
   asset_id: props.asset?.id || null,
@@ -31,10 +44,16 @@ const form = useForm({
   untukSaya: true,
   namaTamu: user?.name || '',
   guest_name: user?.name || '',
-  startDate: props.requestParams?.date_start?.split(' ')[0] || '',
-  endDate: props.requestParams?.date_end?.split(' ')[0] || '',
+  // Untuk mode JAM: simpan full datetime ("2026-07-30 09:00:00") agar overlap check per-jam berjalan
+  // Untuk mode lain: simpan date only ("2026-07-30")
+  startDate: rentalMode === 'hour'
+    ? (props.requestParams?.date_start || '')
+    : (props.requestParams?.date_start?.split(' ')[0] || ''),
+  endDate: rentalMode === 'hour'
+    ? (props.requestParams?.date_end || '')
+    : (props.requestParams?.date_end?.split(' ')[0] || ''),
   duration: props.requestParams?.duration ? Number(props.requestParams.duration) : 1,
-  rental_mode: props.requestParams?.rental_mode || 'day',
+  rental_mode: rentalMode,
   payment_method: props.bankAccounts?.length ? props.bankAccounts[0].id : null
 })
 
@@ -48,32 +67,94 @@ const totalPrice = computed(() => {
     return base + (base * (props.serviceFee / 100))
 })
 
-watch([() => form.startDate, () => form.endDate], ([newStart, newEnd]) => {
-    if (newStart && newEnd) {
+const flatpickrConfig = computed(() => {
+    return {
+        disable: props.bookedDates.map(date => {
+            return {
+                from: date.from,
+                to: date.to
+            }
+        }),
+        minDate: "today",
+        locale: Indonesian,
+        altInput: true,
+        altFormat: "d M Y",
+        dateFormat: "Y-m-d",
+        disableMobile: "true",
+    }
+});
+
+const hourDate = ref('');
+const hourStartTime = ref('');
+const hourEndTime = ref('');
+
+if (rentalMode === 'hour') {
+    if (form.startDate) {
+        const [d, t] = form.startDate.split(' ');
+        hourDate.value = d || '';
+        hourStartTime.value = t ? t.substring(0, 5) : '';
+    }
+    if (form.endDate) {
+        const [, t] = form.endDate.split(' ');
+        hourEndTime.value = t ? t.substring(0, 5) : '';
+    }
+}
+
+watch([hourDate, hourStartTime, hourEndTime], ([d, st, et]) => {
+    if (rentalMode === 'hour') {
+        if (d && st) form.startDate = `${d} ${st}:00`;
+        if (d && et) form.endDate = `${d} ${et}:00`;
+        
+        if (d && st && et) {
+            const start = new Date(`${d}T${st}:00`);
+            const end = new Date(`${d}T${et}:00`);
+            let diff = (end - start) / (1000 * 60 * 60);
+            if (diff <= 0) diff = 1;
+            form.duration = Math.ceil(diff);
+        }
+    }
+});
+
+watch(() => form.startDate, (newStart) => {
+    if (newStart && rentalMode === 'month') {
         const start = new Date(newStart);
-        const end = new Date(newEnd);
-        if (end > start) {
-            const rentalUnit = props.requestParams?.rental_mode || props.asset?.type?.rental_unit || 'day';
-            if (rentalUnit === 'month') {
-                let months = (end.getFullYear() - start.getFullYear()) * 12;
-                months -= start.getMonth();
-                months += end.getMonth();
-                form.duration = months <= 0 ? 1 : months;
-            } else {
-                const diffTime = Math.abs(end - start);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                form.duration = diffDays === 0 ? 1 : diffDays;
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + form.duration);
+        form.endDate = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    } else if (newStart && rentalMode !== 'hour') {
+        const start = new Date(newStart);
+        if (form.endDate) {
+            const end = new Date(form.endDate);
+            if (end <= start) {
+                const newEnd = new Date(start);
+                newEnd.setDate(newEnd.getDate() + 1);
+                form.endDate = new Date(newEnd.getTime() - newEnd.getTimezoneOffset() * 60000).toISOString().split('T')[0];
             }
         }
     }
-})
+});
+
+watch(() => form.endDate, (newEnd) => {
+    if (newEnd && form.startDate && rentalMode !== 'month' && rentalMode !== 'hour') {
+        const start = new Date(form.startDate);
+        const end = new Date(newEnd);
+        if (end > start) {
+            const diffTime = Math.abs(end - start);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            form.duration = diffDays === 0 ? 1 : diffDays;
+        }
+    }
+});
 
 const displayRentalUnit = computed(() => {
-    const mode = props.requestParams?.rental_mode || props.asset?.type?.rental_unit || 'day';
-    return mode === 'month' ? 'bulan' : (mode === 'night' ? 'malam' : (mode === 'year' ? 'tahun' : 'opsi'));
+    const labels = { hour: 'jam', day: 'hari', night: 'malam', month: 'bulan', year: 'tahun' };
+    return labels[form.rental_mode] || 'opsi';
 })
 
 const submitBooking = () => {
+    // Reset error sebelum submit baru
+    bookingError.value = ''
+
     // Sync snapshot fields before submitting
     form.booker_name = form.namaPemesan
     form.booker_phone = form.phone
@@ -82,8 +163,22 @@ const submitBooking = () => {
 
     form.post(route('booking.store'), {
         preserveScroll: true,
-        onSuccess: () => console.log('Booking submitted successfully!'),
-        onError: (errors) => console.error('Booking errors:', errors)
+        replace: true,
+        onSuccess: () => {
+            bookingError.value = ''
+        },
+        onError: (errors) => {
+            console.error('Booking errors:', errors)
+            if (errors.startDate) {
+                bookingError.value = errors.startDate
+            } else if (errors.endDate) {
+                bookingError.value = errors.endDate
+            } else {
+                bookingError.value = 'Terjadi kesalahan. Silakan periksa kembali data Anda.'
+            }
+            // Scroll ke atas agar error terlihat
+            window.scrollTo({ top: 0, behavior: 'smooth' })
+        }
     });
 }
 
@@ -113,6 +208,28 @@ watch(() => form.namaPemesan, (val) => {
         />
         <div class="min-h-screen bg-slate-50/60 text-slate-800 font-sans antialiased pb-28 lg:pb-16">
             <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+
+                <!-- INLINE ERROR BANNER -->
+                <transition
+                    enter-active-class="transition-all duration-300 ease-out"
+                    enter-from-class="opacity-0 -translate-y-2"
+                    enter-to-class="opacity-100 translate-y-0"
+                    leave-active-class="transition-all duration-200 ease-in"
+                    leave-from-class="opacity-100 translate-y-0"
+                    leave-to-class="opacity-0 -translate-y-2"
+                >
+                    <div v-if="bookingError" class="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-5 py-4">
+                        <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500 shrink-0"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold">Pemesanan Gagal</p>
+                            <p class="text-xs mt-0.5 text-red-700">{{ bookingError }}</p>
+                        </div>
+                        <button @click="bookingError = ''" class="text-red-400 hover:text-red-600 transition-colors ml-2">
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+                </transition>
+
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
 
                 <!-- MAIN CONTENT (KOLOM KIRI - 7 COLS) -->
@@ -183,7 +300,7 @@ watch(() => form.namaPemesan, (val) => {
 
                     <label class="flex items-center gap-2.5 pt-2 cursor-pointer select-none">
                         <input type="checkbox" v-model="form.untukSaya" class="w-4 h-4 rounded text-[#ffc000] focus:ring-[#ffc000] border-slate-300" />
-                        <span class="text-xs font-medium text-slate-700">Saya menginap untuk diri sendiri</span>
+                        <span class="text-xs font-medium text-slate-700">Saya memesan untuk diri sendiri</span>
                     </label>
                     </div>
                 </section>
@@ -226,7 +343,7 @@ watch(() => form.namaPemesan, (val) => {
                                     <span class="text-sm font-semibold text-slate-900">Transfer Bank</span>
                                 </div>
                             </div>
-                            
+
                             <!-- Sub-items Bank -->
                             <div class="px-4 pb-4 pt-1 space-y-2 bg-slate-50/50">
                                 <div v-for="bank in bankAccounts" :key="bank.id"
@@ -262,24 +379,62 @@ watch(() => form.namaPemesan, (val) => {
                 <!-- Order Summary Card -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-xl shadow-slate-200/50 space-y-5">
                     <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                            <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Mulai Sewa</label>
-                                <input type="date" v-model="form.startDate" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none" />
+                        <!-- Mode JAM: tampilkan read-only, tidak bisa diubah di halaman ini -->
+                        <!-- Mode JAM -->
+                        <template v-if="form.rental_mode === 'hour'">
+                            <div class="border-b border-slate-200 p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Tanggal Sewa</label>
+                                <flat-pickr v-model="hourDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
                             </div>
-                            <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Selesai Sewa</label>
-                                <input type="date" v-model="form.endDate" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none" />
+                            <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                                <div class="p-3.5 hover:bg-slate-50 transition-colors">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Mulai</label>
+                                    <input type="time" v-model="hourStartTime" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none">
+                                </div>
+                                <div class="p-3.5 hover:bg-slate-50 transition-colors">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Selesai</label>
+                                    <input type="time" v-model="hourEndTime" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none">
+                                </div>
                             </div>
-                        </div>
+                        </template>
+                        <!-- Mode Bulan -->
+                        <template v-else-if="form.rental_mode === 'month'">
+                            <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                                <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Mulai Sewa</label>
+                                    <flat-pickr v-model="form.startDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
+                                </div>
+                                <div class="p-3.5 bg-slate-50">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Selesai Sewa</label>
+                                    <div class="w-full text-sm font-bold text-slate-800 pt-0.5">{{ form.endDate ? new Date(form.endDate).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '—' }}</div>
+                                </div>
+                            </div>
+                        </template>
+                        <!-- Mode Hari / Malam / Tahun -->
+                        <template v-else>
+                            <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
+                                <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Mulai Sewa</label>
+                                    <flat-pickr v-model="form.startDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
+                                </div>
+                                <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Selesai Sewa</label>
+                                    <flat-pickr v-model="form.endDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
+                                </div>
+                            </div>
+                        </template>
                         <div class="p-3.5 flex justify-between items-center bg-slate-50">
                             <span class="text-xs font-medium text-slate-500">Durasi Sewa</span>
                             <span class="text-sm font-bold text-slate-900">{{ form.duration }} {{ displayRentalUnit }}</span>
                         </div>
                     </div>
 
-                    <button @click="submitBooking" :disabled="form.processing || !form.payment_method" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] text-[#0A2540] font-extrabold py-3.5 rounded-xl transition-all text-sm mt-4 disabled:opacity-50 hidden lg:block">
-                        {{ form.processing ? 'Memproses...' : 'Pesan Sekarang' }}
+                    <button @click="submitBooking" :disabled="form.processing || !form.payment_method" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] text-[#0A2540] font-extrabold py-3.5 rounded-xl transition-all text-sm mt-4 disabled:opacity-50 hidden lg:flex items-center justify-center gap-2">
+                        <template v-if="form.processing">
+                            <svg class="animate-spin h-4 w-4 text-[#0A2540]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Memproses...
+                        </template>
+                        <template v-else>Pesan Sekarang</template>
                     </button>
 
                     <div class="space-y-3 text-sm pt-5 mt-4 border-t border-slate-100">

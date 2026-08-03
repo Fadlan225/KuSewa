@@ -16,10 +16,14 @@ return new class extends Migration
             $table->foreignId('owner_profile_id')->constrained('owner_profiles')->onDelete('restrict');
             $table->foreignID('asset_type_id')->constrained()->onDelete('restrict');
             $table->string('title');
+            $table->string('slug')->unique();
             $table->string('description');
             $table->json('detail');
+            $table->string('country');
             $table->string('province');
             $table->string('city');
+            $table->string('subdistrict');
+            $table->char('postal_code', 5)->nullable();
             $table->string('address');
             $table->string('latitude');
             $table->string('longitude');

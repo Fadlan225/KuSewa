@@ -14,7 +14,7 @@ const props = defineProps({
     searchHistory:       { type: Array,  default: () => [] },
     trending:            { type: Array,  default: () => [] },
     locationSuggestions: { type: Array,  default: () => [] },
-    facilities:          { type: Array,  default: () => [] },
+    facilitiesByType:    { type: Array,  default: () => [] }, // [{type_id, type_name, facilities:[{id,name,icon}]}]
     categories:          { type: Array,  default: () => [] },
 });
 
@@ -73,14 +73,14 @@ const handleMin = (e) => {
     let val = parseInt(e.target.value.replace(/\D/g, '')) || 0;
     minPrice.value = val;
     validatePrices();
-    applyFilters(); 
+    applyFilters();
 };
 const handleMax = (e) => {
     let val = parseInt(e.target.value.replace(/\D/g, '')) || 0;
     if (val > maxLimit) val = maxLimit;
     maxPrice.value = val;
     validatePrices();
-    applyFilters(); 
+    applyFilters();
 };
 
 // Watch activeThumb to trigger applyFilters when drag ends (activeThumb becomes null)
@@ -156,11 +156,81 @@ const toggleCategory = (catName) => {
     else selectedAssets.value.push(catName);
 };
 
-const toggleFacility = (fac) => {
-    const idx = selectedFacilities.value.indexOf(fac);
+const toggleFacility = (facId) => {
+    const idx = selectedFacilities.value.indexOf(facId);
     if (idx > -1) selectedFacilities.value.splice(idx, 1);
-    else selectedFacilities.value.push(fac);
+    else selectedFacilities.value.push(facId);
 };
+
+// State untuk pencarian dan collapse fasilitas
+const facilitySearch = ref('');
+const openFacilityCategories = ref({});
+
+const toggleFacilityCategory = (catName) => {
+    openFacilityCategories.value[catName] = !openFacilityCategories.value[catName];
+};
+
+// Fasilitas yang tampil di sidebar — dinamis berdasarkan tipe yang dipilih, digrup per kategori dan difilter
+const groupedFacilities = computed(() => {
+    if (!props.facilitiesByType || props.facilitiesByType.length === 0) return [];
+
+    let flat = [];
+    const seen = new Set();
+
+    // 1. Ambil list fasilitas flat sesuai tipe yang dipilih
+    if (selectedAssets.value.length === 0) {
+        props.facilitiesByType.forEach(typeGroup => {
+            typeGroup.facilities.forEach(f => {
+                if (!seen.has(f.id)) {
+                    seen.add(f.id);
+                    flat.push(f);
+                }
+            });
+        });
+    } else {
+        props.facilitiesByType
+            .filter(typeGroup => selectedAssets.value.includes(typeGroup.type_name))
+            .forEach(typeGroup => {
+                typeGroup.facilities.forEach(f => {
+                    if (!seen.has(f.id)) {
+                        seen.add(f.id);
+                        flat.push(f);
+                    }
+                });
+            });
+    }
+
+    // 2. Filter berdasarkan pencarian
+    if (facilitySearch.value.trim() !== '') {
+        const query = facilitySearch.value.toLowerCase();
+        flat = flat.filter(f => f.name.toLowerCase().includes(query));
+    }
+
+    // 3. Kelompokkan per kategori
+    const groups = {};
+    flat.forEach(f => {
+        const cat = f.category_name || 'Lainnya';
+        if (!groups[cat]) {
+            groups[cat] = [];
+            // Buka kategori secara default jika belum diset
+            if (openFacilityCategories.value[cat] === undefined) {
+                openFacilityCategories.value[cat] = true;
+            }
+        }
+        groups[cat].push(f);
+    });
+
+    // Jika sedang mencari, paksa buka semua kategori yang tampil
+    if (facilitySearch.value.trim() !== '') {
+        Object.keys(groups).forEach(cat => openFacilityCategories.value[cat] = true);
+    }
+
+    // Konversi object ke array dan urutkan abjad kategori
+    return Object.keys(groups).map(catName => ({
+        name: catName,
+        facilities: groups[catName]
+    })).sort((a, b) => a.name.localeCompare(b.name));
+});
 
 const resetFilters = () => {
     keywordQuery.value = '';
@@ -205,12 +275,12 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
         </div>
 
         <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-8 sm:py-12 pb-24 sm:pb-16 text-[#1D1D1F]">
-            
+
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                
+
                 <!-- SIDEBAR KIRI (DESKTOP) -->
                 <div class="hidden lg:block lg:col-span-3 space-y-6 lg:sticky lg:top-[140px] h-fit">
-                    
+
                     <!-- Dummy Map -->
                     <div class="bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden relative">
                         <!-- Gambar peta sebagai background -->
@@ -224,19 +294,68 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                     </div>
 
 
-                    <!-- Filter Fasilitas -->
-                    <div class="bg-white rounded-2xl p-5 border shadow-sm">
-                        <h3 class="font-extrabold text-[#0A2540] text-[15px] mb-4">Fasilitas Populer</h3>
-                        <div class="space-y-3 max-h-[250px] overflow-y-auto pr-2 custom-scrollbar">
-                            <label v-for="fac in props.facilities" :key="fac" class="flex items-center gap-3 cursor-pointer group">
-                                <div class="relative flex items-center">
-                                    <input type="checkbox" :checked="selectedFacilities.includes(fac)" @change="toggleFacility(fac)" class="peer sr-only">
-                                    <div class="w-5 h-5 rounded border-2 border-gray-300 bg-white peer-checked:bg-[#0A2540] peer-checked:border-[#0A2540] transition flex items-center justify-center">
-                                        <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100"></i>
-                                    </div>
+                    <!-- Filter Fasilitas Header & Search -->
+                    <div class="bg-white rounded-2xl p-5 border border-gray-200 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-extrabold text-[#0A2540] text-[15px]">
+                                Fasilitas
+                                <span v-if="selectedAssets.length > 0" class="ml-1 text-[11px] font-semibold text-[#FFC000] bg-amber-50 px-1.5 py-0.5 rounded-full">
+                                    {{ selectedAssets[0] }}
+                                </span>
+                            </h3>
+                            <span v-if="selectedFacilities.length > 0" class="text-[10px] font-bold text-[#0A2540] bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                                {{ selectedFacilities.length }} dipilih
+                            </span>
+                        </div>
+
+                        <!-- Search input for facilities -->
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <i class="fa-solid fa-search text-gray-400 text-xs"></i>
+                            </div>
+                            <input type="text" v-model="facilitySearch" placeholder="Cari fasilitas..." class="w-full text-sm border-gray-200 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl pl-9 py-2 bg-slate-50 transition" />
+                        </div>
+                    </div>
+
+                    <!-- Empty state kalau tipe dipilih tapi tidak punya fasilitas -->
+                    <p v-if="groupedFacilities.length === 0" class="text-xs text-gray-400 text-center py-4 bg-white rounded-2xl border border-gray-200 shadow-sm">
+                        Tidak ada fasilitas tersedia
+                    </p>
+
+                    <!-- Fasilitas Cards (Per Kategori) -->
+                    <div v-else class="space-y-4">
+                        <div v-for="group in groupedFacilities" :key="group.name" class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                            <!-- Group Header -->
+                            <button @click="toggleFacilityCategory(group.name)" class="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition">
+                                <span class="text-[15px] font-extrabold text-[#0A2540]">{{ group.name }}</span>
+                                <div class="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center">
+                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform" :class="{'rotate-180': openFacilityCategories[group.name]}"></i>
                                 </div>
-                                <span class="text-sm font-semibold text-[#6C757D] group-hover:text-[#0A2540] transition">{{ fac }}</span>
-                            </label>
+                            </button>
+
+                            <!-- Group Content (Checkboxes) -->
+                            <div v-show="openFacilityCategories[group.name]" class="px-4 pb-4 space-y-1">
+                                <label
+                                    v-for="fac in group.facilities"
+                                    :key="fac.id"
+                                    class="flex items-center gap-3 cursor-pointer group py-1.5 px-2 rounded-lg hover:bg-slate-50 transition"
+                                >
+                                    <div class="relative flex items-center shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            :checked="selectedFacilities.includes(fac.id)"
+                                            @change="toggleFacility(fac.id)"
+                                            class="peer sr-only"
+                                        >
+                                        <div class="w-5 h-5 rounded border border-gray-300 bg-white peer-checked:bg-[#FFC000] peer-checked:border-[#FFC000] transition flex items-center justify-center">
+                                            <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100"></i>
+                                        </div>
+                                    </div>
+                                    <span class="text-sm font-medium text-[#6C757D] group-hover:text-[#0A2540] transition leading-tight">
+                                        {{ fac.name }}
+                                    </span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
@@ -251,7 +370,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                             <h1 class="text-xl sm:text-2xl font-extrabold text-[#0A2540]">{{ searchQuery || 'Semua Lokasi' }}</h1>
                             <p class="text-xs sm:text-sm text-[#6C757D] mt-0.5">{{ props.assets?.total ?? assetData.length }} properti ditemukan</p>
                         </div>
-                        
+
                         <div class="flex items-center gap-3">
                             <span class="text-xs font-bold text-[#6C757D] hidden sm:inline">Urutkan:</span>
                             <div class="relative w-48 z-40">
@@ -265,7 +384,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                                     </div>
                                     <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''"></i>
                                 </button>
-                                
+
                                 <Transition
                                     enter-active-class="transition ease-out duration-100"
                                     enter-from-class="transform opacity-0 scale-95"
@@ -305,16 +424,16 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                         </div>
 
                         <div v-else-if="assetData.length > 0" class="flex flex-col gap-4">
-                            <HorizontalAssetCard 
-                                v-for="(asset, index) in assetData" 
+                            <HorizontalAssetCard
+                                v-for="(asset, index) in assetData"
                                 :key="asset.id"
                                 :asset="asset"
                             :categoryName="asset.type?.category?.name || asset.category?.name || 'Lainnya'"
                             />
-                            
+
                             <!-- Intersection Observer Target for Infinite Scroll -->
                             <div ref="loadMoreTarget" class="h-4 w-full"></div>
-                            
+
                             <!-- Loading Indicator -->
                             <div v-if="isLoadingMore" class="flex justify-center items-center py-6">
                                 <div class="w-8 h-8 border-4 border-[#FFC000] border-t-transparent rounded-full animate-spin"></div>
@@ -352,6 +471,6 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
         </div>
 
 
-        
+
     </AppLayout>
 </template>

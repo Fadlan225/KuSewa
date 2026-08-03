@@ -68,7 +68,13 @@ const isLoggedIn = computed(() => !!page.props.auth.user)
                 class="relative flex flex-col items-center justify-center gap-1.5 h-full w-20 transition-colors duration-300"
                 :class="isActive('/chat').value ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
 
-                <i class="fa-solid fa-inbox text-xl relative z-10"></i>
+                <div class="relative flex flex-col items-center z-10">
+                    <i class="fa-solid fa-inbox text-xl"></i>
+                    <!-- Notification Badge -->
+                    <span v-if="page.props.auth.unreadCount > 0" class="absolute -top-1 -right-3 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold px-1 min-w-[15px] h-[15px] rounded-full">
+                        {{ page.props.auth.unreadCount > 99 ? '99+' : page.props.auth.unreadCount }}
+                    </span>
+                </div>
                 <span class="text-[10px] font-bold relative z-10">Kotak Masuk</span>
 
                 <transition enter-active-class="transition opacity-0 duration-300" enter-to-class="opacity-100">

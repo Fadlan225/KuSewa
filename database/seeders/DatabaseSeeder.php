@@ -17,6 +17,11 @@ class DatabaseSeeder extends Seeder
             AssetCategorySeeder::class,     // 5 kategori
             AssetTypeSeeder::class,         // 22 tipe aset
 
+            // ── Facilities ─────────────────────────────────────────────────
+            FacilityCategorySeeder::class,  // Master kategori fasilitas
+            FacilitySeeder::class,          // Master fasilitas (WiFi, AC, dll)
+            AssetTypeFacilitySeeder::class, // Aturan fasilitas per asset type
+
             // ── Users & Profiles ───────────────────────────────────────────
             UsersSeeder::class,             // 1 admin + 30 owner + 99 customer
             OwnerProfileSeeder::class,      // 30 profil owner (verified)
@@ -25,6 +30,7 @@ class DatabaseSeeder extends Seeder
             // ── Assets & Images ────────────────────────────────────────────
             AssetSeeder::class,             // 220 aset (10/type)
             AssetUnitSeeder::class,         // Asset units (kamar, tipe apartemen, kios, studio, dll)
+            AssetFacilitySeeder::class,     // Fasilitas per aset & unit (sistem baru)
             GaleryCategorySeeder::class,    // Kategori galeri foto per tipe
             AssetImageSeeder::class,        // Gambar per aset & unit dengan kategori galeri
             AssetPricingSeeder::class,      // Harga realistis per tipe

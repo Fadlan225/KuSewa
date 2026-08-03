@@ -72,11 +72,11 @@ const initials = computed(() => {
 
 // Mendefinisikan class FontAwesome untuk setiap menu
 const accountMenuItems = [
-    { label: 'Profile', icon: 'fa-regular fa-user', route: route('profile.settings') },
-    { label: 'Favorite', icon: 'fa-regular fa-heart', route: route('favorites.index') },
+    { label: 'Profil Saya', icon: 'fa-regular fa-user', route: route('profile.settings') },
+    { label: 'Favorit', icon: 'fa-regular fa-heart', route: route('favorites.index') },
     { label: 'Ulasan', icon: 'fa-regular fa-comment-dots', route: '#' },
     { label: 'Aktivitas', icon: 'fa-solid fa-chart-line', route: route('aktivitas.index') },
-    { label: 'Terakhir di lihat', icon: 'fa-regular fa-clock', route: '#' },
+    { label: 'Terakhir di lihat', icon: 'fa-regular fa-clock', route: route('last-seen.index') },
 ];
 
 const settingsMenuItems = [
@@ -86,9 +86,33 @@ const settingsMenuItems = [
 
 const helpMenuItems = [
     { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: '#' },
-    { label: 'Customer Services', icon: 'fa-solid fa-headset', route: '#' },
-    { label: 'FAQ', icon: 'fa-regular fa-circle-question', route: '#' },
+    { label: 'Pelayanan Pelanggan', icon: 'fa-solid fa-headset', route: '#' },
 ];
+
+const locationDenied = ref(false);
+import { onMounted } from 'vue';
+
+onMounted(() => {
+    if (localStorage.getItem('location_denied') === 'true') {
+        locationDenied.value = true;
+    }
+});
+
+const requestLocationPermission = () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                localStorage.removeItem('location_denied');
+                locationDenied.value = false;
+            },
+            (error) => {
+                alert("Izin lokasi masih ditolak atau diblokir secara permanen oleh browser. Silakan ubah pengaturan situs pada browser Anda.");
+            }
+        );
+    } else {
+        alert("Geolocation tidak didukung oleh browser Anda.");
+    }
+};
 </script>
 
 <template>
@@ -157,6 +181,27 @@ const helpMenuItems = [
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Pesan Izin Lokasi (ditampilkan jika ditolak) -->
+            <div v-if="locationDenied" class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-bold text-amber-800">Izin Lokasi Ditolak</h3>
+                        <p class="text-sm text-amber-700 mt-1">
+                            Izinkan lokasi pada pengaturan browser Anda untuk melihat rekomendasi <strong>Aset Dekat Anda</strong> di halaman Beranda.
+                        </p>
+                    </div>
+                </div>
+                <button
+                    @click="requestLocationPermission"
+                    class="shrink-0 px-4 py-2 bg-amber-400 text-amber-900 font-bold text-xs rounded hover:bg-amber-500 transition-colors w-full sm:w-auto"
+                >
+                    Izinkan Lokasi
+                </button>
             </div>
 
             <!-- Bagian Ringkasan Pesanan -->

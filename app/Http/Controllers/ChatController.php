@@ -58,6 +58,8 @@ class ChatController extends Controller
                     'avatarText' => strtoupper(substr($contact->name, 0, 2)),
                     'avatar' => !empty($contact->profile_photo) ? asset('storage/'.$contact->profile_photo) : null,
                     'assetName' => $chat->asset->title ?? 'Aset Dihapus',
+                    'assetSlug' => $chat->asset->slug ?? null,
+                    'assetId' => $chat->asset_id,
                     'assetImage' => $chat->asset->images->first() ? $chat->asset->images->first()->image_url : null,
                     'isOnline' => true, // Dummy untuk UI
                     'lastMessage' => $lastMsg ? (

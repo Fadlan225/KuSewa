@@ -131,7 +131,7 @@ const toggleFavorite = () => {
 
 // ── Navigasi (tanpa <Link> agar tidak konflik di mobile) ──────────────
 const navigateToAsset = () => {
-    router.visit(route('assets.show', props.asset.id));
+    router.visit(route('assets.show', props.asset.slug));
 };
 
 let lastTapTime = 0;

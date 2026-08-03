@@ -69,6 +69,41 @@ class HomeController extends Controller
     }
 
     /**
+     * Helper: hitung distribusi harga untuk histogram
+     */
+    private function getPriceDistribution($assetIds = null): array
+    {
+        $query = \App\Models\asset_pricing::orderBy('id');
+        
+        if ($assetIds !== null) {
+            $query->whereIn('asset_id', $assetIds);
+        } else {
+            $query->whereIn('asset_id', asset::where('status', 'active')->pluck('id'));
+        }
+
+        $prices = $query->get(['asset_id', 'price'])
+            ->unique('asset_id')
+            ->pluck('price');
+
+        $histogramBuckets = 30;
+        $histogramMax = 10000000;
+        $bucketSize = $histogramMax / $histogramBuckets;
+        $priceDistribution = array_fill(0, $histogramBuckets, 0);
+
+        foreach ($prices as $price) {
+            if ($price >= $histogramMax) {
+                $priceDistribution[$histogramBuckets - 1]++;
+            } else {
+                $idx = floor($price / $bucketSize);
+                if ($idx >= $histogramBuckets) $idx = $histogramBuckets - 1;
+                $priceDistribution[$idx]++;
+            }
+        }
+        
+        return $priceDistribution;
+    }
+
+    /**
      * Halaman beranda utama.
      * Arsitektur baru: Category → Types → Assets.
      * Homepage menampilkan per CATEGORY (Hunian, Komersial, Lahan, Event, Media Iklan)
@@ -76,53 +111,190 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // Ambil semua kategori beserta type_ids di bawahnya
+        $sections = [];
+
+        // 1. Dekat Lokasi Anda (Akan diisi dinamis via API Frontend)
+        $sections[] = [
+            'id'      => 'nearby',
+            'title'   => 'Dekat Lokasi Anda',
+            'icon'    => 'fa-solid fa-location-dot',
+            'type'    => 'dynamic',
+            'api_url' => route('api.home.nearby-assets'), // pastikan nama route ini ada
+            'assets'  => []
+        ];
+
+        // Helper common queries & transformations
+        $mapAsset = function ($asset) {
+            $favorite = $asset->favorites->first();
+            $asset->isFavorite = (bool) $favorite;
+            $asset->favorite_id = $favorite?->id;
+            unset($asset->favorites);
+            return $asset;
+        };
+
+        $withCommonRelations = [
+            'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
+            'defaultPricing:id,asset_id,price',
+            'type:id,name,allow_units,rental_unit,category_id',
+            'favorites' => function ($q) {
+                if (auth()->check()) {
+                    $q->select(['id', 'user_id', 'asset_id'])->where('user_id', auth()->id());
+                } else {
+                    $q->whereRaw('1=0');
+                }
+            }
+        ];
+
+        // 2. Populer Minggu Ini
+        $popularAssets = asset::where('status', 'active')
+            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
+            ->withCount(['bookings', 'views', 'favorites', 'reviews'])
+            ->withAvg('reviews as reviews_avg_rating', 'rating')
+            ->orderByRaw('((IFNULL(bookings_count, 0) * 5) + (IFNULL(views_count, 0) * 1) + (IFNULL(favorites_count, 0) * 3) + (IFNULL(reviews_count, 0) * 2) + (IFNULL(reviews_avg_rating, 0) * 2)) DESC')
+            ->limit(10)
+            ->with($withCommonRelations)
+            ->get()
+            ->map($mapAsset);
+
+        $sections[] = [
+            'id'     => 'popular',
+            'title'  => 'Populer Minggu Ini',
+            'icon'   => 'fa-solid fa-fire',
+            'type'   => 'static',
+            'assets' => $popularAssets
+        ];
+
+        // 3. Terakhir Dilihat (Perlu login)
+        if (auth()->check()) {
+            $viewedAssetIds = \App\Models\AssetView::where('user_id', auth()->id())
+                ->orderByDesc('last_viewed')
+                ->limit(10)
+                ->pluck('asset_id');
+
+            if ($viewedAssetIds->isNotEmpty()) {
+                $viewedAssets = asset::whereIn('id', $viewedAssetIds)
+                    ->where('status', 'active')
+                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
+                    ->with($withCommonRelations)
+                    ->withAvg('reviews as reviews_avg_rating', 'rating')
+                    ->get();
+
+                // Urutkan kembali sesuai dengan urutan id di array viewedAssetIds
+                $sortedViewedAssets = $viewedAssets->sortBy(function($model) use ($viewedAssetIds) {
+                    return array_search($model->id, $viewedAssetIds->toArray());
+                })->values()->map($mapAsset);
+
+                $sections[] = [
+                    'id'     => 'recent',
+                    'title'  => 'Terakhir Dilihat',
+                    'icon'   => 'fa-solid fa-clock-rotate-left',
+                    'type'   => 'static',
+                    'assets' => $sortedViewedAssets
+                ];
+            }
+        }
+
+        // 4. Karena anda menyukai (Perlu login)
+        if (auth()->check()) {
+            $favTypes = \App\Models\favorite::where('favorites.user_id', auth()->id())
+                ->join('assets', 'assets.id', '=', 'favorites.asset_id')
+                ->join('asset_types', 'asset_types.id', '=', 'assets.asset_type_id')
+                ->select('asset_types.id', 'asset_types.name', \DB::raw('count(*) as count'))
+                ->groupBy('asset_types.id', 'asset_types.name')
+                ->orderByDesc('count')
+                ->limit(3)
+                ->get();
+
+            foreach ($favTypes as $favType) {
+                $recommendedAssets = asset::where('asset_type_id', $favType->id)
+                    ->where('status', 'active')
+                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
+                    ->orderByDesc('id')
+                    ->limit(10)
+                    ->with($withCommonRelations)
+                    ->withAvg('reviews as reviews_avg_rating', 'rating')
+                    ->get()
+                    ->map($mapAsset);
+
+                if ($recommendedAssets->isNotEmpty()) {
+                    $sections[] = [
+                        'id'     => 'recommendation_' . $favType->id,
+                        'title'  => 'Karena Anda Menyukai ' . $favType->name,
+                        'icon'   => 'fa-solid fa-thumbs-up',
+                        'type'   => 'static',
+                        'assets' => $recommendedAssets
+                    ];
+                }
+            }
+        }
+
+        // 5. Rating tertinggi
+        $topRatedAssets = asset::where('status', 'active')
+            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
+            ->withAvg('reviews as reviews_avg_rating', 'rating')
+            ->havingRaw('reviews_avg_rating > 0')
+            ->orderByDesc('reviews_avg_rating')
+            ->limit(10)
+            ->with($withCommonRelations)
+            ->get()
+            ->map($mapAsset);
+
+        if ($topRatedAssets->isNotEmpty()) {
+            $sections[] = [
+                'id'     => 'top_rated',
+                'title'  => 'Rating Tertinggi',
+                'icon'   => 'fa-solid fa-star',
+                'type'   => 'static',
+                'assets' => $topRatedAssets
+            ];
+        }
+
+        // 6. Kategori-kategori (List yang lama di bagian paling bawah)
         $categories = asset_category::select(['id', 'name', 'icon'])
             ->with(['types:id,category_id,name,allow_units,rental_unit'])
             ->whereHas('types.assets', fn($q) => $q->where('status', 'active'))
             ->get();
 
-        // Untuk setiap kategori, load aset dari semua typenya (max 12)
-        $categories->each(function ($category) {
+        $categories->each(function ($category) use (&$sections, $mapAsset, $withCommonRelations) {
             $typeIds = $category->types->pluck('id');
 
-            $category->assets = asset::whereIn('asset_type_id', $typeIds)
+            $categoryAssets = asset::whereIn('asset_type_id', $typeIds)
                 ->where('status', 'active')
-                ->select(['id', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
-                ->with([
-                    'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
-                    'defaultPricing:id,asset_id,price',
-                    'type:id,name,allow_units,rental_unit,category_id',
-                    'favorites' => function ($q) {
-                        $q->select(['id', 'user_id', 'asset_id'])
-                          ->where('user_id', auth()->id());
-                    }
-                ])
+                ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'address', 'status', 'detail'])
+                ->with($withCommonRelations)
                 ->withAvg('reviews as reviews_avg_rating', 'rating')
                 ->latest('id')
-                ->limit(12)
+                ->limit(10)
                 ->get()
-                ->each(function ($asset) {
-                    $favorite = $asset->favorites->first();
-                    $asset->isFavorite  = (bool) $favorite;
-                    $asset->favorite_id = $favorite?->id;
-                    unset($asset->favorites);
-                });
-        })
-        ->filter(fn($cat) => $cat->assets->isNotEmpty())
-        ->values();
+                ->map($mapAsset);
+
+            if ($categoryAssets->isNotEmpty()) {
+                $sections[] = [
+                    'id'     => 'category_' . $category->id,
+                    'title'  => $category->name,
+                    'icon'   => $category->icon,
+                    'type'   => 'static',
+                    'assets' => $categoryAssets
+                ];
+            }
+        });
+
 
         $meta = $this->getSearchMeta();
         $locationSuggestions = $this->getLocationSuggestions();
+        $facilitiesByType = $this->getFacilitiesByType();
+        $priceDistribution = $this->getPriceDistribution(); // Global distribution
 
         return inertia('Home/index', [
-            'categories'          => $categories,
+            'sections'            => $sections,
             'allCategories'       => asset_category::select(['id', 'name', 'icon'])
                                         ->with(['types:id,category_id,name,allow_units,rental_unit'])
                                         ->get(),
             'searchHistory'       => $meta['searchHistory'],
             'trending'            => $meta['trending'],
             'locationSuggestions' => $locationSuggestions,
+            'facilitiesByType'    => $facilitiesByType,
+            'priceDistribution'   => $priceDistribution,
         ]);
     }
 
@@ -143,7 +315,7 @@ class HomeController extends Controller
         $query = asset::where('status', 'active')
             ->select([
                 'id', 'asset_type_id', 'owner_profile_id',
-                'title', 'city', 'address', 'status', 'detail'
+                'title', 'slug', 'city', 'address', 'status', 'detail'
             ])
             ->with([
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
@@ -179,34 +351,62 @@ class HomeController extends Controller
             });
         }
 
+        // --- Calculate Price Distribution (before price filter) ---
+        $assetIdsForHistogram = (clone $query)->pluck('assets.id');
+        $priceDistribution = $this->getPriceDistribution($assetIdsForHistogram);
+
         // Filter harga
         if ($minPrice > 0 || $maxPrice < 10000000) {
             $query->whereHas('defaultPricing', fn($q) => $q->whereBetween('price', [$minPrice, $maxPrice]));
         }
 
-        // Filter fasilitas
+        // Filter fasilitas (sistem baru: pivot asset_facilities)
         $facilities = request('facilities', []);
         if (!empty($facilities) && is_array($facilities)) {
-            $query->where(function ($q) use ($facilities) {
-                foreach ($facilities as $facility) {
-                    $q->whereJsonContains('detail->facility', $facility);
-                }
+            $query->whereHas('facilities', function ($q) use ($facilities) {
+                $q->whereIn('facilities.id', $facilities);
             });
         }
 
-        // Filter jadwal — exclude aset yang sudah dipesan (pending/accepted) pada rentang tsb
+        // Filter jadwal — exclude aset yang sudah dipesan pada rentang tsb
         if ($dateStart && $dateEnd) {
-            $query->whereDoesntHave('bookings', function ($q) use ($dateStart, $dateEnd) {
-                $q->whereIn('booking_status', ['pending', 'accepted'])
-                  ->where('start_date', '<=', $dateEnd)
-                  ->where('end_date', '>=', $dateStart);
+            $parsedDateStart = \Carbon\Carbon::parse($dateStart);
+            $parsedDateEnd = \Carbon\Carbon::parse($dateEnd)->endOfDay();
+
+            $query->whereDoesntHave('bookings', function ($q) use ($parsedDateStart, $parsedDateEnd) {
+                $q->whereNotIn('booking_status', ['cancelled', 'rejected'])
+                  ->where('start_date', '<', $parsedDateEnd)
+                  ->where('end_date', '>', $parsedDateStart)
+                  ->where(function ($q2) {
+                      $q2->where('booking_status', '!=', 'pending')
+                         ->orWhere(function ($q3) {
+                             $q3->where('booking_status', 'pending')
+                                ->whereHas('payment', function ($q4) {
+                                    $q4->where('payment_status', 'pending')
+                                       ->where('expires_at', '>', now());
+                                });
+                         });
+                  });
             });
         } elseif ($dateStart) {
             // Hanya tanggal mulai dipilih — cek overlap di hari itu
-            $query->whereDoesntHave('bookings', function ($q) use ($dateStart) {
-                $q->whereIn('booking_status', ['pending', 'accepted'])
-                  ->where('start_date', '<=', $dateStart)
-                  ->where('end_date', '>=', $dateStart);
+            $parsedDateStart = \Carbon\Carbon::parse($dateStart);
+            $parsedDateEnd = \Carbon\Carbon::parse($dateStart)->endOfDay();
+
+            $query->whereDoesntHave('bookings', function ($q) use ($parsedDateStart, $parsedDateEnd) {
+                $q->whereNotIn('booking_status', ['cancelled', 'rejected'])
+                  ->where('start_date', '<', $parsedDateEnd)
+                  ->where('end_date', '>', $parsedDateStart)
+                  ->where(function ($q2) {
+                      $q2->where('booking_status', '!=', 'pending')
+                         ->orWhere(function ($q3) {
+                             $q3->where('booking_status', 'pending')
+                                ->whereHas('payment', function ($q4) {
+                                    $q4->where('payment_status', 'pending')
+                                       ->where('expires_at', '>', now());
+                                });
+                         });
+                  });
             });
         }
 
@@ -241,21 +441,10 @@ class HomeController extends Controller
         });
 
         $meta = $this->getSearchMeta();
-        $locationQuery = $location ?: null;
+        $locationQuery = null; // Always fetch default suggestions for the dropdown
         $locationSuggestions = $this->getLocationSuggestions($locationQuery);
 
-        // Ambil semua fasilitas unik - di-cache 60 menit agar tidak query ulang tiap request
-        // Menggunakan JSON_EACH di SQLite / JSON_TABLE di MySQL untuk ekstraksi di DB level
-        $allFacilities = Cache::remember('asset_facilities', 3600, function () {
-            return asset::where('status', 'active')
-                ->whereNotNull('detail')
-                ->pluck('detail')
-                ->flatMap(fn($d) => $d['facility'] ?? [])
-                ->unique()
-                ->filter()
-                ->values()
-                ->toArray();
-        });
+        $facilitiesByType = $this->getFacilitiesByType();
 
         return inertia('Home/Assets/Index', [
             'assets'              => $assets,
@@ -277,10 +466,11 @@ class HomeController extends Controller
                 ->with(['types:id,category_id,name,allow_units,rental_unit'])
                 ->get(),
             'allTypes'            => asset_type::select(['id', 'category_id', 'name', 'allow_units', 'rental_unit'])->get(),
-            'facilities'          => $allFacilities,
+            'facilitiesByType'    => $facilitiesByType, // fasilitas terstruktur per tipe
             'searchHistory'       => $meta['searchHistory'],
             'trending'            => $meta['trending'],
             'locationSuggestions' => $locationSuggestions,
+            'priceDistribution'   => $priceDistribution,
         ]);
     }
 
@@ -400,5 +590,36 @@ class HomeController extends Controller
             return back()->with('success', 'Kata kunci berhasil dihapus.');
         }
         return back();
+    }
+
+    /**
+     * Helper untuk mengambil data fasilitas terstruktur per tipe
+     */
+    private function getFacilitiesByType()
+    {
+        return Cache::remember('facilities_by_type_v2', 3600, function () {
+            return \App\Models\asset_type::select(['id', 'name'])
+                ->with([
+                    'allowedFacilities' => fn($q) => $q
+                        ->select(['facilities.id', 'facilities.name', 'facilities.facility_category_id'])
+                        ->with('category:id,name')
+                        ->where('asset_type_facilities.scope', 'asset')
+                        ->orderBy('facilities.sort_order')
+                ])
+                ->whereHas('allowedFacilities')
+                ->orderBy('name')
+                ->get()
+                ->map(fn($type) => [
+                    'type_id'    => $type->id,
+                    'type_name'  => $type->name,
+                    'facilities' => $type->allowedFacilities->map(fn($f) => [
+                        'id'            => $f->id,
+                        'name'          => $f->name,
+                        'category_name' => $f->category?->name,
+                    ])->values()->toArray(),
+                ])
+                ->values()
+                ->toArray();
+        });
     }
 }

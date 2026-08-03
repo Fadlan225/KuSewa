@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed, nextTick } from 'vue';
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
@@ -102,7 +102,19 @@ onMounted(() => {
             generateCodes();
         });
     }
+
+    // Intercept native back button
+    window.history.pushState(null, null, window.location.href);
+    window.addEventListener('popstate', onPopState);
 });
+
+onUnmounted(() => {
+    window.removeEventListener('popstate', onPopState);
+});
+
+const onPopState = (event) => {
+    router.visit(route('aktivitas.index'));
+};
 
 const goBack = () => {
     router.visit(route('aktivitas.index'));
@@ -145,8 +157,8 @@ const durationString = computed(() => {
 });
 
 const assetTitle = computed(() => {
-    let title = props.booking.asset?.title || '';
-    let unitName = props.booking.asset_unit?.name || props.booking.assetUnit?.name;
+    let title = props.booking.asset_name || '';
+    let unitName = props.booking.asset_unit_name;
     if (unitName) {
         title += ' - ' + unitName;
     }
@@ -253,7 +265,7 @@ const copyCode = async () => {
     <AppLayout :hideNavbar="true" hideBottombar>
         <div class="min-h-screen bg-[#F8F9FA] pb-24 md:pb-8 text-[#1D1D1F] font-sans relative flex flex-col">
             <!-- NAVBAR -->
-            <DetailNavbar backUrl="/aktivitas" :showSections="false" :showShare="false" :showFavorite="false" />
+            <DetailNavbar backUrl="/aktivitas" :forceBackUrl="true" :showSections="false" :showShare="false" :showFavorite="false" />
 
         <!-- CONTAINER (Responsive Width Constraint) -->
         <div class="w-full max-w-3xl mx-auto p-4 flex-1">

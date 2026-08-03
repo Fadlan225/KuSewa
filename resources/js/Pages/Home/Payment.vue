@@ -1,7 +1,7 @@
 <template>
   <AppLayout hideNavbar hideBottombar>
     <!-- NAV DETIL dengan tombol back -->
-    <DetailNavbar backUrl="/booking-page" :showSections="false" :showShare="false" :showFavorite="false" />
+    <DetailNavbar backUrl="/aktivitas" :showSections="false" :showShare="false" :showFavorite="false" />
 
     <div class="min-h-screen bg-[#f2f2f7] text-slate-900 font-sans antialiased pb-24 pt-4 selection:bg-[#ffc000]/30">
       <main class="max-w-3xl mx-auto px-4 sm:px-6 space-y-6">

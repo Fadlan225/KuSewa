@@ -41,7 +41,7 @@ const {
     keywordQuery, isMobileSearchOpen, isKeywordSheetOpen,
 
     // Jadwal
-    desktopCalendarPage, prevDesktopMonth, nextDesktopMonth, monthsData, daysOfWeek, selectDate, isStartDate, isInRange, isEndDate, endDate, formattedSchedule,
+    desktopCalendarPage, prevDesktopMonth, nextDesktopMonth, monthsData, daysOfWeek, selectDate, isStartDate, isInRange, isEndDate, endDate, formattedSchedule, isPastDate,
 
     // Harga
     priceError, formattedMinPrice, formattedMaxPrice, handleMinPriceInput, handleMaxPriceInput, sliderTrack, minPercent, maxPercent, startDrag, activeThumb, parsedMinPrice, parsedMaxPrice, maxLimit, formatPriceShort,
@@ -319,7 +319,7 @@ const initials = computed(() => {
                         v-if="page.props.auth.user"
                         href="/chat"
                         :class="[
-                            'relative text-sm font-semibold transition-colors duration-300',
+                            'relative text-sm font-semibold transition-colors duration-300 flex items-center gap-1.5',
                             isInbox
                                 ? 'text-[#FFC000]'
                                 : isCurrentlyTransparent
@@ -332,6 +332,11 @@ const initials = computed(() => {
                             class="absolute -bottom-2 left-0 w-full h-[2.5px] bg-[#FFC000] rounded-full"
                         ></span>
                         Kotak Masuk
+                        
+                        <!-- Notification Badge -->
+                        <span v-if="page.props.auth.unreadCount > 0" class="flex items-center justify-center bg-red-500 text-white text-[10px] font-bold px-1.5 min-w-[18px] h-[18px] rounded-full">
+                            {{ page.props.auth.unreadCount > 99 ? '99+' : page.props.auth.unreadCount }}
+                        </span>
                     </Link>
                 </div>
 
@@ -566,10 +571,14 @@ const initials = computed(() => {
                                                 <div v-else-if="isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
 
                                                 <!-- TANGGAL -->
-                                                <div class="relative z-10 w-7 h-7 flex flex-col items-center justify-center rounded-full text-[11px] font-bold cursor-pointer transition"
-                                                    :class="{ 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) || isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date),
-                                                            'text-[#1A1A1A]': isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date),
-                                                            'text-[#0A2540] hover:border hover:border-[#1A1A1A]': !isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) }">
+                                                <div class="relative z-10 w-7 h-7 flex flex-col items-center justify-center rounded-full text-[11px] font-bold transition"
+                                                    :class="[
+                                                        isPastDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
+                                                        { 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) || isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date),
+                                                          'text-[#1A1A1A]': isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date),
+                                                          'text-[#0A2540]': !isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isPastDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) }
+                                                    ]"
+                                                    @click="!isPastDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && selectDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)">
                                                     <span>{{ date }}</span>
                                                 </div>
                                                 <div v-if="isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute -bottom-3 left-1/2 -translate-x-1/2 text-[8px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>

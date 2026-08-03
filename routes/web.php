@@ -18,6 +18,9 @@ Route::get('/', [HomeController::class, 'index'])->name('Home');
 Route::get('/search', [HomeController::class, 'search'])->name('assets.search');
 Route::get('/search/suggest', [HomeController::class, 'suggest'])->name('search.suggest');
 
+// API for Home
+Route::get('/api/home/nearby-assets', [\App\Http\Controllers\Api\HomeAssetController::class, 'nearby'])->name('api.home.nearby-assets');
+
 Route::middleware('auth')->group(function () {
     Route::post('/search-logs', [HomeController::class, 'logSearch'])->name('search.log');
     Route::delete('/search-logs', [HomeController::class, 'clearSearchHistory'])->name('search.clear');
@@ -61,6 +64,13 @@ Route::middleware('auth')->group(function () {
     // ==========================
     Route::resource('favorites', FavoriteController::class)
         ->only(['index', 'store', 'destroy']);
+
+    // ==========================
+    // Last Seen / Terakhir Dilihat
+    // ==========================
+    Route::get('/last-seen', [App\Http\Controllers\AssetViewController::class, 'index'])->name('last-seen.index');
+    Route::delete('/last-seen/bulk', [App\Http\Controllers\AssetViewController::class, 'bulkDestroy'])->name('last-seen.bulkDestroy');
+    Route::delete('/last-seen/{assetView}', [App\Http\Controllers\AssetViewController::class, 'destroy'])->name('last-seen.destroy');
 
     // ==========================
     // Profile

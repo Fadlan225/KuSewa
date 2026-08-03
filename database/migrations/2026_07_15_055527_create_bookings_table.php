@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asset_id')->nullable()->constrained()->onDelete('restrict');
             $table->foreignId('asset_unit_id')->nullable()->constrained()->onDelete('restrict');
+            $table->string('asset_name')->nullable();
+            $table->string('asset_unit_name')->nullable();
             $table->string('booking_code');
             $table->string('booker_name');
             $table->string('booker_phone');

@@ -1,10 +1,11 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
+import axios from 'axios';
 import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
 import LazyAssetCard from '@/Components/UI/LazyAssetCard.vue';
 
 const props = defineProps({
-    categories: {
+    sections: {
         type: Array,
         default: () => []
     },
@@ -12,48 +13,78 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
-    // Prop baru untuk mengatur jenis empty state
     emptyStateType: {
         type: String,
-        default: 'no-data', // Pilihan: 'no-data', 'filter', 'search'
+        default: 'no-data', 
         validator: (value) => ['no-data', 'filter', 'search'].includes(value)
     },
-    // Prop untuk kata kunci pencarian (ditampilkan di kondisi ke-3)
     searchKeyword: {
         type: String,
         default: ''
     }
 });
 
-// Daftarkan event emits untuk tombol aksi
 const emit = defineEmits(['goHome', 'resetFilter', 'clearSearch']);
 
-// Computed: kategori yang punya aset
-const visibleCategories = computed(() =>
-    props.categories.filter(c => c.assets && c.assets.length > 0)
+const localSections = ref([]);
+const isLocating = ref(true);
+
+onMounted(() => {
+    // Inisialisasi localSections dengan data dari props
+    localSections.value = [...props.sections];
+
+    // Cek apakah ada section 'nearby'
+    const nearbyIndex = localSections.value.findIndex(s => s.id === 'nearby');
+    if (nearbyIndex !== -1) {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                async (position) => {
+                    localStorage.removeItem('location_denied');
+                    try {
+                        const response = await axios.get(localSections.value[nearbyIndex].api_url, {
+                            params: {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            }
+                        });
+                        
+                        if (response.data && response.data.length > 0) {
+                            localSections.value[nearbyIndex].assets = response.data;
+                        } else {
+                            // Kosongkan / hapus jika tidak ada aset di sekitarnya
+                            localSections.value.splice(nearbyIndex, 1);
+                        }
+                    } catch (error) {
+                        console.error("Gagal mengambil aset terdekat", error);
+                        localSections.value.splice(nearbyIndex, 1);
+                    } finally {
+                        isLocating.value = false;
+                    }
+                },
+                (error) => {
+                    console.warn("Izin lokasi ditolak atau gagal", error);
+                    localStorage.setItem('location_denied', 'true');
+                    localSections.value.splice(nearbyIndex, 1);
+                    isLocating.value = false;
+                }
+            );
+        } else {
+            // Geolocation tidak didukung browser
+            localSections.value.splice(nearbyIndex, 1);
+            isLocating.value = false;
+        }
+    } else {
+        isLocating.value = false;
+    }
+});
+
+// Computed: section yang punya aset (atau sedang meload 'nearby')
+const visibleSections = computed(() =>
+    localSections.value.filter(s => (s.assets && s.assets.length > 0) || (s.id === 'nearby' && isLocating.value))
 );
 
-const toggleFavorite = (asset) => {
-    asset.isFavorite = !asset.isFavorite;
-};
-
-const formatRupiah = (value) => {
-    if (!value) return 'Hubungi Pemilik';
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0
-    }).format(value);
-};
-
-const periodLabel = {
-    hour: 'jam', day: 'hari',
-    week: 'minggu', month: 'bulan', year: 'tahun'
-};
-
-// Skeleton sections: tampilkan 3 baris skeleton
+// Skeleton sections
 const skeletonSections = 3;
-// Jumlah kartu skeleton per baris
 const skeletonCards = 6;
 </script>
 
@@ -67,7 +98,6 @@ const skeletonCards = 6;
                 :key="'sk-' + s"
                 class="pl-4 sm:pl-6 lg:pl-8 animate-pulse"
             >
-                <!-- Header skeleton -->
                 <div class="flex justify-between items-center mb-4 pr-4 sm:pr-6 lg:pr-8">
                     <div class="flex items-center gap-2">
                         <div class="w-4 h-4 rounded bg-gray-200"></div>
@@ -75,8 +105,6 @@ const skeletonCards = 6;
                     </div>
                     <div class="h-4 w-16 rounded bg-gray-100"></div>
                 </div>
-
-                <!-- Kartu skeleton horizontal -->
                 <div class="flex gap-3 sm:gap-4 pb-6 pt-2 overflow-hidden pr-4 sm:pr-6 lg:pr-8">
                     <AssetCardSkeleton v-for="c in skeletonCards" :key="c" />
                 </div>
@@ -85,55 +113,58 @@ const skeletonCards = 6;
 
         <!-- ========== DATA NYATA ========== -->
         <template v-else>
-            <template v-if="visibleCategories.length > 0">
-                <template v-for="category in visibleCategories" :key="category.id">
-                <section
+            <template v-if="visibleSections.length > 0">
+                <template v-for="section in visibleSections" :key="section.id">
+                    <section
                         class="pl-4 sm:pl-6 lg:pl-8"
                         style="content-visibility: auto; contain-intrinsic-size: 0 320px;"
                     >
-
                         <!-- Section Header -->
-                        <div class="flex justify-between items-end mb-4 pr-4 sm:pr-6 lg:pr-8">
-                            <div class="flex items-center gap-2">
-                                <i v-if="category.icon" :class="[category.icon, 'text-[#FFC000] text-base']"></i>
-                                <h2 class="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight">{{ category.name }}</h2>
+                        <div class="flex justify-between items-end mb-4 pr-4 sm:pr-6 lg:pr-8 gap-4">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <i v-if="section.icon" :class="[section.icon, 'text-[#FFC000] text-base shrink-0']"></i>
+                                <h2 class="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight truncate" :title="section.title">{{ section.title }}</h2>
                             </div>
-                            <a href="#" class="text-xs sm:text-sm font-bold text-[#FFC000] hover:text-[#e6ad00] transition-colors flex items-center gap-1">
-                                <span>Lihat Semua</span>
+                            <a href="#" class="text-xs sm:text-sm font-bold text-[#FFC000] hover:text-[#e6ad00] transition-colors flex items-center gap-1 shrink-0 pb-0.5">
+                                <span class="hidden sm:inline">Lihat Semua</span>
+                                <span class="sm:hidden">Semua</span>
                                 <i class="fa-solid fa-chevron-right text-[10px]"></i>
                             </a>
                         </div>
 
+                        <!-- Jika section nearby sedang meload lokasi -->
+                        <div v-if="section.id === 'nearby' && isLocating" class="flex gap-3 sm:gap-4 pb-6 pt-2 overflow-hidden pr-4 sm:pr-6 lg:pr-8 animate-pulse">
+                            <AssetCardSkeleton v-for="c in skeletonCards" :key="'nearby-sk-'+c" />
+                        </div>
+                        
                         <!-- Horizontal Scroll - will-change agar GPU-accelerated -->
                         <div
+                            v-else
                             class="flex overflow-x-auto gap-3 sm:gap-4 pb-6 pt-2 snap-x snap-mandatory no-scrollbar pr-4 sm:pr-6 lg:pr-8"
                             style="will-change: scroll-position; -webkit-overflow-scrolling: touch;"
                         >
                             <LazyAssetCard
-                                v-for="asset in category.assets"
+                                v-for="asset in section.assets"
                                 :key="asset.id"
                                 :asset="asset"
-                                :categoryName="category.name"
+                                :categoryName="asset.type?.category?.name || 'Aset'"
                             />
                         </div>
-
                     </section>
                 </template>
             </template>
 
-            <!-- ========== EMPTY STATE (3 KONDISI) ========== -->
+            <!-- ========== EMPTY STATE ========== -->
             <div
                 v-else
                 class="flex flex-col items-center pt-10 pb-32 px-4 w-full text-center"
             >
-                <!-- Gambar SVG tunggal untuk semua kondisi -->
                 <img
                     src="/empty.svg"
                     class="w-48 h-48 object-contain mb-6"
                     alt="Ilustrasi Kosong"
                 >
 
-                <!-- KONDISI 1: Belum Ada Aset (Sama Sekali) -->
                 <template v-if="props.emptyStateType === 'no-data'">
                     <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum Ada Aset</h2>
                     <p class="text-sm text-[#6C757D] mb-6">Aset sedang disiapkan.</p>
@@ -145,7 +176,6 @@ const skeletonCards = 6;
                     </button>
                 </template>
 
-                <!-- KONDISI 2: Aset Tidak Ditemukan (Filter) -->
                 <template v-else-if="props.emptyStateType === 'filter'">
                     <h2 class="text-xl font-bold text-[#0A2540] mb-2">Tidak Ditemukan</h2>
                     <p class="text-sm text-[#6C757D] mb-6">Ubah filter pencarian Anda.</p>
@@ -157,7 +187,6 @@ const skeletonCards = 6;
                     </button>
                 </template>
 
-                <!-- KONDISI 3: Aset Tidak Ditemukan (Pencarian Keyword) -->
                 <template v-else-if="props.emptyStateType === 'search'">
                     <h2 class="text-xl font-bold text-[#0A2540] mb-2">Hasil Kosong</h2>
                     <p class="text-sm text-[#6C757D] mb-6">Coba kata kunci lain.</p>
@@ -168,7 +197,6 @@ const skeletonCards = 6;
                         Hapus Pencarian
                     </button>
                 </template>
-
             </div>
         </template>
     </div>

@@ -10,6 +10,8 @@ class booking extends Model
     protected $fillable = [
         'asset_id',
         'asset_unit_id',
+        'asset_name',
+        'asset_unit_name',
         'booking_code',
         'booker_name',
         'booker_phone',

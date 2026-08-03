@@ -37,4 +37,10 @@ class asset_units extends Model
     {
         return $this->hasMany(asset_image::class, 'asset_unit_id');
     }
+
+    public function facilities()
+    {
+        return $this->belongsToMany(facility::class, 'asset_unit_facilities', 'asset_unit_id', 'facility_id')
+                    ->withTimestamps();
+    }
 }

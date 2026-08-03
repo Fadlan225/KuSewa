@@ -1,6 +1,6 @@
 <script setup>
 import { usePage } from '@inertiajs/vue3';
-import { computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
 
@@ -44,6 +44,7 @@ const {
     isStartDate,
     isEndDate,
     isInRange,
+    isPastDate,
     monthsData,
     daysOfWeek,
     loadMoreMonths,
@@ -51,26 +52,100 @@ const {
     // Harga
     minPrice,
     maxPrice,
-    validatePrices,
-    priceError,
+    parsedMinPrice,
+    parsedMaxPrice,
     formattedMinPrice,
     formattedMaxPrice,
     handleMinPriceInput,
     handleMaxPriceInput,
-    sliderTrack,
+    maxLimit,
     minPercent,
     maxPercent,
-    startDrag,
+    priceError,
     activeThumb,
-    parsedMinPrice,
-    parsedMaxPrice,
-    maxLimit,
+    startDrag,
+    sliderTrack,
+    validatePrices,
     formatPriceShort,
+    isLokasiFullScreen,
+    closeLokasiFullScreen,
+    priceDistribution,
+    handleBucketClick,
 
     // Fasilitas
     selectedFacilities,
     toggleFacility
 } = useHomeSearch();
+
+const maxDistributionCount = computed(() => {
+    if (!priceDistribution.value || priceDistribution.value.length === 0) return 1;
+    return Math.max(...priceDistribution.value) || 1;
+});
+
+const isBucketActive = (idx) => {
+    const bucketMin = (idx / 30) * 100;
+    const bucketMax = ((idx + 1) / 30) * 100;
+    return bucketMax >= minPercent.value && bucketMin <= maxPercent.value;
+};
+
+// State untuk pencarian dan collapse fasilitas di mobile
+const facilitySearchMobile = ref('');
+const openFacilityCategoriesMobile = ref({});
+
+const toggleFacilityCategoryMobile = (catName) => {
+    openFacilityCategoriesMobile.value[catName] = !openFacilityCategoriesMobile.value[catName];
+};
+
+// Fasilitas dinamis berdasarkan tipe yang dipilih, digrup per kategori
+const groupedFacilitiesForMobile = computed(() => {
+    const byType = page.props.facilitiesByType || [];
+    if (byType.length === 0) return [];
+
+    let flat = [];
+    const seen = new Set();
+    
+    if (selectedAssets.value.length === 0) {
+        byType.forEach(group => {
+            group.facilities.forEach(f => {
+                if (!seen.has(f.id)) { seen.add(f.id); flat.push(f); }
+            });
+        });
+    } else {
+        byType
+            .filter(group => selectedAssets.value.includes(group.type_name))
+            .forEach(group => {
+                group.facilities.forEach(f => {
+                    if (!seen.has(f.id)) { seen.add(f.id); flat.push(f); }
+                });
+            });
+    }
+
+    if (facilitySearchMobile.value.trim() !== '') {
+        const query = facilitySearchMobile.value.toLowerCase();
+        flat = flat.filter(f => f.name.toLowerCase().includes(query));
+    }
+
+    const groups = {};
+    flat.forEach(f => {
+        const cat = f.category_name || 'Lainnya';
+        if (!groups[cat]) {
+            groups[cat] = [];
+            if (openFacilityCategoriesMobile.value[cat] === undefined) {
+                openFacilityCategoriesMobile.value[cat] = true;
+            }
+        }
+        groups[cat].push(f);
+    });
+
+    if (facilitySearchMobile.value.trim() !== '') {
+        Object.keys(groups).forEach(cat => openFacilityCategoriesMobile.value[cat] = true);
+    }
+
+    return Object.keys(groups).map(catName => ({
+        name: catName,
+        facilities: groups[catName]
+    })).sort((a, b) => a.name.localeCompare(b.name));
+});
 
 // Filter categories are now handled in useHomeSearch
 
@@ -92,7 +167,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
 </script>
 
 <template>
-    <BottomSheet v-model="isMobileSearchOpen" title="">
+    <BottomSheet v-model="isMobileSearchOpen" title="" height-class="h-[85vh]">
         <!-- Kita tidak menggunakan judul bawaan BottomSheet karena ada tabs di header -->
         <template #tabs>
             <div class="flex items-center justify-between mb-4">
@@ -212,25 +287,32 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                                 <div v-for="day in daysOfWeek" :key="day" class="text-center text-[11px] font-bold text-[#6C757D]">
                                                     {{ day }}
                                                 </div>
-                                                <div v-for="i in month.emptyDaysStart" :key="'empty-'+i"></div>
-                                                <div v-for="date in month.daysInMonth" :key="date" class="relative flex justify-center items-center h-9" @click="selectDate(month.year, month.month, date)">
-                                                    <div v-if="isStartDate(month.year, month.month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                                    <div v-else-if="isInRange(month.year, month.month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                                    <div v-else-if="isEndDate(month.year, month.month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                                <template v-for="(week, wIdx) in month.weeks" :key="'w-'+wIdx">
+                                                    <div v-for="(date, dIdx) in week" :key="'d-'+wIdx+'-'+dIdx" class="relative flex justify-center items-center h-9">
+                                                        <template v-if="date">
+                                                            <div v-if="isStartDate(month.year, month.month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                                            <div v-else-if="isInRange(month.year, month.month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
+                                                            <div v-else-if="isEndDate(month.year, month.month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
 
-                                                    <div
-                                                        class="relative z-10 w-9 h-9 flex flex-col items-center justify-center rounded-full text-[13px] font-bold cursor-pointer transition"
-                                                        :class="{
-                                                            'bg-[#1A1A1A] text-white shadow-md': isStartDate(month.year, month.month, date) || isEndDate(month.year, month.month, date),
-                                                            'text-[#1A1A1A]': isInRange(month.year, month.month, date),
-                                                            'text-[#0A2540]': !isStartDate(month.year, month.month, date) && !isEndDate(month.year, month.month, date) && !isInRange(month.year, month.month, date)
-                                                        }"
-                                                    >
-                                                        <span>{{ date }}</span>
+                                                            <div
+                                                                class="relative z-10 w-9 h-9 flex flex-col items-center justify-center rounded-full text-[13px] font-bold cursor-pointer transition"
+                                                                :class="[
+                                                                    (isPastDate(month.year, month.month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'hover:bg-gray-100',
+                                                                    {
+                                                                        'bg-[#1A1A1A] text-white shadow-md hover:bg-[#1A1A1A]': isStartDate(month.year, month.month, date) || isEndDate(month.year, month.month, date),
+                                                                        'text-[#1A1A1A]': isInRange(month.year, month.month, date),
+                                                                        'text-[#0A2540]': !isStartDate(month.year, month.month, date) && !isEndDate(month.year, month.month, date) && !isInRange(month.year, month.month, date) && !isPastDate(month.year, month.month, date)
+                                                                    }
+                                                                ]"
+                                                                @click="!isPastDate(month.year, month.month, date) && selectDate(month.year, month.month, date)"
+                                                            >
+                                                                <span>{{ date }}</span>
+                                                            </div>
+                                                            <div v-if="isStartDate(month.year, month.month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
+                                                            <div v-else-if="isEndDate(month.year, month.month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                                        </template>
                                                     </div>
-                                                    <div v-if="isStartDate(month.year, month.month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                                    <div v-else-if="isEndDate(month.year, month.month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
-                                                </div>
+                                                </template>
                                             </div>
                                         </div>
                                         <button @click="loadMoreMonths" class="w-full py-3 mt-2 bg-gray-100 rounded-xl text-center text-sm font-bold text-[#0A2540] active:bg-gray-200 transition">
@@ -304,10 +386,19 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                         </div>
                                     </div>
                                     <p v-if="priceError" class="text-[11px] font-bold text-red-500 mt-1 mb-5">{{ priceError }}</p>
-                                    <div v-else class="mb-5 mt-1 h-[16px]"></div>
+                                    
+                                    <!-- Histogram -->
+                                    <div v-else class="h-12 w-full flex items-end justify-between px-2 gap-[1px] mb-2 mt-4">
+                                        <div v-for="(count, idx) in priceDistribution" :key="idx"
+                                            @click="handleBucketClick(idx)"
+                                            class="flex-1 rounded-t-[2px] transition-all duration-300 min-h-[2px] cursor-pointer hover:bg-opacity-80"
+                                            :style="{ height: `${Math.max((count / maxDistributionCount) * 100, 2)}%` }"
+                                            :class="isBucketActive(idx) ? 'bg-[#FFC000]' : 'bg-[#E2E8F0]'">
+                                        </div>
+                                    </div>
 
                                     <!-- Slider -->
-                                    <div class="mb-6 mt-12 relative h-1.5 mx-2" ref="sliderTrack">
+                                    <div class="mb-6 mt-2 relative h-1.5 mx-2" ref="sliderTrack">
                                         <div class="absolute inset-0 bg-[#6C757D]/20 rounded-full"></div>
                                         <div class="absolute h-full bg-[#0A2540] rounded-full" :style="`left: ${minPercent}%; right: ${100 - maxPercent}%`"></div>
 
@@ -318,7 +409,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                             class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-[3px] border-[#0A2540] rounded-full shadow-md z-20 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
                                             :style="`left: calc(${minPercent}% - 10px)`">
                                             <div v-show="activeThumb === 'min'" class="absolute -top-[42px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
-                                                {{ parsedMinPrice >= maxLimit ? '> 10 Jt' : formatPriceShort(parsedMinPrice) }}
+                                                {{ parsedMinPrice >= maxLimit ? '10 Jt +' : formatPriceShort(parsedMinPrice) }}
                                                 <div class="absolute -bottom-[4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0A2540] rotate-45 rounded-sm -z-10"></div>
                                             </div>
                                         </div>
@@ -330,33 +421,71 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                             class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-[3px] border-[#0A2540] rounded-full shadow-md z-20 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
                                             :style="`left: calc(${maxPercent}% - 10px)`">
                                             <div v-show="activeThumb === 'max'" class="absolute -top-[42px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
-                                                {{ parsedMaxPrice >= maxLimit ? '> 10 Jt' : formatPriceShort(parsedMaxPrice) }}
+                                                {{ parsedMaxPrice >= maxLimit ? '10 Jt +' : formatPriceShort(parsedMaxPrice) }}
                                                 <div class="absolute -bottom-[4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0A2540] rotate-45 rounded-sm -z-10"></div>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="flex justify-between mt-3 mx-2 text-[10px] font-bold text-[#6C757D]">
                                         <span>Rp0</span>
-                                        <span>>Rp10 jt</span>
+                                        <span>Rp10 jt +</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <!-- 5. FASILITAS (Search Page Only) -->
+                            <!-- 5. FASILITAS -->
                             <div v-if="steps.includes('fasilitas')" class="w-full h-full flex-shrink-0 px-4 overflow-y-auto pb-24 hide-scrollbar">
                                 <div class="bg-white rounded-2xl p-5 shadow-sm border border-[#6C757D]/5 relative">
                                     <button @click="selectedFacilities = []" class="absolute top-5 right-5 text-[11px] font-bold text-[#6C757D] hover:text-[#0A2540] underline decoration-[#6C757D]/30 underline-offset-2 z-10">Reset</button>
                                     <h3 class="font-extrabold text-[#0A2540] text-[15px] mb-4">Fasilitas Populer</h3>
-                                    <div class="space-y-3">
-                                        <label v-for="fac in page.props.facilities || []" :key="fac" class="flex items-center gap-3 cursor-pointer group">
-                                            <div class="relative flex items-center">
-                                                <input type="checkbox" :checked="selectedFacilities.includes(fac)" @change="toggleFacility(fac)" class="peer sr-only">
-                                                <div class="w-5 h-5 rounded border-2 border-gray-300 bg-white peer-checked:bg-[#0A2540] peer-checked:border-[#0A2540] transition flex items-center justify-center">
-                                                    <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100"></i>
+                                    
+                                    <!-- Search input for facilities -->
+                                    <div class="mb-4 relative">
+                                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                            <i class="fa-solid fa-search text-gray-400 text-xs"></i>
+                                        </div>
+                                        <input type="text" v-model="facilitySearchMobile" placeholder="Cari fasilitas..." class="w-full text-sm border-gray-200 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl pl-9 py-2.5 bg-slate-50 transition" />
+                                    </div>
+
+                                    <!-- Grouped Facilities (Accordion) -->
+                                    <p v-if="groupedFacilitiesForMobile.length === 0" class="text-sm text-gray-400 text-center py-6">
+                                        Tidak ada fasilitas tersedia
+                                    </p>
+                                    
+                                    <div v-else class="space-y-3 pb-8">
+                                        <div v-for="group in groupedFacilitiesForMobile" :key="group.name" class="bg-white rounded-xl overflow-hidden border border-slate-100 shadow-sm">
+                                            <!-- Group Header -->
+                                            <button @click="toggleFacilityCategoryMobile(group.name)" class="w-full flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-slate-50 transition active:bg-slate-100">
+                                                <span class="text-[15px] font-bold text-[#0A2540]">{{ group.name }}</span>
+                                                <div class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center">
+                                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform" :class="{'rotate-180': openFacilityCategoriesMobile[group.name]}"></i>
                                                 </div>
+                                            </button>
+                                            
+                                            <!-- Group Content (Checkboxes) -->
+                                            <div v-show="openFacilityCategoriesMobile[group.name]" class="px-4 pb-4 pt-2 space-y-2">
+                                                <label
+                                                    v-for="fac in group.facilities"
+                                                    :key="fac.id"
+                                                    class="flex items-center gap-3.5 cursor-pointer group py-2 rounded-lg transition"
+                                                >
+                                                    <div class="relative flex items-center shrink-0">
+                                                        <input
+                                                            type="checkbox"
+                                                            :checked="selectedFacilities.includes(fac.id)"
+                                                            @change="toggleFacility(fac.id)"
+                                                            class="peer sr-only"
+                                                        >
+                                                        <div class="w-6 h-6 rounded-md border-2 border-gray-300 bg-white peer-checked:bg-[#FFC000] peer-checked:border-[#FFC000] transition flex items-center justify-center">
+                                                            <i class="fa-solid fa-check text-white text-xs opacity-0 peer-checked:opacity-100"></i>
+                                                        </div>
+                                                    </div>
+                                                    <span class="text-[15px] font-medium text-[#495057] group-hover:text-[#0A2540] transition leading-tight">
+                                                        {{ fac.name }}
+                                                    </span>
+                                                </label>
                                             </div>
-                                            <span class="text-sm font-semibold text-[#6C757D] group-hover:text-[#0A2540] transition">{{ fac }}</span>
-                                        </label>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

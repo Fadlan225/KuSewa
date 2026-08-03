@@ -11,12 +11,8 @@ const isKeywordSheetOpen = ref(false);
 const activeSearchStep = ref('aset'); // 'aset', 'lokasi', 'jadwal', 'harga', 'fasilitas'
 
 const steps = computed(() => {
-    // Only show 'fasilitas' tab on the search page
-    const page = usePage();
-    if (page.component === 'Home/Assets/Index') {
-        return ['aset', 'lokasi', 'jadwal', 'harga', 'fasilitas'];
-    }
-    return ['aset', 'lokasi', 'jadwal', 'harga'];
+    // Tampilkan tab 'fasilitas' di semua halaman (HomePage maupun SearchPage)
+    return ['aset', 'lokasi', 'jadwal', 'harga', 'fasilitas'];
 });
 
 const currentStepIndex = computed(() => steps.value.indexOf(activeSearchStep.value));
@@ -89,6 +85,11 @@ const toggleFacility = (fac) => {
     if (idx > -1) selectedFacilities.value.splice(idx, 1);
     else selectedFacilities.value.push(fac);
 };
+
+// Reset filter fasilitas ketika kategori / tipe aset diganti
+watch(selectedAssets, () => {
+    selectedFacilities.value = [];
+});
 const sortOption = ref('popular');
 
 // State Pencarian Lokasi
@@ -185,8 +186,18 @@ watch([startDate, durationMonths], () => {
     }
 });
 
+const isPastDate = (year, month, date) => {
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const check = new Date(year, month, date);
+    return check < today;
+};
+
 const selectDate = (year, month, date) => {
     const selected = new Date(year, month, date);
+    
+    // Blokir tanggal masa lalu
+    if (isPastDate(year, month, date)) return;
     
     if (activeScheduleMode.value === 'hour' || activeScheduleMode.value === 'month') {
         // Mode hour/month: hanya pilih 1 tanggal (startDate)
@@ -280,7 +291,7 @@ const parsedMaxPrice = computed(() => parseInt(maxPrice.value) || 0);
 
 const formattedMinPrice = computed(() => parsedMinPrice.value.toLocaleString('id-ID'));
 const formattedMaxPrice = computed(() => {
-    if (parsedMaxPrice.value >= maxLimit) return '> ' + maxLimit.toLocaleString('id-ID');
+    if (parsedMaxPrice.value >= maxLimit) return maxLimit.toLocaleString('id-ID') + ' +';
     return parsedMaxPrice.value.toLocaleString('id-ID');
 });
 
@@ -356,25 +367,72 @@ const stopDrag = () => {
     document.removeEventListener('touchend', stopDrag);
 };
 
+const handleBucketClick = (idx) => {
+    const totalBuckets = 30;
+    const bucketCenterPercent = ((idx + 0.5) / totalBuckets) * 100;
+    const bucketCenterPrice = Math.round(((bucketCenterPercent / 100) * maxLimit) / priceStep.value) * priceStep.value;
+
+    const minDiff = Math.abs(bucketCenterPrice - parsedMinPrice.value);
+    const maxDiff = Math.abs(bucketCenterPrice - parsedMaxPrice.value);
+
+    if (minDiff <= maxDiff) {
+        minPrice.value = Math.max(0, Math.min(bucketCenterPrice, parsedMaxPrice.value - priceStep.value));
+    } else {
+        maxPrice.value = Math.min(maxLimit, Math.max(bucketCenterPrice, parsedMinPrice.value + priceStep.value));
+    }
+    validatePrices();
+};
+
 // ── Kalender ─────────────────────────────────────────────────────────────
 const daysOfWeek = ['Min', 'Sn', 'Sl', 'R', 'Km', 'J', 'Sb'];
 const monthsToShow = ref(4);
 const monthsData = computed(() => {
     const data = [];
-    let currentMonth = new Date(2026, 6, 1);
-    for (let i = 0; i < monthsToShow.value; i++) {
+    const today = new Date();
+    let currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
+    let generatedCount = 0;
+    for (let i = 0; generatedCount < monthsToShow.value; i++) {
+        if (i > 36) break;
+
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth();
         const monthName = new Intl.DateTimeFormat('id-ID', { month: 'long' }).format(currentMonth);
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const firstDay = new Date(year, month, 1).getDay();
-        data.push({
-            id: `${year}-${month}`,
-            year, month,
-            title: `${monthName} ${year}`,
-            daysInMonth,
-            emptyDaysStart: firstDay
+        
+        const weeks = [];
+        let currentWeek = new Array(firstDay).fill(null);
+        for (let date = 1; date <= daysInMonth; date++) {
+            currentWeek.push(date);
+            if (currentWeek.length === 7) {
+                weeks.push(currentWeek);
+                currentWeek = [];
+            }
+        }
+        if (currentWeek.length > 0) {
+            while (currentWeek.length < 7) currentWeek.push(null);
+            weeks.push(currentWeek);
+        }
+
+        const availableWeeks = weeks.filter(week => {
+            return week.some(date => {
+                if (date === null) return false;
+                return !isPastDate(year, month, date);
+            });
         });
+
+        if (availableWeeks.length > 0) {
+            data.push({
+                id: `${year}-${month}`,
+                year, month,
+                title: `${monthName} ${year}`,
+                weeks: availableWeeks,
+                daysInMonth: daysInMonth,
+                emptyDaysStart: firstDay
+            });
+            generatedCount++;
+        }
         currentMonth.setMonth(currentMonth.getMonth() + 1);
     }
     return data;
@@ -509,8 +567,11 @@ const hydrateFilters = (filters) => {
 
     if (filters.location) searchQuery.value = filters.location;
 
-    if (filters.facilities) {
-        selectedFacilities.value = Array.isArray(filters.facilities) ? [...filters.facilities] : [filters.facilities];
+    if (filters.facilities && filters.facilities.length > 0) {
+        // Konversi ke integer (sistem baru pakai ID, bukan nama)
+        selectedFacilities.value = (Array.isArray(filters.facilities) ? filters.facilities : [filters.facilities])
+            .map(f => Number(f))
+            .filter(f => f > 0);
     } else {
         selectedFacilities.value = [];
     }
@@ -614,8 +675,11 @@ export function useHomeSearch() {
         }
     }, { immediate: true });
 
+    const priceDistribution = computed(() => page.props.priceDistribution || []);
+
     return {
         keywordQuery,
+        priceDistribution,
         // UI
         isMobileSearchOpen,
         isKeywordSheetOpen,
@@ -656,6 +720,7 @@ export function useHomeSearch() {
         isStartDate,
         isEndDate,
         isInRange,
+        isPastDate,
         formattedSchedule,
         formatDate,
 
@@ -680,6 +745,7 @@ export function useHomeSearch() {
         startDrag,
         onDrag,
         stopDrag,
+        handleBucketClick,
 
         // Kalender
         daysOfWeek,

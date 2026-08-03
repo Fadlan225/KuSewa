@@ -9,12 +9,14 @@ class BookingSeeder extends Seeder
 {
     /**
      * 600 booking dengan distribusi:
-     * - 10% pending   = 60
-     * - 20% confirmed = 120
-     * - 60% completed = 360
+     * - 10% pending   = 60   (dengan payment aktif, tidak expired)
+     * - 15% confirmed = 90
+     * - 10% active    = 60
+     * - 55% completed = 330
      * - 10% cancelled = 60
      *
-     * Customer dibagi rata ke 99 customer.
+     * DIJAMIN tidak ada tanggal yang overlap per asset.
+     * Setiap asset mendapat slot tanggal non-tumpuk secara berurutan.
      */
     public function run(): void
     {
@@ -24,7 +26,7 @@ class BookingSeeder extends Seeder
 
         $assets = DB::table('assets')
             ->join('asset_pricings', 'asset_pricings.asset_id', '=', 'assets.id')
-            ->select('assets.id', 'asset_pricings.price')
+            ->select('assets.id', 'assets.title as asset_name', 'asset_pricings.price')
             ->orderBy('assets.id')
             ->get();
 
@@ -32,6 +34,7 @@ class BookingSeeder extends Seeder
             ->where('email', 'like', 'customer%@kusewa.com')
             ->orderBy('id')
             ->get();
+
         $serviceFeePct = DB::table('service_fees')
             ->where('fee_type', 'percentage')
             ->value('fee_value') ?? 5;
@@ -41,7 +44,10 @@ class BookingSeeder extends Seeder
             return;
         }
 
-        // Distribusi status: pending=10%, confirmed=15%, active=10%, completed=55%, cancelled=10%
+        $custCount  = $customers->count();
+        $assetCount = $assets->count();
+
+        // Distribusi status: cancelled tidak memblokir slot, sisanya ya
         $statusPool = array_merge(
             array_fill(0, 60,  'pending'),
             array_fill(0, 90,  'confirmed'),
@@ -52,55 +58,93 @@ class BookingSeeder extends Seeder
         shuffle($statusPool);
 
         $totalBookings = 600;
-        $assetCount    = $assets->count();
-        $custCount     = $customers->count();
         $batch         = [];
+        $custIndex     = 0;
+        $statusIndex   = 0;
 
-        $this->command->info("Membuat {$totalBookings} booking...");
+        // Tracker: per asset_id, tanggal terakhir yang sudah dipakai
+        // Key = asset_id, Value = Carbon date (end_date booking terakhir)
+        $assetNextAvailable = [];
 
-        for ($i = 0; $i < $totalBookings; $i++) {
-            $asset    = $assets[$i % $assetCount];
-            $customer = $customers[$i % $custCount];
-            $status   = $statusPool[$i];
+        $this->command->info("Membuat {$totalBookings} booking (tanpa overlap)...");
 
-            // Tanggal berdasarkan status
-            if ($status === 'completed') {
-                $startDate = now()->subDays(rand(30, 365));
-                $duration  = rand(1, 14);
-            } elseif ($status === 'confirmed') {
-                $startDate = now()->addDays(rand(1, 60));
-                $duration  = rand(1, 30);
-            } elseif ($status === 'cancelled') {
-                $startDate = now()->subDays(rand(1, 60));
-                $duration  = rand(1, 7);
-            } else { // pending
-                $startDate = now()->addDays(rand(1, 30));
-                $duration  = rand(1, 14);
+        // Distribusikan booking ke setiap asset secara round-robin
+        // cancelled tidak perlu "blocking" slot, tapi kita tetap assign waktunya
+        $bookingsPerAsset = (int) ceil($totalBookings / $assetCount);
+        $created = 0;
+
+        for ($a = 0; $a < $assetCount && $created < $totalBookings; $a++) {
+            $asset = $assets[$a];
+
+            // Berapa booking untuk asset ini?
+            $remaining = $totalBookings - $created;
+            $count = min($bookingsPerAsset, $remaining);
+
+            // Tracker tanggal untuk asset ini — mulai dari 400 hari lalu
+            $currentDate = now()->subDays(400)->startOfDay();
+
+            for ($j = 0; $j < $count && $created < $totalBookings; $j++) {
+                $status   = $statusPool[$statusIndex % count($statusPool)];
+                $statusIndex++;
+                $customer = $customers[$custIndex % $custCount];
+                $custIndex++;
+
+                // Tentukan durasi & jeda antar booking
+                $duration = rand(2, 14);
+                $gap      = rand(1, 5); // Jeda antar booking agar tidak persis bersentuhan
+
+                $startDate = $currentDate->copy()->addDays($gap);
+                $endDate   = $startDate->copy()->addDays($duration);
+
+                // Sesuaikan arah waktu berdasarkan status
+                // completed = masa lalu, confirmed/active = mendatang, pending = mendatang dekat
+                if ($status === 'completed') {
+                    // Sudah terjadi di masa lalu — hanya assign jika masih di masa lalu
+                    if ($startDate->isFuture()) {
+                        // Paksa ke masa lalu jika current date sudah ke depan
+                        $status = 'cancelled';
+                    }
+                } elseif (in_array($status, ['confirmed', 'active'])) {
+                    // Harus di masa mendatang — jika currentDate masih lalu, lompat ke masa depan
+                    if ($startDate->isPast()) {
+                        $startDate = now()->addDays(rand(2, 60) + ($j * 3));
+                        $endDate   = $startDate->copy()->addDays($duration);
+                    }
+                }
+
+                // Maju pointer untuk booking berikutnya di asset yang sama
+                $currentDate = $endDate->copy();
+
+                $subtotal   = $asset->price * $duration;
+                $serviceFee = round($subtotal * $serviceFeePct / 100);
+                $total      = $subtotal + $serviceFee;
+
+                // Tanggal created_at: beberapa hari sebelum start_date (simulasi pemesanan lebih awal)
+                $createdAt = $startDate->copy()->subDays(rand(1, 10));
+
+                $batch[] = [
+                    'asset_id'       => $asset->id,
+                    'asset_unit_id'  => null,
+                    'asset_name'     => $asset->asset_name,
+                    'asset_unit_name'=> null,
+                    'booking_code'   => 'BK' . strtoupper(substr(md5($created . $asset->id . microtime()), 0, 8)),
+                    'booker_name'    => $customer->name,
+                    'booker_phone'   => $customer->phone ?? '08' . rand(100000000, 999999999),
+                    'booker_email'   => $customer->email,
+                    'guest_name'     => $customer->name,
+                    'user_id'        => $customer->id,
+                    'start_date'     => $startDate->format('Y-m-d'),
+                    'end_date'       => $endDate->format('Y-m-d'),
+                    'subtotal'       => $subtotal,
+                    'service_fee'    => $serviceFee,
+                    'total'          => $total,
+                    'booking_status' => $status,
+                    'created_at'     => $createdAt->format('Y-m-d H:i:s'),
+                    'updated_at'     => now()->format('Y-m-d H:i:s'),
+                ];
+
+                $created++;
             }
-
-            $endDate = $startDate->copy()->addDays($duration);
-            $subtotal = $asset->price * $duration;
-            $serviceFee = round($subtotal * $serviceFeePct / 100);
-            $total = $subtotal + $serviceFee;
-
-            $batch[] = [
-                'asset_id'       => $asset->id,
-                'asset_unit_id'  => null,
-                'booking_code'   => 'BK' . strtoupper(substr(md5($i . $asset->id . time()), 0, 8)),
-                'booker_name'    => $customer->name,
-                'booker_phone'   => $customer->phone ?? '08' . rand(100000000, 999999999),
-                'booker_email'   => $customer->email,
-                'guest_name'     => $customer->name,
-                'user_id'        => $customer->id,
-                'start_date'     => $startDate->format('Y-m-d'),
-                'end_date'       => $endDate->format('Y-m-d'),
-                'subtotal'       => $subtotal,
-                'service_fee'    => $serviceFee,
-                'total'          => $total,
-                'booking_status' => $status,
-                'created_at'     => $startDate->copy()->subDays(rand(1, 7)),
-                'updated_at'     => now(),
-            ];
         }
 
         // Batch insert
@@ -108,6 +152,6 @@ class BookingSeeder extends Seeder
             DB::table('bookings')->insert($chunk);
         }
 
-        $this->command->info("✓ {$totalBookings} booking berhasil dibuat!");
+        $this->command->info("✓ {$created} booking berhasil dibuat (tanpa overlap)!");
     }
 }

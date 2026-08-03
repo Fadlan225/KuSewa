@@ -12,7 +12,14 @@ class asset extends Model
         'owner_profile_id',
         'asset_type_id',
         'title',
+        'slug',
         'description',
+        'country',
+        'province',
+        'city',
+        'subdistrict',
+        'postal_code',
+        'address',
         'latitude',
         'longitude',
         'status',
@@ -26,6 +33,11 @@ class asset extends Model
         return $this->belongsTo(owner_profile::class);
     }
 
+    public function getRouteKeyName()
+    {
+        return 'slug';
+    }
+
     public function images(){
         return $this->hasMany(asset_image::class);
     }
@@ -34,11 +46,6 @@ class asset extends Model
         return $this->hasOne(asset_image::class)->orderBy('id');
     }
 
-    /**
-     * Ambil 3 gambar pertama untuk thumbnail (search, favorite, home card).
-     * Limit 3 dilakukan di controller/query level dengan ->latest('id')->limit(3)
-     * karena Eloquent ->limit() pada hasMany tidak efektif di eager loading.
-     */
     public function thumbnailImages(){
         return $this->hasMany(asset_image::class)->orderBy('id');
     }
@@ -79,5 +86,11 @@ class asset extends Model
 
     public function views(){
         return $this->hasMany(AssetView::class);
+    }
+
+    public function facilities()
+    {
+        return $this->belongsToMany(facility::class, 'asset_facilities')
+                    ->withTimestamps();
     }
 }

@@ -8,6 +8,7 @@ const {
     isKeywordSheetOpen,
     desktopActiveMenu,
     selectedAssets,
+    keywordQuery,
     searchQuery,
     formattedSchedule,
     parsedMinPrice,
@@ -42,7 +43,24 @@ const {
     durationMonths,
     activeScheduleMode,
     simpleDateString,
+    priceDistribution,
+    handleBucketClick,
 } = useHomeSearch();
+
+import { computed } from 'vue';
+
+const maxDistributionCount = computed(() => {
+    if (!priceDistribution.value || priceDistribution.value.length === 0) return 1;
+    return Math.max(...priceDistribution.value) || 1;
+});
+
+const isBucketActive = (idx) => {
+    const bucketMin = (idx / 30) * 100;
+    const bucketMax = ((idx + 1) / 30) * 100;
+    // Check if the bucket overlaps with the selected range [minPercent, 100 - maxPercent(which is actually just maxPercent from left? No, maxPercent is calculated as max/maxLimit * 100)]
+    // Wait, in useHomeSearch.js, minPercent is min/maxLimit*100, maxPercent is max/maxLimit*100.
+    return bucketMax >= minPercent.value && bucketMin <= maxPercent.value;
+};
 
 let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
 
@@ -69,16 +87,17 @@ onUnmounted(() => {
     <!-- Full Width Sticky Wrapper -->
     <div class="w-full bg-white shadow-sm border-b border-[#6C757D]/10 py-3 relative z-[70]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
+
             <!-- MOBILE VIEW: Search Bar like Image 3 -->
             <div class="flex lg:hidden items-center bg-white rounded-full border border-gray-200 shadow-sm p-1">
                 <div class="flex-1 flex items-center pl-3 pr-2" @click="isKeywordSheetOpen = true">
                     <i class="fa-solid fa-magnifying-glass text-[#0A2540] mr-3"></i>
-                    <input 
-                        type="text" 
+                    <input
+                        type="text"
                         readonly
-                        :placeholder="searchQuery || 'Mau sewa apa hari ini?'" 
-                        class="bg-transparent w-full border-none p-0 text-[13px] font-bold focus:ring-0 text-[#0A2540] placeholder-[#0A2540] outline-none cursor-pointer"
+                        :value="keywordQuery"
+                        placeholder="Mau sewa apa hari ini?"
+                        class="bg-transparent w-full border-none p-0 text-[13px] font-bold focus:ring-0 text-[#0A2540] placeholder-[#6C757D] outline-none cursor-pointer"
                     />
                 </div>
                 <button @click="isMobileSearchOpen = true" class="w-9 h-9 bg-[#FFC000] text-[#0A2540] rounded-full flex items-center justify-center shrink-0 shadow-sm">
@@ -90,7 +109,7 @@ onUnmounted(() => {
             <div class="hidden lg:flex flex-col w-full max-w-[850px] relative mx-auto">
         <!-- Overlay untuk menutup modal jika di klik di luar -->
         <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/5 transition-opacity"></div>
-        
+
         <!-- Card Utama (Slim & Compact) -->
         <div class="flex flex-row items-center justify-between w-full transition-all duration-300 relative z-50">
 
@@ -315,7 +334,7 @@ onUnmounted(() => {
                             <label class="block text-xs font-bold text-[#6C757D] mb-2 text-center">Durasi Sewa (Bulan)</label>
                             <CircularMonthSlider v-model="durationMonths" />
                         </div>
-                        
+
                         <div v-if="endDate" class="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
                             <span class="text-[11px] text-[#6C757D] font-bold">Tanggal Selesai Otomatis:</span>
                             <span class="text-[11px] font-bold text-[#0A2540]">
@@ -348,10 +367,18 @@ onUnmounted(() => {
                         </div>
                     </div>
                     <p v-if="priceError" class="text-[11px] font-bold text-red-500 mt-1 mb-6">{{ priceError }}</p>
-                    <div v-else class="mb-6 mt-1 h-[16px]"></div>
+                    <!-- Histogram -->
+                    <div v-else class="h-12 w-full flex items-end justify-between px-2 gap-[1px] mb-2 mt-4">
+                        <div v-for="(count, idx) in priceDistribution" :key="idx"
+                            @click="handleBucketClick(idx)"
+                            class="flex-1 rounded-t-[2px] transition-all duration-300 min-h-[2px] cursor-pointer hover:bg-opacity-80"
+                            :style="{ height: `${Math.max((count / maxDistributionCount) * 100, 2)}%` }"
+                            :class="isBucketActive(idx) ? 'bg-[#FFC000]' : 'bg-[#E2E8F0]'">
+                        </div>
+                    </div>
 
                     <!-- Slider -->
-                    <div class="mb-2 mt-8 relative h-1.5 mx-2" ref="sliderTrack">
+                    <div class="mb-2 mt-2 relative h-1.5 mx-2" ref="sliderTrack">
                         <!-- Background track -->
                         <div class="absolute inset-0 bg-[#6C757D]/20 rounded-full"></div>
                         <!-- Active track -->
@@ -362,7 +389,7 @@ onUnmounted(() => {
                             class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-[3px] border-[#0A2540] rounded-full shadow-sm z-20 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
                             :style="`left: calc(${minPercent}% - 10px)`">
                             <div v-show="activeThumb === 'min'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
-                                {{ parsedMinPrice >= maxLimit ? '> 10 Jt' : formatPriceShort(parsedMinPrice) }}
+                                {{ parsedMinPrice >= maxLimit ? '10 Jt +' : formatPriceShort(parsedMinPrice) }}
                                 <div class="absolute -bottom-[4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0A2540] rotate-45 rounded-sm -z-10"></div>
                             </div>
                         </div>
@@ -372,14 +399,14 @@ onUnmounted(() => {
                             class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-[3px] border-[#0A2540] rounded-full shadow-sm z-20 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
                             :style="`left: calc(${maxPercent}% - 10px)`">
                             <div v-show="activeThumb === 'max'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
-                                {{ parsedMaxPrice >= maxLimit ? '> 10 Jt' : formatPriceShort(parsedMaxPrice) }}
+                                {{ parsedMaxPrice >= maxLimit ? '10 Jt +' : formatPriceShort(parsedMaxPrice) }}
                                 <div class="absolute -bottom-[4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0A2540] rotate-45 rounded-sm -z-10"></div>
                             </div>
                         </div>
                     </div>
                     <div class="flex justify-between mt-3 mx-2 text-[10px] font-bold text-[#6C757D]">
                         <span>Rp0</span>
-                        <span>>Rp10 jt</span>
+                        <span>Rp10 jt +</span>
                     </div>
                 </div>
             </div>

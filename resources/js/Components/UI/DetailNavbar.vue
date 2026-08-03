@@ -33,13 +33,22 @@ const props = defineProps({
     showFavorite: {
         type: Boolean,
         default: true
+    },
+    forceBackUrl: {
+        type: Boolean,
+        default: false
     }
 });
 
 defineEmits(['favorite']);
 
 const goBack = () => {
-    if (window.history.length > 2) { // length 1 means new tab, length 2 usually means initial page load on some browsers. Better to just check > 1, or use router.visit as fallback
+    if (props.forceBackUrl) {
+        router.visit(props.backUrl);
+        return;
+    }
+    
+    if (window.history.length > 2) { 
         window.history.back();
     } else {
         router.visit(props.backUrl);

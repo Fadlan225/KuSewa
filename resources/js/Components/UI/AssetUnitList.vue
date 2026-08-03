@@ -1,5 +1,37 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
+
+const listImageIndices = reactive({});
+const getListImageIndex = (unitId) => listImageIndices[unitId] || 0;
+const nextListImage = (unit) => {
+    if (!unit.images || unit.images.length <= 1) return;
+    listImageIndices[unit.id] = (getListImageIndex(unit.id) + 1) % unit.images.length;
+};
+const prevListImage = (unit) => {
+    if (!unit.images || unit.images.length <= 1) return;
+    const len = unit.images.length;
+    listImageIndices[unit.id] = (getListImageIndex(unit.id) - 1 + len) % len;
+};
+
+let touchStartX = 0;
+const onTouchStart = (e) => {
+    touchStartX = e.changedTouches[0].screenX;
+};
+const onTouchEnd = (e, nextCallback, prevCallback) => {
+    const touchEndX = e.changedTouches[0].screenX;
+    if (touchEndX < touchStartX - 40) nextCallback();
+    if (touchEndX > touchStartX + 40) prevCallback();
+};
+
+const nextDetailImage = () => {
+    if (!selectedDetailUnit.value || !selectedDetailUnit.value.images) return;
+    activeDetailImageIndex.value = (activeDetailImageIndex.value + 1) % selectedDetailUnit.value.images.length;
+};
+
+const prevDetailImage = () => {
+    if (!selectedDetailUnit.value || !selectedDetailUnit.value.images) return;
+    activeDetailImageIndex.value = (activeDetailImageIndex.value - 1 + selectedDetailUnit.value.images.length) % selectedDetailUnit.value.images.length;
+};
 import BottomSheet from '@/Components/UI/BottomSheet.vue';
 
 const props = defineProps({
@@ -18,6 +50,18 @@ const props = defineProps({
     priceMultiplier: {
         type: Number,
         default: 1,
+    },
+    startDate: {
+        type: String,
+        default: null,
+    },
+    endDate: {
+        type: String,
+        default: null,
+    },
+    selectedUnitId: {
+        type: [Number, String],
+        default: null,
     }
 });
 
@@ -28,8 +72,62 @@ const formatRupiah = (value) => {
     return new Intl.NumberFormat('id-ID', {
         style: 'currency',
         currency: 'IDR',
-        minimumFractionDigits: 0
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
     }).format(value);
+};
+
+const getAvailableQuantity = (unit) => {
+    if (!props.startDate || !props.endDate) return null;
+    
+    if (!unit.bookings || unit.bookings.length === 0) return unit.quantity;
+    
+    let reqStart = new Date(props.startDate);
+    reqStart.setHours(0,0,0,0);
+    let reqEnd = new Date(props.endDate);
+    reqEnd.setHours(0,0,0,0);
+    
+    console.log("Checking unit:", unit.id, "bookings:", unit.bookings);
+    
+    let maxDailyBookings = 0;
+    
+    // Pastikan iterasi mencakup hari yang sama jika start dan end sama
+    let iterationEnd = new Date(reqEnd);
+    if (props.rentalUnitLabel !== 'malam') {
+        iterationEnd.setDate(iterationEnd.getDate() + 1); // Tambah 1 hari inklusif untuk sewa harian/jam
+    }
+    
+    // Iterasi per hari untuk mencari puncak jumlah kamar terpakai bersamaan
+    for (let d = new Date(reqStart); d < iterationEnd; d.setDate(d.getDate() + 1)) {
+        let dailyCount = 0;
+        let currentDay = new Date(d);
+        for (let b of unit.bookings) {
+            // Fix cross browser date parsing (safari doesn't support 'YYYY-MM-DD HH:mm:ss')
+            // Laravel might send '2026-09-26 00:00:00' or '2026-09-26T00:00:00.000000Z'
+            let bStartStr = b.start_date.split(' ')[0].split('T')[0];
+            let bStart = new Date(bStartStr + "T00:00:00");
+            
+            let bEndStr = b.end_date.split(' ')[0].split('T')[0];
+            let bEnd = new Date(bEndStr + "T00:00:00");
+            
+            if (props.rentalUnitLabel === 'malam') {
+                // Sewa malam: checkin di currentDay, checkout keesokan harinya
+                if (bStart <= currentDay && bEnd > currentDay) {
+                    dailyCount++;
+                }
+            } else {
+                // Sewa jam/hari: blokir penuh dari tanggal mulai sampai selesai
+                if (bStart <= currentDay && bEnd >= currentDay) {
+                    dailyCount++;
+                }
+            }
+        }
+        if (dailyCount > maxDailyBookings) {
+            maxDailyBookings = dailyCount;
+        }
+    }
+    
+    return Math.max(0, unit.quantity - maxDailyBookings);
 };
 
 const getUnitImage = (unit) => {
@@ -63,15 +161,9 @@ const closeDetail = () => {
     }, 300);
 };
 
-const nextDetailImage = () => {
-    if (!selectedDetailUnit.value || !selectedDetailUnit.value.images) return;
-    activeDetailImageIndex.value = (activeDetailImageIndex.value + 1) % selectedDetailUnit.value.images.length;
-};
 
-const prevDetailImage = () => {
-    if (!selectedDetailUnit.value || !selectedDetailUnit.value.images) return;
-    activeDetailImageIndex.value = (activeDetailImageIndex.value - 1 + selectedDetailUnit.value.images.length) % selectedDetailUnit.value.images.length;
-};
+
+
 
 // Ambil harga terendah dari sebuah unit
 const getLowestPricing = (unit) => {
@@ -91,20 +183,30 @@ const handleSelect = (unit, pricing) => {
 <template>
     <div class="space-y-4">
         <!-- Looping for units -->
-        <div v-for="unit in units" :key="unit.id" class="w-full bg-white sm:bg-white rounded-none sm:rounded-2xl shadow-none sm:shadow-sm border-b sm:border border-gray-200 sm:border-gray-100 hover:shadow-md transition-shadow overflow-hidden group flex flex-col sm:flex-row relative">
+        <div v-for="unit in units" :key="unit.id" 
+             :class="['w-full bg-white sm:bg-white rounded-none sm:rounded-2xl shadow-none hover:shadow-md transition-shadow overflow-hidden group flex flex-col sm:flex-row relative', 
+                      selectedUnitId === unit.id ? 'border-2 border-[#FFC000] ring-1 ring-[#FFC000]/50 sm:shadow-md z-10' : 'border-b sm:border border-gray-200 sm:border-gray-100 sm:shadow-sm']">
 
             <!-- MOBILE: Layout sesuai screenshot -->
             <div class="sm:hidden flex flex-col bg-[#F8F9FA] pb-2">
-                <!-- Image Carousel Mobile -->
-                <div class="relative w-full h-[220px] bg-gray-200 shrink-0" @click="openDetail(unit)">
-                    <img v-if="getUnitImage(unit)" :src="getUnitImage(unit)" class="w-full h-full object-cover" />
-                    <div v-else class="w-full h-full flex items-center justify-center bg-slate-100">
-                        <i class="fa-solid fa-image text-3xl text-gray-300"></i>
-                    </div>
-                    <!-- Indicator Dots (Simulasi) -->
-                    <div v-if="unit.images && unit.images.length > 1" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
-                        <div class="w-2 h-2 rounded-full bg-white"></div>
-                        <div class="w-2 h-2 rounded-full bg-white/50" v-for="n in Math.min(3, unit.images.length - 1)" :key="n"></div>
+                <!-- Image Carousel Mobile (Before Bottom Sheet) -->
+                <div class="relative w-full h-[220px] bg-gray-200 shrink-0 overflow-hidden"
+                     @touchstart="onTouchStart"
+                     @touchend="(e) => onTouchEnd(e, () => nextListImage(unit), () => prevListImage(unit))">
+
+                    <Transition name="fade">
+                        <img v-if="unit.images?.length > 0" :key="getListImageIndex(unit.id)" :src="unit.images[getListImageIndex(unit.id)].image_url" class="w-full h-full object-cover absolute inset-0 cursor-pointer" @click="openDetail(unit)" />
+                        <div v-else class="w-full h-full flex items-center justify-center bg-slate-100 absolute inset-0 cursor-pointer" @click="openDetail(unit)">
+                            <i class="fa-solid fa-image text-3xl text-gray-300"></i>
+                        </div>
+                    </Transition>
+
+                    <!-- Indicator Dots -->
+                    <div v-if="unit.images && unit.images.length > 1" class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 z-10 pointer-events-none">
+                        <div v-for="idx in Math.min(5, unit.images.length)" :key="idx"
+                             class="w-2 h-2 rounded-full"
+                             :class="(idx-1) === getListImageIndex(unit.id) ? 'bg-white' : 'bg-white/50'">
+                        </div>
                     </div>
                 </div>
 
@@ -153,8 +255,9 @@ const handleSelect = (unit, pricing) => {
 
                         <!-- Action Button -->
                         <div class="flex justify-end mt-4">
-                            <button @click="handleSelect(unit, getLowestPricing(unit))" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform">
-                                Pilih
+                            <button @click="handleSelect(unit, getLowestPricing(unit))" 
+                                    :class="['font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform active:scale-95', selectedUnitId === unit.id ? 'bg-[#0A2540] text-white' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540]']">
+                                {{ selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar' }}
                             </button>
                         </div>
                     </div>
@@ -208,8 +311,13 @@ const handleSelect = (unit, pricing) => {
                         </div>
                     </div>
 
-                    <div class="mt-2 text-[11px] font-bold text-red-500">
-                        Sisa {{ unit.quantity }} unit di harga ini!
+                    <div class="mt-2 text-[11px] font-bold">
+                        <span v-if="getAvailableQuantity(unit) !== null" :class="getAvailableQuantity(unit) > 0 ? 'text-green-600' : 'text-red-500'">
+                            {{ getAvailableQuantity(unit) > 0 ? `Tersedia ${getAvailableQuantity(unit)} unit di tanggal ini` : 'Penuh di tanggal ini' }}
+                        </span>
+                        <span v-else class="text-gray-500">
+                            Total {{ unit.quantity }} Unit tipe ini
+                        </span>
                     </div>
                 </div>
 
@@ -222,11 +330,12 @@ const handleSelect = (unit, pricing) => {
                                 /{{ rentalUnitLabel }}
                             </span>
                         </div>
+                        <!-- Action Button -->
+                        <button @click="handleSelect(unit, getLowestPricing(unit))" 
+                                :class="['mt-4 w-full font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform active:scale-95', selectedUnitId === unit.id ? 'bg-[#0A2540] text-white' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540]']">
+                            {{ selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar' }}
+                        </button>
                     </div>
-
-                    <button @click="handleSelect(unit, getLowestPricing(unit))" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] text-xs font-extrabold py-2 px-4 rounded-lg transition-all shadow-sm">
-                        Pesan
-                    </button>
                 </div>
             </div>
         </div>
@@ -352,25 +461,31 @@ const handleSelect = (unit, pricing) => {
             <template #default>
                 <div v-if="selectedDetailUnit" class="flex flex-col h-full overflow-y-auto relative pb-24">
 
-                    <!-- Carousel Mobile -->
-                    <div class="relative w-full h-[250px] bg-gray-100 group shrink-0">
-                        <img v-if="selectedDetailUnit.images?.length > 0" :src="selectedDetailUnit.images[activeDetailImageIndex].image_url" class="w-full h-full object-cover" />
-                        <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                            <i class="fa-solid fa-image text-4xl mb-2"></i>
-                        </div>
+                    <!-- Carousel Mobile (Bottom Sheet) -->
+                    <div class="relative w-full h-[250px] bg-gray-100 group shrink-0 overflow-hidden"
+                         @touchstart="onTouchStart"
+                         @touchend="(e) => onTouchEnd(e, nextDetailImage, prevDetailImage)">
+                        <Transition name="fade">
+                            <img v-if="selectedDetailUnit.images?.length > 0" :key="activeDetailImageIndex" :src="selectedDetailUnit.images[activeDetailImageIndex].image_url" class="w-full h-full object-cover absolute inset-0" />
+                            <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400 absolute inset-0">
+                                <i class="fa-solid fa-image text-4xl mb-2"></i>
+                            </div>
+                        </Transition>
 
                         <template v-if="selectedDetailUnit.images?.length > 1">
-                            <button @click.prevent="prevDetailImage" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center active:bg-black/70">
+                            <button @click.prevent="prevDetailImage" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center active:bg-black/70 z-10">
                                 <i class="fa-solid fa-chevron-left text-xs"></i>
                             </button>
-                            <button @click.prevent="nextDetailImage" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center active:bg-black/70">
+                            <button @click.prevent="nextDetailImage" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center active:bg-black/70 z-10">
                                 <i class="fa-solid fa-chevron-right text-xs"></i>
                             </button>
-                            <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1 rounded text-[10px] text-white font-bold tracking-wider">
+                            <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1 rounded text-[10px] text-white font-bold tracking-wider z-10">
                                 {{ activeDetailImageIndex + 1 }} / {{ selectedDetailUnit.images.length }}
                             </div>
                         </template>
                     </div>
+
+
 
                     <!-- Konten Detail Mobile -->
                     <div class="p-5 flex flex-col gap-6">
@@ -429,5 +544,14 @@ const handleSelect = (unit, pricing) => {
 <style scoped>
 .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+</style>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>
