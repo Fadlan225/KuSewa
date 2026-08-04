@@ -129,6 +129,47 @@ const verificationIcon = (status) => ({
     approved: 'fa-circle-check',
     rejected: 'fa-circle-xmark',
 }[status] || 'fa-clock');
+
+// --- FOTO PREVIEW: AMBIL FOTO TERATAS/PERTAMA YANG DIUPLOAD OWNER ---
+// Backend bisa mengirim struktur foto dalam beberapa bentuk (photos: [...], atau
+// foto_properti: [{ nama_ruangan, photos/previews: [...] }, ...] sesuai form pengajuan).
+// Fungsi ini mencoba tiap kemungkinan secara berurutan dan selalu mengambil foto
+// PERTAMA yang ditemukan (foto paling atas/awal saat owner upload), lalu fallback
+// ke field 'image' lama, dan terakhir ke placeholder kalau belum ada foto sama sekali.
+const placeholderImage = 'https://placehold.co/500x300?text=Belum+Ada+Foto';
+
+const previewImage = (item) => {
+    const ambilUrl = (foto) => {
+        if (!foto) return null;
+        if (typeof foto === 'string') return foto;
+        return foto.url || foto.path || foto.image || null;
+    };
+
+    // Bentuk 1: daftar foto flat di level properti (photos / gallery / images)
+    const daftarFlat = item.photos || item.gallery || item.images;
+    if (Array.isArray(daftarFlat) && daftarFlat.length > 0) {
+        const url = ambilUrl(daftarFlat[0]);
+        if (url) return url;
+    }
+
+    // Bentuk 2: foto dikelompokkan per kategori ruangan (mengikuti struktur form pengajuan)
+    if (Array.isArray(item.foto_properti)) {
+        const kategoriPertama = item.foto_properti.find(k =>
+            (Array.isArray(k.photos) && k.photos.length > 0) ||
+            (Array.isArray(k.previews) && k.previews.length > 0)
+        );
+        if (kategoriPertama) {
+            const sumberFoto = kategoriPertama.photos || kategoriPertama.previews;
+            const url = ambilUrl(sumberFoto[0]);
+            if (url) return url;
+        }
+    }
+
+    // Fallback: field 'image' tunggal (kompatibel dengan data lama/dummy)
+    if (item.image) return item.image;
+
+    return placeholderImage;
+};
 </script>
 
 <template>
@@ -288,7 +329,7 @@ const verificationIcon = (status) => ({
                     >
                         <div>
                             <div class="relative h-48 bg-slate-100 overflow-hidden">
-                                <img :src="item.image" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
+                                <img :src="previewImage(item)" :alt="item.title" class="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
                                 
                                 <div class="absolute top-3 left-3">
                                     <span class="bg-[#0A2540]/90 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">
@@ -337,6 +378,15 @@ const verificationIcon = (status) => ({
                             </div>
 
                             <div class="flex items-center gap-1">
+                                <!-- LIHAT DETAIL: status pengajuan/diterima/ditolak & info lengkap aset (GRID) -->
+                                <Link 
+                                    :href="`/owner/property/${item.id}`" 
+                                    class="p-2 text-slate-400 hover:text-[#0A2540] hover:bg-slate-200/60 rounded-lg transition flex items-center justify-center" 
+                                    title="Lihat Detail"
+                                >
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </Link>
+
                                 <!-- REDIRECT KE EDIT PAGE (GRID) -->
                                 <Link 
                                     :href="`/owner/property/${item.id}/edit`" 
@@ -372,7 +422,7 @@ const verificationIcon = (status) => ({
                                 <tr v-for="item in filteredProperties" :key="item.id" class="hover:bg-slate-50/50 transition">
                                     <td class="p-4">
                                         <div class="flex items-center gap-3">
-                                            <img :src="item.image" class="w-12 h-12 rounded-xl object-cover shrink-0" />
+                                            <img :src="previewImage(item)" class="w-12 h-12 rounded-xl object-cover shrink-0" />
                                             <div>
                                                 <h4 class="font-bold text-slate-800">{{ item.title }}</h4>
                                                 <p class="text-[10px] text-slate-400">{{ item.type }}</p>
@@ -400,6 +450,15 @@ const verificationIcon = (status) => ({
                                     </td>
                                     <td class="p-4 text-right">
                                         <div class="flex items-center justify-end gap-2">
+                                            <!-- LIHAT DETAIL: status pengajuan/diterima/ditolak & info lengkap aset (TABLE) -->
+                                            <Link 
+                                                :href="`/owner/property/${item.id}`" 
+                                                class="p-1.5 text-slate-400 hover:text-[#0A2540] transition flex items-center justify-center" 
+                                                title="Lihat Detail"
+                                            >
+                                                <i class="fa-solid fa-eye"></i>
+                                            </Link>
+
                                             <!-- REDIRECT KE EDIT PAGE (TABLE) -->
                                             <Link 
                                                 :href="`/owner/property/${item.id}/edit`" 
