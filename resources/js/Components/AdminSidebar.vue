@@ -94,7 +94,7 @@ const toggleMenu = (key) => {
                 
                 <Link
                     :href="route('admin.asset-validation')"
-                    class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                     :class="isActive('admin.asset-validation') ? 'bg-slate-100 text-slate-900' : ''"
                 >
                     <i class="fa-solid fa-clipboard-check w-5 text-center" :class="isActive('admin.asset-validation') ? 'text-[#FFC000]' : 'text-slate-400'"></i>

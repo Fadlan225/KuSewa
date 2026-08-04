@@ -13,12 +13,6 @@ const assets = ref([
     { id: 3, title: 'Apartemen Emerald Tower', owner: 'Rina Oktaviani', location: 'Bandung', category: 'Apartemen', status: 'Pending', submitted: '01 Ags 2026' },
 ]);
 
-const submissions = ref([
-    { id: 1, applicant: 'Budi Prasetya', type: 'Owner Baru', request: 'Verifikasi NIK & KTP', status: 'Pending', created: '03 Ags 2026' },
-    { id: 2, applicant: 'Citra Ananda', type: 'Aset Properti', request: 'Verifikasi foto ruangan', status: 'Pending', created: '03 Ags 2026' },
-    { id: 3, applicant: 'Iwan Suhendra', type: 'Fasilitas', request: 'Tambahkan fasilitas WiFi', status: 'Disetujui', created: '29 Jul 2026' },
-]);
-
 const filteredAssets = computed(() => {
     return assets.value.filter(item => {
         const matchesFilter = activeFilter.value === 'Semua' || item.status === activeFilter.value;
@@ -28,25 +22,16 @@ const filteredAssets = computed(() => {
     });
 });
 
-const filteredSubmissions = computed(() => {
-    return submissions.value.filter(item => {
-        const matchesFilter = activeFilter.value === 'Semua' || item.status === activeFilter.value;
-        const matchesSearch = [item.applicant, item.type, item.request]
-            .join(' ').toLowerCase().includes(searchQuery.value.toLowerCase());
-        return matchesFilter && matchesSearch;
-    });
-});
-
 const totals = computed(() => ({
     pendingAssets: assets.value.filter(item => item.status === 'Pending').length,
     approvedAssets: assets.value.filter(item => item.status === 'Disetujui').length,
-    pendingSubmissions: submissions.value.filter(item => item.status === 'Pending').length,
-    approvedSubmissions: submissions.value.filter(item => item.status === 'Disetujui').length,
+    rejectedAssets: assets.value.filter(item => item.status === 'Ditolak').length,
+    totalAssets: assets.value.length,
 }));
 </script>
 
 <template>
-    <Head title="Validasi Aset & Pengajuan - Admin Panel" />
+    <Head title="Validasi Aset - Admin Panel" />
 
     <div class="h-screen bg-slate-50 text-slate-700 font-sans flex antialiased overflow-hidden">
         <!-- Sidebar Container -->
@@ -64,7 +49,7 @@ const totals = computed(() => ({
                     <input
                         type="text"
                         v-model="searchQuery"
-                        placeholder="Cari aset, pemohon, atau lokasi..."
+                        placeholder="Cari nama aset, pemilik, atau lokasi..."
                         class="w-full text-sm bg-transparent border-none focus:ring-0 p-0 placeholder-slate-400 text-slate-700"
                     />
                 </div>
@@ -83,9 +68,9 @@ const totals = computed(() => ({
                     <div>
                         <h1 class="text-xl font-bold text-slate-900 flex items-center gap-2">
                             <i class="fa-solid fa-clipboard-check text-[#FFC000]"></i> 
-                            Validasi Aset & Pengajuan
+                            Validasi Aset Properti
                         </h1>
-                        <p class="text-sm text-slate-500 mt-1">Pantau aset yang menunggu verifikasi dan kelola pengajuan masuk.</p>
+                        <p class="text-sm text-slate-500 mt-1">Pantau dan verifikasi aset properti yang didaftarkan oleh para owner.</p>
                     </div>
 
                     <!-- Compact Filter -->
@@ -106,33 +91,32 @@ const totals = computed(() => ({
                     </div>
                 </div>
 
-                <!-- Consolidated Stats Bar (Lebih efisien ruang) -->
+                <!-- Consolidated Stats Bar -->
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 overflow-hidden">
                     <div class="p-5 flex flex-col justify-center">
-                        <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Aset Menunggu</p>
-                        <p class="mt-1 text-2xl font-bold text-slate-900">{{ totals.pendingAssets }}</p>
+                        <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Menunggu Verifikasi</p>
+                        <p class="mt-1 text-2xl font-bold text-amber-600">{{ totals.pendingAssets }}</p>
                     </div>
                     <div class="p-5 flex flex-col justify-center">
                         <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Aset Disetujui</p>
                         <p class="mt-1 text-2xl font-bold text-emerald-600">{{ totals.approvedAssets }}</p>
                     </div>
                     <div class="p-5 flex flex-col justify-center">
-                        <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Pengajuan Baru</p>
-                        <p class="mt-1 text-2xl font-bold text-amber-600">{{ totals.pendingSubmissions }}</p>
+                        <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Aset Ditolak</p>
+                        <p class="mt-1 text-2xl font-bold text-rose-600">{{ totals.rejectedAssets }}</p>
                     </div>
                     <div class="p-5 flex flex-col justify-center">
-                        <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Pengajuan Selesai</p>
-                        <p class="mt-1 text-2xl font-bold text-[#0A2540]">{{ totals.approvedSubmissions }}</p>
+                        <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Total Keseluruhan</p>
+                        <p class="mt-1 text-2xl font-bold text-[#0A2540]">{{ totals.totalAssets }}</p>
                     </div>
                 </div>
 
-                <!-- Tables Section (Stacked untuk mencegah tabel sesak di layar standar) -->
+                <!-- Tables Section -->
                 <div class="space-y-6">
-                    
                     <!-- Table: Aset -->
                     <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                         <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h2 class="text-sm font-bold text-slate-800">Aset Menunggu Validasi</h2>
+                            <h2 class="text-sm font-bold text-slate-800">Daftar Aset Properti</h2>
                             <button class="text-xs font-semibold text-[#0A2540] hover:text-[#FFC000] transition">Lihat Semua &rarr;</button>
                         </div>
                         <div class="overflow-x-auto">
@@ -142,7 +126,7 @@ const totals = computed(() => ({
                                         <th class="py-3 px-5">Nama Aset</th>
                                         <th class="py-3 px-4">Pemilik</th>
                                         <th class="py-3 px-4">Lokasi & Kategori</th>
-                                        <th class="py-3 px-4">Tanggal</th>
+                                        <th class="py-3 px-4">Tanggal Daftar</th>
                                         <th class="py-3 px-4">Status</th>
                                         <th class="py-3 px-5 text-right">Aksi</th>
                                     </tr>
@@ -158,73 +142,28 @@ const totals = computed(() => ({
                                         <td class="py-3 px-4">
                                             <span :class="[
                                                 'inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset',
-                                                item.status === 'Pending' ? 'bg-amber-50 text-amber-700 ring-amber-200' : 'bg-emerald-50 text-emerald-700 ring-emerald-200'
+                                                item.status === 'Pending' ? 'bg-amber-50 text-amber-700 ring-amber-200' : 
+                                                item.status === 'Disetujui' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 
+                                                'bg-rose-50 text-rose-700 ring-rose-200'
                                             ]">
                                                 {{ item.status }}
                                             </span>
                                         </td>
                                         <td class="py-3 px-5 text-right">
                                             <button class="text-xs font-medium text-slate-400 group-hover:text-[#0A2540] transition border border-transparent group-hover:border-slate-200 px-3 py-1.5 rounded-md hover:bg-slate-100">
-                                                Detail
+                                                Tinjau Aset
                                             </button>
                                         </td>
                                     </tr>
                                     <tr v-if="filteredAssets.length === 0">
-                                        <td colspan="6" class="py-10 text-center text-slate-500">Tidak ada data yang sesuai.</td>
+                                        <td colspan="6" class="py-10 text-center text-slate-500">Tidak ada data aset yang sesuai.</td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                     </section>
-
-                    <!-- Table: Pengajuan -->
-                    <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-                        <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h2 class="text-sm font-bold text-slate-800">Daftar Pengajuan (Tiket)</h2>
-                            <button class="text-xs font-semibold text-[#0A2540] hover:text-[#FFC000] transition">Kelola Semua &rarr;</button>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left text-sm whitespace-nowrap">
-                                <thead>
-                                    <tr class="border-b border-slate-200 bg-slate-50 text-slate-500 font-medium">
-                                        <th class="py-3 px-5">Pengaju</th>
-                                        <th class="py-3 px-4">Tipe & Deskripsi</th>
-                                        <th class="py-3 px-4">Tanggal</th>
-                                        <th class="py-3 px-4">Status</th>
-                                        <th class="py-3 px-5 text-right">Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    <tr v-for="item in filteredSubmissions" :key="item.id" class="hover:bg-slate-50 transition-colors group">
-                                        <td class="py-3 px-5 font-semibold text-slate-800">{{ item.applicant }}</td>
-                                        <td class="py-3 px-4 text-slate-600">
-                                            <span class="font-medium text-slate-700">{{ item.type }}</span> 
-                                            <span class="text-slate-400 text-xs ml-2 hidden sm:inline">- {{ item.request }}</span>
-                                        </td>
-                                        <td class="py-3 px-4 text-slate-500 text-xs">{{ item.created }}</td>
-                                        <td class="py-3 px-4">
-                                            <span :class="[
-                                                'inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset',
-                                                item.status === 'Pending' ? 'bg-amber-50 text-amber-700 ring-amber-200' : 'bg-emerald-50 text-emerald-700 ring-emerald-200'
-                                            ]">
-                                                {{ item.status }}
-                                            </span>
-                                        </td>
-                                        <td class="py-3 px-5 text-right">
-                                            <button class="text-xs font-medium text-slate-400 group-hover:text-[#0A2540] transition border border-transparent group-hover:border-slate-200 px-3 py-1.5 rounded-md hover:bg-slate-100">
-                                                Tinjau
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="filteredSubmissions.length === 0">
-                                        <td colspan="5" class="py-10 text-center text-slate-500">Tidak ada data yang sesuai.</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </section>
-
                 </div>
+
             </div>
         </main>
     </div>

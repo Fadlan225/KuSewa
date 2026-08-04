@@ -56,7 +56,6 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\AdminDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/owner-validation', [App\Http\Controllers\AdminOwnerValidationController::class, 'index'])->name('owner-validation');
     Route::get('/pengajuan-akun', [App\Http\Controllers\AdminAccountSubmissionController::class, 'index'])->name('pengajuan-akun');
     Route::get('/user-accounts', [App\Http\Controllers\AdminUserAccountController::class, 'index'])->name('user-accounts');
     Route::get('/admin-accounts', [App\Http\Controllers\AdminAdministratorAccountController::class, 'index'])->name('admin-accounts');
