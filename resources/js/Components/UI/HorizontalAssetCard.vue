@@ -237,6 +237,15 @@ const rentalUnitLabel = (unit) => {
 
     return labels[unit] ?? "sewa";
 };
+
+const availabilityText = computed(() => {
+    // If backend provides specific date/text
+    if (props.asset.available_at) {
+        return `Tersedia ${props.asset.available_at}`;
+    }
+    // Default fallback
+    return "Tersedia Sekarang";
+});
 </script>
 
 <template>
@@ -296,6 +305,11 @@ const rentalUnitLabel = (unit) => {
                 <div class="text-[10px] md:text-xs text-gray-500 font-medium truncate mt-0.5">
                     <i class="fa-solid fa-location-dot text-[#FFC000] mr-0.5"></i>
                     {{ [asset.subdistrict, asset.city].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
+                </div>
+                
+                <div class="text-[10px] md:text-[11px] text-[#10B981] font-bold mt-1.5 flex items-center gap-1">
+                    <i class="fa-solid fa-calendar-check"></i>
+                    {{ availabilityText }}
                 </div>
             </div>
 

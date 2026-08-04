@@ -47,6 +47,7 @@ class AssetController extends Controller
             'pricings',
             'ownerProfile.user',
             'reviews.user',
+            'reviews.reviewTagItems.reviewTag',
             'favorites' => function ($query) {
                 $query->where('user_id', auth()->id());
             },

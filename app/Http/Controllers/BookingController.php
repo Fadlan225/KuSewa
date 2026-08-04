@@ -83,8 +83,7 @@ class BookingController extends Controller
                     ];
                 });
         }
-
-        return Inertia::render('Home/Booking', [
+        return Inertia::render('Home/Bookings/Booking', [
             'asset' => $asset,
             'selectedPricing' => $selectedPricing,
             'serviceFee' => $serviceFee,
@@ -249,8 +248,7 @@ class BookingController extends Controller
         if ($booking->user_id !== auth()->id()) {
             abort(403, 'Unauthorized action.');
         }
-
-        return Inertia::render('Home/BookingPass', [
+        return Inertia::render('Home/Bookings/BookingPass', [
             'booking' => $booking
         ]);
     }

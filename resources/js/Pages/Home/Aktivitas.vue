@@ -59,20 +59,20 @@ const formatDate = (dateString) => {
 // Helper for group headers (Hari Ini, Kemarin, dll)
 const getGroupLabel = (dateString) => {
   if (!dateString) return 'Lainnya';
-  
+
   const date = new Date(dateString);
   const today = new Date();
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  
-  const isSameDay = (d1, d2) => 
+
+  const isSameDay = (d1, d2) =>
     d1.getFullYear() === d2.getFullYear() &&
     d1.getMonth() === d2.getMonth() &&
     d1.getDate() === d2.getDate();
-    
+
   if (isSameDay(date, today)) return 'Hari Ini';
   if (isSameDay(date, yesterday)) return 'Kemarin';
-  
+
   return new Intl.DateTimeFormat('id-ID', {
     day: 'numeric', month: 'long', year: 'numeric'
   }).format(date);
@@ -86,11 +86,11 @@ function getXsrfToken() {
 
 const toggleFavorite = async (item) => {
     if (item.isPendingFavorite) return;
-    
+
     const nextState = !item.isFavorite;
     item.isFavorite = nextState;
     item.isPendingFavorite = true;
-    
+
     const user = page.props.auth?.user;
     if (!user) {
         item.isFavorite = !nextState;
@@ -218,10 +218,16 @@ const activitiesBase = ref(
     let actions = [];
     if (bs === 'pending') {
       actions.push({ label: 'Batalkan', primary: false, actionId: 'cancel' });
-    }
-    if (bs === 'confirmed' && (!ps || ps === 'pending')) {
+    } else if (bs === 'confirmed' && (!ps || ps === 'pending')) {
       actions.push({ label: 'Bayar Sekarang', primary: true, actionId: 'pay' });
       actions.push({ label: 'Batalkan', primary: false, actionId: 'cancel' });
+    } else if (bs === 'completed') {
+      if (!b.reviews) {
+        actions.push({ label: 'Ulasan', primary: true, actionId: 'review' });
+      }
+      actions.push({ label: 'Pesan Lagi', primary: false, actionId: 'book_again' });
+    } else if (bs === 'cancelled' || ps === 'rejected' || ps === 'expired') {
+      actions.push({ label: 'Pesan Lagi', primary: true, actionId: 'book_again' });
     }
 
     // Default Images
@@ -246,7 +252,7 @@ const activitiesBase = ref(
       images.push('https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=150&q=80');
       images.push('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=150&q=80');
     }
-    
+
     const dateObj = new Date(b.created_at || b.start_date);
 
     return {
@@ -294,14 +300,14 @@ const groupedActivities = computed(() => {
   if (activeFilter.value !== 'Semua') {
       filtered = filtered.filter(item => item.category === activeFilter.value);
   }
-  
+
   // Sort
   if (sort.value === 'Terbaru') {
       filtered = [...filtered].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   } else {
       filtered = [...filtered].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
   }
-  
+
   // Group by day
   const groups = {};
   filtered.forEach(item => {
@@ -309,7 +315,7 @@ const groupedActivities = computed(() => {
       if(!groups[label]) groups[label] = [];
       groups[label].push(item);
   });
-  
+
   // Convert object to array preserving order from the first element of each group
   // Actually, since we sorted the array, Object keys might not preserve order.
   const orderedGroups = [];
@@ -324,7 +330,7 @@ const groupedActivities = computed(() => {
           });
       }
   });
-  
+
   return orderedGroups;
 });
 
@@ -341,6 +347,16 @@ const handleActionClick = (action, item) => {
     } else {
        alert("Data pembayaran belum tersedia");
     }
+  } else if (action.actionId === 'book_again') {
+    if (item.raw && item.raw.asset && item.raw.asset.slug) {
+      router.get(`/assets/${item.raw.asset.slug}`);
+    } else if (item.raw && item.raw.asset_id) {
+      router.get(`/assets/${item.raw.asset_id}`);
+    } else {
+      console.warn("Asset data not found for booking", item.id);
+    }
+  } else if (action.actionId === 'review') {
+    router.get(`/ulasan/${item.id}`);
   } else {
     console.log(`Action dipicu: ${action.label} pada ${item.name}`);
   }
@@ -369,8 +385,8 @@ const processCancellation = () => {
 
 <template>
   <AppLayout>
-    <Head title="Aktivitas Saya - KuSewa" />
-    
+    <Head title="Aktivitas Saya" />
+
     <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-16 text-[#1D1D1F]">
 
       <!-- Mobile Top: Search or Filter Summary -->
@@ -541,52 +557,63 @@ const processCancellation = () => {
                     <div
                       v-for="item in group.items"
                       :key="item.id"
-                      class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-row overflow-hidden group p-2.5 md:p-3 items-center gap-3 md:gap-4 select-none [-webkit-touch-callout:none]"
+                      @click="router.get(`/booking/${item.id}`)"
+                      class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col overflow-hidden group p-2.5 md:p-3 gap-2 select-none cursor-pointer [-webkit-touch-callout:none]"
                     >
-                      <!-- Gambar -->
-                      <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-lg overflow-hidden cursor-pointer bg-slate-100" @click="router.get(`/booking/${item.id}`)">
-                        <img :src="item.images[0]" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" alt="Main" onerror="this.src='https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=300&q=80'" />
-                      </div>
+                      <!-- Bagian Atas: Info Aset -->
+                      <div class="flex items-center gap-3 md:gap-4 w-full">
+                        <!-- Gambar -->
+                        <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-lg overflow-hidden bg-slate-100">
+                          <img :src="item.images[0]" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" alt="Main" onerror="this.src='https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=300&q=80'" />
+                        </div>
 
-                      <!-- Konten Info & Progress -->
-                      <div class="flex-1 min-w-0 flex flex-col justify-center">
-                        <h3 class="font-bold text-sm md:text-base text-[#0A2540] truncate cursor-pointer hover:text-[#FFC000]" @click="router.get(`/booking/${item.id}`)">
-                            {{ item.name }}
-                        </h3>
-
-                        <!-- Progress Bar Minimalis -->
-                        <div v-if="item.progress" class="mt-1.5 md:mt-2 w-full max-w-sm">
-                          <div class="flex justify-between items-center mb-1">
-                             <span class="text-[9px] md:text-[10px] font-bold" :style="{ color: item.statusColor }">{{ item.status }}</span>
-                          </div>
-                          <div class="w-full h-1.5 md:h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-[#10B981] transition-all" :style="{ width: item.progressPercent + '%' }"></div>
-                          </div>
+                        <!-- Konten Info -->
+                        <div class="flex-1 min-w-0 flex flex-col justify-center self-stretch">
+                           <div class="flex justify-between items-center gap-2 h-full">
+                              <div class="flex flex-col justify-center h-full">
+                                 <h3 class="font-bold text-sm md:text-base text-[#0A2540] truncate group-hover:text-[#FFC000]">
+                                     {{ item.name }}
+                                 </h3>
+                                 <span class="text-[9px] md:text-[10px] font-bold mt-1.5 md:mt-2" :style="{ color: item.statusColor }">{{ item.status }}</span>
+                              </div>
+                              <div class="flex flex-col items-end justify-center shrink-0">
+                                 <p class="font-extrabold text-xs md:text-sm text-[#FFC000] leading-none">{{ item.totalPrice }}</p>
+                              </div>
+                           </div>
                         </div>
                       </div>
 
-                      <!-- Harga & Aksi -->
-                      <div class="shrink-0 flex flex-col items-end justify-between self-stretch py-0.5">
-                        <div class="text-right mb-2 md:mb-0">
-                          <p class="font-extrabold text-xs md:text-sm text-[#FFC000] leading-none">{{ item.totalPrice }}</p>
+                      <!-- Progress Bar & Actions (Bagian Bawah) -->
+                      <div v-if="item.progress" class="w-full">
+                        <!-- Progress Bar -->
+                        <div class="w-full relative py-1 md:py-1.5">
+                          <div class="w-full h-1.5 md:h-2 bg-gray-200 rounded-full relative">
+                            <!-- Progress Fill -->
+                            <div class="absolute top-0 left-0 h-full bg-[#10B981] transition-all rounded-full" :style="{ width: item.progressPercent + '%' }"></div>
+                            
+                            <!-- Checkpoints -->
+                            <div class="absolute top-1/2 -translate-y-1/2 left-[15%] w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white border-[1.5px] transition-colors" :class="item.progressPercent >= 15 ? 'border-[#10B981]' : 'border-gray-300'"></div>
+                            <div class="absolute top-1/2 -translate-y-1/2 left-[40%] w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white border-[1.5px] transition-colors" :class="item.progressPercent >= 40 ? 'border-[#10B981]' : 'border-gray-300'"></div>
+                            <div class="absolute top-1/2 -translate-y-1/2 left-[65%] w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white border-[1.5px] transition-colors" :class="item.progressPercent >= 65 ? 'border-[#10B981]' : 'border-gray-300'"></div>
+                            <div class="absolute top-1/2 -translate-y-1/2 left-[80%] w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white border-[1.5px] transition-colors" :class="item.progressPercent >= 80 ? 'border-[#10B981]' : 'border-gray-300'"></div>
+                            <div class="absolute top-1/2 -translate-y-1/2 right-0 w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white border-[1.5px] transition-colors" :class="item.progressPercent >= 100 ? 'border-[#10B981]' : 'border-gray-300'"></div>
+                          </div>
                         </div>
-
-                        <div class="flex gap-1.5 md:gap-2 mt-auto">
+                        
+                        <!-- Actions -->
+                        <div v-if="item.actions.length > 0" class="flex justify-end gap-1.5 md:gap-2 mt-1 md:mt-2 pt-2 md:pt-3 border-t border-gray-100">
                           <button
                             v-for="(action, idx) in item.actions"
                             :key="idx"
-                            @click="handleActionClick(action, item)"
+                            @click.stop="handleActionClick(action, item)"
                             :class="[
-                              'px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold transition-all shadow-sm active:scale-95',
+                              'px-3 md:px-4 py-1.5 md:py-2 rounded-lg text-[10px] md:text-xs font-bold transition-all shadow-sm active:scale-95',
                               action.primary
                                 ? 'bg-[#FFC000] text-[#0A2540] hover:bg-[#e6ad00]'
                                 : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                             ]"
                           >
                             {{ action.label }}
-                          </button>
-                          <button v-if="item.actions.length === 0" @click="router.get(`/booking/${item.id}`)" class="px-2.5 md:px-3 py-1 md:py-1.5 rounded-lg text-[9px] md:text-[10px] font-bold transition-all shadow-sm active:scale-95 bg-white border border-[#0A2540] text-[#0A2540] hover:bg-[#0A2540] hover:text-white">
-                            Detail
                           </button>
                         </div>
                       </div>

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import { Head } from '@inertiajs/vue3';
 import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue'
 
 const props = defineProps({
@@ -83,6 +84,8 @@ const filteredFavorites = computed(() => {
 </script>
 
 <template>
+    <Head title="Favorit" />
+
     <AppLayout>
         <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-8 sm:py-12 pb-24 sm:pb-16 text-[#1D1D1F]">
 

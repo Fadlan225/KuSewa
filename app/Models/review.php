@@ -20,4 +20,9 @@ class review extends Model
     public function booking(){
         return $this->belongsTo(booking::class);
     }
+
+    public function reviewTagItems()
+    {
+        return $this->hasMany(review_tag_item::class);
+    }
 }

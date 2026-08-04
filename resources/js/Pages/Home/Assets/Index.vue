@@ -19,8 +19,8 @@ const props = defineProps({
 });
 
 import { useHomeSearch } from '@/Composables/useHomeSearch';
-import MobileSearchSheet from '@/Pages/Home/MobileSearchSheet.vue';
-import KeywordSearchSheet from '@/Pages/Home/KeywordSearchSheet.vue';
+import MobileSearchSheet from '@/Pages/Home/Search/MobileSearchSheet.vue';
+import KeywordSearchSheet from '@/Pages/Home/Search/KeywordSearchSheet.vue';
 import StickySubNavSearch from '@/Components/UI/StickySubNavSearch.vue';
 
 const {
@@ -469,8 +469,5 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                 </div>
             </div>
         </div>
-
-
-
     </AppLayout>
 </template>

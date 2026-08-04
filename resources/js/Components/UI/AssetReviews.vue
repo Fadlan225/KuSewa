@@ -36,6 +36,36 @@ const reviewDistribution = computed(() => {
     });
 });
 
+const reviewTagsDistribution = computed(() => {
+    if (!props.reviews || props.reviews.length === 0) return [];
+    
+    const tagCounts = {};
+    const totalReviews = props.reviews.length;
+    
+    props.reviews.forEach(review => {
+        if (review.review_tag_items && review.review_tag_items.length > 0) {
+            review.review_tag_items.forEach(item => {
+                const tag = item.review_tag;
+                if (tag) {
+                    if (!tagCounts[tag.name]) {
+                        tagCounts[tag.name] = { count: 0, name: tag.name };
+                    }
+                    tagCounts[tag.name].count++;
+                }
+            });
+        }
+    });
+    
+    const sortedTags = Object.values(tagCounts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+    
+    return sortedTags.map(tag => {
+        const percentage = Math.round((tag.count / totalReviews) * 100);
+        return { ...tag, percentage };
+    });
+});
+
 const showAllReviews = ref(false);
 
 const visibleReviews = computed(() => {
@@ -61,7 +91,7 @@ const formatDate = (dateString) => {
                     <div class="text-6xl font-black text-[#0A2540] tracking-tighter">
                         {{ parseFloat(averageRating || 0).toFixed(1) }}
                     </div>
-                    
+
                     <div class="flex gap-1 text-[#FFC000] my-2 text-lg">
                         <i v-for="i in 5" :key="i" class="fa-solid fa-star"
                             :class="{
@@ -77,19 +107,18 @@ const formatDate = (dateString) => {
                 </div>
 
                 <!-- Sisi Kanan: Progress Bar Breakdown -->
-                <div class="flex-grow sm:pl-8 flex flex-col justify-center gap-2 w-full">
-                    <div v-for="item in reviewDistribution" :key="item.star" class="flex items-center gap-3 text-sm">
-                        <div class="flex items-center gap-1 w-8 justify-end text-gray-500 font-medium text-xs">
-                            {{ item.star }} <i class="fa-solid fa-star text-[#FFC000] text-[10px]"></i>
+                <div class="flex-grow sm:pl-8 flex flex-col gap-3 w-full">
+                    <div v-for="item in reviewTagsDistribution" :key="item.name" class="flex items-center text-sm">
+                        <div class="flex flex-col w-full gap-1.5">
+                            <div class="flex justify-between items-center text-xs">
+                                <span class="text-gray-600 font-medium">{{ item.name }}</span>
+                                <span class="font-bold text-[#0A2540]">{{ item.percentage }}%</span>
+                            </div>
+                            <!-- Progress Bar dinamis -->
+                            <div class="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                                <div class="h-full bg-[#FFC000] rounded-full transition-all duration-500" :style="{ width: item.percentage + '%' }"></div>
+                            </div>
                         </div>
-
-                        <!-- Progress Bar dinamis -->
-                        <div class="flex-grow h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-[#FFC000] rounded-full transition-all duration-500" :style="{ width: item.percentage + '%' }"></div>
-                        </div>
-
-                        <!-- Jumlah ulasan per bintang -->
-                        <div class="w-4 text-xs font-medium text-gray-400 text-right">{{ item.count }}</div>
                     </div>
                 </div>
             </div>
@@ -101,10 +130,11 @@ const formatDate = (dateString) => {
                         <!-- Header Card Ulasan: Profil & Bintang -->
                         <div class="flex items-start justify-between mb-3">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-[#0A2540] flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
-                                    <!-- Inisial Nama atau Foto -->
-                                    <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" class="w-full h-full object-cover" />
-                                    <span v-else>{{ review.user?.name?.charAt(0) || 'U' }}</span>
+                                <div class="w-10 h-10 rounded-full bg-[#0A2540] relative flex items-center justify-center text-white font-bold overflow-hidden shrink-0">
+                                    <!-- Inisial selalu ada di belakang -->
+                                    <span class="absolute inset-0 flex items-center justify-center">{{ review.user?.name?.charAt(0) || 'U' }}</span>
+                                    <!-- Jika ada foto, letakkan di atas. Jika gagal dimuat, sembunyikan img-nya menggunakan native onerror -->
+                                    <img v-if="review.user?.profile_photo" :src="review.user.profile_photo" onerror="this.style.display='none'" class="w-full h-full object-cover relative z-10" />
                                 </div>
                                 <div>
                                     <p class="font-bold text-[#0A2540] text-sm">{{ review.user?.name || 'Anonim' }}</p>
@@ -121,6 +151,13 @@ const formatDate = (dateString) => {
                         <p class="text-sm text-gray-600 leading-relaxed">
                             "{{ review.review }}"
                         </p>
+
+                        <!-- Tags yang dipilih -->
+                        <div v-if="review.review_tag_items && review.review_tag_items.length > 0" class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-gray-50">
+                            <span v-for="tagItem in review.review_tag_items" :key="tagItem.id" class="px-2.5 py-1 bg-[#FFC000]/10 text-[#B38600] font-semibold border border-[#FFC000]/20 rounded-md text-[11px]">
+                                {{ tagItem.review_tag?.name }}
+                            </span>
+                        </div>
                     </div>
                 </div>
 

@@ -25,7 +25,6 @@ defineProps({
 
 <template>
     <div class="min-h-screen bg-[#F8F9FA] font-sans text-[#000000]">
-        <Head title="KuSewa" />
 
         <GlobalLoading />
 
@@ -36,7 +35,7 @@ defineProps({
         </main>
 
         <Bottombar v-if="!hideBottombar" />
-        
+
         <FloatingChat />
 
         <!-- <Footer /> -->

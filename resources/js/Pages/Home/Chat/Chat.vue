@@ -1,5 +1,5 @@
 <template>
-  <Head title="Pesan & Obrolan" />
+  <Head title="Kotak Masuk" />
   <!-- Main Layout -->
   <div class="fixed inset-0 flex flex-col bg-[#F0F2F5] font-sans overflow-hidden">
     <!-- Navbar Component for Top (Hidden on mobile if chat is open) -->

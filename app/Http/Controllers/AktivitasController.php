@@ -20,7 +20,8 @@ class AktivitasController extends Controller
             },
             "asset.firstImage",
             "asset.type.category",
-            "payment"
+            "payment",
+            "reviews"
         ])
         ->where("user_id", $userId)
         ->orderBy("created_at", "desc")

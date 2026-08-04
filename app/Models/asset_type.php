@@ -48,4 +48,9 @@ class asset_type extends Model
                     ->withPivot('scope')
                     ->withTimestamps();
     }
+
+    public function reviewTags()
+    {
+        return $this->hasMany(review_tag::class);
+    }
 }

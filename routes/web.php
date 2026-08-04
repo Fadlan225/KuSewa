@@ -12,6 +12,8 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\AktivitasController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Api\HomeAssetController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\AssetViewController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -29,6 +31,14 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::resource('assets', AssetController::class)->only(['show']);
+
+Route::get('/bantuan', function () {
+    return Inertia::render('Home/Bantuan/PusatBantuan');
+})->name('bantuan');
+
+Route::get('/hubungi-kami', function () {
+    return Inertia::render('Home/Bantuan/HubungiKami');
+})->name('hubungi-kami');
 
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
@@ -53,6 +63,8 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas.index');
+    Route::get('/ulasan/{id}', [ReviewController::class, 'create'])->name('ulasan.index');
+    Route::post('/ulasan/{id}', [ReviewController::class, 'store'])->name('ulasan.store');
 
     // ==========================
     // Booking & Payment
@@ -69,9 +81,9 @@ Route::middleware('auth')->group(function () {
     // ==========================
     // Last Seen / Terakhir Dilihat
     // ==========================
-    Route::get('/last-seen', [App\Http\Controllers\AssetViewController::class, 'index'])->name('last-seen.index');
-    Route::delete('/last-seen/bulk', [App\Http\Controllers\AssetViewController::class, 'bulkDestroy'])->name('last-seen.bulkDestroy');
-    Route::delete('/last-seen/{assetView}', [App\Http\Controllers\AssetViewController::class, 'destroy'])->name('last-seen.destroy');
+    Route::get('/last-seen', [AssetViewController::class, 'index'])->name('last-seen.index');
+    Route::delete('/last-seen/bulk', [AssetViewController::class, 'bulkDestroy'])->name('last-seen.bulkDestroy');
+    Route::delete('/last-seen/{assetView}', [AssetViewController::class, 'destroy'])->name('last-seen.destroy');
 
     // ==========================
     // Profile

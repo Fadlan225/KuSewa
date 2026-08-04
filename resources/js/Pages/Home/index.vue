@@ -9,9 +9,9 @@ import { useHomeSearch } from '@/Composables/useHomeSearch';
 
 // ── Lazy load bottom sheets: JS tidak di-parse sampai pertama kali dibuka ──
 // Hemat ~30KB JS parse time + eliminasi render overhead DOM saat init
-const MobileSearchSheet  = defineAsyncComponent(() => import('./MobileSearchSheet.vue'));
-const KeywordSearchSheet = defineAsyncComponent(() => import('./KeywordSearchSheet.vue'));
-const LokasiSearchSheet  = defineAsyncComponent(() => import('./LokasiSearchSheet.vue'));
+const MobileSearchSheet  = defineAsyncComponent(() => import('./Search/MobileSearchSheet.vue'));
+const KeywordSearchSheet = defineAsyncComponent(() => import('./Search/KeywordSearchSheet.vue'));
+const LokasiSearchSheet  = defineAsyncComponent(() => import('./Search/LokasiSearchSheet.vue'));
 
 // State dari composable untuk v-if conditional mounting
 const { isMobileSearchOpen, isKeywordSheetOpen, isLokasiFullScreen } = useHomeSearch();
@@ -33,7 +33,7 @@ const props = defineProps({
 
 <template>
     <AppLayout transparentNavbar>
-        <Head title="Beranda - KuSewa" />
+        <Head title="Beranda" />
 
         <HeroSection />
 

@@ -222,7 +222,7 @@ const executeDelete = () => {
 
 <template>
   <AppLayout>
-    <Head title="Terakhir Dilihat - KuSewa" />
+    <Head title="Terakhir Dilihat" />
 
     <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-16 text-[#1D1D1F]">
 
@@ -367,7 +367,7 @@ const executeDelete = () => {
           </div>
 
           <!-- Gambar -->
-          <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-lg overflow-hidden cursor-pointer bg-slate-100" @click="router.get(`/assets/${item.asset?.id}`)">
+          <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-lg overflow-hidden cursor-pointer bg-slate-100" @click="router.get(`/assets/${item.asset?.slug || item.asset?.id}`)">
             <img :src="getImageUrl(item.asset?.first_image || item.asset?.firstImage)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" alt="Asset" onerror="this.src='https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=300&q=80'" />
           </div>
 
@@ -377,7 +377,7 @@ const executeDelete = () => {
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 uppercase tracking-wide">{{ item.asset?.type?.category?.name || 'Aset' }}</span>
                 <span class="text-[10px] text-slate-400 flex items-center gap-1"><i class="fa-regular fa-clock"></i> {{ timeAgo(item.last_viewed) }}</span>
             </div>
-            <h3 class="font-bold text-sm md:text-base text-[#0A2540] truncate cursor-pointer hover:text-[#FFC000]" @click="router.get(`/assets/${item.asset?.id}`)">
+            <h3 class="font-bold text-sm md:text-base text-[#0A2540] truncate cursor-pointer hover:text-[#FFC000]" @click="router.get(`/assets/${item.asset?.slug || item.asset?.id}`)">
                 {{ item.asset?.title }}
             </h3>
             <p class="font-extrabold text-xs md:text-sm text-[#FFC000] leading-none mt-1">

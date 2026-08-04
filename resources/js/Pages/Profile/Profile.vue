@@ -1,10 +1,12 @@
 <script setup>
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';
+import Cropper from 'cropperjs';
+import 'cropperjs/dist/cropper.css';
 
 const props = defineProps({
     mustVerifyEmail: Boolean,
@@ -27,25 +29,82 @@ const initials = computed(() => {
 const photoInput = ref(null);
 const uploadingPhoto = ref(false);
 
+const showCropModal = ref(false);
+const imageToCrop = ref(null);
+const cropperImg = ref(null);
+let cropperInstance = null;
+const originalFile = ref(null);
+
 const selectNewPhoto = () => {
     photoInput.value.click();
 };
 
-const updatePhoto = (e) => {
+const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append('photo', file);
+    originalFile.value = file;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        imageToCrop.value = event.target.result;
+        showCropModal.value = true;
 
-    uploadingPhoto.value = true;
-    router.post(route('profile.photo'), formData, {
-        preserveScroll: true,
-        preserveState: true,
-        onFinish: () => {
-            uploadingPhoto.value = false;
-        }
-    });
+        nextTick(() => {
+            if (cropperInstance) cropperInstance.destroy();
+            cropperInstance = new Cropper(cropperImg.value, {
+                aspectRatio: 1,
+                viewMode: 1,
+                autoCropArea: 1,
+            });
+        });
+    };
+    reader.readAsDataURL(file);
+};
+
+const cancelCrop = () => {
+    showCropModal.value = false;
+    if (cropperInstance) cropperInstance.destroy();
+    if (photoInput.value) photoInput.value.value = null;
+};
+
+const submitCroppedImage = () => {
+    if (!cropperInstance) return;
+
+    cropperInstance.getCroppedCanvas().toBlob((blob) => {
+        if (!blob) return;
+
+        const file = new File([blob], originalFile.value.name, {
+            type: originalFile.value.type,
+            lastModified: Date.now(),
+        });
+
+        uploadingPhoto.value = true;
+        showCropModal.value = false;
+
+        router.post(route('profile.photo'), {
+            photo: file
+        }, {
+            preserveScroll: true,
+            preserveState: true,
+            forceFormData: true,
+            onSuccess: () => {
+                if (photoInput.value) photoInput.value.value = null;
+            },
+            onError: (errors) => {
+                if (errors.photo) {
+                    alert(errors.photo);
+                } else {
+                    alert('Gagal mengupload foto.');
+                }
+                if (photoInput.value) photoInput.value.value = null;
+            },
+            onFinish: () => {
+                uploadingPhoto.value = false;
+            }
+        });
+
+        cropperInstance.destroy();
+    }, originalFile.value.type);
 };
 
 // Accordion state
@@ -94,7 +153,7 @@ const showLogoutModal = ref(false);
                     </div>
                 </div>
 
-                <input type="file" class="hidden" ref="photoInput" @change="updatePhoto" accept="image/*">
+                <input type="file" class="hidden" ref="photoInput" @change="handleFileChange" accept="image/*">
 
                 <h2 class="mt-4 text-xl font-extrabold text-[#0A2540]">{{ user.name }}</h2>
                 <p class="text-sm text-[#466080]">{{ user.email }}</p>
@@ -188,6 +247,36 @@ const showLogoutModal = ref(false);
                             class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
                         >
                             Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Crop Modal -->
+        <Teleport to="body" v-if="showCropModal">
+            <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 overflow-hidden">
+                <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl flex flex-col max-h-[90vh]">
+                    <h2 class="text-xl font-bold text-gray-900 mb-4 text-center">Sesuaikan Foto Profil</h2>
+
+                    <div class="flex-grow min-h-0 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center" style="max-height: 60vh;">
+                        <img ref="cropperImg" :src="imageToCrop" alt="Mulai potong gambar" class="max-w-full max-h-full block">
+                    </div>
+
+                    <div class="mt-6 flex justify-end gap-3 shrink-0">
+                        <button
+                            type="button"
+                            @click="cancelCrop"
+                            class="px-6 py-2.5 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors"
+                        >
+                            Batal
+                        </button>
+                        <button
+                            type="button"
+                            @click="submitCroppedImage"
+                            class="px-6 py-2.5 bg-[#0A2540] border border-transparent rounded-xl font-bold text-sm text-white hover:bg-[#0A2540]/90 focus:outline-none transition-colors"
+                        >
+                            Crop & Upload
                         </button>
                     </div>
                 </div>
