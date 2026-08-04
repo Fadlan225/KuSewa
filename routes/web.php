@@ -61,6 +61,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/user-accounts', [App\Http\Controllers\AdminUserAccountController::class, 'index'])->name('user-accounts');
     Route::get('/admin-accounts', [App\Http\Controllers\AdminAdministratorAccountController::class, 'index'])->name('admin-accounts');
     Route::post('/admin-accounts', [App\Http\Controllers\AdminAdministratorAccountController::class, 'store'])->name('admin-accounts.store');
+    Route::get('/asset-validation', [App\Http\Controllers\AdminAssetValidationController::class, 'index'])->name('asset-validation');
+    Route::get('/property-assets', [App\Http\Controllers\AdminPropertyAssetController::class, 'index'])->name('property-assets');
+    Route::get('/category-facility', [App\Http\Controllers\AdminCategoryFacilityController::class, 'index'])->name('category-facility');
+    Route::get('/payment-system', [App\Http\Controllers\AdminPaymentSystemController::class, 'index'])->name('payment-system');
+    Route::get('/service-fee', [App\Http\Controllers\AdminServiceFeeController::class, 'index'])->name('service-fee');
+    Route::get('/promo-discount', [App\Http\Controllers\AdminPromoDiscountController::class, 'index'])->name('promo-discount');
+    Route::get('/cms-manager', [App\Http\Controllers\AdminCMSManagerController::class, 'index'])->name('cms-manager');
+    Route::get('/system-notifications', [App\Http\Controllers\AdminSystemNotificationsController::class, 'index'])->name('system-notifications');
+    Route::get('/user-reports', [App\Http\Controllers\AdminUserReportController::class, 'index'])->name('user-reports');
+    Route::get('/activity-log', [App\Http\Controllers\AdminActivityLogController::class, 'index'])->name('activity-log');
+    Route::get('/backup-restore', [App\Http\Controllers\AdminBackupRestoreController::class, 'index'])->name('backup-restore');
 });
 
 

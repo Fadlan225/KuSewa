@@ -92,18 +92,30 @@ const toggleMenu = (key) => {
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Validasi & Aset</p>
                 
-                <Link href="#" class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-clipboard-check w-5 text-center text-slate-400"></i>
+                <Link
+                    :href="route('admin.asset-validation')"
+                    class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    :class="isActive('admin.asset-validation') ? 'bg-slate-100 text-slate-900' : ''"
+                >
+                    <i class="fa-solid fa-clipboard-check w-5 text-center" :class="isActive('admin.asset-validation') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
                     <span>Validasi Aset & Pengajuan</span>
                 </Link>
 
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-building w-5 text-center text-slate-400"></i>
+                <Link
+                    :href="route('admin.property-assets')"
+                    class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    :class="isActive('admin.property-assets') ? 'bg-slate-100 text-slate-900' : ''"
+                >
+                    <i class="fa-solid fa-building w-5 text-center" :class="isActive('admin.property-assets') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
                     <span>Aset Properti</span>
                 </Link>
 
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-layer-group w-5 text-center text-slate-400"></i>
+                <Link
+                    :href="route('admin.category-facility')"
+                    class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    :class="isActive('admin.category-facility') ? 'bg-slate-100 text-slate-900' : ''"
+                >
+                    <i class="fa-solid fa-layer-group w-5 text-center" :class="isActive('admin.category-facility') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
                     <span>Kategori & Fasilitas</span>
                 </Link>
             </div>
@@ -112,59 +124,91 @@ const toggleMenu = (key) => {
             <div class="pt-2">
                 <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Keuangan & Pembayaran</p>
                 
-                <Link href="#" class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-credit-card w-5 text-center text-slate-400"></i>
-                    <span>Sistem Pembayaran</span>
-                </Link>
+                    <Link
+                        :href="route('admin.payment-system')"
+                        class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        :class="isActive('admin.payment-system') ? 'bg-slate-100 text-slate-900' : ''"
+                    >
+                        <i class="fa-solid fa-credit-card w-5 text-center" :class="isActive('admin.payment-system') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
+                        <span>Sistem Pembayaran</span>
+                    </Link>
 
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-hand-holding-dollar w-5 text-center text-slate-400"></i>
-                    <span>Biaya Layanan & Sanksi</span>
-                </Link>
+                    <Link
+                        :href="route('admin.service-fee')"
+                        class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        :class="isActive('admin.service-fee') ? 'bg-slate-100 text-slate-900' : ''"
+                    >
+                        <i class="fa-solid fa-hand-holding-dollar w-5 text-center" :class="isActive('admin.service-fee') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
+                        <span>Biaya Layanan & Sanksi</span>
+                    </Link>
 
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-ticket w-5 text-center text-slate-400"></i>
-                    <span>Promo & Diskon</span>
-                </Link>
+                    <Link
+                        :href="route('admin.promo-discount')"
+                        class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        :class="isActive('admin.promo-discount') ? 'bg-slate-100 text-slate-900' : ''"
+                    >
+                        <i class="fa-solid fa-ticket w-5 text-center" :class="isActive('admin.promo-discount') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
+                        <span>Promo & Diskon</span>
+                    </Link>
+                </div>
+
+                <!-- Section: Konten & Komunikasi -->
+                <div class="pt-2">
+                    <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Konten & Informasi</p>
+                    
+                    <Link
+                        :href="route('admin.cms-manager')"
+                        class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        :class="isActive('admin.cms-manager') ? 'bg-slate-100 text-slate-900' : ''"
+                    >
+                        <i class="fa-solid fa-globe w-5 text-center" :class="isActive('admin.cms-manager') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
+                        <span>Kelola CMS Website</span>
+                    </Link>
+
+                    <Link
+                        :href="route('admin.system-notifications')"
+                        class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        :class="isActive('admin.system-notifications') ? 'bg-slate-100 text-slate-900' : ''"
+                    >
+                        <i class="fa-regular fa-bell w-5 text-center" :class="isActive('admin.system-notifications') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
+                        <span>Notifikasi Sistem</span>
+                    </Link>
+
+                    <Link
+                        :href="route('admin.user-reports')"
+                        class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        :class="isActive('admin.user-reports') ? 'bg-slate-100 text-slate-900' : ''"
+                    >
+                        <i class="fa-solid fa-flag w-5 text-center" :class="isActive('admin.user-reports') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
+                        <span>Laporan Pengguna & Rating</span>
+                    </Link>
+                </div>
+
+                <!-- Section: Pengaturan & Sistem -->
+                <div class="pt-2 pb-2">
+                    <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Sistem & Keamanan</p>
+
+                    <Link
+                        :href="route('admin.activity-log')"
+                        class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        :class="isActive('admin.activity-log') ? 'bg-slate-100 text-slate-900' : ''"
+                    >
+                        <i class="fa-solid fa-list-check w-5 text-center" :class="isActive('admin.activity-log') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
+                        <span>Log Aktivitas Admin</span>
+                    </Link>
+
+                    <Link
+                        :href="route('admin.backup-restore')"
+                        class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        :class="isActive('admin.backup-restore') ? 'bg-slate-100 text-slate-900' : ''"
+                    >
+                        <i class="fa-solid fa-database w-5 text-center" :class="isActive('admin.backup-restore') ? 'text-[#FFC000]' : 'text-slate-400'"></i>
+                        <span>Backup & Restore Data</span>
+                    </Link>
+                </div>
             </div>
-
-            <!-- Section: Konten & Komunikasi -->
-            <div class="pt-2">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Konten & Informasi</p>
-                
-                <Link href="#" class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-globe w-5 text-center text-slate-400"></i>
-                    <span>Kelola CMS Website</span>
-                </Link>
-
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-regular fa-bell w-5 text-center text-slate-400"></i>
-                    <span>Notifikasi Sistem</span>
-                </Link>
-
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-flag w-5 text-center text-slate-400"></i>
-                    <span>Laporan Pengguna & Rating</span>
-                </Link>
-            </div>
-
-            <!-- Section: Pengaturan & Sistem -->
-            <div class="pt-2 pb-2">
-                <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400">Sistem & Keamanan</p>
-
-                <Link href="#" class="mt-1 flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-list-check w-5 text-center text-slate-400"></i>
-                    <span>Log Aktivitas Admin</span>
-                </Link>
-
-                <Link href="#" class="flex items-center gap-3 rounded-xl px-3.5 py-2 text-slate-600 hover:bg-slate-100 hover:text-slate-900">
-                    <i class="fa-solid fa-database w-5 text-center text-slate-400"></i>
-                    <span>Backup & Restore Data</span>
-                </Link>
-            </div>
-        </div>
-    </aside>
-</template>
+        </aside>
+    </template>
 
 <style scoped>
 /* Hilangkan scrollbar untuk Chrome, Safari, dan Edge modern */
