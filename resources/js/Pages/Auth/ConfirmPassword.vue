@@ -1,63 +1,69 @@
 <script setup>
-import { Head, useForm } from '@inertiajs/vue3';
-import AuthLayout from '@/Layouts/AuthLayout.vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { provide, ref } from 'vue';
+import AuthFlow from '@/Components/Auth/AuthFlow.vue';
 
-const form = useForm({
-    password: '',
-});
-
-const submit = () => {
-    form.post(route('password.confirm'), {
-        onFinish: () => form.reset(),
-    });
-};
+const initialAuthStep = ref('email');
+const initialAuthData = ref({});
+provide('initialAuthStep', initialAuthStep);
+provide('initialAuthData', initialAuthData);
 </script>
 
 <template>
-    <AuthLayout>
-        <Head title="Confirm Password" />
+    <div class="min-h-screen relative flex items-center justify-center overflow-hidden">
+        <Head title="Konfirmasi Password" />
 
-        <div class="mb-6 text-sm text-gray-600">
-            This is a secure area of the application. Please confirm your
-            password before continuing.
+        <!-- Background Image -->
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('/public.png')"></div>
+
+        <!-- Dark overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
+
+        <!-- Content -->
+        <div class="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-8 min-h-screen flex items-center py-16">
+            <div class="flex flex-col md:flex-row items-center justify-between w-full gap-10">
+
+                <!-- Left side: Hero text -->
+                <div class="flex-1 text-left max-w-lg hidden md:block">
+                    <!-- Logo -->
+                    <Link :href="route('Home')" class="flex items-center gap-2.5 mb-10 group">
+                        <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-9 w-auto brightness-0 invert group-hover:scale-105 transition-transform" />
+                        <span class="font-bold text-2xl text-white">
+                            kusewa<span class="text-[#FFC000]">.id</span>
+                        </span>
+                    </Link>
+
+                    <h1 class="text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight mb-5">
+                        Area <span class="text-[#FFC000]">Aman.</span>
+                    </h1>
+                    <p class="text-white/80 text-base leading-relaxed max-w-sm">
+                        Ini adalah area aman aplikasi. Silakan konfirmasi akses Anda untuk melanjutkan.
+                    </p>
+                </div>
+
+                <!-- Right side: Form Card -->
+                <div class="w-full max-w-[420px] flex-shrink-0">
+                    <!-- Back Button (Desktop) -->
+                    <Link :href="route('Home')" class="hidden md:flex items-center gap-2 text-white hover:text-[#FFC000] font-medium text-sm mb-4 transition-colors w-fit">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Ke Halaman Utama KuSewa
+                    </Link>
+
+                    <div class="md:hidden text-center mb-8">
+                        <Link :href="route('Home')" class="inline-flex items-center gap-2">
+                            <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-8 w-auto brightness-0 invert" />
+                            <span class="font-bold text-xl text-white">
+                                kusewa<span class="text-[#FFC000]">.id</span>
+                            </span>
+                        </Link>
+                    </div>
+
+                    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[400px]">
+                        <AuthFlow />
+                    </div>
+                </div>
+
+            </div>
         </div>
-
-        <form @submit.prevent="submit" class="space-y-5">
-            <div>
-                <label
-                    for="password"
-                    class="block text-sm font-medium text-gray-700 mb-2"
-                >
-                    Password
-                </label>
-
-                <input
-                    id="password"
-                    v-model="form.password"
-                    type="password"
-                    required
-                    autofocus
-                    autocomplete="current-password"
-                    class="w-full rounded-lg border border-gray-300 px-4 py-2.5 focus:border-[#466080] focus:ring-2 focus:ring-[#466080]/20 outline-none transition"
-                />
-
-                <p
-                    v-if="form.errors.password"
-                    class="mt-2 text-sm text-red-600"
-                >
-                    {{ form.errors.password }}
-                </p>
-            </div>
-
-            <div class="flex justify-end">
-                <button
-                    type="submit"
-                    :disabled="form.processing"
-                    class="rounded-lg bg-[#466080] px-5 py-2.5 text-white font-medium transition hover:bg-[#36506d] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                    Confirm
-                </button>
-            </div>
-        </form>
-    </AuthLayout>
+    </div>
 </template>

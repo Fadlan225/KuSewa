@@ -1,164 +1,104 @@
 <script setup>
-import { Head, useForm, Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { provide, ref } from 'vue';
+import AuthFlow from '@/Components/Auth/AuthFlow.vue';
 
-defineProps({
-    status: {
-        type: String,
-    },
+const initialAuthStep = ref('forgot_password_email');
+const initialAuthData = ref({
+    purpose: 'forgot_password'
 });
-
-const form = useForm({
-    email: '',
-});
-
-const submit = () => {
-    form.post(route('password.email'));
-};
+provide('initialAuthStep', initialAuthStep);
+provide('initialAuthData', initialAuthData);
 </script>
 
 <template>
     <Head title="Lupa Password" />
 
-    <!-- Container Utama (Full Screen, Relative) -->
-    <div class="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="min-h-screen relative flex items-center justify-center overflow-hidden">
+        <!-- Background Image -->
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('/public.png')"></div>
 
-        <!-- FULLSCREEN BACKGROUND -->
-        <div class="absolute inset-0 z-0">
-            <img
-                src="/public.png"
-                alt="Background kusewa.id"
-                class="h-full w-full object-cover"
-            />
-            <!-- Overlay gelap agar teks dan form lebih mudah dibaca -->
-            <div class="absolute inset-0 bg-gray-900/60 mix-blend-multiply"></div>
-        </div>
+        <!-- Dark overlay -->
+        <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>
 
-        <!-- KONTEN UTAMA (Di atas Background) -->
-        <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10 md:gap-4 lg:gap-16">
+        <!-- Content -->
+        <div class="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-8 min-h-screen flex items-center py-16">
+            
+            <!-- Absolute Top Left Logo for Desktop -->
+            <Link :href="route('Home')" class="absolute top-10 left-6 lg:left-8 items-center gap-2.5 hidden md:flex z-50">
+                <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-9 w-auto brightness-0 invert" />
+                <span class="font-bold text-2xl text-white">
+                    kusewa<span class="text-[#FFC000]">.id</span>
+                </span>
+            </Link>
 
-            <!-- SISI KIRI: Teks Promosi (Hanya muncul di desktop md:) -->
-            <div class="hidden md:flex flex-col w-full md:w-1/2 text-white pr-4 gap-12">
-                <!-- Logo -->
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
-                         <img src="/kusewa-logo.png" alt="Logo" class="h-8 w-auto"/>
-                    </div>
-                    <span class="text-3xl font-bold text-white tracking-wide">kusewa<span class="text-[#FFC107]">.id</span></span>
-                </div>
+            <div class="flex flex-col md:flex-row items-center justify-between w-full gap-10">
 
-                <!-- Teks Utama -->
-                <div class="max-w-xl">
-                    <h1 class="text-4xl lg:text-5xl font-extrabold leading-tight mb-6">
-                        <span class="text-[#FFC107]">Pulihkan</span> Akses Akun Anda.
+                <!-- Left side: Hero text -->
+                <div class="flex-1 text-left max-w-lg hidden md:block">
+
+
+                    <h1 class="text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight mb-5">
+                        Lupa <span class="text-[#FFC000]">Password?</span>
                     </h1>
-                    <p class="text-lg text-gray-200 leading-relaxed">
-                        Kami akan membantu Anda mengatur ulang kata sandi. Cukup masukkan email yang terdaftar dan periksa kotak masuk Anda.
+                    <p class="text-white/80 text-base leading-relaxed max-w-sm mb-8">
+                        Jangan panik. Masukkan email Anda dan kami akan mengirimkan instruksi untuk membuat password baru.
                     </p>
+
+                    <!-- Steps info -->
+                    <div class="space-y-4">
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-[#FFC000]/20 flex items-center justify-center shrink-0 mt-0.5 border border-[#FFC000]/30">
+                                <span class="text-[#FFC000] text-sm font-bold">1</span>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm">Masukkan Email</h3>
+                                <p class="text-white/60 text-xs mt-1">Ketik alamat email yang terdaftar</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-[#FFC000]/20 flex items-center justify-center shrink-0 mt-0.5 border border-[#FFC000]/30">
+                                <span class="text-[#FFC000] text-sm font-bold">2</span>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm">Terima OTP</h3>
+                                <p class="text-white/60 text-xs mt-1">Cek kotak masuk email Anda</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-4">
+                            <div class="w-8 h-8 rounded-full bg-[#FFC000]/20 flex items-center justify-center shrink-0 mt-0.5 border border-[#FFC000]/30">
+                                <span class="text-[#FFC000] text-sm font-bold">3</span>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-sm">Buat Password Baru</h3>
+                                <p class="text-white/60 text-xs mt-1">Login kembali dengan password baru</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Fitur -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-gray-200 mt-4">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2.5 rounded-lg bg-[#FFC107]/20 text-[#FFC107] backdrop-blur-sm border border-[#FFC107]/20">
-                            <i class="fa-solid fa-shield-halved"></i>
-                        </div>
-                        <p class="font-medium">Proses Aman & Terverifikasi</p>
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <div class="p-2.5 rounded-lg bg-[#FFC107]/20 text-[#FFC107] backdrop-blur-sm border border-[#FFC107]/20">
-                            <i class="fa-solid fa-bolt"></i>
-                        </div>
-                        <p class="font-medium">Link Reset Cepat Dikirim</p>
-                    </div>
-                </div>
-            </div>
+                <!-- Right side: Form Card -->
+                <div class="w-full max-w-[420px] flex-shrink-0">
+                    <!-- Back Button (Desktop) -->
+                    <Link :href="route('Home')" class="hidden md:flex items-center gap-2 text-white hover:text-[#FFC000] font-medium text-sm mb-4 transition-colors w-fit">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Ke Halaman Utama KuSewa
+                    </Link>
 
-            <!-- SISI KANAN / MOBILE: Form Card -->
-            <div class="w-full md:w-1/2 flex justify-center md:justify-end">
-                <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/20 backdrop-blur-md">
-
-                    <!-- Tombol Kembali -->
-                    <div class="mb-8 flex justify-start">
-                        <Link
-                            :href="route('login')"
-                            class="flex items-center gap-2 text-sm font-medium text-gray-500 hover:text-[#001F3F] transition-colors"
-                        >
-                            <i class="fa-solid fa-arrow-left"></i>
-                            Kembali ke Login
+                    <div class="md:hidden text-center mb-8">
+                        <Link :href="route('Home')" class="inline-flex items-center gap-2">
+                            <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-8 w-auto brightness-0 invert" />
+                            <span class="font-bold text-xl text-white">
+                                kusewa<span class="text-[#FFC000]">.id</span>
+                            </span>
                         </Link>
                     </div>
 
-                    <!-- Header Form -->
-                    <div class="text-center mb-8">
-                        <div class="inline-flex items-center justify-center p-3 mb-5 rounded-2xl bg-gray-50 shadow-inner border border-gray-100">
-                            <img src="/kusewa-logo.png" alt="Icon" class="h-9 w-9"/>
-                        </div>
-                        <h2 class="text-3xl font-extrabold text-[#001F3F]">Lupa Password</h2>
-                        <p class="mt-3 text-sm text-gray-500 max-w-xs mx-auto leading-relaxed">
-                            Masukkan email Anda untuk menerima link riset password.
-                        </p>
+                    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[400px]">
+                        <AuthFlow />
                     </div>
-
-                    <!-- Status Berhasil -->
-                    <div
-                        v-if="status"
-                        class="mb-6 rounded-xl bg-green-50 border border-green-200 px-5 py-4 text-sm text-green-700 shadow-inner flex items-center gap-3"
-                    >
-                        <i class="fa-solid fa-circle-check text-lg text-green-500"></i>
-                        <span class="font-medium">{{ status }}</span>
-                    </div>
-
-                    <!-- Form -->
-                    <form @submit.prevent="submit" class="space-y-6">
-                        <div>
-                            <label
-                                for="email"
-                                class="block text-sm font-bold text-[#001F3F] mb-2"
-                            >
-                                Alamat Email
-                            </label>
-
-                            <div class="relative group">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#001F3F] transition-colors">
-                                    <i class="fa-regular fa-envelope text-lg"></i>
-                                </div>
-                                <input
-                                    id="email"
-                                    v-model="form.email"
-                                    type="email"
-                                    placeholder="johndoe@example.com"
-                                    required
-                                    autofocus
-                                    autocomplete="username"
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-12 pr-4 py-3.5 text-base text-gray-800 placeholder:text-gray-400 outline-none transition duration-200 shadow-sm focus:bg-white focus:border-[#001F3F] focus:ring-2 focus:ring-[#001F3F]/10"
-                                />
-                            </div>
-
-                            <p
-                                v-if="form.errors.email"
-                                class="mt-2.5 text-sm font-medium text-red-500 flex items-center gap-1.5"
-                            >
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                {{ form.errors.email }}
-                            </p>
-                        </div>
-
-                        <!-- Tombol Submit -->
-                        <div class="pt-2">
-                            <button
-                                type="submit"
-                                :disabled="form.processing"
-                                class="w-full rounded-xl bg-[#FFC107] px-6 py-4 text-[#001F3F] text-base font-extrabold transition duration-200 hover:bg-[#ffcd38] hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-[#FFC107]/30 shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none flex items-center justify-center gap-2"
-                            >
-                                <span v-if="form.processing">
-                                    <i class="fa-solid fa-spinner fa-spin mr-1"></i> Mengirim...
-                                </span>
-                                <span v-else>Kirim Link Reset Password</span>
-                            </button>
-                        </div>
-                    </form>
-
                 </div>
+
             </div>
         </div>
     </div>

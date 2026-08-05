@@ -1,5 +1,7 @@
 <script setup>
-import { Head, useForm, Link } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
+import { provide, ref } from 'vue';
+import AuthFlow from '@/Components/Auth/AuthFlow.vue';
 
 const props = defineProps({
     email: {
@@ -12,49 +14,39 @@ const props = defineProps({
     },
 });
 
-const form = useForm({
-    token: props.token,
+const initialAuthStep = ref('reset_password');
+const initialAuthData = ref({
     email: props.email,
-    password: '',
-    password_confirmation: '',
+    proof: props.token,
+    purpose: 'forgot_password'
 });
-
-const submit = () => {
-    form.post(route('password.store'), {
-        onFinish: () => form.reset('password', 'password_confirmation'),
-    });
-};
+provide('initialAuthStep', initialAuthStep);
+provide('initialAuthData', initialAuthData);
 </script>
 
 <template>
     <Head title="Reset Password" />
 
     <!-- Container Utama (Full Screen, Relative) -->
-    <div class="relative min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="relative min-h-screen flex items-center justify-center overflow-hidden">
 
         <!-- FULLSCREEN BACKGROUND -->
-        <div class="absolute inset-0 z-0">
-            <img
-                src="/public.png"
-                alt="Background kusewa.id"
-                class="h-full w-full object-cover"
-            />
-            <!-- Overlay gelap agar teks dan form lebih mudah dibaca -->
-            <div class="absolute inset-0 bg-gray-900/60 mix-blend-multiply"></div>
-        </div>
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('/public.png')"></div>
+        <div class="absolute inset-0 bg-gray-900/60 mix-blend-multiply"></div>
 
         <!-- KONTEN UTAMA (Di atas Background) -->
-        <div class="relative z-10 w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10 md:gap-4 lg:gap-16">
+        <div class="relative z-10 w-full max-w-7xl mx-auto px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center min-h-screen py-16 gap-10 md:gap-4 lg:gap-16">
+
+            <!-- Absolute Top Left Logo for Desktop -->
+            <Link :href="route('Home')" class="absolute top-10 left-6 lg:left-8 items-center gap-2.5 hidden md:flex z-50">
+                <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-9 w-auto brightness-0 invert" />
+                <span class="font-bold text-2xl text-white">
+                    kusewa<span class="text-[#FFC000]">.id</span>
+                </span>
+            </Link>
 
             <!-- SISI KIRI: Teks Promosi (Hanya muncul di desktop md:) -->
             <div class="hidden md:flex flex-col w-full md:w-1/2 text-white pr-4 gap-12">
-                <!-- Logo -->
-                <div class="flex items-center gap-3">
-                    <div class="p-2 bg-white/10 rounded-xl backdrop-blur-sm">
-                         <img src="/kusewa-logo.png" alt="Logo" class="h-8 w-auto"/>
-                    </div>
-                    <span class="text-3xl font-bold text-white tracking-wide">kusewa<span class="text-[#FFC107]">.id</span></span>
-                </div>
 
                 <!-- Teks Utama -->
                 <div class="max-w-xl">
@@ -85,113 +77,16 @@ const submit = () => {
 
             <!-- SISI KANAN / MOBILE: Form Card -->
             <div class="w-full md:w-1/2 flex justify-center md:justify-end">
-                <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-3xl shadow-2xl border border-white/20 backdrop-blur-md">
+                <div class="w-full max-w-[420px] flex flex-col">
+                    <!-- Back Button (Desktop) -->
+                    <Link :href="route('Home')" class="hidden md:flex items-center gap-2 text-white hover:text-[#FFC000] font-medium text-sm mb-4 transition-colors w-fit">
+                        <i class="fa-solid fa-arrow-left"></i>
+                        Ke Halaman Utama KuSewa
+                    </Link>
 
-                    <!-- Header Form -->
-                    <div class="text-center mb-8">
-                        <div class="inline-flex items-center justify-center p-3 mb-5 rounded-2xl bg-gray-50 shadow-inner border border-gray-100">
-                            <img src="/kusewa-logo.png" alt="Icon" class="h-9 w-9"/>
-                        </div>
-                        <h2 class="text-3xl font-extrabold text-[#001F3F]">Reset Password</h2>
-                        <p class="mt-3 text-sm text-gray-500 max-w-xs mx-auto leading-relaxed">
-                            Masukkan detail password baru Anda di bawah ini.
-                        </p>
+                    <div class="w-full bg-white rounded-3xl shadow-2xl overflow-hidden min-h-[500px]">
+                        <AuthFlow />
                     </div>
-
-                    <!-- Form -->
-                    <form @submit.prevent="submit" class="space-y-5">
-
-                        <!-- Email (Prefilled) -->
-                        <div>
-                            <label for="email" class="block text-sm font-bold text-[#001F3F] mb-2">
-                                Alamat Email
-                            </label>
-                            <div class="relative group">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#001F3F] transition-colors">
-                                    <i class="fa-regular fa-envelope text-lg"></i>
-                                </div>
-                                <input
-                                    id="email"
-                                    v-model="form.email"
-                                    type="email"
-                                    required
-                                    readonly
-                                    autocomplete="username"
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-100 pl-12 pr-4 py-3.5 text-base text-gray-600 outline-none cursor-not-allowed shadow-sm"
-                                />
-                            </div>
-                            <p v-if="form.errors.email" class="mt-2.5 text-sm font-medium text-red-500 flex items-center gap-1.5">
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                {{ form.errors.email }}
-                            </p>
-                        </div>
-
-                        <!-- Password Baru -->
-                        <div>
-                            <label for="password" class="block text-sm font-bold text-[#001F3F] mb-2">
-                                Password Baru
-                            </label>
-                            <div class="relative group">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#001F3F] transition-colors">
-                                    <i class="fa-solid fa-lock text-lg"></i>
-                                </div>
-                                <input
-                                    id="password"
-                                    v-model="form.password"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    required
-                                    autofocus
-                                    autocomplete="new-password"
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-12 pr-4 py-3.5 text-base text-gray-800 placeholder:text-gray-400 outline-none transition duration-200 shadow-sm focus:bg-white focus:border-[#001F3F] focus:ring-2 focus:ring-[#001F3F]/10"
-                                />
-                            </div>
-                            <p v-if="form.errors.password" class="mt-2.5 text-sm font-medium text-red-500 flex items-center gap-1.5">
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                {{ form.errors.password }}
-                            </p>
-                        </div>
-
-                        <!-- Konfirmasi Password -->
-                        <div>
-                            <label for="password_confirmation" class="block text-sm font-bold text-[#001F3F] mb-2">
-                                Konfirmasi Password
-                            </label>
-                            <div class="relative group">
-                                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#001F3F] transition-colors">
-                                    <i class="fa-solid fa-lock text-lg"></i>
-                                </div>
-                                <input
-                                    id="password_confirmation"
-                                    v-model="form.password_confirmation"
-                                    type="password"
-                                    placeholder="••••••••"
-                                    required
-                                    autocomplete="new-password"
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50/50 pl-12 pr-4 py-3.5 text-base text-gray-800 placeholder:text-gray-400 outline-none transition duration-200 shadow-sm focus:bg-white focus:border-[#001F3F] focus:ring-2 focus:ring-[#001F3F]/10"
-                                />
-                            </div>
-                            <p v-if="form.errors.password_confirmation" class="mt-2.5 text-sm font-medium text-red-500 flex items-center gap-1.5">
-                                <i class="fa-solid fa-circle-exclamation"></i>
-                                {{ form.errors.password_confirmation }}
-                            </p>
-                        </div>
-
-                        <!-- Tombol Submit -->
-                        <div class="pt-4">
-                            <button
-                                type="submit"
-                                :disabled="form.processing"
-                                class="w-full rounded-xl bg-[#FFC107] px-6 py-4 text-[#001F3F] text-base font-extrabold transition duration-200 hover:bg-[#ffcd38] hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-[#FFC107]/30 shadow-md disabled:cursor-not-allowed disabled:opacity-60 disabled:transform-none flex items-center justify-center gap-2"
-                            >
-                                <span v-if="form.processing">
-                                    <i class="fa-solid fa-spinner fa-spin mr-1"></i> Menyimpan...
-                                </span>
-                                <span v-else>Simpan Password Baru</span>
-                            </button>
-                        </div>
-                    </form>
-
                 </div>
             </div>
         </div>
