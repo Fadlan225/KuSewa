@@ -1,6 +1,6 @@
 <script setup>
 import { Link, usePage } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 
 // Mengambil data page saat ini untuk mengecek route aktif
 const page = usePage();
@@ -16,7 +16,9 @@ const isHomeActive = computed(() => page.url === '/');
 // Menggabungkan logika untuk menu profil/login
 const isAuthActive = computed(() => isActive('/profile').value || isActive('/login').value);
 
-const isLoggedIn = computed(() => !!page.props.auth.user)
+const isLoggedIn = computed(() => !!page.props.auth.user);
+
+const openAuthModal = inject('openAuthModal', () => { console.log('AuthModal not provided') });
 </script>
 
 <template>
@@ -86,7 +88,9 @@ const isLoggedIn = computed(() => !!page.props.auth.user)
             </Link>
 
             <!-- Item Navigasi Profil / Masuk -->
-            <Link :href="isLoggedIn ? '/profile' : '/login'"
+            <component :is="isLoggedIn ? Link : 'button'"
+                :href="isLoggedIn ? '/profile' : undefined"
+                @click="!isLoggedIn && openAuthModal()"
                 class="relative flex flex-col items-center justify-center gap-1.5 h-full w-20 transition-colors duration-300"
                 :class="isAuthActive ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
 
@@ -101,7 +105,7 @@ const isLoggedIn = computed(() => !!page.props.auth.user)
                         <div class="w-full h-1 bg-[#FFC000] rounded-t-full shadow-[0_0_10px_rgba(255,192,0,0.5)]"></div>
                     </div>
                 </transition>
-            </Link>
+            </component>
 
         </div>
     </div>

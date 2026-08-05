@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
+import { ref, onMounted, onUnmounted, computed, watch, inject } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
@@ -18,6 +18,7 @@ const props = defineProps({
 });
 
 const page = usePage();
+const openAuthModal = inject('openAuthModal', () => { console.log('AuthModal not provided') });
 const isScrolled = ref(false);
 const isUserMenuOpen = ref(false);
 
@@ -775,12 +776,12 @@ const initials = computed(() => {
 
                         <!-- Login Button if not logged in -->
                         <template v-else>
-                            <Link
-                                :href="route('login')"
+                            <button
+                                @click="openAuthModal()"
                                 class="ml-1 px-5 py-2 bg-primary hover:bg-[#e6ad00] text-white text-xs font-bold rounded-full transition-all shadow-sm"
                             >
                                 Masuk
-                            </Link>
+                            </button>
                         </template>
                     </div>
                 </div>

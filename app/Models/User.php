@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password','phone','role', 'status'])]
+#[Fillable(['name', 'email', 'password','phone','profile_photo','date_of_birth','gender','role', 'status','last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -57,5 +57,9 @@ class User extends Authenticatable
 
     public function assetViews(){
         return $this->hasMany(AssetView::class);
+    }
+
+    public function providers(){
+        return $this->hasMany(auth_provider::class);
     }
 }

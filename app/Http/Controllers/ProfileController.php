@@ -44,6 +44,7 @@ class ProfileController extends Controller
                 'phone' => $user->phone,
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
+                'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,

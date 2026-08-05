@@ -115,13 +115,28 @@ const toggleAccordion = (tab) => {
 
 // Logout modal state
 const showLogoutModal = ref(false);
+
+const linkGoogle = () => {
+    window.location.href = '/auth/google/redirect';
+};
+
+const unlinkGoogle = () => {
+    if (confirm('Apakah Anda yakin ingin memutuskan tautan akun Google ini?')) {
+        router.delete(route('auth.google.unlink'), {
+            preserveScroll: true,
+            onError: (errors) => {
+                if (errors.error) alert(errors.error);
+            }
+        });
+    }
+};
 </script>
 
 <template>
     <Head title="Pengaturan Profil" />
 
     <div class="min-h-screen bg-[#F8F9FA] pb-24 text-[#1D1D1F] font-sans">
-        <DetailNavbar backUrl="/profile" :showSections="false" :showShare="false" :showFavorite="false" />
+        <DetailNavbar backUrl="/profile" :forceBackUrl="true" :showSections="false" :showShare="false" :showFavorite="false" />
 
         <main class="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8 space-y-6">
 
@@ -189,6 +204,39 @@ const showLogoutModal = ref(false);
                 </button>
                 <div v-show="activeAccordion === 'keamanan'" class="px-6 pb-6 border-t border-gray-50 pt-4">
                     <UpdatePasswordForm />
+                </div>
+            </div>
+
+            <!-- Akun Tertaut Card -->
+            <div class="bg-white shadow-sm rounded-2xl border border-gray-100 overflow-hidden transition-all duration-300">
+                <button @click="toggleAccordion('akun_tertaut')" class="w-full px-6 py-5 flex items-center justify-between text-left focus:outline-none hover:bg-gray-50/50">
+                    <div>
+                        <h3 class="text-base font-bold text-[#0A2540]">Akun Tertaut</h3>
+                        <p class="text-sm text-gray-500 mt-0.5">Kelola sambungan akun sosial untuk login</p>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300" :class="{ 'rotate-180': activeAccordion === 'akun_tertaut' }"></i>
+                </button>
+                <div v-show="activeAccordion === 'akun_tertaut'" class="px-6 pb-6 border-t border-gray-50 pt-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <i class="fa-brands fa-google text-2xl text-red-500"></i>
+                            <div>
+                                <p class="text-sm font-bold text-[#0A2540]">Google</p>
+                                <p class="text-xs text-gray-500">Tautkan akun Google untuk mempermudah login.</p>
+                            </div>
+                        </div>
+                        <button v-if="!user.is_google_linked" @click="linkGoogle" class="px-4 py-2 border border-gray-300 rounded-lg text-sm font-bold text-[#0A2540] hover:bg-gray-50 transition-colors">
+                            Tautkan
+                        </button>
+                        <div v-else class="flex items-center space-x-2">
+                            <span class="px-3 py-2 bg-gray-100 rounded-lg text-xs font-bold text-gray-500 flex items-center cursor-default">
+                                <i class="fa-solid fa-check text-green-500 mr-2"></i> Tertaut
+                            </span>
+                            <button @click="unlinkGoogle" class="px-3 py-2 border border-red-200 text-red-500 rounded-lg text-xs font-bold hover:bg-red-50 transition-colors">
+                                Putuskan
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

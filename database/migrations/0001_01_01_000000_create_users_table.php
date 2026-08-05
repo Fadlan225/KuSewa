@@ -17,10 +17,13 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->string('profile_photo')->nullable();
+            $table->date('date_of_birth')->nullable();
+            $table->enum('gender',['male','female'])->nullable();
             $table->enum('role', ['admin', 'customer'])->default('customer');
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamp('email_verified_at')->nullable();
-            $table->string('password');
+            $table->string('password')->nullable();
+            $table->timestamp('last_login_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
