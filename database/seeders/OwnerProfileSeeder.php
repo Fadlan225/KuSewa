@@ -2,54 +2,66 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
+use App\Models\owner_profile;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class OwnerProfileSeeder extends Seeder
 {
     public function run(): void
     {
-        \DB::statement('SET FOREIGN_KEY_CHECKS=0');
-        DB::table('owner_profiles')->truncate();
-        \DB::statement('SET FOREIGN_KEY_CHECKS=1');
-
-        // Ambil user yang email-nya owner1..owner30 (berurutan)
-        $ownerUsers = DB::table('users')
-            ->where('email', 'like', 'owner%@kusewa.com')
-            ->orderBy('id')
-            ->get();
-
-        if ($ownerUsers->isEmpty()) {
-            $this->command->error('Owner users belum ada. Jalankan UsersSeeder dulu.');
-            return;
-        }
-
-        $cities = [
-            'Samarinda', 'Balikpapan', 'Bontang', 'Tenggarong', 'Berau',
-            'Kutai Kertanegara', 'Penajam', 'Sangatta', 'Tarakan', 'Nunukan',
+        $ownerData = [
+            'budisantoso15@kusewa.com' => [
+                'national_id' => '6471011508850001',
+                'address' => 'Jl. Pahlawan No. 10, Samarinda',
+                'place_of_birth' => 'Samarinda',
+                'date_of_birth' => '1985-08-15',
+            ],
+            'sitirahma02@kusewa.com' => [
+                'national_id' => '6471014212900001',
+                'address' => 'Jl. Sudirman No. 25, Balikpapan',
+                'place_of_birth' => 'Balikpapan',
+                'date_of_birth' => '1990-12-02',
+            ],
+            'agusprasetyo25@kusewa.com' => [
+                'national_id' => '6471012503880001',
+                'address' => 'Jl. Antasari No. 8, Bontang',
+                'place_of_birth' => 'Bontang',
+                'date_of_birth' => '1988-03-25',
+            ],
+            'dewilestari10@kusewa.com' => [
+                'national_id' => '6471015007920001',
+                'address' => 'Jl. Hasanuddin No. 15, Tenggarong',
+                'place_of_birth' => 'Tenggarong',
+                'date_of_birth' => '1992-07-10',
+            ],
+            'ekowahyudi18@kusewa.com' => [
+                'national_id' => '6471011811800001',
+                'address' => 'Jl. Gajah Mada No. 2, Berau',
+                'place_of_birth' => 'Berau',
+                'date_of_birth' => '1980-11-18',
+            ],
         ];
 
-        $rows = [];
-        foreach ($ownerUsers as $idx => $user) {
-            $city = $cities[$idx % count($cities)];
-            // NIK 16 digit unik (base + offset)
-            $nik  = str_pad((string)(6471000000000000 + $idx * 17 + 1001), 16, '0', STR_PAD_LEFT);
-
-            $rows[] = [
-                'user_id'         => $user->id,
-                'national_id'     => $nik,
-                'address'         => 'Jl. Pemilik Aset No. ' . (($idx + 1) * 3) . ", {$city}",
-                'place_of_birth'  => $city,
-                'date_of_birth'   => date('Y-m-d', mktime(0, 0, 0, rand(1, 12), rand(1, 28), rand(1975, 1998))),
-                'ktp_photo'       => 'ktp/placeholder.jpg',
-                'status'          => 'verified',
-                'verification_at' => now()->subDays(rand(10, 300)),
-                'created_at'      => now()->subDays(rand(30, 400)),
-                'updated_at'      => now(),
-            ];
+        foreach ($ownerData as $email => $data) {
+            $user = User::where('email', $email)->first();
+            
+            if ($user) {
+                owner_profile::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'national_id' => $data['national_id'],
+                        'address' => $data['address'],
+                        'place_of_birth' => $data['place_of_birth'],
+                        'date_of_birth' => $data['date_of_birth'],
+                        'ktp_photo' => 'ktp/placeholder.jpg',
+                        'status' => 'verified',
+                        'verification_at' => now(),
+                    ]
+                );
+            }
         }
 
-        DB::table('owner_profiles')->insert($rows);
-        $this->command->info('✓ ' . count($rows) . ' owner profiles berhasil dibuat! (status: verified)');
+        $this->command->info('✓ 5 owner profiles berhasil dibuat! (status: verified)');
     }
 }

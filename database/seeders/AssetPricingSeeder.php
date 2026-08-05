@@ -4,97 +4,96 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory as Faker;
 
 class AssetPricingSeeder extends Seeder
 {
-    // Rentang harga realistis per tipe aset (min, max, period)
-    private array $pricingMap = [
-        'Rumah'               => [1500000, 8000000,  'month'],
-        'Villa'               => [500000,  5000000,  'day'],
-        'Apartemen'           => [3000000, 15000000, 'month'],
-        'Homestay'            => [150000,  500000,   'day'],
-        'Guest House'         => [200000,  800000,   'day'],
-        'Kos'                 => [500000,  2000000,  'month'],
-        'Hotel'               => [300000,  3000000,  'day'],
-        'Resort'              => [1500000, 10000000, 'day'],
-        'Kontrakan'           => [800000,  5000000,  'month'],
-        'Ruko'                => [5000000, 30000000, 'month'],
-        'Toko'                => [2000000, 15000000, 'month'],
-        'Kios'                => [500000,  5000000,  'month'],
-        'Gudang'              => [3000000, 20000000, 'month'],
-        'Lahan Kosong'        => [5000000, 50000000, 'year'],
-        'Lahan Parkir'        => [1000000, 10000000, 'month'],
-        'Lahan Pertanian'     => [2000000, 20000000, 'year'],
-        'Gedung'              => [5000000, 50000000, 'day'],
-        'Aula'                => [2000000, 15000000, 'day'],
-        'Ruang Meeting'       => [500000,  5000000,  'day'],
-        'Studio'              => [200000,  2000000,  'hour'],
-        'Baliho Digital'      => [3000000, 15000000, 'month'],
-        'Baliho Konvensional' => [1000000, 8000000,  'month'],
-    ];
-
     public function run(): void
     {
-        \DB::statement('SET FOREIGN_KEY_CHECKS=0');
+        DB::statement('SET FOREIGN_KEY_CHECKS=0');
         DB::table('asset_pricings')->truncate();
-        \DB::statement('SET FOREIGN_KEY_CHECKS=1');
+        DB::statement('SET FOREIGN_KEY_CHECKS=1');
+
+        $faker = Faker::create('id_ID');
 
         $assets = DB::table('assets')
-            ->join('asset_types', 'asset_types.id', '=', 'assets.asset_type_id')
-            ->select('assets.id', 'asset_types.name as type_name')
-            ->orderBy('assets.id')
+            ->join('asset_types', 'assets.asset_type_id', '=', 'asset_types.id')
+            ->select('assets.id', 'assets.asset_type_id', 'asset_types.name as type_name', 'asset_types.allow_units')
             ->get();
 
-        if ($assets->isEmpty()) {
-            $this->command->error('Assets belum ada.');
-            return;
-        }
+        $unitsByAsset = DB::table('asset_units')
+            ->select('id', 'asset_id')
+            ->get()
+            ->groupBy('asset_id');
 
         $batch = [];
-        foreach ($assets as $asset) {
-            $config = $this->pricingMap[$asset->type_name] ?? [500000, 5000000, 'month'];
-            [$min, $max, $period] = $config;
+        $totalPricings = 0;
 
-            // Cek apakah asset ini memiliki unit
-            $units = DB::table('asset_units')->where('asset_id', $asset->id)->get();
-            
-            if ($units->count() > 0) {
-                // Harga untuk tiap unit
+        foreach ($assets as $asset) {
+            $type = $asset->type_name;
+
+            if ($asset->allow_units) {
+                // Pricing for units
+                $units = $unitsByAsset->get($asset->id, collect());
                 foreach ($units as $unit) {
-                    $price1 = round(rand($min, $max) / 50000) * 50000;
+                    $price = $this->generatePrice($type, $faker);
                     $batch[] = [
-                        'asset_id'      => $asset->id,
+                        'asset_id' => $asset->id,
                         'asset_unit_id' => $unit->id,
-                        'price'         => $price1,
-                        'created_at'    => now(),
-                        'updated_at'    => now(),
+                        'price' => $price,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ];
-                    
-                    // Opsional: tambah opsi harga kedua (misal +sarapan)
-                    if (rand(0, 1)) {
-                        $batch[] = [
-                            'asset_id'      => $asset->id,
-                            'asset_unit_id' => $unit->id,
-                            'price'         => $price1 + 150000,
-                            'created_at'    => now(),
-                            'updated_at'    => now(),
-                        ];
-                    }
+                    $totalPricings++;
                 }
             } else {
-                // Harga untuk asset tanpa unit
-                $price = round(rand($min, $max) / 50000) * 50000;
+                // Pricing for asset
+                $price = $this->generatePrice($type, $faker);
                 $batch[] = [
-                    'asset_id'   => $asset->id,
+                    'asset_id' => $asset->id,
                     'asset_unit_id' => null,
-                    'price'      => $price,
+                    'price' => $price,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
+                $totalPricings++;
+            }
+
+            if (count($batch) >= 1000) {
+                DB::table('asset_pricings')->insert($batch);
+                $batch = [];
             }
         }
 
-        DB::table('asset_pricings')->insert($batch);
-        $this->command->info('✓ ' . count($batch) . ' pricing berhasil dibuat!');
+        if (!empty($batch)) {
+            DB::table('asset_pricings')->insert($batch);
+        }
+
+        $this->command->info("✓ {$totalPricings} Asset Pricings berhasil dibuat!");
+    }
+
+    private function generatePrice($typeName, $faker)
+    {
+        if ($typeName == 'Rumah') {
+            return $faker->randomElement([500000, 800000, 1000000, 1500000, 2000000, 2500000]);
+        } elseif ($typeName == 'Villa') {
+            return $faker->randomElement([800000, 1200000, 2000000, 3500000, 5000000]);
+        } elseif ($typeName == 'Hotel' || $typeName == 'Resort') {
+            return $faker->randomElement([300000, 500000, 800000, 1200000, 2000000]);
+        } elseif ($typeName == 'Kos') {
+            return $faker->randomElement([700000, 1000000, 1500000, 2500000, 3500000]);
+        } elseif ($typeName == 'Gudang') {
+            return $faker->randomElement([5000000, 10000000, 15000000, 20000000, 25000000]);
+        } elseif ($typeName == 'Studio') {
+            return $faker->randomElement([100000, 150000, 250000, 350000, 500000]);
+        } elseif (strpos($typeName, 'Baliho') !== false) {
+            return $faker->randomElement([8000000, 15000000, 25000000, 35000000, 50000000]);
+        } elseif ($typeName == 'Apartemen') {
+            return $faker->randomElement([400000, 600000, 900000, 1500000, 2500000]);
+        } elseif (in_array($typeName, ['Homestay', 'Guest House'])) {
+            return $faker->randomElement([150000, 250000, 350000, 500000, 750000]);
+        } else {
+            return $faker->randomElement([1000000, 2000000, 3000000, 5000000]);
+        }
     }
 }
