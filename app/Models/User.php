@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password','phone','role', 'status'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'role', 'status'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -35,23 +35,33 @@ class User extends Authenticatable
         return $this->hasOne(owner_profile::class);
     }
 
-    public function bookings(){
+    public function ownerBillings()
+    {
+        return $this->hasMany(owner_billing::class);
+    }
+
+    public function bookings()
+    {
         return $this->hasMany(booking::class);
     }
 
-    public function favorites(){
+    public function favorites()
+    {
         return $this->hasMany(favorite::class);
     }
 
-    public function roomChats(){
+    public function roomChats()
+    {
         return $this->hasMany(room_chat::class);
     }
 
-    public function reviews(){
+    public function reviews()
+    {
         return $this->hasMany(review::class);
     }
 
-    public function searchLogs(){
+    public function searchLogs()
+    {
         return $this->hasMany(search_log::class);
     }
 }

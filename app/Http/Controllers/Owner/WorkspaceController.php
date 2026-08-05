@@ -7,6 +7,7 @@ use App\Models\booking;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use Illuminate\Http\RedirectResponse;
 
 class WorkspaceController extends Controller
 {
@@ -14,15 +15,16 @@ class WorkspaceController extends Controller
     {
         $ownerProfile = $request->user()->ownerProfile;
         $bookings = booking::query()
-            ->with(['asset:id,title', 'user:id,name'])
-            ->when($ownerProfile, fn ($query) => $query->whereHas('asset', fn ($assetQuery) => $assetQuery->where('owner_profile_id', $ownerProfile->id)), fn ($query) => $query->whereRaw('1 = 0'))
+            ->with(['asset:id,title,owner_profile_id', 'user:id,name'])
+            ->when($ownerProfile, fn($query) => $query->whereHas('asset', fn($assetQuery) => $assetQuery->where('owner_profile_id', $ownerProfile->id)), fn($query) => $query->whereRaw('1 = 0'))
             ->latest()
-            ->get()
-            ->map(fn (booking $booking) => [
+            ->paginate(10)
+            ->through(fn(booking $booking) => [
+                'id' => $booking->id,
                 'code' => $booking->booking_code,
                 'asset' => $booking->asset?->title ?? 'Aset telah dihapus',
                 'tenant' => $booking->user?->name ?? 'Penyewa',
-                'period' => date('d M Y', strtotime($booking->start_date)).' - '.date('d M Y', strtotime($booking->end_date)),
+                'period' => $booking->start_date?->format('d M Y') . ' - ' . $booking->end_date?->format('d M Y'),
                 'total' => (float) $booking->total,
                 'status' => $booking->booking_status,
             ]);
@@ -30,12 +32,82 @@ class WorkspaceController extends Controller
         return $this->page('bookings', 'Pemesanan', 'Kelola permintaan sewa dan pantau status pesanan aset Anda.', ['bookings' => $bookings]);
     }
 
+    /**
+     * Tinjau detail satu booking (untuk owner konfirmasi/tolak)
+     */
+    public function review(booking $booking, Request $request): Response
+    {
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || !$booking->asset || $booking->asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+
+        $booking->load(['asset:id,title,owner_profile_id', 'user:id,name,email,phone']);
+
+        return Inertia::render('owner/BookingReview', [
+            'booking' => [
+                'id' => $booking->id,
+                'code' => $booking->booking_code,
+                'asset' => $booking->asset?->title ?? 'Aset telah dihapus',
+                'tenant' => $booking->user?->name ?? 'Penyewa',
+                'tenant_email' => $booking->user?->email ?? '-',
+                'tenant_phone' => $booking->user?->phone ?? '-',
+                'start_date' => $booking->start_date->format('d M Y'),
+                'end_date' => $booking->end_date->format('d M Y'),
+                'subtotal' => (float) $booking->subtotal,
+                'service_fee' => (float) $booking->service_fee,
+                'total' => (float) $booking->total,
+                'status' => $booking->booking_status,
+            ],
+        ]);
+    }
+
+    /**
+     * Konfirmasi booking (pending → confirmed)
+     */
+    public function confirm(booking $booking, Request $request): RedirectResponse
+    {
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || !$booking->asset || $booking->asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+
+        if ($booking->booking_status !== 'pending') {
+            return back()->with('error', 'Hanya booking berstatus menunggu yang dapat dikonfirmasi.');
+        }
+
+        $booking->update(['booking_status' => 'confirmed']);
+
+        return redirect()->route('owner.bookings')
+            ->with('success', 'Booking ' . $booking->booking_code . ' berhasil dikonfirmasi.');
+    }
+
+    /**
+     * Tolak booking (pending → cancelled)
+     */
+    public function rejectBooking(booking $booking, Request $request): RedirectResponse
+    {
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || !$booking->asset || $booking->asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+
+        if ($booking->booking_status !== 'pending') {
+            return back()->with('error', 'Hanya booking berstatus menunggu yang dapat ditolak.');
+        }
+
+        $booking->update(['booking_status' => 'cancelled']);
+
+        return redirect()->route('owner.bookings')
+            ->with('success', 'Booking ' . $booking->booking_code . ' telah ditolak.');
+    }
+
     public function finance(Request $request): Response
     {
         $ownerProfile = $request->user()->ownerProfile;
         $bookings = booking::query()
             ->with('asset:id,title')
-            ->when($ownerProfile, fn ($query) => $query->whereHas('asset', fn ($assetQuery) => $assetQuery->where('owner_profile_id', $ownerProfile->id)), fn ($query) => $query->whereRaw('1 = 0'))
+            ->when($ownerProfile, fn($query) => $query->whereHas('asset', fn($assetQuery) => $assetQuery->where('owner_profile_id', $ownerProfile->id)), fn($query) => $query->whereRaw('1 = 0'))
             ->whereIn('booking_status', ['confirmed', 'completed'])
             ->latest()
             ->get();
@@ -43,7 +115,7 @@ class WorkspaceController extends Controller
         return $this->page('finance', 'Keuangan', 'Ringkasan pendapatan dari pesanan aset yang telah dikonfirmasi.', [
             'income' => (float) $bookings->sum('total'),
             'fees' => (float) $bookings->sum('service_fee'),
-            'transactions' => $bookings->take(8)->map(fn (booking $booking) => [
+            'transactions' => $bookings->take(8)->map(fn(booking $booking) => [
                 'code' => $booking->booking_code,
                 'asset' => $booking->asset?->title ?? 'Aset',
                 'date' => $booking->created_at->format('d M Y'),

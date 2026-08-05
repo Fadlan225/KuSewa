@@ -1,12 +1,22 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+
+// Fix bug ikon marker default Leaflet yang tidak muncul di build Vite
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: new URL('leaflet/dist/images/marker-icon-2x.png', import.meta.url).href,
+    iconUrl: new URL('leaflet/dist/images/marker-icon.png', import.meta.url).href,
+    shadowUrl: new URL('leaflet/dist/images/marker-shadow.png', import.meta.url).href,
+});
 
 // --- KELOMPOK KATEGORI & JENIS PROPERTI ---
 const kategoriPropertiGroups = [
     {
         label: 'Hunian & Tempat Tinggal',
-        options: ['Kos-kosan', 'Rumah Tapak', 'Villa', 'Homestay', 'Apartemen', 'Guest House', 'Rusun / Condominium']
+        options: ['Kos-kosan', 'Hotel', 'Rumah Tapak', 'Villa', 'Homestay', 'Apartemen', 'Guest House', 'Rusun / Condominium']
     },
     {
         label: 'Komersial & Usaha',
@@ -26,6 +36,19 @@ const kategoriPropertiGroups = [
     }
 ];
 
+// Jenis properti yang biasanya punya BANYAK VARIAN KAMAR berbeda
+// (mis. Standard, Deluxe, Suite) dengan jumlah unit & fasilitas masing-masing berbeda.
+// Untuk jenis ini, owner mengisi "Tipe Kamar" alih-alih satu angka jumlah kamar saja.
+const jenisPropertiDenganTipeKamar = ['Kos-kosan', 'Hotel', 'Apartemen', 'Guest House', 'Rusun / Condominium'];
+
+const buatTipeKamarBaru = () => ({
+    id: Date.now() + Math.random(),
+    nama_tipe_kamar: '',
+    jumlah_kamar: '',
+    kapasitas_orang: '',
+    fasilitas_kamar: []
+});
+
 // Form Data State menggunakan Inertia useForm
 const form = useForm({
     // Step 1: Informasi Dasar
@@ -44,8 +67,13 @@ const form = useForm({
     luas_bangunan: '',
     dimensi: '',
 
+    // Khusus jenis properti dengan banyak varian kamar (Kos-kosan, Hotel, Apartemen, Guest House, Rusun)
+    tipe_kamar: [buatTipeKamarBaru()],
+
     // Step 2: Lokasi & Fasilitas
     alamat_lengkap: '',
+    latitude: '',
+    longitude: '',
     kota: 'Samarinda',
     kecamatan: '',
     fasilitas: [],
@@ -71,6 +99,9 @@ const availableJenisProperti = computed(() => {
     return group ? group.options : [];
 });
 
+// True jika jenis properti yang sedang dipilih perlu diisi lewat builder "Tipe Kamar"
+const isTipeKamarProperti = computed(() => jenisPropertiDenganTipeKamar.includes(form.jenis_properti));
+
 // Otomatis ubah nilai 'jenis_properti' ke opsi pertama tiap kali 'kategori' diubah
 watch(() => form.kategori, (newKategori) => {
     const group = kategoriPropertiGroups.find(g => g.label === newKategori);
@@ -79,12 +110,140 @@ watch(() => form.kategori, (newKategori) => {
     }
 });
 
+// Pastikan selalu ada minimal 1 baris "Tipe Kamar" saat owner pindah ke jenis properti
+// yang membutuhkan builder tipe kamar (Kos-kosan, Hotel, Apartemen, Guest House, Rusun)
+watch(() => form.jenis_properti, (newJenis) => {
+    if (jenisPropertiDenganTipeKamar.includes(newJenis) && form.tipe_kamar.length === 0) {
+        form.tipe_kamar.push(buatTipeKamarBaru());
+    }
+});
+
 // Navigation & Modal State
 const currentStep = ref(1);
 const showSuccessModal = ref(false);
 
+// --- LOGIKA PETA LOKASI (LEAFLET + OPENSTREETMAP) ---
+const mapContainer = ref(null);
+const cariAlamatInput = ref('');
+const isSearchingAlamat = ref(false);
+const isLocatingGPS = ref(false);
+let mapInstance = null;
+let markerInstance = null;
+
+// Titik default (sekitar Kalimantan Timur) jika owner belum memilih titik lokasi
+const DEFAULT_LAT = -0.5021;
+const DEFAULT_LNG = 117.1536;
+const DEFAULT_ZOOM = 12;
+
+const initMap = () => {
+    if (!mapContainer.value) return;
+
+    // Hancurkan instance lama dulu (mis. saat pindah step lalu balik lagi ke Step 2)
+    if (mapInstance) {
+        mapInstance.remove();
+        mapInstance = null;
+        markerInstance = null;
+    }
+
+    const lat = form.latitude ? parseFloat(form.latitude) : DEFAULT_LAT;
+    const lng = form.longitude ? parseFloat(form.longitude) : DEFAULT_LNG;
+
+    mapInstance = L.map(mapContainer.value).setView([lat, lng], form.latitude ? 16 : DEFAULT_ZOOM);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(mapInstance);
+
+    if (form.latitude && form.longitude) {
+        pasangMarker(lat, lng);
+    }
+
+    // Klik di peta -> pasang/pindah marker & isi koordinat form
+    mapInstance.on('click', (e) => {
+        pasangMarker(e.latlng.lat, e.latlng.lng);
+    });
+
+    // Perbaiki bug ukuran peta yang kadang blank saat container baru terlihat
+    setTimeout(() => mapInstance.invalidateSize(), 200);
+};
+
+const pasangMarker = (lat, lng) => {
+    form.latitude = lat.toFixed(6);
+    form.longitude = lng.toFixed(6);
+
+    if (markerInstance) {
+        markerInstance.setLatLng([lat, lng]);
+    } else {
+        markerInstance = L.marker([lat, lng], { draggable: true }).addTo(mapInstance);
+        markerInstance.on('dragend', () => {
+            const pos = markerInstance.getLatLng();
+            form.latitude = pos.lat.toFixed(6);
+            form.longitude = pos.lng.toFixed(6);
+        });
+    }
+
+    mapInstance.panTo([lat, lng]);
+};
+
+// Cari alamat lewat Nominatim (geocoding gratis dari OpenStreetMap, tanpa API key)
+const cariLokasiDiPeta = async () => {
+    const query = cariAlamatInput.value.trim();
+    if (!query) return;
+
+    isSearchingAlamat.value = true;
+    try {
+        const res = await fetch(
+            `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=id&q=${encodeURIComponent(query)}`
+        );
+        const data = await res.json();
+        if (data.length > 0) {
+            const { lat, lon } = data[0];
+            mapInstance.setView([lat, lon], 17);
+            pasangMarker(parseFloat(lat), parseFloat(lon));
+        } else {
+            alert('Lokasi tidak ditemukan, coba kata kunci lain atau langsung klik di peta.');
+        }
+    } catch (err) {
+        console.error('Gagal mencari lokasi:', err);
+        alert('Gagal mencari lokasi. Periksa koneksi internet Anda.');
+    } finally {
+        isSearchingAlamat.value = false;
+    }
+};
+
+// Gunakan lokasi GPS perangkat owner saat ini
+const gunakanLokasiSaatIni = () => {
+    if (!navigator.geolocation) {
+        alert('Perangkat/browser Anda tidak mendukung GPS.');
+        return;
+    }
+    isLocatingGPS.value = true;
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const { latitude, longitude } = pos.coords;
+            mapInstance.setView([latitude, longitude], 17);
+            pasangMarker(latitude, longitude);
+            isLocatingGPS.value = false;
+        },
+        (err) => {
+            console.error(err);
+            alert('Gagal mengambil lokasi GPS. Pastikan izin lokasi diaktifkan.');
+            isLocatingGPS.value = false;
+        }
+    );
+};
+
+// Peta hanya perlu di-init saat Step 2 aktif, karena elemen mapContainer
+// dilepas dari DOM oleh v-if ketika step lain sedang tampil
+watch(currentStep, async (step) => {
+    if (step === 2) {
+        await nextTick();
+        initMap();
+    }
+});
+
 // --- LOGIKA FASILITAS ---
-// (tidak berubah — lihat komentar di bawah untuk detail)
 const fasilitasByKategori = [
     {
         kategori: 'Hunian & Kelengkapan Kamar',
@@ -156,17 +315,6 @@ const fasilitasByKategori = [
             'Perawatan & Maintenance Rutin (Baliho)'
         ]
     }
-];
-
-const fasilitasPopuler = [
-    { id: 'Wi-Fi / Internet', icon: 'fa-wifi' },
-    { id: 'AC (Pendingin)', icon: 'fa-snowflake' },
-    { id: 'Area Parkir Luas', icon: 'fa-square-parking' },
-    { id: 'Keamanan / CCTV 24 Jam', icon: 'fa-shield-halved' },
-    { id: 'Termasuk Listrik & Air', icon: 'fa-bolt' },
-    { id: 'Furnished Lengkap', icon: 'fa-couch' },
-    { id: 'Akses 24 Jam', icon: 'fa-clock' },
-    { id: 'Kamar Mandi Dalam', icon: 'fa-bath' }
 ];
 
 const semuaFasilitasStandar = fasilitasByKategori.flatMap(k => k.items);
@@ -403,32 +551,6 @@ const koreksiPenulisanFasilitas = (teks) => {
 };
 
 const inputFasilitasKustom = ref('');
-const showSaran = ref(false);
-
-const saranFasilitas = computed(() => {
-    const keyword = inputFasilitasKustom.value.trim().toLowerCase();
-
-    if (!keyword) {
-        const items = fasilitasPopuler.map(f => f.id).filter(f => !form.fasilitas.includes(f));
-        return items.length > 0 ? [{ kategori: 'Populer', icon: 'fa-star', items }] : [];
-    }
-
-    const hasilAlias = Object.keys(aliasFasilitas)
-        .filter(alias => alias.includes(keyword))
-        .map(alias => aliasFasilitas[alias]);
-
-    const hasil = [];
-    fasilitasByKategori.forEach(grup => {
-        const cocok = [...new Set(
-            grup.items.filter(item => item.toLowerCase().includes(keyword) || hasilAlias.includes(item))
-        )].filter(item => !form.fasilitas.includes(item));
-
-        if (cocok.length > 0) {
-            hasil.push({ kategori: grup.kategori, icon: grup.icon, items: cocok.slice(0, 5) });
-        }
-    });
-    return hasil;
-});
 
 const toggleFasilitas = (id) => {
     const index = form.fasilitas.indexOf(id);
@@ -437,14 +559,6 @@ const toggleFasilitas = (id) => {
     } else {
         form.fasilitas.splice(index, 1);
     }
-};
-
-const pilihSaranFasilitas = (item) => {
-    if (!form.fasilitas.includes(item)) {
-        form.fasilitas.push(item);
-    }
-    inputFasilitasKustom.value = '';
-    showSaran.value = false;
 };
 
 const tambahFasilitasKustom = () => {
@@ -457,13 +571,85 @@ const tambahFasilitasKustom = () => {
         form.fasilitas.push(nilaiFinal);
     }
     inputFasilitasKustom.value = '';
-    showSaran.value = false;
 };
 
 const hapusFasilitas = (fas) => {
     const index = form.fasilitas.indexOf(fas);
     if (index > -1) form.fasilitas.splice(index, 1);
 };
+
+// --- LOGIKA TIPE KAMAR (khusus Kos-kosan, Hotel, Apartemen, Guest House, Rusun) ---
+const tambahTipeKamar = () => {
+    form.tipe_kamar.push(buatTipeKamarBaru());
+};
+
+const hapusTipeKamar = (index) => {
+    form.tipe_kamar.splice(index, 1);
+};
+
+const toggleFasilitasKamar = (tIndex, item) => {
+    const list = form.tipe_kamar[tIndex].fasilitas_kamar;
+    const idx = list.indexOf(item);
+    if (idx === -1) {
+        list.push(item);
+    } else {
+        list.splice(idx, 1);
+    }
+};
+
+// Index tipe kamar yang dropdown fasilitasnya sedang terbuka (hanya 1 yang bisa terbuka sekaligus)
+const fasilitasKamarDropdownOpen = ref(null);
+
+const toggleFasilitasKamarDropdown = (index) => {
+    fasilitasKamarDropdownOpen.value = fasilitasKamarDropdownOpen.value === index ? null : index;
+};
+
+// --- LOGIKA NESTED DROPDOWN FASILITAS (dropdown di dalam dropdown) ---
+// Struktur: Pilih Fasilitas -> [Jenis Fasilitas] -> [Nama Fasilitas]
+const fasilitasDropdownOpen = ref(false);
+const activeFasilitasKategori = ref(null);
+const fasilitasDropdownRef = ref(null);
+
+const toggleFasilitasDropdown = () => {
+    fasilitasDropdownOpen.value = !fasilitasDropdownOpen.value;
+    if (!fasilitasDropdownOpen.value) activeFasilitasKategori.value = null;
+};
+
+// Buka/tutup sub-dropdown nama fasilitas di dalam kategori (jenis fasilitas) yang diklik
+const toggleSubKategoriFasilitas = (kategori) => {
+    activeFasilitasKategori.value = activeFasilitasKategori.value === kategori ? null : kategori;
+};
+
+// Hitung berapa item sudah dipilih di tiap kategori, untuk badge kecil di label jenis fasilitas
+const countFasilitasTerpilih = (grup) => {
+    return grup.items.filter(item => form.fasilitas.includes(item)).length;
+};
+
+// Tutup dropdown kalau klik di luar area dropdown
+const handleClickOutsideFasilitas = (e) => {
+    if (fasilitasDropdownRef.value && !fasilitasDropdownRef.value.contains(e.target)) {
+        fasilitasDropdownOpen.value = false;
+        activeFasilitasKategori.value = null;
+    }
+};
+
+// Tutup dropdown fasilitas tipe kamar kalau klik di luar area dropdown-nya
+const handleClickOutsideFasilitasKamar = (e) => {
+    if (!e.target.closest('.kamar-fasilitas-dropdown')) {
+        fasilitasKamarDropdownOpen.value = null;
+    }
+};
+
+onMounted(() => {
+    window.addEventListener('click', handleClickOutsideFasilitas);
+    window.addEventListener('click', handleClickOutsideFasilitasKamar);
+});
+
+onBeforeUnmount(() => {
+    if (mapInstance) mapInstance.remove();
+    window.removeEventListener('click', handleClickOutsideFasilitas);
+    window.removeEventListener('click', handleClickOutsideFasilitasKamar);
+});
 
 // --- LOGIKA FOTO KATEGORI ---
 
@@ -552,14 +738,51 @@ const prevStep = () => {
 };
 
 // --- SUBMIT FORM ---
+const validationErrors = ref({});
+const showValidationAlert = ref(false);
+
+const validateForm = () => {
+    const errors = {};
+    if (!form.nama_properti.trim()) errors.nama_properti = 'Nama properti wajib diisi';
+    if (!form.kategori) errors.kategori = 'Kategori wajib dipilih';
+    if (!form.jenis_properti) errors.jenis_properti = 'Jenis properti wajib dipilih';
+    if (!form.tipe_sewa) errors.tipe_sewa = 'Tipe sewa wajib dipilih';
+    if (!form.alamat_lengkap.trim()) errors.alamat_lengkap = 'Alamat lengkap wajib diisi';
+    if (!form.kota.trim()) errors.kota = 'Kota wajib diisi';
+    if (!form.kecamatan.trim()) errors.kecamatan = 'Kecamatan wajib diisi';
+    if (!form.harga_sewa || Number(form.harga_sewa) <= 0) errors.harga_sewa = 'Harga sewa wajib diisi (minimal > 0)';
+
+    validationErrors.value = errors;
+    return Object.keys(errors).length === 0;
+};
+
 const submitProperty = () => {
+    showValidationAlert.value = false;
+
+    // Validasi client-side
+    if (!validateForm()) {
+        showValidationAlert.value = true;
+        currentStep.value = 1;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+    }
+
+    // Pastikan owner sudah menandai titik koordinat sebelum data terkirim
+    if (!form.latitude || !form.longitude) {
+        alert('Mohon tentukan titik lokasi properti Anda di peta terlebih dahulu.');
+        currentStep.value = 2;
+        return;
+    }
+
     form.post(route('owner.property.store'), {
         preserveScroll: true,
         onSuccess: () => {
             showSuccessModal.value = true;
         },
         onError: (errors) => {
-            console.error('Validasi Gagal:', errors);
+            showValidationAlert.value = true;
+            validationErrors.value = errors;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     });
 };
@@ -600,6 +823,29 @@ const closeModalAndRedirect = () => {
             <div>
                 <h1 class="text-xl font-bold text-slate-900">Ajukan Properti Baru</h1>
                 <p class="text-xs text-slate-500 mt-1">Lengkapi data aset Anda agar calon penyewa bisa melihat unit Anda di platform kusewa.id</p>
+            </div>
+
+            <!-- VALIDATION ALERT -->
+            <div v-if="showValidationAlert" class="bg-rose-50 border border-rose-200 rounded-2xl p-4 flex items-start gap-3">
+                <div class="w-8 h-8 rounded-xl bg-rose-100 text-rose-500 flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-triangle-exclamation text-sm"></i>
+                </div>
+                <div class="space-y-1.5 flex-1">
+                    <h4 class="text-sm font-bold text-rose-700">Lengkapi Data yang Diperlukan</h4>
+                    <p class="text-xs text-rose-600">Beberapa field wajib belum diisi. Silakan periksa kembali:</p>
+                    <ul class="list-disc list-inside text-xs text-rose-600 space-y-0.5">
+                        <li v-if="validationErrors.nama_properti">Nama properti belum diisi</li>
+                        <li v-if="validationErrors.kategori || validationErrors.jenis_properti">Kategori / jenis properti belum dipilih</li>
+                        <li v-if="validationErrors.tipe_sewa">Tipe sewa belum dipilih</li>
+                        <li v-if="validationErrors.alamat_lengkap">Alamat lengkap belum diisi</li>
+                        <li v-if="validationErrors.kota">Kota belum diisi</li>
+                        <li v-if="validationErrors.kecamatan">Kecamatan belum diisi</li>
+                        <li v-if="validationErrors.harga_sewa">Harga sewa belum diisi</li>
+                    </ul>
+                    <button @click="showValidationAlert = false" class="text-[10px] font-bold text-rose-500 hover:text-rose-700 mt-1">
+                        <i class="fa-solid fa-xmark mr-1"></i> Tutup
+                    </button>
+                </div>
             </div>
 
             <!-- STEPPER PROGRESS BAR -->
@@ -681,14 +927,95 @@ const closeModalAndRedirect = () => {
                             Detail Spesifik: {{ form.jenis_properti }}
                         </h3>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-
-                            <div v-if="['Kos-kosan', 'Apartemen'].includes(form.jenis_properti)">
-                                <label class="block text-[11px] font-bold text-slate-700 mb-1">Jumlah Kamar</label>
-                                <input v-model="form.jumlah_kamar" type="number" placeholder="Berapa kamar?" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A2540] transition" />
+                        <!-- BUILDER TIPE KAMAR: khusus Kos-kosan, Hotel, Apartemen, Guest House, Rusun/Condominium -->
+                        <div v-if="isTipeKamarProperti" class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-[11px] font-bold text-slate-700">Tipe Kamar / Unit <span class="text-rose-500">*</span></label>
+                                <button type="button" @click="tambahTipeKamar" class="text-[10px] font-bold text-[#0A2540] hover:text-[#FFC000] bg-white border border-slate-200 px-2.5 py-1 rounded-lg transition cursor-pointer">
+                                    + Tambah Tipe Kamar
+                                </button>
                             </div>
+                            <p class="text-[10px] text-slate-400 -mt-2">
+                                Tambahkan tiap tipe kamar yang tersedia (mis. Standard, Deluxe, Suite) beserta jumlah unit, kapasitas, dan fasilitasnya masing-masing.
+                            </p>
 
-                            <template v-if="['Rumah Tapak', 'Villa', 'Homestay', 'Guest House', 'Rusun / Condominium'].includes(form.jenis_properti)">
+                            <div v-for="(tipe, tIndex) in form.tipe_kamar" :key="tipe.id" class="bg-white border border-slate-200 rounded-xl p-3.5 relative space-y-3">
+                                <button
+                                    v-if="form.tipe_kamar.length > 1" type="button" @click.prevent="hapusTipeKamar(tIndex)"
+                                    class="absolute top-3 right-3 w-6 h-6 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center text-[10px] cursor-pointer"
+                                    title="Hapus Tipe Kamar"
+                                >
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pr-8">
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-600 mb-1">Nama Tipe Kamar <span class="text-rose-500">*</span></label>
+                                        <input v-model="tipe.nama_tipe_kamar" type="text" placeholder="Contoh: Deluxe Room" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A2540] transition" required />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-600 mb-1">Jumlah Unit</label>
+                                        <input v-model="tipe.jumlah_kamar" type="number" placeholder="Contoh: 5" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A2540] transition" />
+                                    </div>
+                                    <div>
+                                        <label class="block text-[10px] font-bold text-slate-600 mb-1">Kapasitas Orang / Kamar</label>
+                                        <input v-model="tipe.kapasitas_orang" type="number" placeholder="Contoh: 2" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A2540] transition" />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-600 mb-1.5">Fasilitas Tipe Kamar Ini</label>
+
+                                    <div class="relative kamar-fasilitas-dropdown">
+                                        <button
+                                            type="button"
+                                            @click.stop="toggleFasilitasKamarDropdown(tIndex)"
+                                            class="w-full text-[11px] px-3 py-2 rounded-xl border border-slate-200 flex items-center justify-between hover:border-[#0A2540] transition cursor-pointer bg-white"
+                                        >
+                                            <span :class="tipe.fasilitas_kamar.length > 0 ? 'font-bold text-[#0A2540]' : 'text-slate-400'">
+                                                {{ tipe.fasilitas_kamar.length > 0 ? `${tipe.fasilitas_kamar.length} fasilitas dipilih` : 'Pilih Fasilitas Kamar' }}
+                                            </span>
+                                            <i class="fa-solid fa-chevron-down text-[9px] text-slate-400 transition" :class="{ 'rotate-180': fasilitasKamarDropdownOpen === tIndex }"></i>
+                                        </button>
+
+                                        <div
+                                            v-if="fasilitasKamarDropdownOpen === tIndex"
+                                            class="absolute z-20 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-56 overflow-y-auto"
+                                        >
+                                            <button
+                                                type="button" v-for="item in fasilitasByKategori[0].items" :key="item"
+                                                @click.stop="toggleFasilitasKamar(tIndex, item)"
+                                                class="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] text-left hover:bg-slate-50 transition cursor-pointer"
+                                            >
+                                                <span
+                                                    class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition"
+                                                    :class="tipe.fasilitas_kamar.includes(item) ? 'bg-[#0A2540] border-[#0A2540]' : 'border-slate-300 bg-white'"
+                                                >
+                                                    <i v-if="tipe.fasilitas_kamar.includes(item)" class="fa-solid fa-check text-[9px] text-white"></i>
+                                                </span>
+                                                <span :class="tipe.fasilitas_kamar.includes(item) ? 'font-bold text-[#0A2540]' : 'text-slate-600'">
+                                                    {{ item }}
+                                                </span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- CHIP FASILITAS KAMAR TERPILIH -->
+                                    <div v-if="tipe.fasilitas_kamar.length > 0" class="flex flex-wrap gap-1.5 mt-2">
+                                        <div v-for="item in tipe.fasilitas_kamar" :key="item" class="inline-flex items-center gap-1 bg-[#0A2540]/5 border border-[#0A2540]/20 text-[#0A2540] text-[10px] font-bold px-2 py-1 rounded-lg">
+                                            <span>{{ item }}</span>
+                                            <button type="button" @click.stop="toggleFasilitasKamar(tIndex, item)" class="text-rose-500 hover:text-rose-700 cursor-pointer">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-else class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                            <template v-if="['Rumah Tapak', 'Villa', 'Homestay'].includes(form.jenis_properti)">
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-700 mb-1">Jumlah Kamar</label>
                                     <input v-model="form.jumlah_kamar" type="number" placeholder="Jumlah kamar tidur" class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A2540] transition" />
@@ -786,61 +1113,149 @@ const closeModalAndRedirect = () => {
                         <input v-model="form.alamat_lengkap" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 transition" required />
                     </div>
 
-                    <!-- FASILITAS: SEARCH BERKATEGORI + CHIP POPULER RINGKAS -->
+                    <!-- PILIH TITIK KOORDINAT DI PETA -->
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Fasilitas / Kelengkapan Aset</label>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">
+                            Titik Lokasi di Peta <span class="text-rose-500">*</span>
+                        </label>
                         <p class="text-[10px] text-slate-400 mb-2">
-                            Cari atau ketik fasilitas apa saja (mis. "wifi", "genset", "sertifikat") — hasil dikelompokkan per kategori, dan penulisan otomatis disamakan ke format standar meski ada typo.
+                            Cari alamat di kolom bawah, gunakan lokasi GPS Anda, atau klik/geser pin langsung di peta untuk menandai titik properti secara presisi.
                         </p>
 
-                        <div class="flex gap-2 relative">
+                        <!-- Search bar + tombol GPS -->
+                        <div class="flex gap-2 mb-2">
                             <div class="flex-1 relative">
                                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-[11px]"></i>
                                 <input
-                                    v-model="inputFasilitasKustom"
-                                    @keyup.enter.prevent="tambahFasilitasKustom"
-                                    @focus="showSaran = true"
-                                    @blur="() => setTimeout(() => showSaran = false, 150)"
+                                    v-model="cariAlamatInput"
+                                    @keyup.enter.prevent="cariLokasiDiPeta"
                                     type="text"
-                                    placeholder="Cari atau ketik fasilitas..."
+                                    placeholder="Cari nama jalan / area di peta..."
                                     class="w-full text-xs pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540]"
                                 />
-                                <div
-                                    v-if="showSaran && saranFasilitas.length > 0"
-                                    class="absolute z-20 top-full left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-xl shadow-lg overflow-hidden max-h-64 overflow-y-auto"
-                                >
-                                    <div v-for="grup in saranFasilitas" :key="grup.kategori">
-                                        <div class="sticky top-0 bg-slate-50 px-3.5 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 border-b border-slate-100">
-                                            <i :class="['fa-solid', grup.icon, 'text-[#FFC000] text-[10px]']"></i>
+                            </div>
+                            <button
+                                type="button" @click.prevent="cariLokasiDiPeta" :disabled="isSearchingAlamat"
+                                class="bg-[#0A2540] text-white text-xs font-bold px-4 rounded-xl hover:bg-[#123e6b] transition cursor-pointer shrink-0 disabled:opacity-50"
+                            >
+                                {{ isSearchingAlamat ? 'Mencari...' : 'Cari' }}
+                            </button>
+                            <button
+                                type="button" @click.prevent="gunakanLokasiSaatIni" :disabled="isLocatingGPS"
+                                title="Gunakan Lokasi Saya Saat Ini"
+                                class="bg-slate-100 text-[#0A2540] text-xs font-bold px-3 rounded-xl hover:bg-slate-200 transition cursor-pointer shrink-0 disabled:opacity-50"
+                            >
+                                <i class="fa-solid fa-location-crosshairs"></i>
+                            </button>
+                        </div>
+
+                        <!-- Container Peta -->
+                        <div ref="mapContainer" class="w-full h-72 rounded-xl border border-slate-200 z-0"></div>
+
+                        <!-- Info koordinat terpilih -->
+                        <div class="flex items-center gap-2 mt-2 text-[11px]" :class="form.latitude ? 'text-emerald-600' : 'text-slate-400'">
+                            <i :class="['fa-solid', form.latitude ? 'fa-circle-check' : 'fa-circle-exclamation']"></i>
+                            <span v-if="form.latitude">
+                                Titik lokasi terpilih: {{ form.latitude }}, {{ form.longitude }}
+                            </span>
+                            <span v-else>Belum ada titik lokasi dipilih.</span>
+                        </div>
+                    </div>
+
+                    <!-- FASILITAS: NESTED DROPDOWN (Jenis Fasilitas -> Nama Fasilitas) -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Fasilitas / Kelengkapan Aset</label>
+                        <p class="text-[10px] text-slate-400 mb-2">
+                            Klik "Pilih Fasilitas", lalu pilih jenis fasilitas untuk membuka daftar nama fasilitas di dalamnya.
+                        </p>
+
+                        <div class="relative" ref="fasilitasDropdownRef">
+                            <!-- TOMBOL UTAMA -->
+                            <button
+                                type="button"
+                                @click.stop="toggleFasilitasDropdown"
+                                class="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 flex items-center justify-between hover:border-[#0A2540] transition cursor-pointer bg-white"
+                            >
+                                <span :class="form.fasilitas.length > 0 ? 'font-bold text-[#0A2540]' : 'text-slate-400'">
+                                    {{ form.fasilitas.length > 0 ? `${form.fasilitas.length} fasilitas dipilih` : 'Pilih Fasilitas' }}
+                                </span>
+                                <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition" :class="{ 'rotate-180': fasilitasDropdownOpen }"></i>
+                            </button>
+
+                            <!-- DROPDOWN UTAMA: LIST JENIS FASILITAS -->
+                            <div
+                                v-if="fasilitasDropdownOpen"
+                                class="absolute z-30 mt-1.5 w-full bg-white border border-slate-200 rounded-xl shadow-lg max-h-80 overflow-y-auto"
+                            >
+                                <div v-for="grup in fasilitasByKategori" :key="grup.kategori" class="border-b border-slate-100 last:border-0">
+
+                                    <!-- HEADER JENIS FASILITAS (trigger sub-dropdown) -->
+                                    <button
+                                        type="button"
+                                        @click.stop="toggleSubKategoriFasilitas(grup.kategori)"
+                                        class="w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+                                    >
+                                        <span class="flex items-center gap-2">
+                                            <i :class="['fa-solid', grup.icon, 'text-[#FFC000] text-[11px] w-3.5 text-center']"></i>
                                             <span>{{ grup.kategori }}</span>
-                                        </div>
+                                            <span
+                                                v-if="countFasilitasTerpilih(grup) > 0"
+                                                class="text-[10px] bg-[#0A2540] text-white font-bold px-1.5 py-0.5 rounded-full leading-none"
+                                            >
+                                                {{ countFasilitasTerpilih(grup) }}
+                                            </span>
+                                        </span>
+                                        <i
+                                            class="fa-solid fa-chevron-right text-[10px] text-slate-400 transition"
+                                            :class="{ 'rotate-90 text-[#0A2540]': activeFasilitasKategori === grup.kategori }"
+                                        ></i>
+                                    </button>
+
+                                    <!-- SUB-DROPDOWN: LIST NAMA FASILITAS DI DALAM JENIS FASILITAS -->
+                                    <div v-if="activeFasilitasKategori === grup.kategori" class="bg-slate-50 border-t border-slate-100">
                                         <button
                                             type="button"
                                             v-for="item in grup.items" :key="item"
-                                            @mousedown.prevent="pilihSaranFasilitas(item)"
-                                            class="w-full text-left text-xs px-3.5 py-2 hover:bg-slate-50 flex items-center gap-2 cursor-pointer transition border-b border-slate-50 last:border-0"
+                                            @click.stop="toggleFasilitas(item)"
+                                            class="w-full flex items-center gap-2.5 pl-8 pr-3.5 py-2 text-[11px] text-left hover:bg-white transition cursor-pointer"
                                         >
-                                            <i class="fa-solid fa-plus text-[10px] text-[#FFC000] shrink-0"></i>
-                                            <span>{{ item }}</span>
+                                            <span
+                                                class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition"
+                                                :class="form.fasilitas.includes(item) ? 'bg-[#0A2540] border-[#0A2540]' : 'border-slate-300 bg-white'"
+                                            >
+                                                <i v-if="form.fasilitas.includes(item)" class="fa-solid fa-check text-[9px] text-white"></i>
+                                            </span>
+                                            <span :class="form.fasilitas.includes(item) ? 'font-bold text-[#0A2540]' : 'text-slate-600'">
+                                                {{ item }}
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- OPSI TAMBAH FASILITAS MANUAL (kalau tidak ada di daftar) -->
+                                <div class="p-2.5 bg-slate-50 border-t border-slate-100">
+                                    <div class="flex gap-1.5">
+                                        <input
+                                            v-model="inputFasilitasKustom"
+                                            @keyup.enter.prevent="tambahFasilitasKustom"
+                                            @click.stop
+                                            type="text"
+                                            placeholder="Fasilitas tidak ada di daftar? Ketik di sini..."
+                                            class="flex-1 text-[11px] px-2.5 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0A2540] transition"
+                                        />
+                                        <button
+                                            type="button"
+                                            @click.stop="tambahFasilitasKustom"
+                                            class="bg-[#0A2540] text-white text-[11px] font-bold px-3 rounded-lg hover:bg-[#123e6b] transition cursor-pointer shrink-0"
+                                        >
+                                            Tambah
                                         </button>
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" @click.prevent="tambahFasilitasKustom" class="bg-[#0A2540] text-white text-xs font-bold px-4 rounded-xl hover:bg-[#123e6b] transition cursor-pointer shrink-0">
-                                Tambah
-                            </button>
                         </div>
 
-                        <div class="flex flex-wrap gap-1.5 mt-2.5">
-                            <button
-                                type="button" v-for="item in fasilitasPopuler" :key="item.id" @click="toggleFasilitas(item.id)"
-                                :class="['text-[11px] px-2.5 py-1.5 rounded-full border flex items-center gap-1.5 transition cursor-pointer', form.fasilitas.includes(item.id) ? 'border-[#0A2540] bg-[#0A2540]/5 font-bold text-[#0A2540]' : 'border-slate-200 text-slate-500 hover:bg-slate-50']"
-                            >
-                                <i :class="['fa-solid', item.icon, 'text-[10px]', form.fasilitas.includes(item.id) ? 'text-[#0A2540]' : 'text-slate-400']"></i>
-                                <span>{{ item.id }}</span>
-                            </button>
-                        </div>
-
+                        <!-- CHIP FASILITAS TERPILIH -->
                         <div class="mt-3 pt-3 border-t border-slate-100">
                             <div v-if="form.fasilitas.length > 0" class="flex flex-wrap gap-2">
                                 <div v-for="fas in form.fasilitas" :key="fas" class="inline-flex items-center gap-1.5 bg-[#0A2540]/5 border border-[#0A2540]/20 text-[#0A2540] text-[11px] font-bold px-2.5 py-1 rounded-lg">

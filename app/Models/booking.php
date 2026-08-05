@@ -20,23 +20,33 @@ class booking extends Model
         'booking_status'
     ];
 
-    public function asset(){
+    protected $casts = [
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+    ];
+
+    public function asset()
+    {
         return $this->belongsTo(asset::class);
     }
 
-    public function assetUnit(){
+    public function assetUnit()
+    {
         return $this->belongsTo(asset_units::class, 'asset_unit_id');
     }
 
-    public function user(){
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function payment(){
+    public function payment()
+    {
         return $this->hasOne(payment::class);
     }
 
-    public function reviews(){
+    public function reviews()
+    {
         return $this->hasOne(review::class);
     }
 }

@@ -28,6 +28,13 @@ const bookingStatusClass = (status) => ({
     cancelled: 'bg-slate-100 text-slate-600 border-slate-200',
     rejected: 'bg-rose-50 text-rose-700 border-rose-200',
 }[status] || 'bg-slate-100 text-slate-600 border-slate-200');
+const bookingStatusLabel = (status) => ({
+    pending: 'Menunggu',
+    confirmed: 'Dikonfirmasi',
+    active: 'Aktif',
+    completed: 'Selesai',
+    cancelled: 'Dibatalkan',
+}[status] || status);
 const bookingStatusIcon = (status) => ({
     pending: 'fa-clock',
     confirmed: 'fa-circle-check',
@@ -36,6 +43,15 @@ const bookingStatusIcon = (status) => ({
     cancelled: 'fa-ban',
     rejected: 'fa-circle-xmark',
 }[status] || 'fa-circle-info');
+
+// Pagination helpers
+const bookingItems = computed(() => props.bookings?.data || []);
+const paginationLinks = computed(() => props.bookings?.meta?.links?.filter(l => l.url) || []);
+const paginationMeta = computed(() => ({
+    from: props.bookings?.meta?.from || 0,
+    to: props.bookings?.meta?.to || 0,
+    total: props.bookings?.meta?.total || 0,
+}));
 </script>
 
 <template>
@@ -53,10 +69,90 @@ const bookingStatusIcon = (status) => ({
                     <Link v-if="type === 'bookings'" :href="route('owner.property.index')" class="bg-[#0A2540] text-white text-xs font-bold px-4 py-2.5 rounded-xl">Kelola Aset</Link>
                 </header>
 
-                <section v-if="type === 'bookings'" class="bg-white border border-slate-200 rounded-2xl overflow-hidden">
-                    <div class="p-5 border-b border-slate-100 flex justify-between"><h2 class="font-bold text-slate-800">Daftar Pesanan</h2><span class="text-xs text-slate-400">{{ bookings.length }} pesanan</span></div>
-                    <div v-if="bookings.length" class="overflow-x-auto"><table class="w-full text-sm"><thead class="bg-slate-50 text-left text-xs text-slate-400"><tr><th class="p-4">Kode</th><th class="p-4">Aset & Penyewa</th><th class="p-4">Periode</th><th class="p-4">Total</th><th class="p-4">Status</th></tr></thead><tbody><tr v-for="booking in bookings" :key="booking.code" class="border-t border-slate-100"><td class="p-4 font-bold text-[#0A2540]">{{ booking.code }}</td><td class="p-4"><p class="font-semibold">{{ booking.asset }}</p><p class="text-xs text-slate-400">{{ booking.tenant }}</p></td><td class="p-4 text-slate-500">{{ booking.period }}</td><td class="p-4 font-bold">{{ formatCurrency(booking.total) }}</td><td class="p-4"><span :class="['inline-flex items-center px-2.5 py-1 rounded-full border text-xs font-bold', bookingStatusClass(booking.status)]"><i :class="['fa-solid mr-1', bookingStatusIcon(booking.status)]"></i>{{ booking.status }}</span></td></tr></tbody></table></div>
-                    <div v-else class="p-12 text-center"><i class="fa-solid fa-receipt text-3xl text-slate-200"></i><p class="mt-3 font-bold text-slate-700">Belum ada pesanan</p><p class="mt-1 text-sm text-slate-400">Pesanan dari aset Anda akan tampil di halaman ini.</p></div>
+                <section v-if="type === 'bookings'" class="space-y-4">
+                    <!-- Ringkasan -->
+                    <div class="flex items-center justify-between">
+                        <h2 class="font-bold text-slate-800">Daftar Pesanan</h2>
+                        <span class="text-[11px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
+                            {{ paginationMeta.total }} total · {{ bookingItems.length }} halaman ini
+                        </span>
+                    </div>
+
+                    <!-- Card List -->
+                    <div v-if="bookingItems.length" class="space-y-3">
+                        <div
+                            v-for="booking in bookingItems"
+                            :key="booking.id"
+                            class="bg-white border border-slate-200/80 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 hover:border-slate-300 transition"
+                        >
+                            <div class="flex items-start gap-4 flex-1 min-w-0">
+                                <!-- Status Icon -->
+                                <div :class="[
+                                    'w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-sm',
+                                    booking.status === 'pending' ? 'bg-amber-50 text-amber-500' :
+                                    booking.status === 'confirmed' ? 'bg-emerald-50 text-emerald-500' :
+                                    booking.status === 'completed' ? 'bg-sky-50 text-sky-500' :
+                                    'bg-slate-100 text-slate-400'
+                                ]">
+                                    <i :class="['fa-solid', bookingStatusIcon(booking.status)]"></i>
+                                </div>
+
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-slate-800 text-sm">{{ booking.asset }}</span>
+                                        <span :class="['text-[10px] font-extrabold px-2 py-0.5 rounded-full border', bookingStatusClass(booking.status)]">
+                                            {{ bookingStatusLabel(booking.status) }}
+                                        </span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">
+                                        {{ booking.code }} · {{ booking.tenant }}
+                                    </p>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">
+                                        <i class="fa-regular fa-calendar text-[10px] mr-1"></i>{{ booking.period }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-4 sm:flex-col sm:items-end sm:gap-1 shrink-0">
+                                <span class="font-extrabold text-[#0A2540] text-sm">{{ formatCurrency(booking.total) }}</span>
+                                <Link
+                                    v-if="booking.status === 'pending'"
+                                    :href="`/owner/bookings/${booking.id}`"
+                                    class="text-[11px] font-bold bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                                >
+                                    <i class="fa-solid fa-magnifying-glass text-[10px]"></i> Tinjau
+                                </Link>
+                                <Link
+                                    v-else
+                                    :href="`/owner/bookings/${booking.id}`"
+                                    class="text-[11px] font-medium text-slate-400 hover:text-[#0A2540] transition"
+                                >
+                                    Lihat Detail
+                                </Link>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Empty -->
+                    <div v-else class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                        <i class="fa-solid fa-receipt text-3xl text-slate-200"></i>
+                        <p class="mt-3 font-bold text-slate-700">Belum ada pesanan</p>
+                        <p class="mt-1 text-sm text-slate-400">Pesanan dari aset Anda akan tampil di halaman ini.</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div v-if="paginationLinks.length > 0" class="flex items-center justify-center gap-1 pt-2">
+                        <Link
+                            v-for="link in paginationLinks"
+                            :key="link.label"
+                            :href="link.url"
+                            v-html="link.label"
+                            :class="[
+                                'text-xs font-bold px-3 py-1.5 rounded-lg transition',
+                                link.active ? 'bg-[#0A2540] text-white' : 'text-slate-500 hover:bg-slate-100',
+                            ]"
+                        />
+                    </div>
                 </section>
 
                 <template v-else-if="type === 'finance'">

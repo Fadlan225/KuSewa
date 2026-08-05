@@ -7,13 +7,19 @@ const props = defineProps({
     billInfo: {
         type: Object,
         default: () => ({
+            id: null,
             period: 'Agustus 2026',
             dueDate: '10 Agustus 2026',
             amount: 250000,
             serviceFee: 5000,
-            status: 'Belum Dibayar', // Belum Dibayar, Menunggu Verifikasi, Lunas
+            totalTransactions: 0,
+            status: 'Belum Dibayar',
             invoiceId: 'INV/202608/KSW/0091'
         })
+    },
+    billingHistory: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -22,6 +28,7 @@ const selectedMethod = ref('qris');
 const paymentProof = ref(null);
 const isSubmitted = ref(false);
 const form = useForm({
+    billing_id: props.billInfo.id,
     payment_method: 'qris',
     payment_proof: null,
 });
@@ -109,19 +116,22 @@ const submitPayment = () => {
                                     <span class="font-bold text-rose-600">{{ billInfo.dueDate }}</span>
                                 </div>
                                 <div class="flex justify-between text-slate-600">
-                                    <span>Biaya Langganan Owner</span>
-                                    <span class="font-semibold text-slate-800">Rp {{ billInfo.amount.toLocaleString('id-ID') }}</span>
+                                    <span>Biaya Layanan / Transaksi</span>
+                                    <span class="font-semibold text-slate-800">Rp {{ billInfo.serviceFee.toLocaleString('id-ID') }}</span>
                                 </div>
                                 <div class="flex justify-between text-slate-600">
-                                    <span>Biaya Penanganan / Aplikasi</span>
-                                    <span class="font-semibold text-slate-800">Rp {{ billInfo.serviceFee.toLocaleString('id-ID') }}</span>
+                                    <span>Jumlah Transaksi Berhasil</span>
+                                    <span class="font-semibold text-slate-800">{{ billInfo.totalTransactions }} transaksi</span>
                                 </div>
                             </div>
 
                             <div class="pt-3 border-t border-slate-100 flex justify-between items-center">
                                 <span class="text-xs font-bold text-slate-800">Total Tagihan</span>
-                                <span class="text-lg font-black text-[#0A2540]">Rp {{ totalPayment.toLocaleString('id-ID') }}</span>
+                                <span class="text-lg font-black text-[#0A2540]">Rp {{ billInfo.amount.toLocaleString('id-ID') }}</span>
                             </div>
+                            <p class="text-[10px] text-slate-400 -mt-1">
+                                Rumus: {{ billInfo.serviceFee.toLocaleString('id-ID') }} × {{ billInfo.totalTransactions }} transaksi
+                            </p>
                         </div>
 
                         <!-- Pilih Metode Pembayaran -->
@@ -211,6 +221,44 @@ const submitPayment = () => {
 
                     </div>
 
+                </div>
+
+                <!-- RIWAYAT TAGIHAN -->
+                <div v-if="billingHistory.length > 0" class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
+                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Riwayat Tagihan Bulanan</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="text-left text-slate-400 border-b border-slate-100">
+                                    <th class="pb-2 font-medium">ID Tagihan</th>
+                                    <th class="pb-2 font-medium">Periode</th>
+                                    <th class="pb-2 font-medium">Transaksi</th>
+                                    <th class="pb-2 font-medium">Total</th>
+                                    <th class="pb-2 font-medium">Status</th>
+                                    <th class="pb-2 font-medium">Tgl Bayar</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="bill in billingHistory" :key="bill.id" class="border-b border-slate-50 hover:bg-slate-50/50">
+                                    <td class="py-2.5 font-bold text-[#0A2540]">{{ bill.invoiceId }}</td>
+                                    <td class="py-2.5">{{ bill.period }}</td>
+                                    <td class="py-2.5">{{ bill.totalTransactions }}</td>
+                                    <td class="py-2.5 font-semibold">Rp {{ bill.amount.toLocaleString('id-ID') }}</td>
+                                    <td class="py-2.5">
+                                        <span :class="[
+                                            'text-[10px] font-extrabold px-2 py-0.5 rounded-full',
+                                            bill.status === 'Lunas' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 
+                                            bill.status === 'Terlambat' ? 'bg-rose-50 text-rose-600 border border-rose-200' : 
+                                            'bg-amber-50 text-amber-600 border border-amber-200'
+                                        ]">
+                                            {{ bill.status }}
+                                        </span>
+                                    </td>
+                                    <td class="py-2.5 text-slate-400">{{ bill.paidAt || '-' }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>

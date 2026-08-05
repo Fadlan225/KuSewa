@@ -88,6 +88,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     Route::post('/monthly-payment', [MonthlyPaymentController::class, 'store'])->name('monthly-payment.store');
 
     Route::get('/bookings', [WorkspaceController::class, 'bookings'])->name('bookings');
+    Route::get('/bookings/{booking}', [WorkspaceController::class, 'review'])->name('bookings.review');
+    Route::patch('/bookings/{booking}/confirm', [WorkspaceController::class, 'confirm'])->name('bookings.confirm');
+    Route::patch('/bookings/{booking}/reject', [WorkspaceController::class, 'rejectBooking'])->name('bookings.reject');
     Route::get('/finance', [WorkspaceController::class, 'finance'])->name('finance');
     Route::get('/verification', [WorkspaceController::class, 'verification'])->name('verification');
     Route::get('/settings', [WorkspaceController::class, 'settings'])->name('settings');

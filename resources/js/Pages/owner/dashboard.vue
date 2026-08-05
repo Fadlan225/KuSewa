@@ -1,319 +1,193 @@
-    <script setup>
-    import { ref, computed } from 'vue';
-    import { Head, Link, usePage } from '@inertiajs/vue3';
-    // 1. Import komponen Sidebar reusable yang baru dibuat
-    import Sidebar from '@/Components/sidebar.vue';
+<script setup>
+import { computed } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
+import Sidebar from '@/Components/sidebar.vue';
 
-    const page = usePage();
+const props = defineProps({
+    stats: { type: Object, default: () => ({}) },
+    user: { type: Object, default: () => ({}) },
+});
 
-    const props = defineProps({
-        owner: {
-            type: Object,
-            default: () => ({
-                nik: '6471000000001001',
-                ttl: 'Samarinda, 22 Maret 1995',
-                alamat: 'Jl. Pemilik Aset No. 3, Samarinda',
-                status: 'Terverifikasi'
-            })
-        },
-        stats: {
-            type: Object,
-            default: () => ({
-                totalProperti: 8,
-                pesananAktif: 14,
-                konfirmasiPending: 3,
-                totalPendapatan: 'Rp 18.500.000'
-            })
-        }
-    });
+// ==========================================
+// DUMMY DATA — dipakai otomatis kalau prop "stats" dari backend masih kosong,
+// jadi halaman ini bisa langsung ditest tanpa perlu controller/DB nyala dulu.
+// Begitu backend sudah mengirim data asli, ini otomatis diabaikan.
+// ==========================================
+const dummyStats = {
+    totalUnit: 12,
+    totalTersewa: 7,
+    bookingPending: 3,
+    pendapatanBulanIni: 18750000,
 
-    // Tab Aktif Kategori Aset Kusewa
-    const activeTab = ref('Kos & Rumah');
-    const tabs = ['Kos & Rumah', 'Apartemen', 'Kendaraan'];
+    monthlyIncome: [
+        { month: 'Mar', income: 9500000 },
+        { month: 'Apr', income: 12300000 },
+        { month: 'Mei', income: 8750000 },
+        { month: 'Jun', income: 15200000 },
+        { month: 'Jul', income: 11000000 },
+        { month: 'Agu', income: 18750000 },
+    ],
+    totalPendapatan: 75500000,
 
-    const user = computed(() => page.props.auth?.user || {
-        name: 'Budi Santoso',
-        email: 'owner@kusewa.id'
-    });
+    kotaData: {
+        Samarinda: 6,
+        Balikpapan: 3,
+        Bontang: 2,
+        Tenggarong: 1,
+    },
 
-    // Mock Data Penyewa Aktif di kusewa.id
-    const activeTenants = ref([
-        { name: 'Ahmad Rizky', property: 'Kos Samarinda #03', rentEnd: '12 Aug 2026', status: 'Lunas', avatar: 'https://i.pravatar.cc/100?img=11' },
-        { name: 'Siti Rahma', property: 'Apt Orchard B12', rentEnd: '01 Sep 2026', status: 'Pending', avatar: 'https://i.pravatar.cc/100?img=5' },
-        { name: 'Budi Kurniawan', property: 'Innova Reborn (2 Hri)', rentEnd: '25 Jul 2026', status: 'Lunas', avatar: 'https://i.pravatar.cc/100?img=9' },
-        { name: 'Wilona Hamda', property: 'Kos Melati #01', rentEnd: '10 Aug 2026', status: 'Lunas', avatar: 'https://i.pravatar.cc/100?img=20' },
-        { name: 'Rava Nanda', property: 'Rumah Kontrakan A2', rentEnd: '15 Dec 2026', status: 'Lunas', avatar: 'https://i.pravatar.cc/100?img=13' },
-    ]);
-    </script>
+    totalTerverifikasi: 8,
+    totalPendingVerifikasi: 3,
+    totalDitolak: 1,
 
-    <template>
-        <Head title="Owner Dashboard - kusewa.id" />
+    bookingAktif: 5,
+    bookingSelesaiBulanIni: 9,
+    totalTersedia: 5,
+};
 
-        <div class="min-h-screen bg-[#F3F5F8] text-slate-700 font-sans flex antialiased selection:bg-[#FFC000]/30">
+// Kalau backend belum kirim apa-apa (props.stats === {}), pakai dummy.
+// Kalau backend sudah kirim sebagian/semua field, itu yang dipakai.
+const displayStats = computed(() => {
+    const hasRealData = props.stats && Object.keys(props.stats).length > 0;
+    return hasRealData ? props.stats : dummyStats;
+});
 
-            <!-- ==================== SIDEBAR COMPONENT ==================== -->
-            <!-- Menggantikan tag <aside> panjang yang lama -->
-            <Sidebar />
+const formatCurrency = (v) => 'Rp ' + Number(v || 0).toLocaleString('id-ID');
 
-            <!-- ==================== MAIN CONTENT ==================== -->
-            <main class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+const monthlyIncome = computed(() => displayStats.value.monthlyIncome || []);
+const maxIncome = computed(() => Math.max(...monthlyIncome.value.map(m => m.income), 1));
 
-                <!-- TOPBAR HEADER -->
-                <header class="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-30 shrink-0">
-                    <div class="flex items-center gap-3 w-1/3">
-                        <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-                        <input type="text" placeholder="Cari penyewa, ID pesanan, atau unit..." class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400" />
+const kotaList = computed(() => {
+    const data = displayStats.value.kotaData || {};
+    return Object.entries(data).map(([name, count]) => ({ name, count }));
+});
+</script>
+
+<template>
+    <Head title="Dashboard Owner - kusewa.id" />
+
+    <div class="min-h-screen bg-[#F8FAFC] text-slate-700 font-sans flex antialiased">
+        <Sidebar />
+
+        <main class="flex-1 min-w-0 p-6 md:p-8 overflow-y-auto">
+            <div class="max-w-[1200px] mx-auto space-y-6">
+
+                <!-- HEADER -->
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-black text-slate-900">Dashboard</h1>
+                        <p class="text-xs text-slate-400 mt-1">Ringkasan operasional properti & sewa Anda di kusewa.id</p>
                     </div>
-
-                    <div class="flex items-center gap-4">
-                        <button class="relative p-2 text-slate-400 hover:text-slate-600">
-                            <i class="fa-solid fa-bell text-sm"></i>
-                            <span class="w-1.5 h-1.5 bg-rose-500 rounded-full absolute top-2 right-2"></span>
-                        </button>
-
-                        <div class="h-6 w-[1px] bg-slate-200"></div>
-
-                        <!-- Owner Status Indicator Badge -->
-                        <div class="flex items-center gap-2">
-                            <div class="w-7 h-7 rounded-lg bg-[#FFC000] text-[#0A2540] flex items-center justify-center font-black text-xs">
-                                <i class="fa-solid fa-circle-check"></i>
-                            </div>
-                            <div class="text-left leading-tight hidden sm:block">
-                                <p class="text-xs font-bold text-slate-800">Pemilik Terverifikasi</p>
-                                <p class="text-[10px] text-emerald-600 font-semibold">● NIK Cocok</p>
-                            </div>
-                        </div>
-                    </div>
-                </header>
-
-                <!-- BODY CONTENT AREA -->
-                <div class="p-6 space-y-5 max-w-[1400px] w-full mx-auto">
-
-                    <!-- TITLE ROW & QUICK ACTION -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-2xl bg-[#0A2540] text-[#FFC000] flex items-center justify-center font-black text-base shadow-sm">
-                                <i class="fa-solid fa-house-user"></i>
-                            </div>
-                            <div>
-                                <h1 class="text-base font-bold text-slate-900 tracking-tight">Ringkasan Aset & Sewa</h1>
-                                <p class="text-[11px] text-slate-400">Kelola operasional penyewaan properti kamu di kusewa.id</p>
-                            </div>
-                        </div>
-
-                        <div class="flex items-center gap-3 text-xs">
-                            <Link href="/owner/property/create" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-black px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
-                                <i class="fa-solid fa-plus text-xs"></i>
-                                <span>Tambah Properti Baru</span>
-                            </Link>
-                        </div>
-                    </div>
-
-                    <!-- TABS CATEGORY (Kos, Apartemen, Kendaraan) -->
-                    <div class="flex items-center gap-6 border-b border-slate-200/80 pb-1 text-xs font-medium">
-                        <button 
-                            v-for="tab in tabs" 
-                            :key="tab"
-                            @click="activeTab = tab"
-                            :class="[
-                                'pb-2 transition relative',
-                                activeTab === tab ? 'text-[#0A2540] font-bold border-b-2 border-[#0A2540]' : 'text-slate-400 hover:text-slate-600'
-                            ]"
-                        >
-                            {{ tab }}
-                        </button>
-                    </div>
-
-                    <!-- TOP ANALYTICS SECTION: 4 MINI METRICS + MAP LOKASI ASET -->
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                        
-                        <!-- 4 Metric Cards Grid (5 Cols) -->
-                        <div class="lg:col-span-5 grid grid-cols-2 gap-4">
-                            
-                            <!-- Card 1 -->
-                            <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
-                                <div class="w-8 h-8 rounded-full bg-amber-50 text-[#0A2540] flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-building text-[#FFC000]"></i>
-                                </div>
-                                <div class="mt-4">
-                                    <span class="text-[11px] font-medium text-slate-400 block">Total Unit Aset</span>
-                                    <span class="text-xl font-extrabold text-slate-900">{{ stats.totalProperti }} Unit</span>
-                                </div>
-                            </div>
-
-                            <!-- Card 2 -->
-                            <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
-                                <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-key"></i>
-                                </div>
-                                <div class="mt-4">
-                                    <span class="text-[11px] font-medium text-slate-400 block">Sedang Tersewa</span>
-                                    <span class="text-xl font-extrabold text-slate-900">{{ stats.pesananAktif }} Penyewa</span>
-                                </div>
-                            </div>
-
-                            <!-- Card 3 -->
-                            <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
-                                <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-clock-rotate-left"></i>
-                                </div>
-                                <div class="mt-4">
-                                    <span class="text-[11px] font-medium text-slate-400 block">Perlu Konfirmasi</span>
-                                    <span class="text-xl font-extrabold text-slate-900">{{ stats.konfirmasiPending }} Pengajuan</span>
-                                </div>
-                            </div>
-
-                            <!-- Card 4 -->
-                            <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
-                                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
-                                    <i class="fa-solid fa-wallet"></i>
-                                </div>
-                                <div class="mt-4">
-                                    <span class="text-[11px] font-medium text-slate-400 block">Pendapatan Bulan Ini</span>
-                                    <span class="text-lg font-extrabold text-slate-900">{{ stats.totalPendapatan }}</span>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- Map Sebaran Properti kusewa.id (7 Cols) -->
-                        <div class="lg:col-span-7 bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm flex flex-col justify-between relative overflow-hidden min-h-[220px]">
-                            <div class="grid grid-cols-3 gap-4 z-10">
-                                <div>
-                                    <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider block">Cakupan Wilayah</span>
-                                    <span class="text-sm font-extrabold text-slate-800">2 Kota (Kaltim)</span>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider block">Tingkat Okupansi</span>
-                                    <span class="text-sm font-extrabold text-emerald-600">87.5% Terisi</span>
-                                </div>
-                                <div>
-                                    <span class="text-[10px] font-medium text-slate-400 uppercase tracking-wider block">Rata-rata Sewa</span>
-                                    <span class="text-sm font-extrabold text-slate-800">6 Bulan</span>
-                                </div>
-                            </div>
-
-                            <!-- Map Pin Area kusewa.id (Samarinda/Balikpapan Visual) -->
-                            <div class="my-4 relative h-32 bg-slate-50/50 rounded-xl border border-dashed border-slate-200 flex items-center justify-center overflow-hidden">
-                                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#0A2540_1px,transparent_1px)] [background-size:12px_12px]"></div>
-
-                                <!-- Pins Lokasi Aset -->
-                                <div class="absolute top-4 left-1/4 bg-[#0A2540] text-white text-[9px] px-2.5 py-1 rounded-md shadow-md flex items-center gap-1.5">
-                                    <i class="fa-solid fa-location-dot text-[#FFC000]"></i> Samarinda Kota <strong class="text-[#FFC000]">5 Unit</strong>
-                                </div>
-                                <div class="absolute bottom-5 right-1/4 bg-[#0A2540] text-white text-[9px] px-2.5 py-1 rounded-md shadow-md flex items-center gap-1.5">
-                                    <i class="fa-solid fa-location-dot text-[#FFC000]"></i> Balikpapan <strong class="text-[#FFC000]">3 Unit</strong>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center justify-between text-[11px] text-slate-400 pt-2 border-t border-slate-100 z-10">
-                                <span>Diperbarui otomatis dari sistem kusewa.id</span>
-                                <button class="text-[#0A2540] font-bold flex items-center gap-1 hover:underline">
-                                    <i class="fa-solid fa-rotate text-[10px]"></i>
-                                    <span>Refresh Data</span>
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <!-- BOTTOM 3-COLUMN DATA GRID -->
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                        
-                        <!-- Col 1: List Penyewa Aktif (4 Cols) -->
-                        <div class="lg:col-span-4 bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between mb-3">
-                                    <h3 class="text-xs font-bold text-slate-800">Penyewa Aktif Saat Ini</h3>
-                                    <button class="text-[11px] font-bold text-[#0A2540] hover:underline">Lihat Semua</button>
-                                </div>
-
-                                <div class="divide-y divide-slate-100">
-                                    <div v-for="(tenant, index) in activeTenants" :key="index" class="py-2.5 flex items-center justify-between text-xs">
-                                        <div class="flex items-center gap-2.5 min-w-0">
-                                            <img :src="tenant.avatar" class="w-7 h-7 rounded-full object-cover" />
-                                            <div class="min-w-0">
-                                                <p class="font-bold text-slate-800 truncate">{{ tenant.name }}</p>
-                                                <p class="text-[10px] text-slate-400 truncate">{{ tenant.property }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="text-right">
-                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">
-                                                {{ tenant.status }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Col 2: Demografi Penyewa (4 Cols) -->
-                        <div class="lg:col-span-4 bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm">
-                            <h3 class="text-xs font-bold text-slate-800 mb-1">Kategori Usia Penyewa</h3>
-                            <p class="text-[10px] text-slate-400 mb-3">Profil demografi penghuni aset Anda</p>
-                            
-                            <div class="flex items-center justify-center gap-6 text-[11px] font-semibold mb-4">
-                                <span class="text-blue-600 flex items-center gap-1"><i class="fa-solid fa-mars"></i> Pria (60%)</span>
-                                <span class="text-emerald-500 flex items-center gap-1"><i class="fa-solid fa-venus"></i> Wanita (40%)</span>
-                            </div>
-
-                            <!-- Demografi Bar Visual -->
-                            <div class="space-y-2 text-[10px] text-slate-400">
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="w-1/2 flex justify-end"><div class="h-3 bg-blue-600 rounded-l w-[30%]"></div></div>
-                                    <span class="w-12 text-center font-bold text-slate-600">Mahasiswa</span>
-                                    <div class="w-1/2"><div class="h-3 bg-emerald-400 rounded-r w-[50%]"></div></div>
-                                </div>
-
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="w-1/2 flex justify-end"><div class="h-3 bg-blue-600 rounded-l w-[85%]"></div></div>
-                                    <span class="w-12 text-center font-bold text-slate-600">Karyawan</span>
-                                    <div class="w-1/2"><div class="h-3 bg-emerald-400 rounded-r w-[40%]"></div></div>
-                                </div>
-
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="w-1/2 flex justify-end"><div class="h-3 bg-blue-600 rounded-l w-[20%]"></div></div>
-                                    <span class="w-12 text-center font-bold text-slate-600">Keluarga</span>
-                                    <div class="w-1/2"><div class="h-3 bg-emerald-400 rounded-r w-[15%]"></div></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Col 3: Status Berkas Identitas Owner (4 Cols) -->
-                        <div class="lg:col-span-4 bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
-                            <div>
-                                <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-3">
-                                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Berkas Identitas Owner</h3>
-                                    <span class="text-[9px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                                        VERIFIED
-                                    </span>
-                                </div>
-
-                                <div class="space-y-2.5 text-xs">
-                                    <div>
-                                        <span class="text-slate-400 text-[10px] font-medium block">NIK Terdaftar</span>
-                                        <span class="font-bold text-slate-800 mt-0.5 block tracking-wider">{{ owner.nik }}</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-slate-400 text-[10px] font-medium block">Tempat, Tanggal Lahir</span>
-                                        <span class="font-semibold text-slate-700 mt-0.5 block">{{ owner.ttl }}</span>
-                                    </div>
-                                    <div>
-                                        <span class="text-slate-400 text-[10px] font-medium block">Alamat Domisili</span>
-                                        <span class="font-semibold text-slate-700 mt-0.5 block leading-tight">{{ owner.alamat }}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button class="w-full mt-4 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 text-xs font-bold py-2 rounded-xl transition">
-                                Perbarui Data Identitas
-                            </button>
-                        </div>
-
-                    </div>
-
+                    <Link
+                        href="/owner/property/create"
+                        class="bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-bold text-xs px-4 py-2.5 rounded-xl transition flex items-center gap-2 w-fit"
+                    >
+                        <i class="fa-solid fa-plus"></i> Tambah Properti
+                    </Link>
                 </div>
-            </main>
 
-        </div>
-    </template>
+                <!-- 4 METRIC CARDS -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+                        <div class="w-9 h-9 rounded-xl bg-amber-50 text-[#FFC000] flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-building"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-3">Total Unit</p>
+                        <p class="text-2xl font-black text-slate-900">{{ displayStats.totalUnit }}</p>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-3">Sedang Tersewa</p>
+                        <p class="text-2xl font-black text-emerald-600">{{ displayStats.totalTersewa }}</p>
+                    </div>
+                    <Link href="/owner/bookings" class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm hover:border-[#0A2540] transition block">
+                        <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-3">Perlu Konfirmasi</p>
+                        <p class="text-2xl font-black text-rose-500">{{ displayStats.bookingPending }}</p>
+                    </Link>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm">
+                        <div class="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <p class="text-[11px] text-slate-400 mt-3">Pendapatan Bulan Ini</p>
+                        <p class="text-lg font-black text-slate-900 truncate">{{ formatCurrency(displayStats.pendapatanBulanIni) }}</p>
+                    </div>
+                </div>
+
+                <!-- CHART + DISTRIBUSI KOTA -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+                    <div class="lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-xs font-bold text-slate-800">Pendapatan 6 Bulan Terakhir</h3>
+                                <p class="text-[10px] text-slate-400">Dari booking yang telah selesai</p>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">
+                                Total: {{ formatCurrency(displayStats.totalPendapatan) }}
+                            </span>
+                        </div>
+                        <div v-if="monthlyIncome.length" class="flex items-end gap-3 h-48">
+                            <div v-for="item in monthlyIncome" :key="item.month" class="flex-1 flex flex-col items-center gap-1.5">
+                                <span class="text-[10px] font-bold text-slate-600">
+                                    {{ item.income > 0 ? formatCurrency(item.income).replace('Rp ', '') : '0' }}
+                                </span>
+                                <div class="w-full rounded-t-lg transition-all duration-500"
+                                    :style="{ height: (item.income / maxIncome) * 100 + '%', backgroundColor: item.income > 0 ? '#0A2540' : '#e2e8f0', minHeight: '4px' }"
+                                ></div>
+                                <span class="text-[10px] font-semibold text-slate-400">{{ item.month }}</span>
+                            </div>
+                        </div>
+                        <div v-else class="h-48 flex items-center justify-center text-xs text-slate-400">
+                            <i class="fa-solid fa-chart-simple text-2xl text-slate-200 mr-2"></i> Belum ada data pendapatan
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-4 space-y-4">
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+                            <h3 class="text-xs font-bold text-slate-800 mb-3">Distribusi per Kota</h3>
+                            <div v-if="kotaList.length" class="space-y-2.5">
+                                <div v-for="kota in kotaList" :key="kota.name" class="flex items-center justify-between text-xs">
+                                    <span class="font-semibold text-slate-700">{{ kota.name }}</span>
+                                    <span class="font-bold text-[#0A2540]">{{ kota.count }} Unit</span>
+                                </div>
+                            </div>
+                            <p v-else class="text-xs text-slate-400">Belum ada data</p>
+                        </div>
+                        <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm">
+                            <h3 class="text-xs font-bold text-slate-800 mb-3">Status Verifikasi</h3>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between"><span class="text-slate-400">Terverifikasi</span><span class="font-bold text-emerald-600">{{ displayStats.totalTerverifikasi }}</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Menunggu</span><span class="font-bold text-amber-600">{{ displayStats.totalPendingVerifikasi }}</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Ditolak</span><span class="font-bold text-rose-600">{{ displayStats.totalDitolak }}</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ROW BAWAH -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm text-center">
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider">Booking Aktif</p>
+                        <p class="text-2xl font-black text-blue-600 mt-1">{{ displayStats.bookingAktif }}</p>
+                        <Link href="/owner/bookings" class="text-[10px] font-bold text-[#0A2540] hover:underline mt-1 inline-block">Lihat Pemesanan</Link>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm text-center">
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider">Selesai Bulan Ini</p>
+                        <p class="text-2xl font-black text-emerald-600 mt-1">{{ displayStats.bookingSelesaiBulanIni }}</p>
+                        <span class="text-[10px] text-slate-400">Booking completed</span>
+                    </div>
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm text-center">
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wider">Siap Disewakan</p>
+                        <p class="text-2xl font-black text-sky-600 mt-1">{{ displayStats.totalTersedia }}</p>
+                        <span class="text-[10px] text-slate-400">Unit kosong</span>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+</template>

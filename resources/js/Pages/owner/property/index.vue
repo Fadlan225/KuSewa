@@ -1,6 +1,6 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { Head, Link, usePage } from '@inertiajs/vue3';
+import { ref, computed, watch } from 'vue';
+import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import Sidebar from '@/Components/sidebar.vue'; 
 
 const page = usePage();
@@ -12,13 +12,38 @@ const props = defineProps({
     }
 });
 
+// --- KELOMPOK KATEGORI & JENIS PROPERTI (disamakan dengan create.vue) ---
+const kategoriPropertiGroups = [
+    {
+        label: 'Hunian & Tempat Tinggal',
+        options: ['Kos-kosan', 'Hotel', 'Rumah Tapak', 'Villa', 'Homestay', 'Apartemen', 'Guest House', 'Rusun / Condominium']
+    },
+    {
+        label: 'Komersial & Usaha',
+        options: ['Ruko (Rumah Toko)', 'Kios / Lapak Pasar', 'Kantor / Workspace', 'Gedung Komersial', 'Food Court / Booth']
+    },
+    {
+        label: 'Penyimpanan & Industri',
+        options: ['Gudang Logistik', 'Pabrik / Manufaktur', 'Cold Storage']
+    },
+    {
+        label: 'Tanah & Lahan Kosong',
+        options: ['Lahan / Tanah Kosong', 'Lahan Pertanian / Perkebunan']
+    },
+    {
+        label: 'Media Iklan & Ruang Promosi',
+        options: ['Baliho / Reklame', 'Billboard / Videotron', 'Neon Box / Titik Toko']
+    }
+];
+
 // Data Dummy fallback jika backend belum kirim data
+// (kategori & jenis_properti disamakan dengan struktur create.vue)
 const defaultProperties = [
     {
         id: 1,
         title: 'Kos Exclusive Samarinda Indah #01',
-        category: 'Kos',
-        type: 'Putra',
+        category: 'Hunian & Tempat Tinggal',
+        type: 'Kos-kosan',
         price: 1350000,
         rent_period: 'Bulan',
         city: 'Samarinda',
@@ -31,8 +56,8 @@ const defaultProperties = [
     {
         id: 2,
         title: 'Apartemen Orchard Tower Unit B12',
-        category: 'Apartemen',
-        type: 'Campur',
+        category: 'Hunian & Tempat Tinggal',
+        type: 'Apartemen',
         price: 3500000,
         rent_period: 'Bulan',
         city: 'Balikpapan',
@@ -43,24 +68,10 @@ const defaultProperties = [
         occupancy: '0/1 Unit'
     },
     {
-        id: 3,
-        title: 'Honda Innova Reborn 2.4 V AT',
-        category: 'Kendaraan',
-        type: 'Mobil',
-        price: 450000,
-        rent_period: 'Hari',
-        city: 'Samarinda',
-        address: 'Jl. Pemilik Aset No. 3',
-        status: 'Tersewa',
-        tenant: 'Budi Kurniawan',
-        image: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=500&q=80',
-        occupancy: 'Aktif'
-    },
-    {
         id: 4,
         title: 'Kos Melati Clean & Cozyman #05',
-        category: 'Kos',
-        type: 'Putri',
+        category: 'Hunian & Tempat Tinggal',
+        type: 'Kos-kosan',
         price: 850000,
         rent_period: 'Bulan',
         city: 'Samarinda',
@@ -73,8 +84,8 @@ const defaultProperties = [
     {
         id: 5,
         title: 'Rumah Kontrakan Minimalis A2',
-        category: 'Rumah Kontrakan',
-        type: 'Pasutri',
+        kategori: 'Hunian & Tempat Tinggal',
+        jenis_properti: 'Rumah Tapak',
         price: 25000000,
         rent_period: 'Tahun',
         city: 'Samarinda',
@@ -87,16 +98,39 @@ const defaultProperties = [
 ];
 
 const propertyList = computed(() => {
-    return props.properties || [];
+    return props.properties?.data || [];
 });
+
+const paginationLinks = computed(() => props.properties?.meta?.links?.filter(l => l.url) || []);
+const paginationMeta = computed(() => ({
+    from: props.properties?.meta?.from || 0,
+    to: props.properties?.meta?.to || 0,
+    total: props.properties?.meta?.total || 0,
+}));
 
 // State Filter & View Mode
 const searchQuery = ref('');
 const selectedCategory = ref('Semua');
+const selectedJenis = ref('Semua');
 const selectedStatus = ref('Semua');
 const viewMode = ref('grid');
 
-const categories = ['Semua', 'Kos', 'Apartemen', 'Rumah Kontrakan', 'Kendaraan'];
+// Daftar pill Kategori Utama (Semua + tiap grup dari create.vue)
+const categories = computed(() => ['Semua', ...kategoriPropertiGroups.map(g => g.label)]);
+
+// Reset filter jenis setiap kali kategori utama diganti, karena daftar jenis ikut berubah
+watch(selectedCategory, () => {
+    selectedJenis.value = 'Semua';
+});
+
+// Daftar jenis properti yang tersedia sesuai kategori utama yang sedang difilter
+const availableJenisFilter = computed(() => {
+    if (selectedCategory.value === 'Semua') {
+        return kategoriPropertiGroups.flatMap(g => g.options);
+    }
+    const group = kategoriPropertiGroups.find(g => g.label === selectedCategory.value);
+    return group ? group.options : [];
+});
 
 // Filter Computation
 const filteredProperties = computed(() => {
@@ -104,20 +138,22 @@ const filteredProperties = computed(() => {
         const matchesSearch = item.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                             item.city.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                             item.address.toLowerCase().includes(searchQuery.value.toLowerCase());
-        
+
         const matchesCategory = selectedCategory.value === 'Semua' || item.category === selectedCategory.value;
+        const matchesJenis = selectedJenis.value === 'Semua' || item.type === selectedJenis.value;
         const matchesStatus = selectedStatus.value === 'Semua'
             || item.status === selectedStatus.value
             || item.verification_status === selectedStatus.value;
 
-        return matchesSearch && matchesCategory && matchesStatus;
+        return matchesSearch && matchesCategory && matchesJenis && matchesStatus;
     });
 });
 
 // Summary Stat Computations
-const totalUnit = computed(() => propertyList.value.length);
+const totalUnit = computed(() => paginationMeta.value.total);
 const totalTersewa = computed(() => propertyList.value.filter(p => p.status === 'Tersewa').length);
 const totalTersedia = computed(() => propertyList.value.filter(p => p.status === 'Tersedia').length);
+const totalPendingVerifikasi = computed(() => propertyList.value.filter(p => p.verification_status === 'pending').length);
 const verificationLabel = (status) => ({ pending: 'Menunggu Verifikasi', approved: 'Terverifikasi', rejected: 'Ditolak' }[status] || 'Menunggu Verifikasi');
 const verificationClass = (status) => ({
     pending: 'bg-amber-50 text-amber-700 border-amber-200',
@@ -169,6 +205,32 @@ const previewImage = (item) => {
     if (item.image) return item.image;
 
     return placeholderImage;
+};
+
+// --- DELETE PROPERTY ---
+const deleteModal = ref(false);
+const deletingProperty = ref(null);
+const deleting = ref(false);
+
+const openDeleteModal = (item) => {
+    deletingProperty.value = item;
+    deleteModal.value = true;
+};
+
+const closeDeleteModal = () => {
+    deleteModal.value = false;
+    deletingProperty.value = null;
+};
+
+const confirmDelete = () => {
+    if (!deletingProperty.value) return;
+    deleting.value = true;
+    router.delete(`/owner/property/${deletingProperty.value.id}`, {
+        onFinish: () => {
+            deleting.value = false;
+            closeDeleteModal();
+        },
+    });
 };
 </script>
 
@@ -224,7 +286,7 @@ const previewImage = (item) => {
                 </div>
 
                 <!-- METRIC SUMMARY STATS -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
                         <div class="w-11 h-11 rounded-xl bg-amber-50 text-[#FFC000] flex items-center justify-center text-base font-bold shrink-0">
                             <i class="fa-solid fa-building"></i>
@@ -254,6 +316,16 @@ const previewImage = (item) => {
                             <span class="text-xl font-black text-blue-600">{{ totalTersedia }} Unit</span>
                         </div>
                     </div>
+
+                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-base font-bold shrink-0">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <div>
+                            <span class="text-[11px] font-medium text-slate-400 block">Menunggu Verifikasi</span>
+                            <span class="text-xl font-black text-amber-600">{{ totalPendingVerifikasi }} Unit</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- FILTER BAR & SEARCH -->
@@ -272,7 +344,12 @@ const previewImage = (item) => {
                         </div>
 
                         <!-- Dropdowns & Toggles -->
-                        <div class="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end">
+                        <div class="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end flex-wrap">
+                            <select v-model="selectedJenis" class="bg-slate-50 text-xs border border-slate-200 rounded-xl px-3 py-2.5 font-semibold focus:outline-none focus:border-[#0A2540]">
+                                <option value="Semua">Semua Jenis</option>
+                                <option v-for="jenis in availableJenisFilter" :key="jenis" :value="jenis">{{ jenis }}</option>
+                            </select>
+
                             <select v-model="selectedStatus" class="bg-slate-50 text-xs border border-slate-200 rounded-xl px-3 py-2.5 font-semibold focus:outline-none focus:border-[#0A2540]">
                                 <option value="Semua">Semua Status</option>
                                 <option value="Tersewa">Tersewa</option>
@@ -302,7 +379,7 @@ const previewImage = (item) => {
 
                     </div>
 
-                    <!-- Category Pills -->
+                    <!-- Category Pills (Kategori Utama, disamakan dengan create.vue) -->
                     <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs pt-2 border-t border-slate-100">
                         <button 
                             v-for="cat in categories" 
@@ -336,13 +413,6 @@ const previewImage = (item) => {
                                         {{ item.category }}
                                     </span>
                                 </div>
-
-                                <div class="absolute top-3 right-3">
-                                    <span :class="['text-[10px] font-black px-2.5 py-1 rounded-lg shadow-xs border backdrop-blur-md', verificationClass(item.verification_status)]">
-                                        <i :class="['fa-solid mr-1', verificationIcon(item.verification_status)]"></i>
-                                        {{ verificationLabel(item.verification_status) }}
-                                    </span>
-                                </div>
                             </div>
 
                             <div class="p-4 space-y-2">
@@ -351,9 +421,15 @@ const previewImage = (item) => {
                                     <span class="font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">{{ item.type }}</span>
                                 </div>
 
-                                <h3 class="font-bold text-slate-800 text-sm leading-snug line-clamp-1 group-hover:text-[#0A2540] transition">
-                                    {{ item.title }}
-                                </h3>
+                                <div class="flex items-center justify-between gap-2">
+                                    <h3 class="font-bold text-slate-800 text-sm leading-snug line-clamp-1 group-hover:text-[#0A2540] transition flex-1">
+                                        {{ item.title }}
+                                    </h3>
+                                    <span :class="['text-[9px] font-black px-2 py-0.5 rounded-lg border shrink-0', verificationClass(item.verification_status)]">
+                                        <i :class="['fa-solid mr-1', verificationIcon(item.verification_status)]"></i>
+                                        {{ verificationLabel(item.verification_status) }}
+                                    </span>
+                                </div>
 
                                 <p class="text-[11px] text-slate-400 line-clamp-1">{{ item.address }}</p>
 
@@ -396,7 +472,7 @@ const previewImage = (item) => {
                                     <i class="fa-solid fa-pen-to-square text-xs"></i>
                                 </Link>
 
-                                <button class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Hapus Unit">
+                                <button @click="openDeleteModal(item)" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition" title="Hapus Unit">
                                     <i class="fa-solid fa-trash-can text-xs"></i>
                                 </button>
                             </div>
@@ -468,7 +544,7 @@ const previewImage = (item) => {
                                                 <i class="fa-solid fa-pen-to-square"></i>
                                             </Link>
 
-                                            <button class="p-1.5 text-slate-400 hover:text-rose-500 transition" title="Hapus Unit">
+                                            <button @click="openDeleteModal(item)" class="p-1.5 text-slate-400 hover:text-rose-500 transition" title="Hapus Unit">
                                                 <i class="fa-solid fa-trash"></i>
                                             </button>
                                         </div>
@@ -488,8 +564,54 @@ const previewImage = (item) => {
                     <p class="text-xs text-slate-400 max-w-sm mx-auto">Coba ubah kata kunci pencarian atau sesuaikan filter status dan kategori kamu.</p>
                 </div>
 
+                <!-- PAGINATION -->
+                <div v-if="paginationLinks.length > 0" class="flex items-center justify-center gap-1 pt-2">
+                    <Link
+                        v-for="link in paginationLinks"
+                        :key="link.label"
+                        :href="link.url"
+                        v-html="link.label"
+                        :class="[
+                            'text-xs font-bold px-3 py-1.5 rounded-lg transition',
+                            link.active ? 'bg-[#0A2540] text-white' : 'text-slate-500 hover:bg-slate-100',
+                        ]"
+                    />
+                </div>
+
             </div>
         </main>
 
+        <!-- DELETE CONFIRMATION MODAL -->
+        <Teleport to="body">
+            <div v-if="deleteModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeDeleteModal"></div>
+                <div class="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-xl mx-4 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Hapus Properti?</h3>
+                            <p class="text-xs text-slate-400">Tindakan ini tidak dapat dibatalkan.</p>
+                        </div>
+                    </div>
+
+                    <div v-if="deletingProperty" class="bg-slate-50 rounded-xl p-3 text-xs space-y-1">
+                        <p class="font-bold text-slate-800">{{ deletingProperty.title }}</p>
+                        <p class="text-slate-400">{{ deletingProperty.type }} · {{ deletingProperty.city }}</p>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 justify-end">
+                        <button @click="closeDeleteModal" :disabled="deleting" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition">
+                            Batal
+                        </button>
+                        <button @click="confirmDelete" :disabled="deleting" class="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50">
+                            <i v-if="deleting" class="fa-solid fa-spinner animate-spin"></i>
+                            {{ deleting ? 'Menghapus...' : 'Ya, Hapus' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>
