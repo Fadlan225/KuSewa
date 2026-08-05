@@ -141,7 +141,7 @@ const checkEmail = async () => {
 };
 
 const sendOtp = async (isResend = true) => {
-    if (countdown.value > 0) return;
+    if (isResend && countdown.value > 0) return;
 
     clearError();
     const wasNotLoading = !loading.value;
@@ -285,7 +285,7 @@ const submitForgotPasswordEmail = async () => {
         error.value = 'Email wajib diisi.';
         return;
     }
-    
+
     loading.value = true;
     try {
         await sendOtp(false);
@@ -296,15 +296,17 @@ const submitForgotPasswordEmail = async () => {
     }
 };
 
-const startCreatePassword = async () => {
+const startCreatePassword = () => {
     purpose.value = 'create_password';
-    loading.value = true;
-    try {
-        await sendOtp();
-        step.value = 'otp';
-    } catch (err) {
-    } finally {
-        loading.value = false;
+    clearError();
+    step.value = 'forgot_password_email';
+};
+
+const goBackFromForgotEmail = () => {
+    if (purpose.value === 'create_password') {
+        step.value = 'create_password_choice';
+    } else {
+        step.value = 'password';
     }
 };
 
@@ -420,7 +422,7 @@ const handleGoogleLogin = () => {
 
             <!-- STEP: FORGOT PASSWORD EMAIL -->
             <div v-else-if="step === 'forgot_password_email'" class="animate-fade-in">
-                <button @click="step = 'password'" class="mb-4 text-[#6C757D] hover:text-[#0A2540] transition text-left">
+                <button type="button" @click="goBackFromForgotEmail" class="mb-4 text-[#6C757D] hover:text-[#0A2540] transition text-left">
                     <i class="fa-solid fa-arrow-left text-sm mr-1"></i> Kembali
                 </button>
                 <h3 class="text-xl font-extrabold mb-2">Lupa Password?</h3>
@@ -473,7 +475,7 @@ const handleGoogleLogin = () => {
                     </button>
                     <button
                         @click="startCreatePassword"
-                        class="w-full justify-center bg-gray-100 hover:bg-gray-200 text-[#0A2540] py-3 rounded-xl font-bold transition-all"
+                        class="w-full justify-center bg-primary hover:bg-primary/90 text-[#0A2540] py-3 rounded-xl font-bold transition-all"
                     >
                         Buat Password
                     </button>
@@ -499,7 +501,7 @@ const handleGoogleLogin = () => {
 
                 <p class="text-xs text-[#6C757D]">
                     Belum menerima email?
-                    <button v-if="countdown === 0" @click="sendOtp" class="font-bold text-[#FFC000] hover:text-amber-500" :disabled="loading">
+                    <button v-if="countdown === 0" @click="sendOtp(true)" class="font-bold text-[#FFC000] hover:text-amber-500" :disabled="loading">
                         Kirim Ulang
                     </button>
                     <span v-else class="font-bold text-gray-400 ml-1">
@@ -507,11 +509,12 @@ const handleGoogleLogin = () => {
                     </span>
                 </p>
 
-                <div class="mt-8">
-                     <button @click="step = 'email'" class="text-xs font-bold text-[#6C757D] hover:text-[#0A2540] underline">
+                <p class="text-xs text-[#6C757D] mt-2">
+                    Salah memasukkan email?
+                    <button type="button" @click="step = 'email'" class="text-[#0A2540] font-bold underline hover:text-gray-700">
                         Ganti Email
                     </button>
-                </div>
+                </p>
             </div>
 
             <!-- STEP: REGISTER (NAME & PASSWORD) -->
