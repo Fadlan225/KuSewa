@@ -42,6 +42,8 @@ class ProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone,
+                'date_of_birth' => $user->date_of_birth,
+                'gender' => $user->gender,
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
@@ -136,6 +138,8 @@ class ProfileController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? $user->phone,
+            'date_of_birth' => $validated['date_of_birth'] ?? $user->date_of_birth,
+            'gender' => $validated['gender'] ?? $user->gender,
         ]);
 
         if ($user->isDirty('email')) {

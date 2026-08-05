@@ -33,18 +33,20 @@ const closeModal = () => {
 </script>
 
 <template>
-    <section class="space-y-6">
-        <p class="text-sm text-gray-600">
-            Setelah akun Anda dihapus, semua sumber daya dan datanya akan dihapus secara permanen. Sebelum menghapus akun Anda, harap unduh data atau informasi apa pun yang ingin Anda simpan.
-        </p>
-
-        <button
-            type="button"
-            @click="confirmUserDeletion"
-            class="inline-flex items-center px-6 py-3 bg-red-600 border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-red-500 active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-        >
-            Hapus Akun
-        </button>
+    <section>
+        <div class="flex items-center justify-between p-4 sm:p-5 border border-gray-200/80 rounded-2xl shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] bg-white transition-all hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]">
+            <div class="pr-4">
+                <p class="text-[15px] font-bold text-[#1D1D1F]">Hapus Akun</p>
+                <p class="text-[13px] text-gray-500 mt-1 leading-relaxed">Setelah akun dihapus, kamu tidak akan bisa mengakses data-datanya untuk selamanya.</p>
+            </div>
+            <button
+                type="button"
+                @click="confirmUserDeletion"
+                class="px-4 py-2 text-sm font-bold text-[#FFC000] hover:text-[#e6ad00] active:scale-95 transition-all shrink-0"
+            >
+                Hapus
+            </button>
+        </div>
 
         <Teleport to="body" v-if="confirmingUserDeletion">
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">

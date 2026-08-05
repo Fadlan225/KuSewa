@@ -401,7 +401,7 @@ const requestLocationPermission = () => {
                         <button
                             type="button"
                             @click="submitCroppedImage"
-                            class="px-6 py-2.5 bg-[#0A2540] border border-transparent rounded-xl font-bold text-sm text-white hover:bg-[#0A2540]/90 focus:outline-none transition-colors"
+                            class="px-6 py-2.5 bg-primary border border-transparent rounded-xl font-bold text-sm text-white hover:bg-primary/90 focus:outline-none transition-colors"
                         >
                             Crop & Upload
                         </button>
