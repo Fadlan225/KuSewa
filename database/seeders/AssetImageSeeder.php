@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
+use Faker\Factory as Faker;
 
 class AssetImageSeeder extends Seeder
 {
@@ -14,107 +14,87 @@ class AssetImageSeeder extends Seeder
         DB::table('asset_images')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
+        $faker = Faker::create('id_ID');
         $imagePath = public_path('assets');
 
-        // ── Ambil semua galery_categories dikelompokkan per type_id & applies_to ──
         $galeryCategories = DB::table('galery_categories')->get();
-
         if ($galeryCategories->isEmpty()) {
             $this->command->error('Galery categories belum ada. Jalankan GaleryCategorySeeder dulu.');
             return;
         }
 
-        // Map: [type_id][applies_to] => Collection of category rows
         $catsByTypeAndScope = [];
         foreach ($galeryCategories as $cat) {
             $catsByTypeAndScope[$cat->asset_type_id][$cat->applies_to][] = $cat;
         }
 
-        // ── Ambil semua asset ──────────────────────────────────────────────────────
         $assets = DB::table('assets')
             ->join('asset_types', 'asset_types.id', '=', 'assets.asset_type_id')
             ->select('assets.id', 'assets.asset_type_id', 'asset_types.name as type_name', 'asset_types.allow_units')
             ->get();
 
-        // ── Ambil semua asset units ────────────────────────────────────────────────
         $unitsByAsset = DB::table('asset_units')
             ->select('id', 'asset_id')
             ->get()
             ->groupBy('asset_id');
 
-        $batch       = [];
-        $batchLimit  = 500;
+        $batch = [];
         $totalImages = 0;
 
         foreach ($assets as $asset) {
+            $typeId = $asset->asset_type_id;
             $folder = $asset->type_name;
             $files  = glob($imagePath . '/' . $folder . '/*') ?: [];
-
+            
             $imagesPool = collect($files)->shuffle()->values();
             $poolSize   = $imagesPool->count();
-
-            if ($poolSize === 0) {
-                continue;
-            }
-
-            $typeId = $asset->asset_type_id;
-
-            // ── 1. Gambar untuk ASSET utama (applies_to = 'asset') ──
+            
+            // 1. Gambar untuk ASSET (5-10 gambar per asset)
             $assetCats = $catsByTypeAndScope[$typeId]['asset'] ?? [];
-
             if (!empty($assetCats)) {
-                foreach ($assetCats as $idx => $cat) {
-                    // Ambil 2-3 foto per kategori (dummy)
-                    $count = rand(2, 3);
-                    for ($i = 0; $i < $count; $i++) {
-                        $file = $imagesPool[($idx * $count + $i) % $poolSize];
-                        $batch[] = [
-                            'asset_id'           => $asset->id,
-                            'asset_unit_id'      => null,
-                            'gallery_category_id' => $cat->id,
-                            'image'              => 'assets/' . $folder . '/' . basename($file),
-                            'created_at'         => now(),
-                            'updated_at'         => now(),
-                        ];
-                        $totalImages++;
+                $numAssetImages = $faker->numberBetween(5, 10);
+                for ($i = 0; $i < $numAssetImages; $i++) {
+                    $cat = $faker->randomElement($assetCats);
+                    $imageStr = 'assets/' . $folder . '/placeholder.jpg';
+                    if ($poolSize > 0) {
+                        $imageStr = 'assets/' . $folder . '/' . basename($imagesPool[$i % $poolSize]);
                     }
-                }
-            } else {
-                // Fallback: type ini tidak punya kategori 'asset', pakai default semua foto
-                foreach ($imagesPool->take(6) as $idx => $file) {
-                    $fallbackCat = collect($catsByTypeAndScope[$typeId]['unit'] ?? [])->first();
-                    if (!$fallbackCat) continue;
-
+                    
                     $batch[] = [
-                        'asset_id'           => $asset->id,
-                        'asset_unit_id'      => null,
-                        'gallery_category_id' => $fallbackCat->id,
-                        'image'              => 'assets/' . $folder . '/' . basename($file),
-                        'created_at'         => now(),
-                        'updated_at'         => now(),
+                        'asset_id' => $asset->id,
+                        'asset_unit_id' => null,
+                        'gallery_category_id' => $cat->id,
+                        'image' => $imageStr,
+                        'created_at' => now(),
+                        'updated_at' => now(),
                     ];
                     $totalImages++;
                 }
             }
 
-            // ── 2. Gambar untuk UNIT (applies_to = 'unit') ──
+            // 2. Gambar untuk UNIT (3-6 gambar per unit)
             if ($asset->allow_units) {
                 $unitCats = $catsByTypeAndScope[$typeId]['unit'] ?? [];
-                $units    = $unitsByAsset->get($asset->id, collect());
-
+                $units = $unitsByAsset->get($asset->id, collect());
+                
                 foreach ($units as $unit) {
-                    foreach ($unitCats as $idx => $cat) {
-                        // 1-2 foto per kategori unit
-                        $count = rand(1, 2);
-                        for ($i = 0; $i < $count; $i++) {
-                            $file = $imagesPool[($idx * $count + $i) % $poolSize];
+                    if (!empty($unitCats)) {
+                        $numUnitImages = $faker->numberBetween(3, 6);
+                        for ($i = 0; $i < $numUnitImages; $i++) {
+                            $cat = $faker->randomElement($unitCats);
+                            $imageStr = 'assets/' . $folder . '/placeholder.jpg';
+                            if ($poolSize > 0) {
+                                // Randomize index for units so they don't look identically sorted
+                                $imageStr = 'assets/' . $folder . '/' . basename($imagesPool[rand(0, $poolSize - 1)]);
+                            }
+                            
                             $batch[] = [
-                                'asset_id'           => null,
-                                'asset_unit_id'      => $unit->id,
+                                'asset_id' => null,
+                                'asset_unit_id' => $unit->id,
                                 'gallery_category_id' => $cat->id,
-                                'image'              => 'assets/' . $folder . '/' . basename($file),
-                                'created_at'         => now(),
-                                'updated_at'         => now(),
+                                'image' => $imageStr,
+                                'created_at' => now(),
+                                'updated_at' => now(),
                             ];
                             $totalImages++;
                         }
@@ -122,18 +102,16 @@ class AssetImageSeeder extends Seeder
                 }
             }
 
-            // Flush batch tiap 500 rows agar tidak habis memory
-            if (count($batch) >= $batchLimit) {
+            if (count($batch) >= 1000) {
                 DB::table('asset_images')->insert($batch);
                 $batch = [];
             }
         }
 
-        // Flush sisa
         if (!empty($batch)) {
             DB::table('asset_images')->insert($batch);
         }
 
-        $this->command->info("✓ {$totalImages} gambar aset berhasil dibuat dengan kategori galeri!");
+        $this->command->info("✓ {$totalImages} Asset Images berhasil dibuat!");
     }
 }
