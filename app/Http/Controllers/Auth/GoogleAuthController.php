@@ -88,9 +88,21 @@ class GoogleAuthController extends Controller
         $user = User::where('email', $googleUser->getEmail())->first();
 
         if ($user) {
-            // Prevent auto-linking for security if the account wasn't linked yet.
-            // Ask them to login normally and link manually.
-            return redirect()->route('Home')->with('error', 'Email ini sudah terdaftar. Silakan login menggunakan password, lalu tautkan akun Google di menu Profil.');
+            // Auto-link the Google account since the emails match
+            auth_provider::create([
+                'user_id' => $user->id,
+                'provider' => 'google',
+                'provider_user_id' => $googleUser->getId(),
+            ]);
+
+            $updateData = ['last_login_at' => Carbon::now()];
+            if (is_null($user->email_verified_at)) {
+                $updateData['email_verified_at'] = Carbon::now();
+            }
+            $user->update($updateData);
+
+            Auth::login($user);
+            return redirect()->intended(route('Home', absolute: false));
         }
 
         $avatarPath = null;
