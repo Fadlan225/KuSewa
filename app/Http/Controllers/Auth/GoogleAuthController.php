@@ -81,7 +81,7 @@ class GoogleAuthController extends Controller
             $user->update($updateData);
 
             Auth::login($user);
-            return redirect()->intended(route('Home', absolute: false));
+            return redirect()->intended(route('Home', absolute: false))->with('success', 'Login Berhasil via Google!');
         }
 
         // Provider doesn't exist, check if email exists
@@ -102,7 +102,7 @@ class GoogleAuthController extends Controller
             $user->update($updateData);
 
             Auth::login($user);
-            return redirect()->intended(route('Home', absolute: false));
+            return redirect()->intended(route('Home', absolute: false))->with('success', 'Login Berhasil via Google!');
         }
 
         $avatarPath = null;
@@ -139,7 +139,7 @@ class GoogleAuthController extends Controller
 
         Auth::login($newUser);
 
-        return redirect()->intended(route('Home', absolute: false));
+        return redirect()->intended(route('Home', absolute: false))->with('success', 'Pendaftaran Berhasil via Google!');
     }
 
     /**

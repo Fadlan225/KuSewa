@@ -1,19 +1,14 @@
 <script setup>
-import { ref, watch } from 'vue';
+import { useAuthModalStore } from '@/Stores/AuthModalStore';
 import BottomSheet from '@/Components/UI/BottomSheet.vue';
 import AuthFlow from './AuthFlow.vue';
+import { storeToRefs } from 'pinia';
 
-const props = defineProps({
-    modelValue: {
-        type: Boolean,
-        required: true
-    }
-});
-
-const emit = defineEmits(['update:modelValue']);
+const authModalStore = useAuthModalStore();
+const { isOpen } = storeToRefs(authModalStore);
 
 const close = () => {
-    emit('update:modelValue', false);
+    authModalStore.close();
 };
 </script>
 
@@ -22,12 +17,12 @@ const close = () => {
         <!-- MOBILE: Bottom Sheet -->
         <div class="md:hidden">
             <BottomSheet 
-                :modelValue="modelValue" 
-                @update:modelValue="val => emit('update:modelValue', val)"
+                :modelValue="isOpen" 
+                @update:modelValue="val => !val && close()"
                 title="Masuk atau Daftar"
                 heightClass="h-[85vh]"
             >
-                <AuthFlow @close="close" />
+                <AuthFlow />
             </BottomSheet>
         </div>
 
@@ -40,7 +35,7 @@ const close = () => {
             leave-from-class="opacity-100 scale-100"
             leave-to-class="opacity-0 scale-95"
         >
-            <div v-if="modelValue" class="hidden md:flex fixed inset-0 z-[100] items-center justify-center p-4">
+            <div v-if="isOpen" class="hidden md:flex fixed inset-0 z-[100] items-center justify-center p-4">
                 <!-- Overlay -->
                 <div @click="close" class="absolute inset-0 bg-black/60 transition-opacity"></div>
                 
@@ -60,7 +55,7 @@ const close = () => {
 
                     <!-- Body -->
                     <div class="flex-1 overflow-y-auto">
-                        <AuthFlow @close="close" />
+                        <AuthFlow />
                     </div>
                 </div>
             </div>

@@ -7,9 +7,13 @@ import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
 
-const emit = defineEmits(['close']);
-
 import { inject, watch } from 'vue';
+import { useAuthFeedbackStore } from '@/Stores/AuthFeedbackStore';
+import { useAuthModalStore } from '@/Stores/AuthModalStore';
+
+const authFeedbackStore = useAuthFeedbackStore();
+const authModalStore = useAuthModalStore();
+
 const initialAuthStep = inject('initialAuthStep', { value: null });
 const initialAuthData = inject('initialAuthData', { value: {} });
 
@@ -201,9 +205,17 @@ const login = async () => {
             remember: true
         });
 
-        router.reload({ preserveScroll: true, onSuccess: () => emit('close') });
+        await authFeedbackStore.showSuccess({
+            title: 'Login Berhasil!',
+            message: 'Selamat datang kembali. Senang bisa bertemu denganmu lagi.'
+        });
+        authModalStore.close();
+        router.reload({ preserveScroll: true });
     } catch (err) {
-        error.value = err.response?.data?.message || 'Password salah.';
+        authFeedbackStore.showError({
+            title: 'Login Gagal',
+            message: err.response?.data?.message || 'Email atau password yang Anda masukkan tidak sesuai.'
+        });
     } finally {
         loading.value = false;
     }
@@ -236,9 +248,17 @@ const finishRegistration = async (skip = false) => {
             gender: skip ? null : form.value.gender
         });
 
-        router.reload({ preserveScroll: true, onSuccess: () => emit('close') });
+        await authFeedbackStore.showSuccess({
+            title: 'Pendaftaran Berhasil!',
+            message: 'Selamat datang! Akun Anda telah berhasil dibuat.'
+        });
+        authModalStore.close();
+        router.reload({ preserveScroll: true });
     } catch (err) {
-        error.value = err.response?.data?.message || 'Terjadi kesalahan.';
+        authFeedbackStore.showError({
+            title: 'Pendaftaran Gagal',
+            message: err.response?.data?.message || 'Terjadi kesalahan saat mendaftar.'
+        });
     } finally {
         loading.value = false;
     }
@@ -265,9 +285,17 @@ const submitResetPassword = async () => {
             purpose: purpose.value
         });
 
-        router.reload({ preserveScroll: true, onSuccess: () => emit('close') });
+        await authFeedbackStore.showSuccess({
+            title: 'Password Berhasil Diubah!',
+            message: 'Silakan masuk kembali menggunakan password baru Anda.'
+        });
+        authModalStore.close();
+        router.reload({ preserveScroll: true });
     } catch (err) {
-        error.value = err.response?.data?.message || 'Terjadi kesalahan.';
+        authFeedbackStore.showError({
+            title: 'Gagal Mengubah Password',
+            message: err.response?.data?.message || 'Terjadi kesalahan saat mengubah password.'
+        });
     } finally {
         loading.value = false;
     }
@@ -365,14 +393,13 @@ const handleGoogleLogin = () => {
                         <div class="flex-grow border-t border-[#6C757D]/20"></div>
                     </div>
 
-                    <button
-                        @click="handleGoogleLogin"
-                        type="button"
+                    <a
+                        :href="route('auth.google.redirect')"
                         class="w-full flex items-center justify-center gap-3 bg-white border border-[#6C757D]/30 hover:bg-gray-50 text-[#0A2540] py-3 rounded-xl font-bold shadow-sm transition-all"
                     >
                         <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google" />
                         Lanjutkan dengan Google
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -473,13 +500,13 @@ const handleGoogleLogin = () => {
                 <p class="text-sm text-[#6C757D] mb-6">Akun Anda terkait dengan Google. Anda bisa langsung masuk atau membuat password terpisah.</p>
 
                 <div class="space-y-3">
-                    <button
-                        @click="handleGoogleLogin"
+                    <a
+                        :href="route('auth.google.redirect')"
                         class="w-full flex items-center justify-center gap-3 bg-white border border-[#6C757D]/30 hover:bg-gray-50 text-[#0A2540] py-3 rounded-xl font-bold shadow-sm transition-all"
                     >
                         <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google" />
                         Masuk dengan Google
-                    </button>
+                    </a>
                     <button
                         @click="startCreatePassword"
                         class="w-full justify-center bg-primary hover:bg-primary/90 text-[#0A2540] py-3 rounded-xl font-bold transition-all"

@@ -8,6 +8,10 @@ import Bottombar from '@/Components/Bottombar.vue';
 import GlobalLoading from "@/Components/GlobalLoading.vue";
 import FloatingChat from '@/Components/UI/FloatingChat.vue';
 import AuthModal from '@/Components/Auth/AuthModal.vue';
+import AuthFeedbackModal from '@/Components/Auth/AuthFeedbackModal.vue';
+import { useAuthModalStore } from '@/Stores/AuthModalStore';
+import { useAuthFeedbackStore } from '@/Stores/AuthFeedbackStore';
+import { storeToRefs } from 'pinia';
 
 defineProps({
     transparentNavbar: {
@@ -24,29 +28,36 @@ defineProps({
     }
 });
 
-// Global Auth Modal State
-const isAuthModalOpen = ref(false);
-const initialAuthStep = ref(null);
-const initialAuthData = ref({});
+// Global Auth Modal State via Pinia
+const authModalStore = useAuthModalStore();
+const { isOpen: isAuthModalOpen, initialStep: initialAuthStep, initialData: initialAuthData } = storeToRefs(authModalStore);
 
-provide('openAuthModal', () => {
-    isAuthModalOpen.value = true;
+// Keep provide for backward compatibility with components using inject
+provide('openAuthModal', (step = null, data = {}) => {
+    authModalStore.open(step, data);
 });
-
 provide('initialAuthStep', initialAuthStep);
 provide('initialAuthData', initialAuthData);
 
 import { onMounted, watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
-watch(isAuthModalOpen, (newVal) => {
-    if (!newVal) {
-        // Modal closed, reset the initial state so next time it opens it starts fresh
-        setTimeout(() => {
-            initialAuthStep.value = null;
-            initialAuthData.value = {};
-        }, 300); // Wait for transition to finish
+const page = usePage();
+const authFeedbackStore = useAuthFeedbackStore();
+
+watch(() => page.props.flash, (flash) => {
+    if (flash?.success) {
+        authFeedbackStore.showSuccess({
+            title: 'Berhasil',
+            message: flash.success
+        });
+    } else if (flash?.error) {
+        authFeedbackStore.showError({
+            title: 'Gagal',
+            message: flash.error
+        });
     }
-});
+}, { deep: true, immediate: true });
 
 onMounted(() => {
     const params = new URLSearchParams(window.location.search);
@@ -63,12 +74,12 @@ onMounted(() => {
             };
             
             if (pPurpose === 'register') {
-                initialAuthStep.value = 'register_password';
+                authModalStore.open('register_password', initialAuthData.value);
             } else if (pPurpose === 'forgot_password' || pPurpose === 'create_password') {
-                initialAuthStep.value = 'reset_password';
+                authModalStore.open('reset_password', initialAuthData.value);
+            } else {
+                authModalStore.open(null, initialAuthData.value);
             }
-            
-            isAuthModalOpen.value = true;
             
             // Hapus parameter URL agar tidak terus memicu modal jika di-refresh
             window.history.replaceState({}, '', window.location.pathname);
@@ -92,7 +103,8 @@ onMounted(() => {
 
         <FloatingChat />
 
-        <AuthModal v-model="isAuthModalOpen" />
+        <AuthModal v-model="isAuthModalOpen" @update:modelValue="(val) => !val && authModalStore.close()" />
+        <AuthFeedbackModal />
 
         <!-- <Footer /> -->
     </div>

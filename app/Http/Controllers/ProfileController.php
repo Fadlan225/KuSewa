@@ -207,10 +207,20 @@ class ProfileController extends Controller
     public function destroy(Request $request): RedirectResponse
     {
         $request->validate([
-            'password' => ['required', 'current_password'],
+            'verified_token' => ['required', 'string'],
         ]);
 
         $user = $request->user();
+
+        // Check if verified_token matches an OTP sent to this user for deletion
+        $tokenRecord = \App\Models\login_token::where('magic_token', $request->verified_token)
+            ->where('email', $user->email)
+            ->where('purpose', 'delete_account')
+            ->first();
+
+        if (!$tokenRecord) {
+            return back()->withErrors(['verified_token' => 'Token verifikasi tidak valid atau sudah digunakan.']);
+        }
 
         Auth::logout();
 
@@ -219,6 +229,6 @@ class ProfileController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return Redirect::to('/');
+        return Redirect::to('/')->with('success', 'Akun Anda berhasil dihapus.');
     }
 }

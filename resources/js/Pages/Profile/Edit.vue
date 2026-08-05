@@ -145,9 +145,12 @@ const settingsMenuItems = [
 ];
 
 const helpMenuItems = [
-    { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: '#' },
-    { label: 'Pelayanan Pelanggan', icon: 'fa-solid fa-headset', route: '#' },
+    { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: route('bantuan') },
+    { label: 'Pelayanan Pelanggan', icon: 'fa-solid fa-headset', route: route('hubungi-kami') },
+    { label: 'Keluar', icon: 'fa-solid fa-arrow-right-from-bracket text-red-500', action: 'logout' },
 ];
+
+const showLogoutModal = ref(false);
 
 const locationDenied = ref(false);
 import { onMounted } from 'vue';
@@ -217,19 +220,6 @@ const requestLocationPermission = () => {
                     <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0A2540] leading-tight pr-0 md:pr-20">
                         {{ user.name }}
                     </h1>
-
-                    <!-- Detail Kontak dan Keanggotaan -->
-                    <div class="mt-2 flex flex-col sm:flex-row items-center justify-center md:justify-start sm:space-x-3 space-y-1 sm:space-y-0 text-sm text-[#466080]">
-                        <span class="flex items-center text-[#000000]">
-                            <i class="fa-regular fa-envelope mr-2 text-[#6C757D]"></i>
-                            {{ user.email }}
-                        </span>
-                        <span class="hidden sm:inline text-gray-300">|</span>
-                        <span class="flex items-center text-[#000000]">
-                            <i class="fa-solid fa-phone mr-2 text-[#6C757D]"></i>
-                            {{ user.phone }}
-                        </span>
-                    </div>
 
                     <!-- Badge status keanggotaan -->
                     <div class="flex justify-center md:justify-start mt-4">
@@ -365,18 +355,30 @@ const requestLocationPermission = () => {
                     <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Bantuan & Lainnya</h3>
                     <div class="border-t border-[#F8F9FA] mb-2"></div>
 
-                    <Link
-                        v-for="(item, index) in helpMenuItems"
-                        :key="index"
-                        :href="item.route"
-                        class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group"
-                    >
-                        <div class="flex items-center space-x-4">
-                            <i :class="[item.icon, 'text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors']"></i>
-                            <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">{{ item.label }}</span>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200"></i>
-                    </Link>
+                    <template v-for="(item, index) in helpMenuItems" :key="index">
+                        <button
+                            v-if="item.action === 'logout'"
+                            @click="showLogoutModal = true"
+                            class="w-full flex items-center justify-between py-3 border-b border-gray-50 hover:bg-red-50 px-3 rounded-xl transition-colors duration-150 group"
+                        >
+                            <div class="flex items-center space-x-4">
+                                <i :class="[item.icon, 'text-lg text-[#6C757D] group-hover:text-red-500 w-6 text-center transition-colors']"></i>
+                                <span class="text-sm sm:text-base font-semibold text-red-500 group-hover:text-red-600 transition-colors">{{ item.label }}</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-sm text-red-500 group-hover:text-red-600 transition-all duration-200 group-hover:translate-x-1"></i>
+                        </button>
+                        <Link
+                            v-else
+                            :href="item.route"
+                            class="w-full flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group"
+                        >
+                            <div class="flex items-center space-x-4">
+                                <i :class="[item.icon, 'text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors']"></i>
+                                <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">{{ item.label }}</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:text-[#FFC000] transition-all duration-200 group-hover:translate-x-1"></i>
+                        </Link>
+                    </template>
                 </div>
             </div>
         </div>
@@ -404,6 +406,38 @@ const requestLocationPermission = () => {
                             class="px-6 py-2.5 bg-primary border border-transparent rounded-xl font-bold text-sm text-white hover:bg-primary/90 focus:outline-none transition-colors"
                         >
                             Crop & Upload
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- Logout Modal -->
+        <Teleport to="body" v-if="showLogoutModal">
+            <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
+                <div class="bg-white rounded-2xl max-w-sm w-full p-6 sm:p-8 shadow-xl transform transition-all duration-300 text-center">
+                    <h2 class="text-xl font-bold text-gray-900">Yakin ingin keluar dari akun?</h2>
+                    <p class="mt-2 text-sm text-gray-600">
+                        Kamu tetap bisa menjelajahi KuSewa, tetapi perlu login kembali untuk melakukan booking atau mengelola aset.
+                    </p>
+
+                    <div class="mt-8 flex flex-col gap-3">
+                        <Link
+                            :href="route('logout')"
+                            method="post"
+                            as="button"
+                            @click="showLogoutModal = false"
+                            class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-sm text-white uppercase tracking-widest hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        >
+                            Ya, Keluar
+                        </Link>
+
+                        <button
+                            type="button"
+                            @click="showLogoutModal = false"
+                            class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
+                        >
+                            Tidak
                         </button>
                     </div>
                 </div>

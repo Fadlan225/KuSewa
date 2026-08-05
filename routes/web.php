@@ -33,11 +33,11 @@ Route::middleware('auth')->group(function () {
 Route::resource('assets', AssetController::class)->only(['show']);
 
 Route::get('/bantuan', function () {
-    return Inertia::render('Home/Bantuan/PusatBantuan');
+    return Inertia::render('Home/Support/PusatBantuan');
 })->name('bantuan');
 
 Route::get('/hubungi-kami', function () {
-    return Inertia::render('Home/Bantuan/HubungiKami');
+    return Inertia::render('Home/Support/HubungiKami');
 })->name('hubungi-kami');
 
 Route::middleware(['auth', 'role:owner'])->group(function () {

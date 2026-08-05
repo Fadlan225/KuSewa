@@ -186,8 +186,13 @@ const showUnlinkGoogleModal = ref(false);
 
             <!-- Keamanan Section -->
             <div class="p-5 sm:p-6 border border-gray-200/80 rounded-2xl shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] bg-white transition-all hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]">
-                <h3 class="text-lg font-bold text-[#1D1D1F] mb-4">Keamanan</h3>
+                <h3 class="text-lg font-bold text-[#1D1D1F] mb-4">Password & Keamanan</h3>
                 <UpdatePasswordForm />
+            </div>
+
+            <!-- Hapus Akun Section -->
+            <div class="py-2">
+                <DeleteUserForm />
             </div>
 
             <!-- Akun Tertaut Section -->
@@ -196,7 +201,7 @@ const showUnlinkGoogleModal = ref(false);
                     <h3 class="text-lg font-bold text-[#1D1D1F]">Akun yang Terhubung</h3>
                     <p class="text-[13px] text-gray-500 mt-1">Masuk lebih mudah dengan menghubungkan akun sosial Anda ke KuSewa.</p>
                 </div>
-                
+
                 <div class="border-t border-gray-100 pt-4 flex items-center justify-between">
                     <div class="flex items-center space-x-4">
                         <!-- Original Google Icon SVG -->
@@ -211,7 +216,7 @@ const showUnlinkGoogleModal = ref(false);
                             <i v-if="user.is_google_linked" class="fa-solid fa-circle-check text-[#00B14F] text-sm"></i>
                         </div>
                     </div>
-                    
+
                     <button type="button" v-if="!user.is_google_linked" @click.prevent="linkGoogle" class="text-[15px] font-bold text-[#0066FF] hover:text-blue-700 transition-colors">
                         Hubungkan
                     </button>
@@ -219,22 +224,6 @@ const showUnlinkGoogleModal = ref(false);
                         Putuskan
                     </button>
                 </div>
-            </div>
-
-            <!-- Hapus Akun Section -->
-            <div class="py-2">
-                <DeleteUserForm />
-            </div>
-
-            <!-- Logout Button -->
-            <div class="pt-6 flex justify-center">
-                <button
-                    @click="showLogoutModal = true"
-                    class="flex items-center space-x-2 text-red-600 font-bold hover:text-red-700 bg-white border border-red-100 shadow-xs px-6 py-3 rounded-full hover:bg-red-50 transition-colors"
-                >
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                    <span>Keluar dari Akun</span>
-                </button>
             </div>
         </main>
 
@@ -260,41 +249,6 @@ const showUnlinkGoogleModal = ref(false);
                         <button
                             @click="showUnlinkGoogleModal = false"
                             class="w-full flex justify-center py-3 px-4 border-2 border-gray-200 rounded-xl shadow-sm text-sm font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-colors"
-                        >
-                            Batal
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </Teleport>
-
-        <!-- Logout Modal -->
-        <Teleport to="body" v-if="showLogoutModal">
-            <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-                <div class="bg-white rounded-2xl max-w-sm w-full p-6 sm:p-8 shadow-xl transform transition-all duration-300 text-center">
-                    <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-arrow-right-from-bracket text-2xl text-red-600"></i>
-                    </div>
-                    <h2 class="text-xl font-bold text-gray-900">Konfirmasi Keluar</h2>
-                    <p class="mt-2 text-sm text-gray-600">
-                        Apakah Anda yakin ingin keluar dari akun ini? Anda harus masuk kembali untuk menggunakan aplikasi.
-                    </p>
-
-                    <div class="mt-8 flex flex-col gap-3">
-                        <Link
-                            :href="route('logout')"
-                            method="post"
-                            as="button"
-                            @click="showLogoutModal = false"
-                            class="w-full inline-flex items-center justify-center px-6 py-3 bg-red-600 border border-transparent rounded-xl font-bold text-sm text-white uppercase tracking-widest hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                        >
-                            Ya, Keluar
-                        </Link>
-
-                        <button
-                            type="button"
-                            @click="showLogoutModal = false"
-                            class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
                         >
                             Batal
                         </button>

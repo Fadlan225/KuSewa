@@ -110,6 +110,7 @@ const resetForm = () => {
                         v-model="form.phone"
                         autocomplete="tel"
                     />
+                    <p class="mt-1.5 text-[13px] text-gray-500">Lengkapi nomor ponsel untuk dapat memulai booking.</p>
                     <p v-show="form.errors.phone" class="mt-1 text-sm text-red-600">{{ form.errors.phone }}</p>
                 </div>
 

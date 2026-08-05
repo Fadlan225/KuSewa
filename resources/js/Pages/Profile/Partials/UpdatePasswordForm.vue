@@ -86,7 +86,7 @@ const updatePassword = () => {
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="inline-flex items-center px-6 py-3 bg-[#0A2540] border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-[#0f3459] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
+                    class="inline-flex items-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-[#0f3459] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
                 >
                     Simpan Kata Sandi
                 </button>

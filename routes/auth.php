@@ -62,14 +62,19 @@ Route::middleware('auth')->group(function () {
 });
 
 // --- NEW AUTH FLOW API ENDPOINTS ---
-Route::prefix('auth-flow')->middleware('guest')->group(function () {
-    Route::post('check-email', [\App\Http\Controllers\Auth\AuthFlowController::class, 'checkEmail']);
+Route::prefix('auth-flow')->group(function () {
+    // Endpoints for both guest and authenticated users
     Route::post('send-otp', [\App\Http\Controllers\Auth\AuthFlowController::class, 'sendOtp']);
     Route::post('verify-otp', [\App\Http\Controllers\Auth\AuthFlowController::class, 'verifyOtp']);
-    Route::get('verify-magic-link', [\App\Http\Controllers\Auth\AuthFlowController::class, 'verifyMagicLink'])->name('auth.magic_link.verify');
-    Route::post('register', [\App\Http\Controllers\Auth\AuthFlowController::class, 'register']);
-    Route::post('login', [\App\Http\Controllers\Auth\AuthFlowController::class, 'login']);
-    Route::post('reset-password', [\App\Http\Controllers\Auth\AuthFlowController::class, 'resetPassword']);
+    
+    // Endpoints strictly for guests
+    Route::middleware('guest')->group(function () {
+        Route::post('check-email', [\App\Http\Controllers\Auth\AuthFlowController::class, 'checkEmail']);
+        Route::get('verify-magic-link', [\App\Http\Controllers\Auth\AuthFlowController::class, 'verifyMagicLink'])->name('auth.magic_link.verify');
+        Route::post('register', [\App\Http\Controllers\Auth\AuthFlowController::class, 'register']);
+        Route::post('login', [\App\Http\Controllers\Auth\AuthFlowController::class, 'login']);
+        Route::post('reset-password', [\App\Http\Controllers\Auth\AuthFlowController::class, 'resetPassword']);
+    });
 });
 
 // --- GOOGLE SOCIALITE ROUTES ---

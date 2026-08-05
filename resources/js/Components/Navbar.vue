@@ -333,7 +333,7 @@ const initials = computed(() => {
                             class="absolute -bottom-2 left-0 w-full h-[2.5px] bg-[#FFC000] rounded-full"
                         ></span>
                         Kotak Masuk
-                        
+
                         <!-- Notification Badge -->
                         <span v-if="page.props.auth.unreadCount > 0" class="flex items-center justify-center bg-red-500 text-white text-[10px] font-bold px-1.5 min-w-[18px] h-[18px] rounded-full">
                             {{ page.props.auth.unreadCount > 99 ? '99+' : page.props.auth.unreadCount }}
@@ -705,10 +705,17 @@ const initials = computed(() => {
                                     class="absolute top-[130%] right-0 w-[320px] sm:w-[340px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 origin-top-right text-[#0A2540]"
                                 >
                                     <!-- 1. Pusat Bantuan -->
-                                    <div class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
+                                    <Link :href="route('bantuan')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
                                         <i class="fa-regular fa-circle-question text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
                                         <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pusat Bantuan</span>
-                                    </div>
+                                    </Link>
+
+                                    <div class="h-px bg-gray-100 my-2"></div>
+
+                                    <Link :href="route('hubungi-kami')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
+                                        <i class="fa-solid fa-headset text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
+                                        <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pelayanan Pelanggan</span>
+                                    </Link>
 
                                     <div class="h-px bg-gray-100 my-2"></div>
 
