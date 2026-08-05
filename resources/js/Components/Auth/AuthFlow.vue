@@ -425,8 +425,15 @@ const handleGoogleLogin = () => {
                 <button type="button" @click="goBackFromForgotEmail" class="mb-4 text-[#6C757D] hover:text-[#0A2540] transition text-left">
                     <i class="fa-solid fa-arrow-left text-sm mr-1"></i> Kembali
                 </button>
-                <h3 class="text-xl font-extrabold mb-2">Lupa Password?</h3>
-                <p class="text-sm text-[#6C757D] mb-6">Jangan khawatir! Pastikan email di bawah ini benar dan kami akan mengirimkan kode OTP untuk mereset password Anda.</p>
+                <h3 class="text-xl font-extrabold mb-2">
+                    {{ purpose === 'create_password' ? 'Buat Password Baru' : 'Lupa Password?' }}
+                </h3>
+                <p class="text-sm text-[#6C757D] mb-6">
+                    {{ purpose === 'create_password' 
+                        ? 'Pastikan email di bawah ini benar dan kami akan mengirimkan kode OTP untuk memverifikasi pembuatan password Anda.'
+                        : 'Jangan khawatir! Pastikan email di bawah ini benar dan kami akan mengirimkan kode OTP untuk mereset password Anda.' 
+                    }}
+                </p>
 
                 <div class="space-y-4">
                     <div>
