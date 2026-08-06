@@ -37,10 +37,10 @@
           :key="option.code"
           @click="selectOption(option)"
           class="px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between"
-          :class="{'bg-[#FFF9E6] text-[#FFC000] font-medium': modelValue === option.code, 'text-[#0A2540]': modelValue !== option.code}"
+          :class="{'bg-[#FFF9E6] text-[#FFC000] font-medium': modelValue == option.code, 'text-[#0A2540]': modelValue != option.code}"
         >
           {{ option.name }}
-          <i v-if="modelValue === option.code" class="fa-solid fa-check text-[#FFC000] text-xs"></i>
+          <i v-if="modelValue == option.code" class="fa-solid fa-check text-[#FFC000] text-xs"></i>
         </li>
       </ul>
     </div>
@@ -114,7 +114,7 @@ const displayValue = computed(() => {
   }
   
   if (props.modelValue && options.value.length > 0) {
-    const selected = options.value.find(opt => opt.code === props.modelValue);
+    const selected = options.value.find(opt => opt.code == props.modelValue);
     return selected ? selected.name : '';
   }
   

@@ -139,10 +139,10 @@ class ProfileController extends Controller
         $user->fill([
             'name' => $validated['name'],
             'email' => $validated['email'],
-            'phone' => $validated['phone'] ?? $user->phone,
-            'date_of_birth' => $validated['date_of_birth'] ?? $user->date_of_birth,
-            'place_of_birth_code' => $validated['place_of_birth_code'] ?? $user->place_of_birth_code,
-            'gender' => $validated['gender'] ?? $user->gender,
+            'phone' => array_key_exists('phone', $validated) ? $validated['phone'] : $user->phone,
+            'date_of_birth' => array_key_exists('date_of_birth', $validated) ? $validated['date_of_birth'] : $user->date_of_birth,
+            'place_of_birth_code' => array_key_exists('place_of_birth_code', $validated) ? $validated['place_of_birth_code'] : $user->place_of_birth_code,
+            'gender' => array_key_exists('gender', $validated) ? $validated['gender'] : $user->gender,
         ]);
 
         if ($user->isDirty('email')) {

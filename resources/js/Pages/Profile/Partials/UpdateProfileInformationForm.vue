@@ -44,6 +44,9 @@ const form = useForm({
 });
 
 onMounted(() => {
+    console.log("Auth User:", user);
+    console.log("Place of birth code:", user.place_of_birth_code);
+    
     if (user.date_of_birth) {
         const parts = user.date_of_birth.split('-');
         if (parts.length === 3) {
