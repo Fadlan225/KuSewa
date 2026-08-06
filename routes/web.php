@@ -40,6 +40,10 @@ Route::get('/hubungi-kami', function () {
     return Inertia::render('Home/Support/HubungiKami');
 })->name('hubungi-kami');
 
+Route::get('/mulai-sewakan', function () {
+    return Inertia::render('Home/MulaiSewakan');
+});
+
 Route::middleware(['auth', 'role:owner'])->group(function () {
 
 });

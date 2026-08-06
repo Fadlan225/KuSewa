@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             // ── Infrastructure ─────────────────────────────────────────────
+            WilayahSeeder::class,           // Master data wilayah (Provinsi, Kota, Kecamatan, Desa)
             ServiceFeeSeeder::class,        // Service fee config
             AssetCategorySeeder::class,     // 5 kategori
             AssetTypeSeeder::class,         // 22 tipe aset
