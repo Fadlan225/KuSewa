@@ -25,7 +25,10 @@ Route::get('/search/suggest', [HomeController::class, 'suggest'])->name('search.
 Route::get('/api/home/nearby-assets', [HomeAssetController::class, 'nearby'])->name('api.home.nearby-assets');
 
 // API for Locations
+Route::get('/api/provinces', [\App\Http\Controllers\LocationController::class, 'getProvinces'])->name('api.provinces.index');
 Route::get('/api/cities', [\App\Http\Controllers\LocationController::class, 'getCities'])->name('api.cities.index');
+Route::get('/api/districts', [\App\Http\Controllers\LocationController::class, 'getDistricts'])->name('api.districts.index');
+Route::get('/api/villages', [\App\Http\Controllers\LocationController::class, 'getVillages'])->name('api.villages.index');
 
 Route::middleware('auth')->group(function () {
     Route::post('/search-logs', [HomeController::class, 'logSearch'])->name('search.log');
@@ -44,7 +47,15 @@ Route::get('/hubungi-kami', function () {
 })->name('hubungi-kami');
 
 Route::get('/mulai-sewakan', function () {
-    return Inertia::render('Home/MulaiSewakan');
+    return redirect()->route('owner.register');
+})->name('mulai-sewakan');
+
+Route::middleware('auth')->prefix('owner')->group(function () {
+    Route::get('/register', [\App\Http\Controllers\OwnerRegistrationController::class, 'index'])->name('owner.register');
+    Route::post('/register/step1', [\App\Http\Controllers\OwnerRegistrationController::class, 'storeStep1'])->name('owner.register.step1');
+    Route::post('/register/step2', [\App\Http\Controllers\OwnerRegistrationController::class, 'storeStep2'])->name('owner.register.step2');
+    Route::post('/register/step3', [\App\Http\Controllers\OwnerRegistrationController::class, 'storeStep3'])->name('owner.register.step3');
+    Route::get('/verification', [\App\Http\Controllers\OwnerRegistrationController::class, 'verificationStatus'])->name('owner.verification');
 });
 
 Route::middleware(['auth', 'role:owner'])->group(function () {

@@ -22,11 +22,16 @@ const openAuthModal = inject('openAuthModal', () => { console.log('AuthModal not
 const isScrolled = ref(false);
 const isUserMenuOpen = ref(false);
 
-const hasOwnerProfile = computed(() => {
+const ownerStatus = computed(() => {
     const user = page.props.auth.user;
-    if (!user) return false;
-    return !!(user.owner_profile || user.ownerProfile || user.role === 'owner');
+    if (!user) return null;
+    const profile = user.owner_profile || user.ownerProfile;
+    if (profile) return profile.status;
+    return null;
 });
+
+const isVerifiedOwner = computed(() => ownerStatus.value === 'verified' || page.props.auth.user?.role === 'owner');
+const isPendingOwner = computed(() => ownerStatus.value === 'pending' || ownerStatus.value === 'rejected');
 
 const userProfilePhoto = computed(() => {
     const photo = page.props.auth.user?.profile_photo;
@@ -726,11 +731,12 @@ const initials = computed(() => {
 
                                     <div class="h-px bg-gray-100 my-2"></div>
 
-                                    <!-- 2. Mulai Sewakan Aset Card Banner (Only if NOT owner) -->
-                                    <template v-if="!hasOwnerProfile">
-                                        <div
+                                    <!-- 2. Mulai Sewakan Aset Card Banner (Only if NOT owner and not pending) -->
+                                    <template v-if="!isVerifiedOwner && !isPendingOwner">
+                                        <Link
+                                            :href="route('owner.register')"
                                             @click="isUserMenuOpen = false"
-                                            class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1"
+                                            class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1 block"
                                         >
                                             <!-- Ilustrasi SVG (Ditempatkan di sudut kanan) -->
                                             <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
@@ -746,12 +752,35 @@ const initials = computed(() => {
                                                     Maksimalkan potensi aset Anda dan mulai hasilkan pendapatan tambahan.
                                                 </p>
                                             </div>
-                                        </div>
+                                        </Link>
+                                        <div class="h-px bg-gray-100 my-2"></div>
+                                    </template>
+
+                                    <!-- 2.5 Cek Status Verifikasi Banner (If pending or rejected) -->
+                                    <template v-if="isPendingOwner">
+                                        <Link
+                                            :href="route('owner.verification')"
+                                            @click="isUserMenuOpen = false"
+                                            class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1 block"
+                                        >
+                                            <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
+                                                <img src="/no-image.svg" alt="Ilustrasi Rumah" class="w-full object-contain object-bottom drop-shadow-sm group-hover:scale-105 transition-transform" />
+                                            </div>
+
+                                            <div class="relative z-10 w-2/3 pr-2">
+                                                <h3 class="text-sm font-bold text-[#0A2540] group-hover:text-amber-600 transition-colors">
+                                                    Status Verifikasi
+                                                </h3>
+                                                <p class="text-[11px] text-gray-500 leading-snug mt-1 font-normal">
+                                                    Cek status pengajuan akun Owner Anda saat ini.
+                                                </p>
+                                            </div>
+                                        </Link>
                                         <div class="h-px bg-gray-100 my-2"></div>
                                     </template>
 
                                     <!-- 3. Option to go to Dashboard IF user has owner_profile -->
-                                    <template v-if="hasOwnerProfile">
+                                    <template v-if="isVerifiedOwner">
                                         <div class="h-px bg-gray-100 my-2"></div>
                                         <Link
                                             href="#"

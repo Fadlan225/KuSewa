@@ -9,6 +9,11 @@ class owner_profile extends Model
     protected $fillable = [
         'user_id',
         'national_id',
+        'province_code',
+        'city_code',
+        'district_code',
+        'village_code',
+        'postal_code',
         'address',
         'ktp_photo',
         'status',
