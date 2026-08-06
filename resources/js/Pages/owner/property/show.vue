@@ -1,5 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import Sidebar from '@/Components/sidebar.vue';
 
 const props = defineProps({
@@ -9,9 +10,14 @@ const props = defineProps({
     },
 });
 
-const jenisPropertiDenganTipeKamar = ['Kos-kosan', 'Hotel', 'Apartemen', 'Guest House', 'Rusun / Condominium'];
-const isTipeKamarProperti = (props.property.tipe_kamar?.length > 0);
 const isBaliho = ['Baliho / Reklame', 'Billboard / Videotron', 'Neon Box / Titik Toko'].includes(props.property.jenis_properti);
+
+// Hanya tampilkan jika properti memiliki tipe kamar DAN jenisnya termasuk yang punya tipe kamar
+const isTipeKamarProperti = computed(() => {
+    const jenis = props.property.jenis_properti;
+    const hasTipeKamar = props.property.tipe_kamar?.length > 0;
+    return ['Kos-kosan', 'Hotel', 'Apartemen', 'Guest House', 'Rusun / Condominium'].includes(jenis) && hasTipeKamar;
+});
 
 const verificationLabel = (status) => ({
     pending: 'Menunggu Verifikasi',
@@ -172,16 +178,13 @@ const fotoUrl = (foto) => typeof foto === 'string' ? foto : foto.url;
                         </div>
 
                         <!-- TIPE KAMAR (khusus Kos-kosan, Hotel, Apartemen, Guest House, Rusun) -->
-                        <div v-if="isTipeKamarProperti" class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-3">
+                        <!-- HANYA MUNCUL JIKA isTipeKamarProperti === true -->
+                        <div v-if="isTipeKamarProperti" class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-2">
                             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Tipe Kamar / Unit</h3>
-                            <div v-for="tipe in property.tipe_kamar" :key="tipe.nama_tipe_kamar" class="border border-slate-100 rounded-xl p-3.5 space-y-2">
-                                <div class="flex items-center justify-between">
-                                    <span class="text-xs font-black text-[#0A2540]">{{ tipe.nama_tipe_kamar }}</span>
-                                    <span class="text-[10px] text-slate-400">{{ tipe.jumlah_kamar || '-' }} unit · {{ tipe.kapasitas_orang || '-' }} orang/kamar</span>
-                                </div>
-                                <div v-if="tipe.fasilitas_kamar?.length" class="flex flex-wrap gap-1.5">
-                                    <span v-for="item in tipe.fasilitas_kamar" :key="item" class="text-[10px] bg-slate-100 px-2 py-0.5 rounded-full">{{ item }}</span>
-                                </div>
+                            <div v-for="tipe in property.tipe_kamar" :key="tipe.nama_tipe_kamar" 
+                                 class="flex items-center justify-between text-sm border-b border-slate-100 py-2 last:border-0">
+                                <span class="font-medium text-slate-800">{{ tipe.nama_tipe_kamar }}</span>
+                                <span class="text-xs text-slate-500">{{ tipe.jumlah_kamar || 0 }} unit · {{ tipe.kapasitas_orang || 0 }} orang/kamar</span>
                             </div>
                         </div>
 

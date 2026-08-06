@@ -228,10 +228,16 @@ class PropertyController extends Controller
             'longitude' => $request->input('longitude'),
             'facilities' => $request->input('fasilitas', []),
             'deposit' => $request->input('deposit'),
-            'property_photos' => collect($request->input('foto_properti', []))->map(function ($photo) {
+            'property_photos' => collect($request->input('foto_properti', []))->map(function ($photo, $index) use ($request) {
+                $uploadedPhotos = collect($request->file("foto_properti.$index.files", []))
+                    ->filter()
+                    ->map(fn ($file) => $file->store('property-photos', 'public'))
+                    ->values()
+                    ->all();
+
                 return [
                     'nama_ruangan' => $photo['nama_ruangan'] ?? $photo['nama_ruangan_pilihan'] ?? '',
-                    'photos' => $photo['existing_photos'] ?? [],
+                    'photos' => array_values(array_merge($photo['existing_photos'] ?? [], $uploadedPhotos)),
                 ];
             })->values()->all(),
         ];
@@ -276,7 +282,10 @@ class PropertyController extends Controller
                     'nama_ruangan' => $photo['nama_ruangan'] ?? '',
                     'photos' => collect($photos)->map(function ($path) {
                         if (is_array($path)) return $path;
-                        return ['path' => $path, 'url' => Storage::url($path)];
+                        return [
+                            'path' => $path,
+                            'url' => filter_var($path, FILTER_VALIDATE_URL) ? $path : Storage::url($path),
+                        ];
                     })->values()->all(),
                 ];
             })->values()->all(),

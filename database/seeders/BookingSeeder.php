@@ -43,38 +43,38 @@ class BookingSeeder extends Seeder
 
         // Distribusi status
         $statusPool = array_merge(
-            array_fill(0, 60,  'pending'),
+            array_fill(0, 60, 'pending'),
             array_fill(0, 120, 'confirmed'),
             array_fill(0, 360, 'completed'),
-            array_fill(0, 60,  'cancelled')
+            array_fill(0, 60, 'cancelled')
         );
         shuffle($statusPool);
 
         $totalBookings = 600;
-        $assetCount    = $assets->count();
-        $custCount     = $customers->count();
-        $batch         = [];
+        $assetCount = $assets->count();
+        $custCount = $customers->count();
+        $batch = [];
 
         $this->command->info("Membuat {$totalBookings} booking...");
 
         for ($i = 0; $i < $totalBookings; $i++) {
-            $asset    = $assets[$i % $assetCount];
+            $asset = $assets[$i % $assetCount];
             $customer = $customers[$i % $custCount];
-            $status   = $statusPool[$i];
+            $status = $statusPool[$i];
 
             // Tanggal berdasarkan status
             if ($status === 'completed') {
                 $startDate = now()->subDays(rand(30, 365));
-                $duration  = rand(1, 14);
+                $duration = rand(1, 14);
             } elseif ($status === 'confirmed') {
                 $startDate = now()->addDays(rand(1, 60));
-                $duration  = rand(1, 30);
+                $duration = rand(1, 30);
             } elseif ($status === 'cancelled') {
                 $startDate = now()->subDays(rand(1, 60));
-                $duration  = rand(1, 7);
+                $duration = rand(1, 7);
             } else { // pending
                 $startDate = now()->addDays(rand(1, 30));
-                $duration  = rand(1, 14);
+                $duration = rand(1, 14);
             }
 
             $endDate = $startDate->copy()->addDays($duration);
@@ -83,18 +83,18 @@ class BookingSeeder extends Seeder
             $total = $subtotal + $serviceFee;
 
             $batch[] = [
-                'asset_id'       => $asset->id,
-                'asset_unit_id'  => null,
-                'booking_code'   => 'BK' . strtoupper(substr(md5($i . $asset->id . time()), 0, 8)),
-                'user_id'        => $customer->id,
-                'start_date'     => $startDate->format('Y-m-d'),
-                'end_date'       => $endDate->format('Y-m-d'),
-                'subtotal'       => $subtotal,
-                'service_fee'    => $serviceFee,
-                'total'          => $total,
+                'asset_id' => $asset->id,
+                'asset_unit_id' => null,
+                'booking_code' => 'BK' . strtoupper(substr(md5($i . $asset->id . time()), 0, 8)),
+                'user_id' => $customer->id,
+                'start_date' => $startDate->format('Y-m-d'),
+                'end_date' => $endDate->format('Y-m-d'),
+                'subtotal' => $subtotal,
+                'service_fee' => $serviceFee,
+                'total' => $total,
                 'booking_status' => $status,
-                'created_at'     => $startDate->copy()->subDays(rand(1, 7)),
-                'updated_at'     => now(),
+                'created_at' => $startDate->copy()->subDays(rand(1, 7)),
+                'updated_at' => now(),
             ];
         }
 
