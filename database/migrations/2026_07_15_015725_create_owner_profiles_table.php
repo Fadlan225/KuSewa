@@ -16,8 +16,6 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
             $table->char('national_id', 16)->unique();
             $table->string('address');
-            $table->string('place_of_birth');
-            $table->date('date_of_birth');
             $table->string('ktp_photo');
             $table->enum('status', ['pending', 'verified', 'rejected'])->default('pending');
             $table->timestamp('verification_at')->nullable();

@@ -1,6 +1,7 @@
 <script setup>
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, watch, onMounted } from 'vue';
+import LocationSelect from '@/Components/UI/LocationSelect.vue';
 
 const props = defineProps({
     mustVerifyEmail: {
@@ -36,7 +37,7 @@ const form = useForm({
     date_of_birth: user.date_of_birth || '',
     national_id: props.owner_profile?.national_id || '',
     address: props.owner_profile?.address || '',
-    place_of_birth: props.owner_profile?.place_of_birth || '',
+    place_of_birth_code: user.place_of_birth_code || '',
     bank_name: props.bank_account?.bank_name || '',
     account_number: props.bank_account?.account_number || '',
     account_holder: props.bank_account?.account_holder || '',
@@ -144,6 +145,17 @@ const resetForm = () => {
                     </div>
                 </div>
 
+                <!-- Tempat Lahir -->
+                <div>
+                    <label class="block text-sm text-[#333333] mb-1.5">Tempat Lahir</label>
+                    <LocationSelect
+                        v-model="form.place_of_birth_code"
+                        endpoint="/api/cities"
+                        placeholder="Cari Kota/Kabupaten..."
+                    />
+                    <p v-show="form.errors.place_of_birth_code" class="mt-1 text-sm text-red-600">{{ form.errors.place_of_birth_code }}</p>
+                </div>
+
                 <!-- Tanggal Lahir -->
                 <div>
                     <label class="block text-sm text-[#333333] mb-1.5">Tanggal Lahir</label>
@@ -226,16 +238,6 @@ const resetForm = () => {
                     <p v-show="form.errors.address" class="mt-1 text-sm text-red-600">{{ form.errors.address }}</p>
                 </div>
 
-                <div>
-                    <label for="place_of_birth" class="block text-sm text-[#333333] mb-1.5">Tempat Lahir</label>
-                    <input
-                        id="place_of_birth"
-                        type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
-                        v-model="form.place_of_birth"
-                    />
-                    <p v-show="form.errors.place_of_birth" class="mt-1 text-sm text-red-600">{{ form.errors.place_of_birth }}</p>
-                </div>
             </div>
 
             <!-- Bagian Rekening Bank -->
@@ -326,12 +328,12 @@ const resetForm = () => {
                 >
                     Batal
                 </button>
-                
+
                 <button
                     type="submit"
                     :disabled="form.processing || !form.isDirty"
                     class="inline-flex items-center px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-200"
-                    :class="form.isDirty ? 'bg-[#0066FF] text-white hover:bg-blue-600 active:scale-95 shadow-md cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
+                    :class="form.isDirty ? 'bg-primary text-white hover:bg-primary/80 active:scale-95 shadow-md cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                 >
                     <i v-if="form.processing" class="fa-solid fa-spinner fa-spin mr-2"></i>
                     Simpan

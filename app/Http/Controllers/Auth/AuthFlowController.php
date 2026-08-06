@@ -145,6 +145,7 @@ class AuthFlowController extends Controller
             'verified_token' => ['required', 'string'],
             'name' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'place_of_birth_code' => ['nullable', 'string', 'exists:cities,code'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'string', 'in:male,female'],
         ]);

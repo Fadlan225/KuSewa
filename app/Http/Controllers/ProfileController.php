@@ -43,6 +43,7 @@ class ProfileController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'date_of_birth' => $user->date_of_birth,
+                'place_of_birth_code' => $user->place_of_birth_code,
                 'gender' => $user->gender,
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
@@ -118,6 +119,7 @@ class ProfileController extends Controller
                 'avatar' => $avatarUrl,
                 'profile_photo' => $avatarUrl,
                 'is_owner' => $isOwner,
+                'place_of_birth_code' => $user->place_of_birth_code,
             ],
             'total_assets_rented' => $totalAssetsRented,
             'bookings_count' => $bookingsCount,
@@ -139,6 +141,7 @@ class ProfileController extends Controller
             'email' => $validated['email'],
             'phone' => $validated['phone'] ?? $user->phone,
             'date_of_birth' => $validated['date_of_birth'] ?? $user->date_of_birth,
+            'place_of_birth_code' => $validated['place_of_birth_code'] ?? $user->place_of_birth_code,
             'gender' => $validated['gender'] ?? $user->gender,
         ]);
 

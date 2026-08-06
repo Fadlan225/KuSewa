@@ -6,6 +6,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
+import LocationSelect from '@/Components/UI/LocationSelect.vue';
 
 import { inject, watch } from 'vue';
 import { useAuthFeedbackStore } from '@/Stores/AuthFeedbackStore';
@@ -46,6 +47,7 @@ const form = ref({
     password_confirmation: '',
     name: '',
     date_of_birth: '',
+    place_of_birth_code: '',
     gender: '',
     otp: '',
 });
@@ -594,6 +596,16 @@ const handleGoogleLogin = () => {
                 <h3 class="text-xl font-extrabold mb-2">Informasi Tambahan</h3>
 
                 <div class="space-y-4">
+                    <!-- Tempat Lahir -->
+                    <div class="mb-5">
+                        <InputLabel value="Tempat Lahir" class="text-xs font-bold mb-3 block" />
+                        <LocationSelect
+                            v-model="form.place_of_birth_code"
+                            endpoint="/api/cities"
+                            placeholder="Cari Kota/Kabupaten..."
+                        />
+                    </div>
+
                     <div>
                         <InputLabel value="Tanggal Lahir" class="text-xs font-bold mb-3 block" />
                         <div class="flex gap-3">

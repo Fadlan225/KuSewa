@@ -29,7 +29,7 @@ class ProfileUpdateRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:20'],
             'national_id' => ['nullable', 'string', 'size:16'],
             'address' => ['nullable', 'string', 'max:255'],
-            'place_of_birth' => ['nullable', 'string', 'max:255'],
+            'place_of_birth_code' => ['nullable', 'string', 'exists:cities,code'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'in:male,female'],
             'bank_name' => ['nullable', 'string', 'max:255'],

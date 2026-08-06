@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('phone')->nullable();
             $table->string('profile_photo')->nullable();
+            $table->string('place_of_birth_code', 4)->nullable();
             $table->date('date_of_birth')->nullable();
             $table->enum('gender',['male','female'])->nullable();
             $table->enum('role', ['admin', 'customer'])->default('customer');

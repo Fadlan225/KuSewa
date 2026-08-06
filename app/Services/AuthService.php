@@ -56,6 +56,7 @@ class AuthService
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => Hash::make($data['password']),
+            'place_of_birth_code' => $data['place_of_birth_code'] ?? null,
             'date_of_birth' => $data['date_of_birth'] ?? null,
             'gender' => $data['gender'] ?? null,
             'role' => 'customer',

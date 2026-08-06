@@ -24,6 +24,9 @@ Route::get('/search/suggest', [HomeController::class, 'suggest'])->name('search.
 // API for Home
 Route::get('/api/home/nearby-assets', [HomeAssetController::class, 'nearby'])->name('api.home.nearby-assets');
 
+// API for Locations
+Route::get('/api/cities', [\App\Http\Controllers\LocationController::class, 'getCities'])->name('api.cities.index');
+
 Route::middleware('auth')->group(function () {
     Route::post('/search-logs', [HomeController::class, 'logSearch'])->name('search.log');
     Route::delete('/search-logs', [HomeController::class, 'clearSearchHistory'])->name('search.clear');

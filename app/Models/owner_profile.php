@@ -10,8 +10,6 @@ class owner_profile extends Model
         'user_id',
         'national_id',
         'address',
-        'place_of_birth',
-        'date_of_birth',
         'ktp_photo',
         'status',
         'verification_at'
