@@ -3,6 +3,11 @@ import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 
 const page = usePage();
+const ownerActivityCounts = computed(() => page.props.ownerActivityCounts || {
+    propertyReview: 0,
+    bookingReview: 0,
+    verificationReview: 0,
+});
 const user = computed(() => page.props.auth?.user || {
     name: 'Budi Santoso',
     email: 'owner@kusewa.id'
@@ -76,7 +81,7 @@ const logout = () => {
                         <i class="fa-solid fa-building text-slate-400"></i>
                         <span>Properti & Aset</span>
                     </div>
-                    <span class="bg-[#FFC000]/20 text-[#0A2540] text-[10px] font-black px-1.5 py-0.5 rounded">8</span>
+                    <span v-if="ownerActivityCounts.propertyReview > 0" class="bg-[#FFC000]/20 text-[#0A2540] text-[10px] font-black px-1.5 py-0.5 rounded">{{ ownerActivityCounts.propertyReview }}</span>
                 </Link>
 
                 <Link :href="route('owner.bookings')" :class="[route().current('owner.bookings') ? 'bg-slate-100 text-[#0A2540] font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium', 'flex items-center justify-between px-3 py-2 rounded-lg transition']">
@@ -84,7 +89,7 @@ const logout = () => {
                         <i class="fa-solid fa-receipt text-slate-400"></i>
                         <span>Pemesanan</span>
                     </div>
-                    <span class="bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">3</span>
+                    <span v-if="ownerActivityCounts.bookingReview > 0" class="bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full">{{ ownerActivityCounts.bookingReview }}</span>
                 </Link>
 
                 <!-- BIAYA BULANAN -->
@@ -104,7 +109,8 @@ const logout = () => {
                             <i class="fa-solid fa-id-card text-slate-400"></i>
                             <span>Verifikasi Berkas</span>
                         </div>
-                        <i class="fa-solid fa-check text-emerald-500 text-[10px]"></i>
+                        <span v-if="ownerActivityCounts.verificationReview > 0" class="bg-amber-100 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full">{{ ownerActivityCounts.verificationReview }}</span>
+                        <i v-else class="fa-solid fa-check text-emerald-500 text-[10px]"></i>
                     </Link>
                 </div>
             </nav>

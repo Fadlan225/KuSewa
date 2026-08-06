@@ -41,25 +41,35 @@ const kategoriPropertiGroups = [
 // Untuk jenis ini, owner mengisi "Tipe Kamar" alih-alih satu angka jumlah kamar saja.
 const jenisPropertiDenganTipeKamar = ['Kos-kosan', 'Hotel', 'Apartemen', 'Guest House', 'Rusun / Condominium'];
 
-const buatTipeKamarBaru = () => ({
+const fasilitasWajibPerJenis = {
+    'Kos-kosan': ['Wi-Fi / Internet', 'Kamar Mandi Dalam', 'Kasur & Lemari'],
+    'Hotel': ['Wi-Fi / Internet', 'AC (Pendingin)', 'Furnished Lengkap', 'Kamar Mandi Dalam', 'Kasur & Lemari'],
+    'Apartemen': ['Wi-Fi / Internet', 'AC (Pendingin)', 'Kamar Mandi Dalam', 'Dapur Bersama / Pribadi'],
+    'Guest House': ['Wi-Fi / Internet', 'AC (Pendingin)', 'Kamar Mandi Dalam', 'Kasur & Lemari'],
+    'Rusun / Condominium': ['Kamar Mandi Dalam', 'Kasur & Lemari', 'Area Parkir Luas'],
+};
+
+const fasilitasWajibKamar = (jenisProperti) => fasilitasWajibPerJenis[jenisProperti] || ['Kamar Mandi Dalam'];
+
+const buatTipeKamarBaru = (jenisProperti = 'Kos-kosan') => ({
     id: Date.now() + Math.random(),
     nama_tipe_kamar: '',
     jumlah_kamar: '',
     kapasitas_orang: '',
-    fasilitas_kamar: []
+    fasilitas_kamar: [...fasilitasWajibKamar(jenisProperti)]
 });
 
 // Form Data State menggunakan Inertia useForm
 const form = useForm({
-    // Step 1: Informasi Dasar
+    // Informasi Dasar
     nama_properti: '',
-    kategori: 'Hunian & Tempat Tinggal', // Default Kategori Utama
-    jenis_properti: 'Kos-kosan', // Default Jenis Properti
-    sub_kategori_baliho: 'Konvensional', // Khusus baliho
+    kategori: 'Hunian & Tempat Tinggal',
+    jenis_properti: 'Kos-kosan',
+    sub_kategori_baliho: 'Konvensional',
     tipe_sewa: 'Bulanan',
     deskripsi: '',
 
-    // Field Dinamis (Step 1)
+    // Detail Spesifik Properti
     jumlah_kamar: '',
     kapasitas_orang: '',
     jumlah_lantai: '',
@@ -67,25 +77,34 @@ const form = useForm({
     luas_bangunan: '',
     dimensi: '',
 
-    // Khusus jenis properti dengan banyak varian kamar (Kos-kosan, Hotel, Apartemen, Guest House, Rusun)
+    // Khusus jenis properti dengan banyak varian kamar
     tipe_kamar: [buatTipeKamarBaru()],
 
-    // Step 2: Lokasi & Fasilitas
+    // Fasilitas Umum
+    fasilitas: [],
+
+    // Lokasi (Auto Country/State/City) — field "_pilihan" untuk dropdown, field polos untuk nilai final
+    negara_pilihan: 'Indonesia',
+    negara: 'Indonesia',
+    provinsi_pilihan: 'Kalimantan Timur',
+    provinsi: 'Kalimantan Timur',
+    kota_pilihan: 'Samarinda',
+    kota: 'Samarinda',
+    kecamatan: '',
     alamat_lengkap: '',
     latitude: '',
     longitude: '',
-    kota: 'Samarinda',
-    kecamatan: '',
-    fasilitas: [],
 
-    // Step 3: Harga & Foto
+    // Harga & Deposit
     harga_sewa: '',
     deposit: '',
+
+    // Foto Properti
     foto_properti: [
         {
             id: Date.now(),
-            nama_ruangan_pilihan: 'Fasad Depan / Tampak Utama', // nilai dropdown
-            nama_ruangan: 'Fasad Depan / Tampak Utama',         // nilai final yang dikirim
+            nama_ruangan_pilihan: 'Fasad Depan / Tampak Utama',
+            nama_ruangan: 'Fasad Depan / Tampak Utama',
             files: [],
             previews: []
         }
@@ -102,6 +121,38 @@ const availableJenisProperti = computed(() => {
 // True jika jenis properti yang sedang dipilih perlu diisi lewat builder "Tipe Kamar"
 const isTipeKamarProperti = computed(() => jenisPropertiDenganTipeKamar.includes(form.jenis_properti));
 
+// --- LOGIKA SKEMA PEMBAYARAN OTOMATIS SESUAI JENIS PROPERTI ---
+// Tiap jenis properti punya skema pembayaran yang relevan saja, supaya owner tidak salah pilih.
+// Misal: Hotel & Homestay identik dengan sewa Harian, sedangkan Lahan/Pabrik identik Tahunan.
+const tipeSewaByJenisProperti = {
+    'Kos-kosan': ['Bulanan', 'Tahunan'],
+    'Hotel': ['Harian'],
+    'Rumah Tapak': ['Bulanan', 'Tahunan'],
+    'Villa': ['Harian', 'Bulanan'],
+    'Homestay': ['Harian'],
+    'Apartemen': ['Bulanan', 'Tahunan'],
+    'Guest House': ['Harian', 'Bulanan'],
+    'Rusun / Condominium': ['Bulanan', 'Tahunan'],
+    'Ruko (Rumah Toko)': ['Bulanan', 'Tahunan'],
+    'Kios / Lapak Pasar': ['Harian', 'Bulanan', 'Tahunan'],
+    'Kantor / Workspace': ['Bulanan', 'Tahunan'],
+    'Gedung Komersial': ['Bulanan', 'Tahunan'],
+    'Food Court / Booth': ['Harian', 'Bulanan'],
+    'Gudang Logistik': ['Bulanan', 'Tahunan'],
+    'Pabrik / Manufaktur': ['Tahunan'],
+    'Cold Storage': ['Bulanan', 'Tahunan'],
+    'Lahan / Tanah Kosong': ['Tahunan'],
+    'Lahan Pertanian / Perkebunan': ['Tahunan'],
+    'Baliho / Reklame': ['Bulanan', 'Tahunan'],
+    'Billboard / Videotron': ['Bulanan', 'Tahunan'],
+    'Neon Box / Titik Toko': ['Bulanan', 'Tahunan']
+};
+
+// Daftar skema pembayaran yang valid untuk jenis properti yang sedang aktif di form
+const availableTipeSewa = computed(() => {
+    return tipeSewaByJenisProperti[form.jenis_properti] || ['Harian', 'Bulanan', 'Tahunan'];
+});
+
 // Otomatis ubah nilai 'jenis_properti' ke opsi pertama tiap kali 'kategori' diubah
 watch(() => form.kategori, (newKategori) => {
     const group = kategoriPropertiGroups.find(g => g.label === newKategori);
@@ -111,12 +162,101 @@ watch(() => form.kategori, (newKategori) => {
 });
 
 // Pastikan selalu ada minimal 1 baris "Tipe Kamar" saat owner pindah ke jenis properti
-// yang membutuhkan builder tipe kamar (Kos-kosan, Hotel, Apartemen, Guest House, Rusun)
+// yang membutuhkan builder tipe kamar (Kos-kosan, Hotel, Apartemen, Guest House, Rusun),
+// dan otomatis sesuaikan skema pembayaran (tipe_sewa) dengan jenis properti yang baru dipilih.
 watch(() => form.jenis_properti, (newJenis) => {
     if (jenisPropertiDenganTipeKamar.includes(newJenis) && form.tipe_kamar.length === 0) {
-        form.tipe_kamar.push(buatTipeKamarBaru());
+        form.tipe_kamar.push(buatTipeKamarBaru(newJenis));
+    }
+
+    // Tambahkan fasilitas minimum tanpa menghapus fasilitas tambahan yang sudah dipilih.
+    const fasilitasWajib = fasilitasWajibKamar(newJenis);
+    form.tipe_kamar.forEach((tipe) => {
+        fasilitasWajib.forEach((fasilitas) => {
+            if (!tipe.fasilitas_kamar.includes(fasilitas)) tipe.fasilitas_kamar.push(fasilitas);
+        });
+    });
+
+    // Jika skema pembayaran yang sedang aktif tidak relevan untuk jenis properti baru,
+    // otomatis ganti ke opsi pertama yang valid untuk jenis tersebut.
+    const opsiValid = tipeSewaByJenisProperti[newJenis] || ['Harian', 'Bulanan', 'Tahunan'];
+    if (!opsiValid.includes(form.tipe_sewa)) {
+        form.tipe_sewa = opsiValid[0];
     }
 });
+
+// --- LOGIKA LOKASI CASCADING: NEGARA -> PROVINSI -> KOTA ---
+// Struktur: { Negara: { Provinsi: [daftar Kota/Kabupaten] } }
+// "Lainnya" selalu tersedia di tiap level untuk kasus yang belum tercakup di daftar (owner isi manual).
+const daftarNegara = ['Indonesia', 'Malaysia', 'Singapura', 'Lainnya'];
+
+const lokasiIndonesia = {
+    'Kalimantan Timur': ['Samarinda', 'Balikpapan', 'Tenggarong (Kutai Kartanegara)', 'Bontang', 'Sangatta', 'Sendawar', 'Lainnya'],
+    'Kalimantan Selatan': ['Banjarmasin', 'Banjarbaru', 'Martapura', 'Kandangan', 'Lainnya'],
+    'Kalimantan Barat': ['Pontianak', 'Singkawang', 'Ketapang', 'Lainnya'],
+    'Kalimantan Tengah': ['Palangka Raya', 'Sampit', 'Kuala Kapuas', 'Lainnya'],
+    'Kalimantan Utara': ['Tanjung Selor', 'Tarakan', 'Nunukan', 'Lainnya'],
+    'DKI Jakarta': ['Jakarta Pusat', 'Jakarta Utara', 'Jakarta Barat', 'Jakarta Selatan', 'Jakarta Timur', 'Kepulauan Seribu', 'Lainnya'],
+    'Jawa Barat': ['Bandung', 'Bekasi', 'Bogor', 'Depok', 'Cimahi', 'Sukabumi', 'Tasikmalaya', 'Cirebon', 'Lainnya'],
+    'Jawa Tengah': ['Semarang', 'Surakarta (Solo)', 'Magelang', 'Salatiga', 'Pekalongan', 'Tegal', 'Lainnya'],
+    'Jawa Timur': ['Surabaya', 'Malang', 'Kediri', 'Madiun', 'Batu', 'Mojokerto', 'Lainnya'],
+    'DI Yogyakarta': ['Yogyakarta', 'Sleman', 'Bantul', 'Kulon Progo', 'Gunungkidul', 'Lainnya'],
+    'Banten': ['Tangerang', 'Tangerang Selatan', 'Serang', 'Cilegon', 'Lainnya'],
+    'Bali': ['Denpasar', 'Badung', 'Gianyar', 'Tabanan', 'Buleleng', 'Lainnya'],
+    'Sumatera Utara': ['Medan', 'Binjai', 'Pematangsiantar', 'Lainnya'],
+    'Sumatera Barat': ['Padang', 'Bukittinggi', 'Payakumbuh', 'Lainnya'],
+    'Riau': ['Pekanbaru', 'Dumai', 'Lainnya'],
+    'Kepulauan Riau': ['Batam', 'Tanjungpinang', 'Lainnya'],
+    'Sumatera Selatan': ['Palembang', 'Lubuklinggau', 'Lainnya'],
+    'Lampung': ['Bandar Lampung', 'Metro', 'Lainnya'],
+    'Sulawesi Selatan': ['Makassar', 'Parepare', 'Lainnya'],
+    'Sulawesi Utara': ['Manado', 'Bitung', 'Lainnya'],
+    'Papua': ['Jayapura', 'Lainnya'],
+    'Lainnya': ['Lainnya']
+};
+
+const lokasiByNegara = {
+    'Indonesia': lokasiIndonesia,
+    'Malaysia': { 'Lainnya': ['Lainnya'] },
+    'Singapura': { 'Lainnya': ['Lainnya'] },
+    'Lainnya': { 'Lainnya': ['Lainnya'] }
+};
+
+// Daftar provinsi yang tersedia, menyesuaikan negara yang sedang dipilih
+const availableProvinsi = computed(() => {
+    const data = lokasiByNegara[form.negara_pilihan];
+    return data ? Object.keys(data) : ['Lainnya'];
+});
+
+// Daftar kota/kabupaten yang tersedia, menyesuaikan provinsi yang sedang dipilih
+const availableKota = computed(() => {
+    const data = lokasiByNegara[form.negara_pilihan];
+    if (!data) return ['Lainnya'];
+    return data[form.provinsi_pilihan] || ['Lainnya'];
+});
+
+// Dipanggil saat owner memilih Negara -> otomatis reset & sesuaikan Provinsi dan Kota
+const pilihNegara = () => {
+    form.negara = form.negara_pilihan === 'Lainnya' ? '' : form.negara_pilihan;
+
+    const daftarProvinsiBaru = availableProvinsi.value;
+    form.provinsi_pilihan = daftarProvinsiBaru[0] || 'Lainnya';
+    pilihProvinsi();
+};
+
+// Dipanggil saat owner memilih Provinsi -> otomatis reset & sesuaikan Kota
+const pilihProvinsi = () => {
+    form.provinsi = form.provinsi_pilihan === 'Lainnya' ? '' : form.provinsi_pilihan;
+
+    const daftarKotaBaru = availableKota.value;
+    form.kota_pilihan = daftarKotaBaru[0] || 'Lainnya';
+    pilihKota();
+};
+
+// Dipanggil saat owner memilih Kota/Kabupaten
+const pilihKota = () => {
+    form.kota = form.kota_pilihan === 'Lainnya' ? '' : form.kota_pilihan;
+};
 
 // Navigation & Modal State
 const currentStep = ref(1);
@@ -578,9 +718,33 @@ const hapusFasilitas = (fas) => {
     if (index > -1) form.fasilitas.splice(index, 1);
 };
 
+// --- FORMAT HARGA OTOMATIS (RIBUAN PAKAI TITIK, MIS. 1.500.000) ---
+// Nilai mentah (angka polos) tetap disimpan di form.harga_sewa / form.deposit untuk dikirim ke server,
+// sedangkan yang tampil di input sudah otomatis diberi titik setiap 3 digit.
+const formatRibuan = (nilai) => {
+    if (!nilai) return '';
+    const angka = nilai.toString().replace(/\D/g, '');
+    if (!angka) return '';
+    return angka.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+};
+
+const hargaSewaDisplay = computed({
+    get: () => formatRibuan(form.harga_sewa),
+    set: (nilai) => {
+        form.harga_sewa = nilai.replace(/\D/g, '');
+    }
+});
+
+const depositDisplay = computed({
+    get: () => formatRibuan(form.deposit),
+    set: (nilai) => {
+        form.deposit = nilai.replace(/\D/g, '');
+    }
+});
+
 // --- LOGIKA TIPE KAMAR (khusus Kos-kosan, Hotel, Apartemen, Guest House, Rusun) ---
 const tambahTipeKamar = () => {
-    form.tipe_kamar.push(buatTipeKamarBaru());
+    form.tipe_kamar.push(buatTipeKamarBaru(form.jenis_properti));
 };
 
 const hapusTipeKamar = (index) => {
@@ -590,6 +754,7 @@ const hapusTipeKamar = (index) => {
 const toggleFasilitasKamar = (tIndex, item) => {
     const list = form.tipe_kamar[tIndex].fasilitas_kamar;
     const idx = list.indexOf(item);
+    if (idx !== -1 && fasilitasWajibKamar(form.jenis_properti).includes(item)) return;
     if (idx === -1) {
         list.push(item);
     } else {
@@ -603,6 +768,8 @@ const fasilitasKamarDropdownOpen = ref(null);
 const toggleFasilitasKamarDropdown = (index) => {
     fasilitasKamarDropdownOpen.value = fasilitasKamarDropdownOpen.value === index ? null : index;
 };
+
+const isFasilitasWajibKamar = (item) => fasilitasWajibKamar(form.jenis_properti).includes(item);
 
 // --- LOGIKA NESTED DROPDOWN FASILITAS (dropdown di dalam dropdown) ---
 // Struktur: Pilih Fasilitas -> [Jenis Fasilitas] -> [Nama Fasilitas]
@@ -698,6 +865,11 @@ const hapusKategoriFoto = (index) => {
     form.foto_properti.splice(index, 1);
 };
 
+// Kategori yang sudah dipakai pada baris lain tidak boleh dipilih ulang.
+const kategoriFotoSudahDipilih = (kategori, index) => form.foto_properti.some((item, itemIndex) => (
+    itemIndex !== index && item.nama_ruangan_pilihan === kategori
+));
+
 // Dipanggil saat owner memilih opsi dari dropdown kategori ruangan/area.
 // Jika bukan "Lainnya", nilai final langsung mengikuti pilihan dropdown (standar & konsisten).
 // Jika "Lainnya", nama_ruangan dikosongkan dulu agar owner mengisi manual lewat input custom.
@@ -747,6 +919,8 @@ const validateForm = () => {
     if (!form.kategori) errors.kategori = 'Kategori wajib dipilih';
     if (!form.jenis_properti) errors.jenis_properti = 'Jenis properti wajib dipilih';
     if (!form.tipe_sewa) errors.tipe_sewa = 'Tipe sewa wajib dipilih';
+    if (!form.negara.trim()) errors.negara = 'Negara wajib diisi';
+    if (!form.provinsi.trim()) errors.provinsi = 'Provinsi wajib diisi';
     if (!form.alamat_lengkap.trim()) errors.alamat_lengkap = 'Alamat lengkap wajib diisi';
     if (!form.kota.trim()) errors.kota = 'Kota wajib diisi';
     if (!form.kecamatan.trim()) errors.kecamatan = 'Kecamatan wajib diisi';
@@ -837,6 +1011,8 @@ const closeModalAndRedirect = () => {
                         <li v-if="validationErrors.nama_properti">Nama properti belum diisi</li>
                         <li v-if="validationErrors.kategori || validationErrors.jenis_properti">Kategori / jenis properti belum dipilih</li>
                         <li v-if="validationErrors.tipe_sewa">Tipe sewa belum dipilih</li>
+                        <li v-if="validationErrors.negara">Negara belum diisi</li>
+                        <li v-if="validationErrors.provinsi">Provinsi belum diisi</li>
                         <li v-if="validationErrors.alamat_lengkap">Alamat lengkap belum diisi</li>
                         <li v-if="validationErrors.kota">Kota belum diisi</li>
                         <li v-if="validationErrors.kecamatan">Kecamatan belum diisi</li>
@@ -864,7 +1040,7 @@ const closeModalAndRedirect = () => {
 
                     <div class="relative z-10 flex items-center gap-2 bg-white px-2">
                         <div :class="['w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition', currentStep >= 2 ? 'bg-[#0A2540] text-[#FFC000]' : 'bg-slate-100 text-slate-400']">2</div>
-                        <span class="text-xs font-bold hidden sm:inline" :class="currentStep >= 2 ? 'text-slate-900' : 'text-slate-400'">Lokasi & Fasilitas</span>
+                        <span class="text-xs font-bold hidden sm:inline" :class="currentStep >= 2 ? 'text-slate-900' : 'text-slate-400'">Lokasi</span>
                     </div>
 
                     <div class="relative z-10 flex items-center gap-2 bg-white pl-2">
@@ -912,10 +1088,11 @@ const closeModalAndRedirect = () => {
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1">Skema Pembayaran <span class="text-rose-500">*</span></label>
+                            <!-- Opsi menyesuaikan otomatis sesuai jenis properti yang dipilih -->
                             <select v-model="form.tipe_sewa" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition">
-                                <option value="Harian">Harian</option>
-                                <option value="Bulanan">Bulanan</option>
-                                <option value="Tahunan">Tahunan</option>
+                                <option v-for="opsi in availableTipeSewa" :key="opsi" :value="opsi">
+                                    {{ opsi }}
+                                </option>
                             </select>
                         </div>
                     </div>
@@ -985,7 +1162,8 @@ const closeModalAndRedirect = () => {
                                             <button
                                                 type="button" v-for="item in fasilitasByKategori[0].items" :key="item"
                                                 @click.stop="toggleFasilitasKamar(tIndex, item)"
-                                                class="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] text-left hover:bg-slate-50 transition cursor-pointer"
+                                                :class="isFasilitasWajibKamar(item) ? 'bg-emerald-50/60' : 'hover:bg-slate-50'"
+                                                class="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] text-left transition cursor-pointer"
                                             >
                                                 <span
                                                     class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition"
@@ -996,6 +1174,7 @@ const closeModalAndRedirect = () => {
                                                 <span :class="tipe.fasilitas_kamar.includes(item) ? 'font-bold text-[#0A2540]' : 'text-slate-600'">
                                                     {{ item }}
                                                 </span>
+                                                <span v-if="isFasilitasWajibKamar(item)" class="ml-auto text-[9px] text-emerald-600 font-bold">Wajib</span>
                                             </button>
                                         </div>
                                     </div>
@@ -1004,7 +1183,7 @@ const closeModalAndRedirect = () => {
                                     <div v-if="tipe.fasilitas_kamar.length > 0" class="flex flex-wrap gap-1.5 mt-2">
                                         <div v-for="item in tipe.fasilitas_kamar" :key="item" class="inline-flex items-center gap-1 bg-[#0A2540]/5 border border-[#0A2540]/20 text-[#0A2540] text-[10px] font-bold px-2 py-1 rounded-lg">
                                             <span>{{ item }}</span>
-                                            <button type="button" @click.stop="toggleFasilitasKamar(tIndex, item)" class="text-rose-500 hover:text-rose-700 cursor-pointer">
+                                            <button v-if="!isFasilitasWajibKamar(item)" type="button" @click.stop="toggleFasilitasKamar(tIndex, item)" class="text-rose-500 hover:text-rose-700 cursor-pointer">
                                                 <i class="fa-solid fa-xmark"></i>
                                             </button>
                                         </div>
@@ -1083,86 +1262,9 @@ const closeModalAndRedirect = () => {
                             class="w-full text-xs p-3 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition"
                         ></textarea>
                     </div>
-                </div>
-
-                <!-- STEP 2: LOKASI & FASILITAS -->
-                <div v-if="currentStep === 2" class="space-y-4">
-                    <h2 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-map-location-dot text-[#0A2540]"></i>
-                        <span>Detail Lokasi & Fasilitas</span>
-                    </h2>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Kota / Kabupaten <span class="text-rose-500">*</span></label>
-                            <select v-model="form.kota" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition">
-                                <option value="Samarinda">Samarinda</option>
-                                <option value="Balikpapan">Balikpapan</option>
-                                <option value="Tenggarong">Tenggarong (Kutai Kartanegara)</option>
-                                <option value="Bontang">Bontang</option>
-                                <option value="Lainnya">Lainnya</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Kecamatan <span class="text-rose-500">*</span></label>
-                            <input v-model="form.kecamatan" type="text" placeholder="Contoh: Samarinda Ulu" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 transition" required />
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Lengkap <span class="text-rose-500">*</span></label>
-                        <input v-model="form.alamat_lengkap" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 transition" required />
-                    </div>
-
-                    <!-- PILIH TITIK KOORDINAT DI PETA -->
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">
-                            Titik Lokasi di Peta <span class="text-rose-500">*</span>
-                        </label>
-                        <p class="text-[10px] text-slate-400 mb-2">
-                            Cari alamat di kolom bawah, gunakan lokasi GPS Anda, atau klik/geser pin langsung di peta untuk menandai titik properti secara presisi.
-                        </p>
-
-                        <!-- Search bar + tombol GPS -->
-                        <div class="flex gap-2 mb-2">
-                            <div class="flex-1 relative">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-[11px]"></i>
-                                <input
-                                    v-model="cariAlamatInput"
-                                    @keyup.enter.prevent="cariLokasiDiPeta"
-                                    type="text"
-                                    placeholder="Cari nama jalan / area di peta..."
-                                    class="w-full text-xs pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540]"
-                                />
-                            </div>
-                            <button
-                                type="button" @click.prevent="cariLokasiDiPeta" :disabled="isSearchingAlamat"
-                                class="bg-[#0A2540] text-white text-xs font-bold px-4 rounded-xl hover:bg-[#123e6b] transition cursor-pointer shrink-0 disabled:opacity-50"
-                            >
-                                {{ isSearchingAlamat ? 'Mencari...' : 'Cari' }}
-                            </button>
-                            <button
-                                type="button" @click.prevent="gunakanLokasiSaatIni" :disabled="isLocatingGPS"
-                                title="Gunakan Lokasi Saya Saat Ini"
-                                class="bg-slate-100 text-[#0A2540] text-xs font-bold px-3 rounded-xl hover:bg-slate-200 transition cursor-pointer shrink-0 disabled:opacity-50"
-                            >
-                                <i class="fa-solid fa-location-crosshairs"></i>
-                            </button>
-                        </div>
-
-                        <!-- Container Peta -->
-                        <div ref="mapContainer" class="w-full h-72 rounded-xl border border-slate-200 z-0"></div>
-
-                        <!-- Info koordinat terpilih -->
-                        <div class="flex items-center gap-2 mt-2 text-[11px]" :class="form.latitude ? 'text-emerald-600' : 'text-slate-400'">
-                            <i :class="['fa-solid', form.latitude ? 'fa-circle-check' : 'fa-circle-exclamation']"></i>
-                            <span v-if="form.latitude">
-                                Titik lokasi terpilih: {{ form.latitude }}, {{ form.longitude }}
-                            </span>
-                            <span v-else>Belum ada titik lokasi dipilih.</span>
-                        </div>
-                    </div>
 
                     <!-- FASILITAS: NESTED DROPDOWN (Jenis Fasilitas -> Nama Fasilitas) -->
+                    <!-- Dipindahkan ke Step 1 supaya Step 2 fokus hanya pada pemilihan lokasi -->
                     <div>
                         <label class="block text-xs font-bold text-slate-700 mb-1">Fasilitas / Kelengkapan Aset</label>
                         <p class="text-[10px] text-slate-400 mb-2">
@@ -1270,6 +1372,109 @@ const closeModalAndRedirect = () => {
                     </div>
                 </div>
 
+                <!-- STEP 2: LOKASI -->
+                <div v-if="currentStep === 2" class="space-y-4">
+                    <h2 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
+                        <i class="fa-solid fa-map-location-dot text-[#0A2540]"></i>
+                        <span>Detail Lokasi</span>
+                    </h2>
+
+                    <!-- NEGARA -> PROVINSI -> KOTA (CASCADING OTOMATIS) -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Negara <span class="text-rose-500">*</span></label>
+                            <select v-model="form.negara_pilihan" @change="pilihNegara" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition">
+                                <option v-for="n in daftarNegara" :key="n" :value="n">{{ n }}</option>
+                            </select>
+                            <input
+                                v-if="form.negara_pilihan === 'Lainnya'"
+                                v-model="form.negara" type="text" placeholder="Tulis nama negara"
+                                class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A2540] transition mt-2" required
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Provinsi <span class="text-rose-500">*</span></label>
+                            <select v-model="form.provinsi_pilihan" @change="pilihProvinsi" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition">
+                                <option v-for="p in availableProvinsi" :key="p" :value="p">{{ p }}</option>
+                            </select>
+                            <input
+                                v-if="form.provinsi_pilihan === 'Lainnya'"
+                                v-model="form.provinsi" type="text" placeholder="Tulis nama provinsi"
+                                class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A2540] transition mt-2" required
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Kota / Kabupaten <span class="text-rose-500">*</span></label>
+                            <select v-model="form.kota_pilihan" @change="pilihKota" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition">
+                                <option v-for="k in availableKota" :key="k" :value="k">{{ k }}</option>
+                            </select>
+                            <input
+                                v-if="form.kota_pilihan === 'Lainnya'"
+                                v-model="form.kota" type="text" placeholder="Tulis nama kota/kabupaten"
+                                class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:border-[#0A2540] transition mt-2" required
+                            />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Kecamatan <span class="text-rose-500">*</span></label>
+                        <input v-model="form.kecamatan" type="text" placeholder="Contoh: Samarinda Ulu" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 transition" required />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Lengkap <span class="text-rose-500">*</span></label>
+                        <input v-model="form.alamat_lengkap" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 transition" required />
+                    </div>
+
+                    <!-- PILIH TITIK KOORDINAT DI PETA -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">
+                            Titik Lokasi di Peta <span class="text-rose-500">*</span>
+                        </label>
+                        <p class="text-[10px] text-slate-400 mb-2">
+                            Cari alamat di kolom bawah, gunakan lokasi GPS Anda, atau klik/geser pin langsung di peta untuk menandai titik properti secara presisi.
+                        </p>
+
+                        <!-- Search bar + tombol GPS -->
+                        <div class="flex gap-2 mb-2">
+                            <div class="flex-1 relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-[11px]"></i>
+                                <input
+                                    v-model="cariAlamatInput"
+                                    @keyup.enter.prevent="cariLokasiDiPeta"
+                                    type="text"
+                                    placeholder="Cari nama jalan / area di peta..."
+                                    class="w-full text-xs pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540]"
+                                />
+                            </div>
+                            <button
+                                type="button" @click.prevent="cariLokasiDiPeta" :disabled="isSearchingAlamat"
+                                class="bg-[#0A2540] text-white text-xs font-bold px-4 rounded-xl hover:bg-[#123e6b] transition cursor-pointer shrink-0 disabled:opacity-50"
+                            >
+                                {{ isSearchingAlamat ? 'Mencari...' : 'Cari' }}
+                            </button>
+                            <button
+                                type="button" @click.prevent="gunakanLokasiSaatIni" :disabled="isLocatingGPS"
+                                title="Gunakan Lokasi Saya Saat Ini"
+                                class="bg-slate-100 text-[#0A2540] text-xs font-bold px-3 rounded-xl hover:bg-slate-200 transition cursor-pointer shrink-0 disabled:opacity-50"
+                            >
+                                <i class="fa-solid fa-location-crosshairs"></i>
+                            </button>
+                        </div>
+
+                        <!-- Container Peta -->
+                        <div ref="mapContainer" class="w-full h-72 rounded-xl border border-slate-200 z-0"></div>
+
+                        <!-- Info koordinat terpilih -->
+                        <div class="flex items-center gap-2 mt-2 text-[11px]" :class="form.latitude ? 'text-emerald-600' : 'text-slate-400'">
+                            <i :class="['fa-solid', form.latitude ? 'fa-circle-check' : 'fa-circle-exclamation']"></i>
+                            <span v-if="form.latitude">
+                                Titik lokasi terpilih: {{ form.latitude }}, {{ form.longitude }}
+                            </span>
+                            <span v-else>Belum ada titik lokasi dipilih.</span>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- STEP 3: HARGA & FOTO BERDASARKAN KATEGORI RUANGAN/AREA -->
                 <div v-if="currentStep === 3" class="space-y-4">
                     <h2 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
@@ -1282,14 +1487,20 @@ const closeModalAndRedirect = () => {
                             <label class="block text-xs font-bold text-slate-700 mb-1">Harga Sewa (Rp) <span class="text-rose-500">*</span></label>
                             <div class="relative">
                                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
-                                <input v-model="form.harga_sewa" type="number" placeholder="1500000" class="w-full text-xs pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 transition" required />
+                                <input
+                                    v-model="hargaSewaDisplay" type="text" inputmode="numeric" placeholder="1.500.000"
+                                    class="w-full text-xs pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 transition" required
+                                />
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-700 mb-1">Uang Deposit (Opsional)</label>
                             <div class="relative">
                                 <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
-                                <input v-model="form.deposit" type="number" placeholder="200000" class="w-full text-xs pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 transition" />
+                                <input
+                                    v-model="depositDisplay" type="text" inputmode="numeric" placeholder="200.000"
+                                    class="w-full text-xs pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 transition"
+                                />
                             </div>
                         </div>
                     </div>
@@ -1324,7 +1535,12 @@ const closeModalAndRedirect = () => {
                                             required
                                         >
                                             <option value="" disabled>Pilih kategori ruangan/area</option>
-                                            <option v-for="opt in daftarKategoriFoto" :key="opt" :value="opt">{{ opt }}</option>
+                                            <option
+                                                v-for="opt in daftarKategoriFoto"
+                                                :key="opt"
+                                                :value="opt"
+                                                :disabled="kategoriFotoSudahDipilih(opt, index)"
+                                            >{{ opt }}</option>
                                         </select>
 
                                         <!-- Muncul hanya jika pilih "Lainnya", untuk kasus yang belum ada di daftar -->

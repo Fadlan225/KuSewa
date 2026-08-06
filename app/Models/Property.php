@@ -22,6 +22,10 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
     'tenant',
     'image',
     'occupancy',
+    'property_name', 'property_type', 'sub_category', 'rental_scheme', 'description',
+    'room_count', 'capacity', 'floor_count', 'land_area', 'building_area', 'dimensions',
+    'room_types', 'district', 'country', 'province', 'latitude', 'longitude', 'facilities',
+    'deposit', 'property_photos',
 ])]
 class Property extends Model
 {
@@ -29,6 +33,9 @@ class Property extends Model
     {
         return [
             'verified_at' => 'datetime',
+            'room_types' => 'array',
+            'facilities' => 'array',
+            'property_photos' => 'array',
         ];
     }
 

@@ -4,6 +4,8 @@ namespace App\Http\Middleware;
 
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use App\Models\Property;
+use App\Models\booking;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -34,11 +36,31 @@ class HandleInertiaRequests extends Middleware
             $user->load('ownerProfile');
         }
 
+        $ownerActivityCounts = [
+            'propertyReview' => 0,
+            'bookingReview' => 0,
+            'verificationReview' => 0,
+        ];
+
+        if ($user) {
+            $ownerActivityCounts['propertyReview'] = Property::where('user_id', $user->id)
+                ->where('verification_status', 'pending')
+                ->count();
+
+            $ownerActivityCounts['bookingReview'] = booking::whereHas(
+                'asset',
+                fn ($query) => $query->where('owner_profile_id', $user->ownerProfile?->id)
+            )->where('booking_status', 'pending')->count();
+
+            $ownerActivityCounts['verificationReview'] = $user->ownerProfile?->status === 'pending' ? 1 : 0;
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
             ],
+            'ownerActivityCounts' => $ownerActivityCounts,
         ];
     }
 }

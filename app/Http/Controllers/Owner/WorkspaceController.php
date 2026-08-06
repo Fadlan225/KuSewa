@@ -14,10 +14,28 @@ class WorkspaceController extends Controller
     public function bookings(Request $request): Response
     {
         $ownerProfile = $request->user()->ownerProfile;
-        $bookings = booking::query()
+        
+        $query = booking::query()
             ->with(['asset:id,title,owner_profile_id', 'user:id,name'])
-            ->when($ownerProfile, fn($query) => $query->whereHas('asset', fn($assetQuery) => $assetQuery->where('owner_profile_id', $ownerProfile->id)), fn($query) => $query->whereRaw('1 = 0'))
-            ->latest()
+            ->when($ownerProfile, fn($query) => $query->whereHas('asset', fn($assetQuery) => $assetQuery->where('owner_profile_id', $ownerProfile->id)), fn($query) => $query->whereRaw('1 = 0'));
+
+        // Hitung jumlah booking per status (seluruh data, bukan hanya halaman ini)
+        $statusCounts = [
+            'all' => (clone $query)->count(),
+            'pending' => (clone $query)->where('booking_status', 'pending')->count(),
+            'confirmed' => (clone $query)->where('booking_status', 'confirmed')->count(),
+            'active' => (clone $query)->where('booking_status', 'active')->count(),
+            'completed' => (clone $query)->where('booking_status', 'completed')->count(),
+            'cancelled' => (clone $query)->where('booking_status', 'cancelled')->count(),
+        ];
+
+        // Filter by status if provided
+        $statusFilter = $request->input('status');
+        if ($statusFilter && $statusFilter !== 'all') {
+            $query->where('booking_status', $statusFilter);
+        }
+
+        $bookings = $query->latest()
             ->paginate(10)
             ->through(fn(booking $booking) => [
                 'id' => $booking->id,
@@ -29,7 +47,10 @@ class WorkspaceController extends Controller
                 'status' => $booking->booking_status,
             ]);
 
-        return $this->page('bookings', 'Pemesanan', 'Kelola permintaan sewa dan pantau status pesanan aset Anda.', ['bookings' => $bookings]);
+        return $this->page('bookings', 'Pemesanan', 'Kelola permintaan sewa dan pantau status pesanan aset Anda.', [
+            'bookings' => $bookings,
+            'statusCounts' => $statusCounts,
+        ]);
     }
 
     /**

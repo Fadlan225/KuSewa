@@ -83,6 +83,9 @@ Route::middleware(['auth', 'role:owner'])->prefix('owner')->name('owner.')->grou
     // DELETE /owner/property/{id}     -> owner.property.destroy
     Route::resource('property', PropertyController::class);
 
+    // Update status ketersediaan properti (manual dari owner)
+    Route::patch('/property/{property}/status', [PropertyController::class, 'updateStatus'])->name('property.updateStatus');
+
     // Monthly Payment
     Route::get('/monthly-payment', [MonthlyPaymentController::class, 'index'])->name('monthly-payment');
     Route::post('/monthly-payment', [MonthlyPaymentController::class, 'store'])->name('monthly-payment.store');

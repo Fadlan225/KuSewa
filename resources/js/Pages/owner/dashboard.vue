@@ -59,7 +59,10 @@ const maxIncome = computed(() => Math.max(...monthlyIncome.value.map(m => m.inco
 
 const kotaList = computed(() => {
     const data = displayStats.value.kotaData || {};
-    return Object.entries(data).map(([name, count]) => ({ name, count }));
+    return Object.entries(data)
+        .map(([name, count]) => ({ name, count: Number(count) }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 3);
 });
 </script>
 
@@ -152,7 +155,7 @@ const kotaList = computed(() => {
                             <div v-if="kotaList.length" class="space-y-2.5">
                                 <div v-for="kota in kotaList" :key="kota.name" class="flex items-center justify-between text-xs">
                                     <span class="font-semibold text-slate-700">{{ kota.name }}</span>
-                                    <span class="font-bold text-[#0A2540]">{{ kota.count }} Unit</span>
+                                    <span class="font-bold text-[#0A2540]">{{ kota.count }} Aset</span>
                                 </div>
                             </div>
                             <p v-else class="text-xs text-slate-400">Belum ada data</p>

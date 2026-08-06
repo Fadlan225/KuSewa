@@ -58,24 +58,7 @@ class PropertyController extends Controller
         $property->loadMissing('verifier');
 
         return Inertia::render('owner/property/show', [
-            'property' => [
-                'id' => $property->id,
-                'title' => $property->title,
-                'category' => $property->category,
-                'type' => $property->type ?? '-',
-                'price' => (float) $property->price,
-                'rent_period' => $property->rent_period,
-                'city' => $property->city,
-                'address' => $property->address,
-                'status' => $property->status,
-                'verification_status' => $property->verification_status,
-                'verification_note' => $property->verification_note,
-                'verified_by' => $property->verifier?->name,
-                'verified_at' => $property->verified_at,
-                'tenant' => $property->tenant,
-                'image' => $property->image ? Storage::url($property->image) : null,
-                'occupancy' => $property->occupancy,
-            ],
+            'property' => $this->propertyPayload($property),
         ]);
     }
 
@@ -85,6 +68,30 @@ class PropertyController extends Controller
     public function create(): Response
     {
         return Inertia::render('owner/property/create');
+    }
+
+    /**
+     * Ubah status ketersediaan properti (manual dari owner)
+     * Hanya dapat dilakukan jika verified & tidak sedang sanksi
+     */
+    public function updateStatus(Property $property, Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'status' => 'required|in:Tersedia,Tersewa,Maintenance',
+        ]);
+
+        if ($property->user_id !== Auth::id()) {
+            abort(403, 'Akses tidak diizinkan.');
+        }
+
+        // Hanya bisa ubah status jika sudah verified (approved)
+        if ($property->verification_status !== 'approved') {
+            return back()->with('error', 'Tidak dapat mengubah status. Properti harus diverifikasi terlebih dahulu.');
+        }
+
+        $property->update(['status' => $validated['status']]);
+
+        return back()->with('success', 'Status properti berhasil diubah menjadi ' . $validated['status']);
     }
 
     public function store(Request $request): RedirectResponse
@@ -97,12 +104,26 @@ class PropertyController extends Controller
             'kota' => 'required|string|max:255',
             'kecamatan' => 'required|string|max:255',
             'harga_sewa' => 'required|numeric|min:0',
+            'deposit' => 'nullable|numeric|min:0',
+            'jenis_properti' => 'required|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'jumlah_kamar' => 'nullable|integer|min:0',
+            'kapasitas_orang' => 'nullable|integer|min:0',
+            'jumlah_lantai' => 'nullable|integer|min:0',
+            'luas_tanah' => 'nullable|numeric|min:0',
+            'luas_bangunan' => 'nullable|numeric|min:0',
+            'dimensi' => 'nullable|string|max:255',
+            'fasilitas' => 'nullable|array',
+            'tipe_kamar' => 'nullable|array',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
         ]);
 
-        Property::create([
+        Property::create(array_merge([
             'user_id' => Auth::id(),
             'title' => $validated['nama_properti'],
-            'category' => $validated['kategori'] === 'Kos & Rumah' ? 'Kos' : $validated['kategori'],
+            'category' => $validated['kategori'],
+            'type' => $validated['jenis_properti'],
             'price' => $validated['harga_sewa'],
             'rent_period' => match ($validated['tipe_sewa']) {
                 'Harian' => 'Hari',
@@ -113,7 +134,7 @@ class PropertyController extends Controller
             'address' => $validated['alamat_lengkap'] . ', ' . $validated['kecamatan'],
             'status' => 'Tersedia',
             'verification_status' => 'pending',
-        ]);
+        ], $this->richPropertyData($request)));
 
         return redirect()->route('owner.property.index')
             ->with('success', 'Properti berhasil diajukan dan menunggu verifikasi admin.');
@@ -129,7 +150,7 @@ class PropertyController extends Controller
         }
 
         return Inertia::render('owner/property/edit', [
-            'property' => $property,
+            'property' => $this->propertyPayload($property),
         ]);
     }
 
@@ -143,30 +164,127 @@ class PropertyController extends Controller
         }
 
         $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'category' => 'required|string',
-            'type' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'rent_period' => 'required|string',
-            'city' => 'required|string',
-            'address' => 'required|string',
+            'nama_properti' => 'required|string|max:255',
+            'kategori' => 'required|string',
+            'tipe_sewa' => 'required|string',
+            'alamat_lengkap' => 'required|string',
+            'kota' => 'required|string',
+            'kecamatan' => 'required|string',
+            'harga_sewa' => 'required|numeric|min:0',
+            'jenis_properti' => 'required|string|max:255',
+            'sub_kategori_baliho' => 'nullable|string|max:255',
+            'deskripsi' => 'nullable|string',
+            'jumlah_kamar' => 'nullable|integer|min:0',
+            'kapasitas_orang' => 'nullable|integer|min:0',
+            'jumlah_lantai' => 'nullable|integer|min:0',
+            'luas_tanah' => 'nullable|numeric|min:0',
+            'luas_bangunan' => 'nullable|numeric|min:0',
+            'dimensi' => 'nullable|string|max:255',
+            'fasilitas' => 'nullable|array',
+            'tipe_kamar' => 'nullable|array',
+            'latitude' => 'nullable|numeric',
+            'longitude' => 'nullable|numeric',
+            'negara' => 'nullable|string|max:255',
+            'provinsi' => 'nullable|string|max:255',
             'status' => 'required|in:Tersedia,Tersewa,Maintenance',
             'tenant' => 'nullable|string|max:255',
-            'image' => 'nullable|image|max:2048',
+            'deposit' => 'nullable|numeric|min:0',
         ]);
 
-        if ($request->hasFile('image')) {
-            if ($property->image) {
-                Storage::disk('public')->delete($property->image);
-            }
-
-            $validated['image'] = $request->file('image')->store('properties', 'public');
-        }
-
-        $property->update($validated);
+        $property->update(array_merge([
+            'title' => $validated['nama_properti'],
+            'category' => $validated['kategori'],
+            'type' => $validated['jenis_properti'],
+            'price' => $validated['harga_sewa'],
+            'rent_period' => $validated['tipe_sewa'],
+            'city' => $validated['kota'],
+            'address' => $validated['alamat_lengkap'] . ', ' . $validated['kecamatan'],
+            'verification_status' => 'pending',
+        ], $this->richPropertyData($request)));
 
         return redirect()->route('owner.property.index')
             ->with('success', 'Data properti berhasil diperbarui!');
+    }
+
+    private function richPropertyData(Request $request): array
+    {
+        return [
+            'property_name' => $request->input('nama_properti'),
+            'property_type' => $request->input('jenis_properti'),
+            'sub_category' => $request->input('sub_kategori_baliho'),
+            'rental_scheme' => $request->input('tipe_sewa'),
+            'description' => $request->input('deskripsi'),
+            'room_count' => $request->input('jumlah_kamar'),
+            'capacity' => $request->input('kapasitas_orang'),
+            'floor_count' => $request->input('jumlah_lantai'),
+            'land_area' => $request->input('luas_tanah'),
+            'building_area' => $request->input('luas_bangunan'),
+            'dimensions' => $request->input('dimensi'),
+            'room_types' => $request->input('tipe_kamar', []),
+            'district' => $request->input('kecamatan'),
+            'country' => $request->input('negara'),
+            'province' => $request->input('provinsi'),
+            'latitude' => $request->input('latitude'),
+            'longitude' => $request->input('longitude'),
+            'facilities' => $request->input('fasilitas', []),
+            'deposit' => $request->input('deposit'),
+            'property_photos' => collect($request->input('foto_properti', []))->map(function ($photo) {
+                return [
+                    'nama_ruangan' => $photo['nama_ruangan'] ?? $photo['nama_ruangan_pilihan'] ?? '',
+                    'photos' => $photo['existing_photos'] ?? [],
+                ];
+            })->values()->all(),
+        ];
+    }
+
+    private function propertyPayload(Property $property): array
+    {
+        return array_merge($property->toArray(), [
+            'nama_properti' => $property->property_name ?: $property->title,
+            'kategori' => $property->category,
+            'jenis_properti' => $property->property_type ?: $property->type ?: $property->category,
+            'sub_kategori_baliho' => $property->sub_category,
+            'tipe_sewa' => $property->rental_scheme ?: match ($property->rent_period) {
+                'Hari' => 'Harian',
+                'Tahun' => 'Tahunan',
+                default => 'Bulanan',
+            },
+            'deskripsi' => $property->description,
+            'jumlah_kamar' => $property->room_count,
+            'kapasitas_orang' => $property->capacity,
+            'jumlah_lantai' => $property->floor_count,
+            'luas_tanah' => $property->land_area,
+            'luas_bangunan' => $property->building_area,
+            'dimensi' => $property->dimensions,
+            'tipe_kamar' => $property->room_types ?: [],
+            'alamat_lengkap' => $property->address,
+            'kecamatan' => $property->district,
+            'negara' => $property->country ?: 'Indonesia',
+            'negara_pilihan' => $property->country ?: 'Indonesia',
+            'provinsi' => $property->province ?: 'Kalimantan Timur',
+            'provinsi_pilihan' => $property->province ?: 'Kalimantan Timur',
+            'kota' => $property->city,
+            'kota_pilihan' => $property->city,
+            'latitude' => $property->latitude,
+            'longitude' => $property->longitude,
+            'fasilitas' => $property->facilities ?: [],
+            'harga_sewa' => (float) $property->price,
+            'deposit' => $property->deposit,
+            'foto_properti' => collect($property->property_photos ?: [])->map(function ($photo) {
+                $photos = $photo['photos'] ?? $photo['existing_photos'] ?? [];
+                return [
+                    'nama_ruangan' => $photo['nama_ruangan'] ?? '',
+                    'photos' => collect($photos)->map(function ($path) {
+                        if (is_array($path)) return $path;
+                        return ['path' => $path, 'url' => Storage::url($path)];
+                    })->values()->all(),
+                ];
+            })->values()->all(),
+            'image' => $property->image ? Storage::url($property->image) : null,
+            'verified_by' => $property->verifier?->name,
+            'type' => $property->property_type ?: $property->type ?: $property->category,
+            'occupancy' => $property->occupancy ?: ($property->room_count ? $property->room_count . ' kamar' : '-'),
+        ]);
     }
 
     /**

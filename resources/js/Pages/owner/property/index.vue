@@ -65,7 +65,7 @@ const defaultProperties = [
         status: 'Tersedia',
         tenant: null,
         image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&w=500&q=80',
-        occupancy: '0/1 Unit'
+        occupancy: '0/1 Aset'
     },
     {
         id: 4,
@@ -79,7 +79,7 @@ const defaultProperties = [
         status: 'Tersedia',
         tenant: null,
         image: 'https://images.unsplash.com/photo-1598928506311-c55ded91a20c?auto=format&fit=crop&w=500&q=80',
-        occupancy: '0/1 Unit'
+        occupancy: '0/1 Aset'
     },
     {
         id: 5,
@@ -150,7 +150,7 @@ const filteredProperties = computed(() => {
 });
 
 // Summary Stat Computations
-const totalUnit = computed(() => paginationMeta.value.total);
+const totalAset = computed(() => paginationMeta.value.total);
 const totalTersewa = computed(() => propertyList.value.filter(p => p.status === 'Tersewa').length);
 const totalTersedia = computed(() => propertyList.value.filter(p => p.status === 'Tersedia').length);
 const totalPendingVerifikasi = computed(() => propertyList.value.filter(p => p.verification_status === 'pending').length);
@@ -205,6 +205,38 @@ const previewImage = (item) => {
     if (item.image) return item.image;
 
     return placeholderImage;
+};
+
+// --- UPDATE STATUS PROPERTY ---
+const updateStatusLoading = ref(null);
+const updateStatusModal = ref(false);
+const updatingProperty = ref(null);
+const newStatus = ref('Tersedia');
+
+const openUpdateStatusModal = (item) => {
+    updatingProperty.value = item;
+    newStatus.value = item.status || 'Tersedia';
+    updateStatusModal.value = true;
+};
+
+const closeUpdateStatusModal = () => {
+    updateStatusModal.value = false;
+    updatingProperty.value = null;
+};
+
+const confirmUpdateStatus = () => {
+    if (!updatingProperty.value) return;
+    updateStatusLoading.value = updatingProperty.value.id;
+    
+    router.patch(`/owner/property/${updatingProperty.value.id}/status`, {
+        status: newStatus.value
+    }, {
+        preserveScroll: true,
+        onFinish: () => {
+            updateStatusLoading.value = null;
+            closeUpdateStatusModal();
+        }
+    });
 };
 
 // --- DELETE PROPERTY ---
@@ -293,7 +325,7 @@ const confirmDelete = () => {
                         </div>
                         <div>
                             <span class="text-[11px] font-medium text-slate-400 block">Total Aset Didaftarkan</span>
-                            <span class="text-xl font-black text-slate-900">{{ totalUnit }} Unit</span>
+                            <span class="text-xl font-black text-slate-900">{{ totalAset }} Aset</span>
                         </div>
                     </div>
 
@@ -303,7 +335,7 @@ const confirmDelete = () => {
                         </div>
                         <div>
                             <span class="text-[11px] font-medium text-slate-400 block">Sedang Tersewa</span>
-                            <span class="text-xl font-black text-emerald-600">{{ totalTersewa }} Unit</span>
+                            <span class="text-xl font-black text-emerald-600">{{ totalTersewa }} Aset</span>
                         </div>
                     </div>
 
@@ -313,7 +345,7 @@ const confirmDelete = () => {
                         </div>
                         <div>
                             <span class="text-[11px] font-medium text-slate-400 block">Siap Disewakan (Kosong)</span>
-                            <span class="text-xl font-black text-blue-600">{{ totalTersedia }} Unit</span>
+                            <span class="text-xl font-black text-blue-600">{{ totalTersedia }} Aset</span>
                         </div>
                     </div>
 
@@ -323,7 +355,7 @@ const confirmDelete = () => {
                         </div>
                         <div>
                             <span class="text-[11px] font-medium text-slate-400 block">Menunggu Verifikasi</span>
-                            <span class="text-xl font-black text-amber-600">{{ totalPendingVerifikasi }} Unit</span>
+                            <span class="text-xl font-black text-amber-600">{{ totalPendingVerifikasi }} Aset</span>
                         </div>
                     </div>
                 </div>
@@ -454,6 +486,20 @@ const confirmDelete = () => {
                             </div>
 
                             <div class="flex items-center gap-1">
+                                <!-- UPDATE STATUS -->
+                                <button 
+                                    v-if="item.verification_status === 'approved'"
+                                    @click="openUpdateStatusModal(item)" 
+                                    :disabled="!!updateStatusLoading"
+                                    :class="[
+                                        'p-2 text-slate-400 hover:text-[#FFC000] hover:bg-amber-50 rounded-lg transition flex items-center justify-center',
+                                        updateStatusLoading === item.id ? 'opacity-50 cursor-not-allowed' : ''
+                                    ]" 
+                                    title="Ubah Status Ketersediaan"
+                                >
+                                    <i :class="updateStatusLoading === item.id ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-gavel'"></i>
+                                </button>
+
                                 <!-- LIHAT DETAIL: status pengajuan/diterima/ditolak & info lengkap aset (GRID) -->
                                 <Link 
                                     :href="`/owner/property/${item.id}`" 
@@ -526,6 +572,20 @@ const confirmDelete = () => {
                                     </td>
                                     <td class="p-4 text-right">
                                         <div class="flex items-center justify-end gap-2">
+                                            <!-- UPDATE STATUS (TABLE) -->
+                                            <button
+                                                v-if="item.verification_status === 'approved'"
+                                                @click="openUpdateStatusModal(item)"
+                                                :disabled="!!updateStatusLoading"
+                                                :class="[
+                                                    'p-1.5 text-slate-400 hover:text-[#FFC000] transition flex items-center justify-center',
+                                                    updateStatusLoading === item.id ? 'opacity-50 cursor-not-allowed' : ''
+                                                ]"
+                                                title="Ubah Status Ketersediaan"
+                                            >
+                                                <i :class="updateStatusLoading === item.id ? 'fa-solid fa-spinner fa-spin' : 'fa-solid fa-gavel'"></i>
+                                            </button>
+
                                             <!-- LIHAT DETAIL: status pengajuan/diterima/ditolak & info lengkap aset (TABLE) -->
                                             <Link 
                                                 :href="`/owner/property/${item.id}`" 
@@ -608,6 +668,57 @@ const confirmDelete = () => {
                         <button @click="confirmDelete" :disabled="deleting" class="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50">
                             <i v-if="deleting" class="fa-solid fa-spinner animate-spin"></i>
                             {{ deleting ? 'Menghapus...' : 'Ya, Hapus' }}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
+
+        <!-- UPDATE STATUS MODAL -->
+        <Teleport to="body">
+            <div v-if="updateStatusModal" class="fixed inset-0 z-50 flex items-center justify-center">
+                <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="closeUpdateStatusModal"></div>
+                <div class="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-xl mx-4 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-amber-100 text-[#FFC000] flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-gavel"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-800">Ubah Status Ketersediaan</h3>
+                            <p class="text-xs text-slate-400">Atur ketersediaan properti secara manual untuk customer langsung.</p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <label class="block text-xs font-bold text-slate-700">
+                            Status Baru:
+                        </label>
+                        <select v-model="newStatus" class="w-full bg-slate-50 text-sm border border-slate-200 rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#FFC000] transition">
+                            <option value="Tersedia">✅ Tersedia - Siap disewakan</option>
+                            <option value="Tersewa">🏠 Tersewa - Sedang dalam kontrak sewa</option>
+                            <option value="Maintenance">🔧 Maintenance - Tidak tersedia untuk perawatan</option>
+                        </select>
+                        
+                        <div v-if="updatingProperty" class="bg-slate-50 rounded-xl p-3 text-xs space-y-1">
+                            <p class="font-bold text-slate-800">{{ updatingProperty.title }}</p>
+                            <p class="text-slate-400">Dari: <span class="font-semibold">{{ updatingProperty.status }}</span></p>
+                        </div>
+
+                        <div class="flex items-start gap-2 bg-blue-50 rounded-lg p-3 border border-blue-100">
+                            <i class="fa-solid fa-circle-info text-blue-500 text-sm mt-0.5 shrink-0"></i>
+                            <p class="text-[10px] text-blue-700 leading-tight">
+                                <strong>Catatan:</strong> Hanya owner dengan properti terverifikasi yang dapat mengubah status ini secara manual saat ada customer datang langsung ke lokasi.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 justify-end pt-2">
+                        <button @click="closeUpdateStatusModal" :disabled="!!updateStatusLoading" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition disabled:opacity-50">
+                            Batal
+                        </button>
+                        <button @click="confirmUpdateStatus" :disabled="!!updateStatusLoading" class="px-4 py-2 text-xs font-bold text-white bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-xl transition flex items-center gap-1.5 disabled:opacity-50">
+                            <i v-if="updateStatusLoading === updatingProperty?.id" class="fa-solid fa-spinner fa-spin"></i>
+                            {{ updateStatusLoading ? 'Memproses...' : 'Simpan Perubahan' }}
                         </button>
                     </div>
                 </div>
