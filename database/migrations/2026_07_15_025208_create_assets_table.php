@@ -17,17 +17,17 @@ return new class extends Migration
             $table->foreignID('asset_type_id')->constrained()->onDelete('restrict');
             $table->string('title');
             $table->string('slug')->unique();
-            $table->string('description');
+            $table->text('description');
             $table->json('detail');
-            $table->string('country');
-            $table->string('province');
-            $table->string('city');
-            $table->string('subdistrict');
+            $table->string('province_code');
+            $table->string('city_code');
+            $table->string('district_code');
+            $table->string('village_code');
             $table->char('postal_code', 5)->nullable();
             $table->string('address');
             $table->string('latitude');
             $table->string('longitude');
-            $table->enum('status', ['active','inactive', 'pending'])->default('pending');
+            $table->enum('status', ['pending','approved', 'rejected','inactive'])->default('pending');
             $table->timestamps();
         });
     }

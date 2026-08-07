@@ -5,8 +5,11 @@ import { usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     asset: { type: Object, required: true },
-    categoryName: { type: String, required: true }
+    categoryName: { type: String, required: true },
+    isOwner: { type: Boolean, default: false }
 });
+
+defineEmits(['delete']);
 
 // ── Intersection Observer (Lazy Load — Mobile Only) ───────────────────────
 // Desktop (≥1024px): langsung render semua kartu, skip observer (hemat CPU).
@@ -19,7 +22,7 @@ let observer = null;
 
 // thumbnailImages dari backend (max 3), fallback ke images lama atau first_image
 const imgList = computed(() => props.asset.thumbnail_images || props.asset.images || []);
-const img1 = computed(() => imgList.value[0]?.image_url || props.asset.first_image?.image_url);
+const img1 = computed(() => imgList.value[0]?.image_url || props.asset.first_image?.image_url || props.asset.image || props.asset.thumbnail);
 const img2 = computed(() => imgList.value[1]?.image_url);
 const img3 = computed(() => imgList.value[2]?.image_url);
 
@@ -118,9 +121,12 @@ const toggleFavorite = () => {
     syncFavorite(next);          // ← kirim ke server di background
 };
 
-// ── Navigasi (tanpa <Link> agar tidak konflik di mobile) ──────────────
 const navigateToAsset = () => {
-    router.visit(route('assets.show', props.asset.slug));
+    if (props.isOwner) {
+        router.visit(route('owner.asset.show', props.asset.id));
+    } else {
+        router.visit(route('assets.show', props.asset.slug));
+    }
 };
 
 let lastTapTime = 0;
@@ -304,7 +310,7 @@ const availabilityText = computed(() => {
 
                 <div class="text-[10px] md:text-xs text-gray-500 font-medium truncate mt-0.5">
                     <i class="fa-solid fa-location-dot text-[#FFC000] mr-0.5"></i>
-                    {{ [asset.subdistrict, asset.city].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
+                    {{ [(asset.district?.name || asset.district), (asset.city?.name || asset.city)].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
                 </div>
                 
                 <div class="text-[10px] md:text-[11px] text-[#10B981] font-bold mt-1.5 flex items-center gap-1">
@@ -317,19 +323,20 @@ const availabilityText = computed(() => {
             <div class="shrink-0 flex flex-col items-end justify-between self-stretch py-0.5">
                 <div class="text-right mb-2 md:mb-0">
                     <p class="font-extrabold text-xs md:text-sm text-[#FFC000] leading-none">
-                        <template v-if="asset.default_pricing">
-                            {{ formatRupiah(asset.default_pricing.price) }}
+                        <template v-if="asset.default_pricing || asset.price">
+                            {{ formatRupiah(asset.default_pricing?.price || asset.price) }}
                         </template>
                         <template v-else>
                             Hubungi
                         </template>
                     </p>
-                    <p v-if="asset.default_pricing" class="text-[9px] md:text-[10px] text-gray-400 mt-1">
-                        /{{ rentalUnitLabel(asset.type?.rental_unit) }}
+                    <p v-if="asset.default_pricing || asset.price" class="text-[9px] md:text-[10px] text-gray-400 mt-1">
+                        /{{ rentalUnitLabel(asset.type?.rental_unit || asset.rent_period) }}
                     </p>
                 </div>
 
                 <button
+                    v-if="!isOwner"
                     class="mt-auto z-30 flex items-center justify-center transition-transform active:scale-125"
                     :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
                     @click.stop.prevent="toggleFavorite"

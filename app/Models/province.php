@@ -6,5 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class province extends Model
 {
-    //
+    protected $table = 'provinces';
+    protected $primaryKey = 'code';
+    public $incrementing = false;
+    protected $keyType = 'string';
 }

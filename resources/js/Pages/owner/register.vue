@@ -83,15 +83,15 @@ const submit = () => {
     <Head title="Pendaftaran Owner - kusewa.id" />
 
     <div class="min-h-screen bg-[#F8FAFC] font-sans text-slate-700 antialiased py-8 px-4 sm:px-6">
-
+        
         <!-- CONTAINER TERPUSAT -->
         <div class="max-w-3xl mx-auto space-y-6">
 
             <!-- HEADER & BACK LINK -->
             <div class="flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <Link
-                        href="owner.dashboard"
+                    <Link 
+                        href="owner.dashboard" 
                         class="w-9 h-9 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-slate-500 hover:text-[#0A2540] hover:border-slate-300 transition shadow-xs"
                     >
                         <i class="fa-solid fa-arrow-left text-xs"></i>
@@ -140,10 +140,10 @@ const submit = () => {
 
             <!-- STEP PROGRESS BAR DENGAN GARIS PENGHUBUNG -->
             <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs relative overflow-hidden">
-
+                
                 <!-- GARIS BACKGROUND ANIMASI -->
                 <div class="absolute top-1/2 left-10 right-10 -translate-y-1/2 h-[2px] bg-slate-100 -z-0">
-                    <div
+                    <div 
                         class="h-full bg-[#0A2540] transition-all duration-300"
                         :style="{
                             width: currentStep === 1 ? '0%' : currentStep === 2 ? '50%' : '100%'
@@ -153,10 +153,10 @@ const submit = () => {
 
                 <!-- ITEM STEPPER -->
                 <div class="grid grid-cols-3 gap-2 relative z-10">
-
+                    
                     <!-- Step 1 -->
                     <div class="flex items-center gap-3 bg-white pr-2 w-fit">
-                        <div
+                        <div 
                             class="w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center transition shrink-0 shadow-xs"
                             :class="currentStep >= 1 ? 'bg-[#0A2540] text-[#FFC000]' : 'bg-slate-100 text-slate-400'"
                         >
@@ -171,7 +171,7 @@ const submit = () => {
 
                     <!-- Step 2 -->
                     <div class="flex items-center gap-3 justify-center mx-auto bg-white px-2 w-fit">
-                        <div
+                        <div 
                             class="w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center transition shrink-0 shadow-xs"
                             :class="currentStep >= 2 ? 'bg-[#0A2540] text-[#FFC000]' : 'bg-slate-100 text-slate-400'"
                         >
@@ -186,7 +186,7 @@ const submit = () => {
 
                     <!-- Step 3 -->
                     <div class="flex items-center gap-3 justify-end ml-auto bg-white pl-2 w-fit">
-                        <div
+                        <div 
                             class="w-9 h-9 rounded-xl font-bold text-xs flex items-center justify-center transition shrink-0 shadow-xs"
                             :class="currentStep === 3 ? 'bg-[#0A2540] text-[#FFC000]' : 'bg-slate-100 text-slate-400'"
                         >
@@ -203,7 +203,7 @@ const submit = () => {
 
             <!-- FORM CARD -->
             <div class="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-xs">
-
+                
                 <!-- STEP 1: IDENTITAS -->
                 <div v-if="currentStep === 1" class="space-y-5">
                     <div>
@@ -216,9 +216,9 @@ const submit = () => {
                     <!-- NIK -->
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-700">Nomor Induk Kependudukan (NIK)</label>
-                        <input
-                            v-model="form.national_id"
-                            type="text"
+                        <input 
+                            v-model="form.national_id" 
+                            type="text" 
                             maxlength="16"
                             placeholder="Contoh: 3271234567890001"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:bg-white focus:outline-none focus:border-[#0A2540] transition"
@@ -231,9 +231,9 @@ const submit = () => {
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-700">Tempat Lahir</label>
-                            <input
-                                v-model="form.place_of_birth"
-                                type="text"
+                            <input 
+                                v-model="form.place_of_birth" 
+                                type="text" 
                                 placeholder="Contoh: Bandung"
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:bg-white focus:outline-none focus:border-[#0A2540] transition"
                                 :class="{ 'border-rose-500': form.errors.place_of_birth }"
@@ -243,9 +243,9 @@ const submit = () => {
 
                         <div class="space-y-1.5">
                             <label class="text-xs font-bold text-slate-700">Tanggal Lahir</label>
-                            <input
-                                v-model="form.date_of_birth"
-                                type="date"
+                            <input 
+                                v-model="form.date_of_birth" 
+                                type="date" 
                                 class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:bg-white focus:outline-none focus:border-[#0A2540] transition"
                                 :class="{ 'border-rose-500': form.errors.date_of_birth }"
                             />
@@ -265,9 +265,9 @@ const submit = () => {
 
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-700">Alamat Lengkap Sesuai KTP</label>
-                        <textarea
-                            v-model="form.address"
-                            rows="4"
+                        <textarea 
+                            v-model="form.address" 
+                            rows="4" 
                             placeholder="Jl. Merdeka No. 12, RT 01/RW 02, Kel. Pasir Kaliki, Kec. Cicendo, Kota Bandung"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:bg-white focus:outline-none focus:border-[#0A2540] transition resize-none"
                             :class="{ 'border-rose-500': form.errors.address }"
@@ -288,10 +288,10 @@ const submit = () => {
                     <div class="space-y-1.5">
                         <label class="text-xs font-bold text-slate-700">Foto KTP Asli</label>
                         <div class="border-2 border-dashed border-slate-200 bg-slate-50 rounded-xl p-6 text-center hover:bg-slate-100/60 transition relative">
-                            <input
-                                type="file"
+                            <input 
+                                type="file" 
                                 accept="image/*"
-                                @change="handleFileUpload"
+                                @change="handleFileUpload" 
                                 class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                             <div v-if="!ktpPreview" class="space-y-2">
@@ -313,8 +313,8 @@ const submit = () => {
 
                 <!-- STEP NAVIGATION BUTTONS -->
                 <div class="pt-6 flex items-center justify-between border-t border-slate-100 mt-6">
-                    <button
-                        type="button"
+                    <button 
+                        type="button" 
                         @click="prevStep"
                         :disabled="currentStep === 1"
                         class="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
@@ -323,9 +323,9 @@ const submit = () => {
                         <span>Sebelumnya</span>
                     </button>
 
-                    <button
+                    <button 
                         v-if="currentStep < 3"
-                        type="button"
+                        type="button" 
                         @click="nextStep"
                         class="px-6 py-2.5 rounded-xl bg-[#0A2540] hover:bg-[#081d33] text-white text-xs font-bold transition flex items-center gap-2 shadow-xs"
                     >
@@ -333,9 +333,9 @@ const submit = () => {
                         <i class="fa-solid fa-arrow-right text-[10px]"></i>
                     </button>
 
-                    <button
+                    <button 
                         v-else
-                        type="button"
+                        type="button" 
                         @click="submit"
                         :disabled="form.processing"
                         class="px-6 py-2.5 rounded-xl bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] text-xs font-black transition flex items-center gap-2 shadow-xs disabled:opacity-50"

@@ -9,11 +9,6 @@
     <table align="center" width="100%" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 600px; background-color: #ffffff; border-top: 5px solid #FFC000; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin: 0 auto;">
         <tr>
             <td style="padding: 40px 40px 20px 40px;">
-                <!-- Logo -->
-                <div style="margin-bottom: 40px;">
-                    <img src="{{ $message->embed(public_path('kusewa-logo.png')) }}" alt="KuSewa" style="height: 35px;">
-                </div>
-
                 <!-- Title -->
                 <h1 style="font-size: 24px; color: #333333; margin-bottom: 25px; font-weight: normal;">
                     Kode Verifikasi Rahasia KuSewa
@@ -23,7 +18,7 @@
                 <p style="font-size: 16px; color: #333333; margin-bottom: 25px; line-height: 1.5;">
                     Ini adalah kode verifikasi KuSewa Anda: <strong style="font-size: 18px;">{{ $otp }}</strong>
                 </p>
-                
+
                 <p style="font-size: 15px; color: #555555; margin-bottom: 35px; line-height: 1.5;">
                     Kode ini berlaku hanya <strong>1 menit</strong>. Atau, Anda dapat memverifikasi secara otomatis dengan menekan tombol berikut:
                 </p>

@@ -517,7 +517,7 @@ const formattedDateRange = computed(() => {
             <div class="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-600">
                 <div class="flex items-center gap-1">
                     <i class="fa-solid fa-location-dot text-gray-400"></i>
-                    <span class="underline decoration-gray-300">{{ asset.city }}, {{ asset.province }}, {{ asset.country }}</span>
+                    <span class="underline decoration-gray-300">{{ asset.city?.name }}, {{ asset.province?.name }}, Indonesia</span>
                 </div>
 
                 <div class="flex items-center gap-1">
@@ -582,7 +582,7 @@ const formattedDateRange = computed(() => {
                 <!-- Lokasi Map Placeholder -->
                 <div id="lokasi" class="py-6 border-b border-gray-200">
                     <h3 class="text-lg font-bold mb-4">Lokasi</h3>
-                    <p class="text-gray-600 mb-4">{{ [asset.address, asset.subdistrict, asset.city, asset.province, asset.country].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
+                    <p class="text-gray-600 mb-4">{{ [asset.address, asset.village?.name, asset.district?.name, asset.city?.name, asset.province?.name, 'Indonesia'].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
                     <div class="w-full h-64 bg-gray-200 rounded-xl overflow-hidden relative flex items-center justify-center">
                         <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://map.viamichelin.com/map/carte?map=viamichelin&z=10&lat=-0.502&lon=117.153&width=800&height=400&format=png&version=latest&layer=background')"></div>
                         <div class="z-10 flex flex-col items-center bg-white/90 p-4 rounded-xl shadow-lg">
@@ -724,12 +724,12 @@ const formattedDateRange = computed(() => {
                         <button
                             v-else
                             @click="submitBooking"
-                            :disabled="asset.status !== 'active' || !activePrice || !startDate || durationCount === 0"
+                            :disabled="asset.status !== 'approved' || !activePrice || !startDate || durationCount === 0"
                             class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
                             Booking Sekarang
                         </button>
 
-                        <p v-if="asset.status !== 'active'" class="text-center text-red-500 text-xs font-bold mb-4">Aset ini sedang tidak tersedia.</p>
+                        <p v-if="asset.status !== 'approved'" class="text-center text-red-500 text-xs font-bold mb-4">Aset ini sedang tidak tersedia.</p>
 
                         <!-- Breakdown -->
                         <div class="space-y-3 text-sm">
@@ -799,7 +799,7 @@ const formattedDateRange = computed(() => {
         :durationLabel="rentalUnitLabel(activeScheduleMode)"
         :formattedDateRange="formattedDateRange"
         :periodLabel="rentalUnitLabel(activeScheduleMode)"
-        :disabled="asset.status !== 'active' || (!asset.pricings?.length && !asset.units?.length) || !startDate || durationCount === 0"
+        :disabled="asset.status !== 'approved' || (!asset.pricings?.length && !asset.units?.length) || !startDate || durationCount === 0"
         :buttonText="(asset.units && asset.units.length > 0) ? 'Pilih Unit' : 'Booking'"
         @submit="handleBottomBarSubmit"
     />

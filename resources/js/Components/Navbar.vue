@@ -30,7 +30,7 @@ const ownerStatus = computed(() => {
     return null;
 });
 
-const isVerifiedOwner = computed(() => ownerStatus.value === 'verified' || page.props.auth.user?.role === 'owner');
+const isVerifiedOwner = computed(() => ownerStatus.value === 'verified');
 const isPendingOwner = computed(() => ownerStatus.value === 'pending' || ownerStatus.value === 'rejected');
 
 const userProfilePhoto = computed(() => {
@@ -783,12 +783,26 @@ const initials = computed(() => {
                                     <template v-if="isVerifiedOwner">
                                         <div class="h-px bg-gray-100 my-2"></div>
                                         <Link
-                                            href="#"
+                                            :href="route('owner.dashboard')"
                                             @click="isUserMenuOpen = false"
-                                            class="flex items-center gap-3 py-2 px-3 bg-[#0A2540] hover:bg-[#113a63] text-white rounded-xl font-bold text-xs transition shadow-sm my-1"
+                                            class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1 block"
                                         >
-                                            <i class="fa-solid fa-chart-pie text-[#FFC000]"></i>
-                                            Dashboard Owner
+                                            <!-- Ilustrasi (Ditempatkan di sudut kanan) -->
+                                            <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
+                                                <div class="w-full h-full flex items-center justify-end pr-4 text-[#0A2540] opacity-10 group-hover:opacity-20 transition-opacity">
+                                                    <i class="fa-solid fa-chart-pie text-5xl"></i>
+                                                </div>
+                                            </div>
+
+                                            <!-- Konten Teks -->
+                                            <div class="relative z-10 w-3/4 pr-2">
+                                                <h3 class="text-sm font-bold text-[#0A2540] group-hover:text-amber-600 transition-colors">
+                                                    Dashboard Owner
+                                                </h3>
+                                                <p class="text-[11px] text-gray-500 leading-snug mt-1 font-normal">
+                                                    Kelola aset, pantau penyewaan, dan lihat pendapatan Anda.
+                                                </p>
+                                            </div>
                                         </Link>
                                         <div class="h-px bg-gray-100 my-2"></div>
                                     </template>

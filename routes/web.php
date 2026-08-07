@@ -14,6 +14,8 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Api\HomeAssetController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\AssetViewController;
+use App\Http\Controllers\OwnerRegistrationController;
+use App\Http\Controllers\Owner\DashboardController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -30,12 +32,6 @@ Route::get('/api/cities', [\App\Http\Controllers\LocationController::class, 'get
 Route::get('/api/districts', [\App\Http\Controllers\LocationController::class, 'getDistricts'])->name('api.districts.index');
 Route::get('/api/villages', [\App\Http\Controllers\LocationController::class, 'getVillages'])->name('api.villages.index');
 
-Route::middleware('auth')->group(function () {
-    Route::post('/search-logs', [HomeController::class, 'logSearch'])->name('search.log');
-    Route::delete('/search-logs', [HomeController::class, 'clearSearchHistory'])->name('search.clear');
-    Route::delete('/search-logs/keyword', [HomeController::class, 'deleteSearchKeyword'])->name('search.deleteKeyword');
-});
-
 Route::resource('assets', AssetController::class)->only(['show']);
 
 Route::get('/bantuan', function () {
@@ -46,27 +42,31 @@ Route::get('/hubungi-kami', function () {
     return Inertia::render('Home/Support/HubungiKami');
 })->name('hubungi-kami');
 
-Route::get('/mulai-sewakan', function () {
-    return redirect()->route('owner.register');
-})->name('mulai-sewakan');
 
 Route::middleware('auth')->prefix('owner')->group(function () {
-    Route::get('/register', [\App\Http\Controllers\OwnerRegistrationController::class, 'index'])->name('owner.register');
-    Route::post('/register/step1', [\App\Http\Controllers\OwnerRegistrationController::class, 'storeStep1'])->name('owner.register.step1');
-    Route::post('/register/step2', [\App\Http\Controllers\OwnerRegistrationController::class, 'storeStep2'])->name('owner.register.step2');
-    Route::post('/register/step3', [\App\Http\Controllers\OwnerRegistrationController::class, 'storeStep3'])->name('owner.register.step3');
-    Route::get('/verification', [\App\Http\Controllers\OwnerRegistrationController::class, 'verificationStatus'])->name('owner.verification');
+    Route::get('/register', [OwnerRegistrationController::class, 'index'])->name('owner.register');
+    Route::post('/register/step1', [OwnerRegistrationController::class, 'storeStep1'])->name('owner.register.step1');
+    Route::post('/register/step2', [OwnerRegistrationController::class, 'storeStep2'])->name('owner.register.step2');
+    Route::post('/register/step3', [OwnerRegistrationController::class, 'storeStep3'])->name('owner.register.step3');
+    Route::get('/verification', [OwnerRegistrationController::class, 'verificationStatus'])->name('owner.verification');
 });
 
-Route::middleware(['auth', 'role:owner'])->group(function () {
+Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-});
-
-Route::get('/confirm-payment', function(){
-    return Inertia::render('Home/Confirm-Payment');
+    Route::resource('asset', \App\Http\Controllers\Owner\AssetController::class)->names('asset');
+    Route::get('/bookings', function(){ return Inertia::render('owner/BookingReview'); })->name('bookings');
+    Route::get('/monthly-payment', function(){ return Inertia::render('owner/MonthlyPayment'); })->name('monthly-payment');
+    Route::get('/finance', function(){ return Inertia::render('owner/finance'); })->name('finance');
+    Route::get('/settings', function(){ return Inertia::render('owner/settings'); })->name('settings');
+    Route::get('/help', function(){ return Inertia::render('owner/help'); })->name('help');
 });
 
 Route::middleware('auth')->group(function () {
+    Route::post('/search-logs', [HomeController::class, 'logSearch'])->name('search.log');
+    Route::delete('/search-logs', [HomeController::class, 'clearSearchHistory'])->name('search.clear');
+    Route::delete('/search-logs/keyword', [HomeController::class, 'deleteSearchKeyword'])->name('search.deleteKeyword');
+
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
     Route::post('/chat/start', [ChatController::class, 'startChat'])->name('chat.start');
 

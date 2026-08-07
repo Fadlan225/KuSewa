@@ -14,10 +14,11 @@ class asset extends Model
         'title',
         'slug',
         'description',
-        'country',
-        'province',
-        'city',
-        'subdistrict',
+        'detail',
+        'province_code',
+        'city_code',
+        'district_code',
+        'village_code',
         'postal_code',
         'address',
         'latitude',
@@ -31,6 +32,22 @@ class asset extends Model
 
     public function ownerProfile(){
         return $this->belongsTo(owner_profile::class);
+    }
+
+    public function province(){
+        return $this->belongsTo(province::class, 'province_code', 'code');
+    }
+
+    public function city(){
+        return $this->belongsTo(city::class, 'city_code', 'code');
+    }
+
+    public function district(){
+        return $this->belongsTo(district::class, 'district_code', 'code');
+    }
+
+    public function village(){
+        return $this->belongsTo(village::class, 'village_code', 'code');
     }
 
     public function getRouteKeyName()
@@ -100,6 +117,9 @@ class asset extends Model
             'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
             'defaultPricing:id,asset_id,price',
             'type:id,name,allow_units,rental_unit,category_id',
+            'city:code,name',
+            'district:code,name',
+            'province:code,name',
             'favorites' => function ($q) {
                 if (auth()->check()) {
                     $q->select(['id', 'user_id', 'asset_id'])->where('user_id', auth()->id());

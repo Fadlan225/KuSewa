@@ -5,8 +5,11 @@ import { usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     asset: { type: Object, required: true },
-    categoryName: { type: String, required: true }
+    categoryName: { type: String, required: true },
+    isOwner: { type: Boolean, default: false }
 });
+
+defineEmits(['delete']);
 
 const rentalUnitLabel = (unit) => {
     const labels = {
@@ -21,7 +24,7 @@ const rentalUnitLabel = (unit) => {
 
 // thumbnailImages dari backend (max 3), fallback ke images lama atau first_image
 const imgList = computed(() => props.asset.thumbnail_images || props.asset.images || []);
-const img1 = computed(() => imgList.value[0]?.image_url || props.asset.first_image?.image_url);
+const img1 = computed(() => imgList.value[0]?.image_url || props.asset.first_image?.image_url || props.asset.image || props.asset.thumbnail);
 const img2 = computed(() => imgList.value[1]?.image_url);
 const img3 = computed(() => imgList.value[2]?.image_url);
 
@@ -131,7 +134,11 @@ const toggleFavorite = () => {
 
 // ── Navigasi (tanpa <Link> agar tidak konflik di mobile) ──────────────
 const navigateToAsset = () => {
-    router.visit(route('assets.show', props.asset.slug));
+    if (props.isOwner) {
+        router.visit(route('owner.asset.show', props.asset.id));
+    } else {
+        router.visit(route('assets.show', props.asset.slug));
+    }
 };
 
 let lastTapTime = 0;
@@ -282,11 +289,9 @@ const periodLabel = {
                 <!-- Gradients overlay -->
                 <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10"></div>
 
-                <!-- ❤️ Tombol Favorit
-                     Semua event touch di-stop agar TIDAK bubbling ke div gambar di atas
-                     (mencegah konflik @touchend="onTouchEnd" dan @click="navigateToAsset")
-                -->
+                <!-- ❤️ Tombol Favorit -->
                 <button
+                    v-if="!isOwner"
                     class="absolute top-2.5 right-2.5 z-30 text-white drop-shadow-md flex items-center justify-center transition-transform active:scale-125"
                     :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
                     @touchstart.stop
@@ -338,15 +343,15 @@ const periodLabel = {
                 <div class="text-[11px] sm:text-xs text-gray-500 font-medium flex items-center gap-1.5 truncate mt-0.5">
                     <i class="fa-solid fa-location-dot text-[12px] sm:text-[13px] text-[#FFC000] flex-shrink-0"></i>
                     <span class="truncate">
-                        {{ [asset.city, asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
+                        {{ [(asset.city?.name || asset.city), asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
                     </span>
                 </div>
 
                 <div class="font-bold text-sm sm:text-base text-[#F97316] mt-auto pt-1">
-                    <template v-if="asset.default_pricing">
-                        {{ formatRupiah(asset.default_pricing.price) }}
+                    <template v-if="asset.default_pricing || asset.price">
+                        {{ formatRupiah(asset.default_pricing?.price || asset.price) }}
                         <span class="text-[10px] font-normal text-gray-400">
-                            /{{ rentalUnitLabel(asset.type?.rental_unit) }}
+                            /{{ rentalUnitLabel(asset.type?.rental_unit || asset.rent_period) }}
                         </span>
                     </template>
                     <span v-else class="text-[11px] font-medium text-gray-400">Hubungi Pemilik</span>

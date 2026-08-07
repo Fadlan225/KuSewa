@@ -21,17 +21,18 @@ class HomeController extends Controller
      */
     private function getLocationSuggestions(?string $query = null): array
     {
-        $q = asset::where('status', 'active')
-            ->whereNotNull('city')
-            ->where('city', '!=', '');
+        $q = asset::where('status', 'approved')
+            ->whereNotNull('city_code')
+            ->where('city_code', '!=', '')
+            ->join('cities', 'assets.city_code', '=', 'cities.code');
 
         if ($query) {
-            $q->where('city', 'like', "%{$query}%");
+            $q->where('cities.name', 'like', "%{$query}%");
         }
 
-        return $q->select('city')
+        return $q->select('cities.name as city')
             ->distinct()
-            ->orderBy('city')
+            ->orderBy('cities.name')
             ->limit(10)
             ->pluck('city')
             ->map(fn($city) => [
@@ -82,7 +83,7 @@ class HomeController extends Controller
         if ($assetIds !== null) {
             $query->whereIn('asset_id', $assetIds);
         } else {
-            $query->whereIn('asset_id', asset::where('status', 'active')->pluck('id'));
+            $query->whereIn('asset_id', asset::where('status', 'approved')->pluck('id'));
         }
 
         $prices = $query->get(['asset_id', 'price'])
@@ -133,12 +134,18 @@ class HomeController extends Controller
             $asset->isFavorite = (bool) $favorite;
             $asset->favorite_id = $favorite?->id;
             unset($asset->favorites);
+            
+            // Map location names so cards display correctly
+            $asset->city_name = $asset->city->name ?? '';
+            $asset->district_name = $asset->district->name ?? '';
+            $asset->province_name = $asset->province->name ?? '';
+            
             return $asset;
         };
 
         // 2. Populer Minggu Ini
-        $popularAssets = asset::where('status', 'active')
-            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
+        $popularAssets = asset::where('status', 'approved')
+            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
             ->withCount(['bookings', 'views', 'favorites', 'reviews'])
             ->withAvg('reviews as reviews_avg_rating', 'rating')
             ->orderByRaw('((IFNULL(bookings_count, 0) * 5) + (IFNULL(views_count, 0) * 1) + (IFNULL(favorites_count, 0) * 3) + (IFNULL(reviews_count, 0) * 2) + (IFNULL(reviews_avg_rating, 0) * 2)) DESC')
@@ -164,8 +171,8 @@ class HomeController extends Controller
 
             if ($viewedAssetIds->isNotEmpty()) {
                 $viewedAssets = asset::whereIn('id', $viewedAssetIds)
-                    ->where('status', 'active')
-                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
+                    ->where('status', 'approved')
+                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
                     ->withCommonRelations()
                     ->withCount('reviews')
             ->withAvg('reviews as reviews_avg_rating', 'rating')
@@ -199,8 +206,8 @@ class HomeController extends Controller
 
             foreach ($favTypes as $favType) {
                 $recommendedAssets = asset::where('asset_type_id', $favType->id)
-                    ->where('status', 'active')
-                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
+                    ->where('status', 'approved')
+                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
                     ->orderByDesc('id')
                     ->withCommonRelations()
                     ->withCount('reviews')
@@ -221,8 +228,8 @@ class HomeController extends Controller
         }
 
         // 5. Rating tertinggi
-        $topRatedAssets = asset::where('status', 'active')
-            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
+        $topRatedAssets = asset::where('status', 'approved')
+            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
             ->withCount('reviews')
             ->withAvg('reviews as reviews_avg_rating', 'rating')
             ->havingRaw('reviews_avg_rating > 0')
@@ -245,15 +252,15 @@ class HomeController extends Controller
         // 6. Kategori-kategori (List yang lama di bagian paling bawah)
         $categories = asset_category::select(['id', 'name', 'icon'])
             ->with(['types:id,category_id,name,allow_units,rental_unit'])
-            ->whereHas('types.assets', fn($q) => $q->where('status', 'active'))
+            ->whereHas('types.assets', fn($q) => $q->where('status', 'approved'))
             ->get();
 
         $categories->each(function ($category) use (&$sections, $mapAsset) {
             $typeIds = $category->types->pluck('id');
 
             $categoryAssets = asset::whereIn('asset_type_id', $typeIds)
-                ->where('status', 'active')
-                ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city', 'subdistrict', 'address', 'status', 'detail'])
+                ->where('status', 'approved')
+                ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
                 ->withCommonRelations()
                 ->withCount('reviews')
             ->withAvg('reviews as reviews_avg_rating', 'rating')
@@ -306,16 +313,19 @@ class HomeController extends Controller
         $dateEnd    = $request->input('date_end', '');
         $sort       = $request->input('sort', 'popular'); // popular, price_asc, price_desc
 
-        $query = asset::where('status', 'active')
+        $query = asset::where('status', 'approved')
             ->select([
                 'id', 'asset_type_id', 'owner_profile_id',
-                'title', 'slug', 'city', 'subdistrict', 'address', 'status', 'detail'
+                'title', 'slug', 'city_code', 'district_code', 'address', 'status', 'detail'
             ])
             ->with([
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                 'defaultPricing:id,asset_id,price',
                 'type:id,name,allow_units,rental_unit,category_id',
                 'type.category:id,name,icon',
+                'city:code,name',
+                'district:code,name',
+                'province:code,name',
                 'favorites' => function ($q) {
                     $q->select(['id', 'user_id', 'asset_id'])
                         ->where('user_id', auth()->id());
@@ -328,7 +338,7 @@ class HomeController extends Controller
         if ($keyword) {
             $query->where(function ($q) use ($keyword) {
                 $q->where('title', 'like', "%{$keyword}%")
-                  ->orWhere('city', 'like', "%{$keyword}%")
+                  ->orWhereHas('city', function($q2) use ($keyword) { $q2->where('name', 'like', "%{$keyword}%"); })
                   ->orWhere('address', 'like', "%{$keyword}%");
             });
         }
@@ -341,7 +351,7 @@ class HomeController extends Controller
         // Filter lokasi (city atau address)
         if ($location) {
             $query->where(function ($q) use ($location) {
-                $q->where('city', 'like', "%{$location}%")
+                $q->whereHas('city', function($q2) use ($location) { $q2->where('name', 'like', "%{$location}%"); })
                   ->orWhere('address', 'like', "%{$location}%");
             });
         }
@@ -432,6 +442,11 @@ class HomeController extends Controller
             $asset->isFavorite = (bool) $favorite;
             $asset->favorite_id = $favorite?->id;
             unset($asset->favorites);
+            
+            $asset->city_name = $asset->city->name ?? '';
+            $asset->district_name = $asset->district->name ?? '';
+            $asset->province_name = $asset->province->name ?? '';
+            
             return $asset;
         });
 
@@ -518,7 +533,7 @@ class HomeController extends Controller
             ->each(fn($name) => $addSuggestion($name, 'category', 'fa-solid fa-layer-group'));
 
         // 2. Dari judul aset aktif
-        asset::where('status', 'active')
+        asset::where('status', 'approved')
             ->where('title', 'like', "%{$q}%")
             ->select('title')
             ->distinct()
@@ -527,10 +542,11 @@ class HomeController extends Controller
             ->each(fn($title) => $addSuggestion($title, 'asset', 'fa-solid fa-building'));
 
         // 3. Dari kota aset aktif
-        asset::where('status', 'active')
-            ->where('city', 'like', "%{$q}%")
-            ->whereNotNull('city')
-            ->select('city')
+        asset::where('status', 'approved')
+            ->join('cities', 'assets.city_code', '=', 'cities.code')
+            ->where('cities.name', 'like', "%{$q}%")
+            ->whereNotNull('city_code')
+            ->select('cities.name as city')
             ->distinct()
             ->limit(3)
             ->pluck('city')

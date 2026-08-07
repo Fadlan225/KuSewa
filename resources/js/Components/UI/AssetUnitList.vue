@@ -79,24 +79,24 @@ const formatRupiah = (value) => {
 
 const getAvailableQuantity = (unit) => {
     if (!props.startDate || !props.endDate) return null;
-    
+
     if (!unit.bookings || unit.bookings.length === 0) return unit.quantity;
-    
+
     let reqStart = new Date(props.startDate);
     reqStart.setHours(0,0,0,0);
     let reqEnd = new Date(props.endDate);
     reqEnd.setHours(0,0,0,0);
-    
+
     console.log("Checking unit:", unit.id, "bookings:", unit.bookings);
-    
+
     let maxDailyBookings = 0;
-    
+
     // Pastikan iterasi mencakup hari yang sama jika start dan end sama
     let iterationEnd = new Date(reqEnd);
     if (props.rentalUnitLabel !== 'malam') {
         iterationEnd.setDate(iterationEnd.getDate() + 1); // Tambah 1 hari inklusif untuk sewa harian/jam
     }
-    
+
     // Iterasi per hari untuk mencari puncak jumlah kamar terpakai bersamaan
     for (let d = new Date(reqStart); d < iterationEnd; d.setDate(d.getDate() + 1)) {
         let dailyCount = 0;
@@ -106,10 +106,10 @@ const getAvailableQuantity = (unit) => {
             // Laravel might send '2026-09-26 00:00:00' or '2026-09-26T00:00:00.000000Z'
             let bStartStr = b.start_date.split(' ')[0].split('T')[0];
             let bStart = new Date(bStartStr + "T00:00:00");
-            
+
             let bEndStr = b.end_date.split(' ')[0].split('T')[0];
             let bEnd = new Date(bEndStr + "T00:00:00");
-            
+
             if (props.rentalUnitLabel === 'malam') {
                 // Sewa malam: checkin di currentDay, checkout keesokan harinya
                 if (bStart <= currentDay && bEnd > currentDay) {
@@ -126,7 +126,7 @@ const getAvailableQuantity = (unit) => {
             maxDailyBookings = dailyCount;
         }
     }
-    
+
     return Math.max(0, unit.quantity - maxDailyBookings);
 };
 
@@ -183,8 +183,8 @@ const handleSelect = (unit, pricing) => {
 <template>
     <div class="space-y-4">
         <!-- Looping for units -->
-        <div v-for="unit in units" :key="unit.id" 
-             :class="['w-full bg-white sm:bg-white rounded-none sm:rounded-2xl shadow-none hover:shadow-md transition-shadow overflow-hidden group flex flex-col sm:flex-row relative', 
+        <div v-for="unit in units" :key="unit.id"
+             :class="['w-full bg-white sm:bg-white rounded-none sm:rounded-2xl shadow-none hover:shadow-md transition-shadow overflow-hidden group flex flex-col sm:flex-row relative',
                       selectedUnitId === unit.id ? 'border-2 border-[#FFC000] ring-1 ring-[#FFC000]/50 sm:shadow-md z-10' : 'border-b sm:border border-gray-200 sm:border-gray-100 sm:shadow-sm']">
 
             <!-- MOBILE: Layout sesuai screenshot -->
@@ -255,7 +255,7 @@ const handleSelect = (unit, pricing) => {
 
                         <!-- Action Button -->
                         <div class="flex justify-end mt-4">
-                            <button @click="handleSelect(unit, getLowestPricing(unit))" 
+                            <button @click="handleSelect(unit, getLowestPricing(unit))"
                                     :class="['font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform active:scale-95', selectedUnitId === unit.id ? 'bg-[#0A2540] text-white' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540]']">
                                 {{ selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar' }}
                             </button>
@@ -331,7 +331,7 @@ const handleSelect = (unit, pricing) => {
                             </span>
                         </div>
                         <!-- Action Button -->
-                        <button @click="handleSelect(unit, getLowestPricing(unit))" 
+                        <button @click="handleSelect(unit, getLowestPricing(unit))"
                                 :class="['mt-4 w-full font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform active:scale-95', selectedUnitId === unit.id ? 'bg-[#0A2540] text-white' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540]']">
                             {{ selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar' }}
                         </button>

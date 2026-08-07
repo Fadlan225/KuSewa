@@ -3,6 +3,10 @@ defineProps({
     layout: {
         type: String,
         default: 'vertical'
+    },
+    isOwner: {
+        type: Boolean,
+        default: false
     }
 });
 </script>
@@ -10,7 +14,10 @@ defineProps({
 <template>
     <div
         v-if="layout === 'vertical'"
-        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col animate-pulse rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden"
+        :class="[
+            'flex-none snap-start flex flex-col animate-pulse rounded-xl shadow-sm border border-gray-100 bg-white overflow-hidden',
+            isOwner ? 'w-full' : 'w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px]'
+        ]"
     >
         <div class="aspect-[3/2] w-full bg-gray-200 relative overflow-hidden">
             <div class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>

@@ -45,17 +45,25 @@ import { usePage } from '@inertiajs/vue3';
 const page = usePage();
 const authFeedbackStore = useAuthFeedbackStore();
 
+let lastProcessedFlashId = null;
+
 watch(() => page.props.flash, (flash) => {
+    // Prevent re-processing the same flash message instance (e.g., when navigating back using history)
+    if (flash?.uuid && flash.uuid === lastProcessedFlashId) return;
+    if (flash?.uuid) lastProcessedFlashId = flash.uuid;
+
     if (flash?.success) {
         authFeedbackStore.showSuccess({
             title: 'Berhasil',
             message: flash.success
         });
+        page.props.flash.success = null;
     } else if (flash?.error) {
         authFeedbackStore.showError({
             title: 'Gagal',
             message: flash.error
         });
+        page.props.flash.error = null;
     }
 }, { deep: true, immediate: true });
 

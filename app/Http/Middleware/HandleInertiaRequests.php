@@ -49,15 +49,24 @@ class HandleInertiaRequests extends Middleware
             }])->get()->sum('unread');
         }
 
+        $sidebarCounts = [
+            'pendingPropertyCount' => null, // TODO
+            'pendingBookingCount' => null, // TODO
+            'verificationCount' => null, // TODO
+            'unreadNotificationCount' => $unreadCount, // Menggunakan query yang sudah ada
+        ];
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
                 'unreadCount' => $unreadCount,
             ],
+            'sidebarCounts' => $sidebarCounts,
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),
+                'uuid' => (string) \Illuminate\Support\Str::uuid(),
             ],
         ];
     }

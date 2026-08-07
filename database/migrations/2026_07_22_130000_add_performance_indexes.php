@@ -21,8 +21,8 @@ return new class extends Migration
             $table->index(['status', 'asset_type_id'], 'idx_assets_status_type');
             // Index asset_type_id (join & filter by type/category)
             $table->index('asset_type_id', 'idx_assets_type');
-            // Search by city (LIKE prefix + filter lokasi)
-            $table->index('city', 'idx_assets_city');
+            // Search by city_code (LIKE prefix + filter lokasi)
+            $table->index('city_code', 'idx_assets_city');
             // Foreign key owner_profile_id (join ke owner_profiles)
             $table->index('owner_profile_id', 'idx_assets_owner_profile');
         });

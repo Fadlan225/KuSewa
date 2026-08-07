@@ -32,7 +32,7 @@ class HomeAssetController extends Controller
             ->selectRaw("{$haversine} AS distance", [$lat, $lng, $lat])
             ->whereBetween('latitude', [$lat - $latDiff, $lat + $latDiff])
             ->whereBetween('longitude', [$lng - $lngDiff, $lng + $lngDiff])
-            ->where('status', 'active')
+            ->where('status', 'approved')
             ->having('distance', '<=', $radius)
             ->orderBy('distance')
             ->limit(10)
@@ -40,6 +40,9 @@ class HomeAssetController extends Controller
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                 'defaultPricing:id,asset_id,price',
                 'type:id,name,allow_units,rental_unit,category_id',
+                'city:code,name',
+                'district:code,name',
+                'province:code,name',
                 'favorites' => function ($q) {
                     if (auth()->check()) {
                         $q->select(['id', 'user_id', 'asset_id'])->where('user_id', auth()->id());
