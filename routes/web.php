@@ -68,6 +68,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/payment-system', [App\Http\Controllers\AdminPaymentSystemController::class, 'index'])->name('payment-system');
     Route::patch('/payment-system/{payment}/approve', [App\Http\Controllers\AdminPaymentSystemController::class, 'approve'])->name('payment-system.approve');
     Route::patch('/payment-system/{payment}/reject', [App\Http\Controllers\AdminPaymentSystemController::class, 'reject'])->name('payment-system.reject');
+    Route::post('/payment-system/methods', [App\Http\Controllers\AdminPaymentSystemController::class, 'storeMethod'])->name('payment-system.methods.store');
+    Route::patch('/payment-system/methods/{paymentMethod}', [App\Http\Controllers\AdminPaymentSystemController::class, 'updateMethod'])->name('payment-system.methods.update');
+    Route::delete('/payment-system/methods/{paymentMethod}', [App\Http\Controllers\AdminPaymentSystemController::class, 'destroyMethod'])->name('payment-system.methods.destroy');
+    Route::post('/payment-system/methods/prioritize', [App\Http\Controllers\AdminPaymentSystemController::class, 'prioritizeMethods'])->name('payment-system.methods.prioritize');
     Route::get('/service-fee', [App\Http\Controllers\AdminServiceFeeController::class, 'index'])->name('service-fee');
     Route::get('/promo-discount', [App\Http\Controllers\AdminPromoDiscountController::class, 'index'])->name('promo-discount');
     Route::get('/cms-manager', [App\Http\Controllers\AdminCMSManagerController::class, 'index'])->name('cms-manager');

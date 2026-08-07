@@ -11,6 +11,13 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        \App\Models\PaymentMethod::insertOrIgnore([
+            ['name' => 'BCA', 'code' => 'bca', 'description' => 'Metode pembayaran yang tercatat.', 'is_active' => true, 'sort_order' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Mandiri', 'code' => 'mandiri', 'description' => 'Metode pembayaran yang tercatat.', 'is_active' => true, 'sort_order' => 2, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'BRI', 'code' => 'bri', 'description' => 'Metode pembayaran yang tercatat.', 'is_active' => true, 'sort_order' => 3, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'BNI', 'code' => 'bni', 'description' => 'Metode pembayaran yang tercatat.', 'is_active' => true, 'sort_order' => 4, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'QRIS', 'code' => 'qris', 'description' => 'Metode pembayaran yang tercatat.', 'is_active' => true, 'sort_order' => 5, 'created_at' => now(), 'updated_at' => now()],
+        ]);
         $this->call([
                 // ── Infrastructure ─────────────────────────────────────────────
             ServiceFeeSeeder::class,        // Service fee config

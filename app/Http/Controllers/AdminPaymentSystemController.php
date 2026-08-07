@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\payment;
+use App\Models\PaymentMethod;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
@@ -40,9 +41,21 @@ class AdminPaymentSystemController extends Controller
                 'proof' => $item->proof_of_payment ? asset('storage/' . $item->proof_of_payment) : null,
             ]);
 
+        $availableYears = payment::query()
+            ->whereNotNull('payment_date')
+            ->selectRaw('YEAR(payment_date) as year')
+            ->distinct()
+            ->pluck('year')
+            ->map(fn ($item) => (int) $item)
+            ->push((int) now()->year)
+            ->unique()
+            ->sortDesc()
+            ->values();
+
         return Inertia::render('admin/PaymentSystem', [
+            'methods' => PaymentMethod::orderBy('sort_order')->orderBy('id')->get(),
             'year' => $year,
-            'availableYears' => payment::query()->selectRaw('YEAR(payment_date) year')->distinct()->orderByDesc('year')->pluck('year')->values(),
+            'availableYears' => $availableYears,
             'monthlyRevenue' => $monthlyRevenue,
             'summary' => [
                 'revenue' => payment::where('payment_status', 'paid')->whereYear('payment_date', $year)->with('booking:id,service_fee')->get()->sum(fn ($item) => $item->booking?->service_fee ?? 0),
@@ -51,6 +64,33 @@ class AdminPaymentSystemController extends Controller
             ],
             'transactions' => $transactions,
         ]);
+    }
+
+    public function storeMethod(Request $request)
+    {
+        $data = $request->validate(['name' => 'required|string|max:100', 'code' => 'required|string|max:50|alpha_dash|unique:payment_methods,code', 'description' => 'nullable|string|max:255']);
+        $data['sort_order'] = (int) PaymentMethod::max('sort_order') + 1;
+        PaymentMethod::create($data);
+        return back()->with('success', 'Metode pembayaran ditambahkan.');
+    }
+
+    public function updateMethod(Request $request, PaymentMethod $paymentMethod)
+    {
+        $data = $request->validate(['name' => 'required|string|max:100', 'code' => 'required|string|max:50|alpha_dash|unique:payment_methods,code,' . $paymentMethod->id, 'description' => 'nullable|string|max:255', 'is_active' => 'boolean']);
+        $paymentMethod->update($data);
+        return back()->with('success', 'Metode pembayaran diperbarui.');
+    }
+
+    public function destroyMethod(PaymentMethod $paymentMethod)
+    {
+        $paymentMethod->delete();
+        return back()->with('success', 'Metode pembayaran dihapus.');
+    }
+
+    public function prioritizeMethods(Request $request)
+    {
+        foreach ($request->input('ids', []) as $index => $id) PaymentMethod::whereKey($id)->update(['sort_order' => $index]);
+        return back()->with('success', 'Prioritas metode pembayaran diperbarui.');
     }
 
     public function approve(payment $payment)
