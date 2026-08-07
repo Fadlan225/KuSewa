@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
             AssetSeeder::class,             // 220 aset (10/type)
             AssetImageSeeder::class,        // 2200 gambar GD (10/asset)
             AssetPricingSeeder::class,      // Harga realistis per tipe
+            DummyAssetSubmissionSeeder::class, // Data demo untuk validasi aset admin
 
                 // ── Transactions ───────────────────────────────────────────────
             BookingSeeder::class,           // 600 booking (10/20/60/10%)

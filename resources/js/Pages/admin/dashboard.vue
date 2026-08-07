@@ -1,9 +1,6 @@
 ﻿<script setup>
-import { ref } from 'vue';
-import { Head, usePage } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import AdminSidebar from '@/Components/AdminSidebar.vue';
-
-const page = usePage();
 
 const props = defineProps({
     admin: {
@@ -17,26 +14,24 @@ const props = defineProps({
     stats: {
         type: Object,
         default: () => ({
-            totalUsers: 1420,
-            totalProperties: 354,
-            pendingApprovals: 12,
-            monthlyRevenue: 'Rp 145.200.000'
+            totalUsers: 0,
+            totalProperties: 0,
+            pendingApprovals: 0,
+            monthlyRevenue: 0
         })
-    }
+    },
+    recentActivities: { type: Array, default: () => [] },
+    quickActions: { type: Array, default: () => [] },
 });
 
-// Tab Aktif Kategori Manajemen Admin
-const activeTab = ref('Overview');
-const tabs = ['Overview', 'Verifikasi Aset', 'Pengguna', 'Laporan Keuangan'];
+const tabs = [
+    { label: 'Overview', route: 'admin.dashboard' },
+    { label: 'Verifikasi Aset', route: 'admin.asset-validation' },
+    { label: 'Pengguna', route: 'admin.pengajuan-akun' },
+    { label: 'Laporan Keuangan', route: 'admin.payment-system' },
+];
 
-// Mock Data Log Aktivitas & Verifikasi Terbaru di kusewa.id
-const recentActivities = ref([
-    { title: 'Pendaftaran Owner Baru', desc: 'Ahmad Fauzi mengajukan akun Owner', time: '10 menit lalu', type: 'user', status: 'Pending' },
-    { title: 'Listing Kos Baru', desc: 'Kos Griya Mawar #02 (Samarinda)', time: '25 menit lalu', type: 'property', status: 'Review' },
-    { title: 'Pencairan Dana (Withdrawal)', desc: 'Owner Budi Santoso mengajukan Rp 4.500.000', time: '1 jam lalu', type: 'finance', status: 'Diproses' },
-    { title: 'Pengaduan Sewa', desc: 'Kendala fasilitas AC di Apt Orchard B12', time: '3 jam lalu', type: 'report', status: 'Open' },
-    { title: 'Verifikasi NIK Sukses', desc: 'Validasi otomatis Dukcapil untuk NIK 6471...', time: '5 jam lalu', type: 'system', status: 'Selesai' },
-]);
+const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
 </script>
 
 <template>
@@ -106,17 +101,15 @@ const recentActivities = ref([
 
                 <!-- TABS CATEGORY -->
                 <div class="flex items-center gap-6 border-b border-slate-200/80 pb-1 text-xs font-medium">
-                    <button 
-                        v-for="tab in tabs" 
-                        :key="tab"
-                        @click="activeTab = tab"
-                        :class="[
-                            'pb-2 transition relative',
-                            activeTab === tab ? 'text-[#0A2540] font-bold border-b-2 border-[#0A2540]' : 'text-slate-400 hover:text-slate-600'
-                        ]"
+                    <Link
+                        v-for="tab in tabs"
+                        :key="tab.route"
+                        :href="route(tab.route)"
+                        class="pb-2 transition relative"
+                        :class="route().current(tab.route) ? 'text-[#0A2540] font-bold border-b-2 border-[#0A2540]' : 'text-slate-400 hover:text-slate-600'"
                     >
-                        {{ tab }}
-                    </button>
+                        {{ tab.label }}
+                    </Link>
                 </div>
 
                 <!-- TOP ANALYTICS SECTION: 4 METRICS + SYSTEM HEALTH -->

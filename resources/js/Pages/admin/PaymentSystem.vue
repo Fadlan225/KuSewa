@@ -1,19 +1,38 @@
 <script setup>
-import { ref } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import AdminSidebar from '@/Components/AdminSidebar.vue';
 
-const paymentMethods = ref([
-    { id: 1, name: 'Transfer Bank', active: true, description: 'Transfer manual dari semua bank BUMN/BUMS.' },
-    { id: 2, name: 'Virtual Account', active: true, description: 'Bayar dengan kode VA otomatis.' },
-    { id: 3, name: 'QRIS', active: false, description: 'Pembayaran via QRIS dari e-wallet.' },
-]);
+const props = defineProps({
+    year: Number, availableYears: Array, monthlyRevenue: Array, summary: Object, transactions: Object,
+});
+const transactionRows = computed(() => props.transactions?.data || []);
+const paginationLinks = computed(() => {
+    const links = props.transactions?.links || [];
+    const numbered = links.filter((link) => /^\d+$/.test(String(link.label).trim()));
+    if (numbered.length <= 7) return links;
 
-const transactions = ref([
-    { id: 1, label: 'Order #A321', amount: 'Rp 1.250.000', date: '2 Ags 2026', method: 'VA', status: 'Berhasil' },
-    { id: 2, label: 'Order #B872', amount: 'Rp 675.000', date: '1 Ags 2026', method: 'Transfer Bank', status: 'Menunggu' },
-    { id: 3, label: 'Order #C103', amount: 'Rp 2.100.000', date: '31 Jul 2026', method: 'QRIS', status: 'Gagal' },
-]);
+    const activeIndex = numbered.findIndex((link) => link.active);
+    const keep = new Set([0, numbered.length - 1, activeIndex - 1, activeIndex, activeIndex + 1]);
+    const result = [];
+    let previousKept = -1;
+    numbered.forEach((link, index) => {
+        if (!keep.has(index)) return;
+        if (previousKept !== -1 && index - previousKept > 1) result.push({ label: '…', url: null, active: false });
+        result.push(link);
+        previousKept = index;
+    });
+    return [links[0], ...result, links[links.length - 1]];
+});
+const maxRevenue = computed(() => Math.max(...(props.monthlyRevenue || []).map(item => Number(item.revenue)), 1));
+const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')}`;
+const changeYear = (event) => router.get(route('admin.payment-system'), { year: event.target.value }, { preserveState: true });
+const paymentMethods = computed(() => [...new Set(transactionRows.value.map(item => item.method))].map((name, id) => ({ id, name, active: true, description: 'Metode pembayaran yang tercatat.' })));
+const statusLabel = (status) => ({ paid: 'Berhasil', pending: 'Menunggu', failed: 'Gagal' }[status] || status);
+const review = (item, action) => {
+    if (!window.confirm(action === 'approve' ? 'Setujui pembayaran dan bukti transaksi ini?' : 'Tolak pembayaran ini?')) return;
+    useForm({}).patch(route(`admin.payment-system.${action}`, item.id), { preserveScroll: true });
+};
 </script>
 
 <template>
@@ -47,13 +66,31 @@ const transactions = ref([
                     </div>
                     <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
                         <p class="text-[11px] font-semibold uppercase text-slate-400">Transaksi Terbaru</p>
-                        <p class="mt-3 text-3xl font-extrabold text-[#0A2540]">{{ transactions.length }}</p>
-                        <p class="text-[11px] text-slate-500 mt-2">Tampilan ringkas aktivitas terakhir.</p>
+                        <p class="mt-3 text-3xl font-extrabold text-[#0A2540]">{{ summary.paidTransactions }}</p>
+                        <p class="text-[11px] text-slate-500 mt-2">Pembayaran berhasil tahun {{ year }}.</p>
                     </div>
                     <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
                         <p class="text-[11px] font-semibold uppercase text-slate-400">Potensi Pendapatan</p>
-                        <p class="mt-3 text-3xl font-extrabold text-emerald-600">Rp 4.025.000</p>
-                        <p class="text-[11px] text-slate-500 mt-2">Estimasi dari transaksi terbaru.</p>
+                        <p class="mt-3 text-3xl font-extrabold text-emerald-600">{{ formatRupiah(summary.revenue) }}</p>
+                        <p class="text-[11px] text-slate-500 mt-2">Omzet biaya layanan website tahun {{ year }}.</p>
+                    </div>
+                </div>
+
+                <div class="rounded-3xl bg-white border border-slate-100 p-6 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div><h2 class="text-sm font-bold text-slate-900">Laporan Omzet Bulanan</h2><p class="text-[11px] text-slate-400">Total biaya layanan dari pembayaran owner yang berhasil.</p></div>
+                        <select :value="year" @change="changeYear" class="rounded-xl border-slate-200 text-xs font-bold"><option v-for="item in availableYears" :key="item" :value="item">{{ item }}</option></select>
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                        <div v-for="month in monthlyRevenue" :key="month.month" class="rounded-2xl bg-slate-50 p-3"><p class="text-[11px] text-slate-400">{{ month.label }}</p><p class="mt-2 text-sm font-extrabold text-[#0A2540]">{{ formatRupiah(month.revenue) }}</p><p class="text-[10px] text-slate-500">{{ month.transactions }} pembayaran</p></div>
+                        <p v-if="!monthlyRevenue.length" class="col-span-full text-xs text-slate-400">Belum ada pembayaran berhasil pada tahun ini.</p>
+                    </div>
+                    <div v-if="monthlyRevenue.length" class="mt-6 h-56 flex items-end gap-2 border-b border-slate-200 px-2">
+                        <div v-for="month in monthlyRevenue" :key="`chart-${month.month}`" class="flex-1 h-full flex flex-col justify-end items-center gap-2">
+                            <span class="text-[9px] text-slate-500">{{ formatRupiah(month.revenue) }}</span>
+                            <div class="w-full max-w-10 rounded-t-lg bg-[#FFC000] hover:bg-[#0A2540] transition" :style="{ height: `${Math.max((month.revenue / maxRevenue) * 75, 4)}%` }" :title="`${month.label}: ${formatRupiah(month.revenue)}`"></div>
+                            <span class="text-[10px] text-slate-500">{{ month.label.slice(0, 3) }}</span>
+                        </div>
                     </div>
                 </div>
 
@@ -110,28 +147,51 @@ const transactions = ref([
                                 <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
                                     <th class="py-4 px-5">Transaksi</th>
                                     <th class="py-4 px-4">Jumlah</th>
+                                    <th class="py-4 px-4">Biaya Layanan</th>
                                     <th class="py-4 px-4">Metode</th>
                                     <th class="py-4 px-4">Tanggal</th>
                                     <th class="py-4 px-5">Status</th>
+                                    <th class="py-4 px-5">Validasi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <tr v-for="item in transactions" :key="item.id" class="hover:bg-slate-50/70 transition-colors">
+                                <tr v-for="item in transactionRows" :key="item.id" class="hover:bg-slate-50/70 transition-colors">
                                     <td class="py-4 px-5 font-semibold text-slate-900">{{ item.label }}</td>
-                                    <td class="py-4 px-4 text-slate-700">{{ item.amount }}</td>
+                                    <td class="py-4 px-4 text-slate-700">{{ formatRupiah(item.amount) }}</td>
+                                    <td class="py-4 px-4 text-emerald-700 font-semibold">{{ formatRupiah(item.service_fee) }}</td>
                                     <td class="py-4 px-4 text-slate-600">{{ item.method }}</td>
                                     <td class="py-4 px-4 text-slate-500">{{ item.date }}</td>
                                     <td class="py-4 px-5">
                                         <span :class="[
                                             'inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold',
-                                            item.status === 'Berhasil' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : item.status === 'Menunggu' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                            item.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : item.status === 'pending' ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
                                         ]">
-                                            {{ item.status }}
+                                            {{ statusLabel(item.status) }}
                                         </span>
+                                    </td>
+                                    <td class="py-4 px-5 whitespace-nowrap">
+                                        <a v-if="item.proof" :href="item.proof" target="_blank" class="mr-2 text-[#0A2540] font-bold hover:underline">Bukti</a>
+                                        <template v-if="item.status === 'pending'">
+                                            <button @click="review(item, 'approve')" class="mr-1 rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-bold text-white">Setujui</button>
+                                            <button @click="review(item, 'reject')" class="rounded-lg bg-rose-600 px-2 py-1 text-[10px] font-bold text-white">Tolak</button>
+                                        </template>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="px-6 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                        <span class="text-slate-400">{{ transactions.from || 0 }}–{{ transactions.to || 0 }} dari {{ transactions.total || 0 }} transaksi</span>
+                        <nav class="flex items-center gap-1" aria-label="Pagination">
+                            <template v-for="(link, index) in paginationLinks" :key="`${link.label}-${index}`">
+                                <button v-if="link.url" :disabled="link.active" @click="router.get(link.url, {}, { preserveState: true, preserveScroll: true })" class="min-w-8 h-8 px-2 rounded-lg border text-[11px] font-semibold transition" :class="link.active ? 'bg-[#0A2540] text-white border-[#0A2540]' : 'bg-white text-slate-600 border-slate-200 hover:border-[#0A2540] hover:text-[#0A2540]'">
+                                    <span v-if="link.label.includes('Previous')" aria-label="Sebelumnya">‹</span>
+                                    <span v-else-if="link.label.includes('Next')" aria-label="Berikutnya">›</span>
+                                    <span v-else>{{ link.label }}</span>
+                                </button>
+                                <span v-else class="w-8 text-center text-slate-400">{{ link.label }}</span>
+                            </template>
+                        </nav>
                     </div>
                 </div>
             </div>

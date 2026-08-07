@@ -14,7 +14,7 @@ class payment extends Model
         'proof_of_payment'
     ];
 
-    public function bookings(){
-        return $this->belongsTo(booking::class);
+    public function booking(){
+        return $this->belongsTo(booking::class, 'booking_id');
     }
 }

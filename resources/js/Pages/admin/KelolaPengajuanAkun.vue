@@ -20,7 +20,6 @@ const applicants = ref([
         phone: '081234567890', 
         date: '3 Agustus 2026', 
         status: 'Pending',
-        propertyType: 'Kos-kosan & Kontrakan',
         ktpUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?w=400' 
     },
     { 
@@ -32,7 +31,6 @@ const applicants = ref([
         phone: '085298765432', 
         date: '3 Agustus 2026', 
         status: 'Pending',
-        propertyType: 'Apartemen & Ruko',
         ktpUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400' 
     },
     { 
@@ -44,7 +42,6 @@ const applicants = ref([
         phone: '081122334455', 
         date: '2 Agustus 2026', 
         status: 'Disetujui',
-        propertyType: '-',
         ktpUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400' 
     },
     { 
@@ -56,7 +53,6 @@ const applicants = ref([
         phone: '087788990011', 
         date: '1 Agustus 2026', 
         status: 'Ditolak',
-        propertyType: 'Gedung / Baliho',
         ktpUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400' 
     },
 ]);
@@ -173,7 +169,6 @@ const handleReject = (id) => {
                                 <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
                                     <th class="py-4 px-6">Calon Pengguna</th>
                                     <th class="py-4 px-4">Target Peran</th>
-                                    <th class="py-4 px-4">Estimasi Jenis Aset</th>
                                     <th class="py-4 px-4">NIK Terdaftar</th>
                                     <th class="py-4 px-4">Tanggal Pengajuan</th>
                                     <th class="py-4 px-4">Status</th>
@@ -198,7 +193,6 @@ const handleReject = (id) => {
                                             {{ item.roleTarget }}
                                         </span>
                                     </td>
-                                    <td class="py-4 px-4 text-slate-600 font-medium">{{ item.propertyType }}</td>
                                     <td class="py-4 px-4 font-mono text-slate-600 font-medium">{{ item.nik }}</td>
                                     <td class="py-4 px-4 text-slate-500 whitespace-nowrap">{{ item.date }}</td>
                                     <td class="py-4 px-4">
@@ -230,7 +224,7 @@ const handleReject = (id) => {
                                     </td>
                                 </tr>
                                 <tr v-if="filteredApplicants.length === 0">
-                                    <td colspan="7" class="py-12 text-center text-slate-400">
+                                    <td colspan="6" class="py-12 text-center text-slate-400">
                                         <i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i>
                                         Tidak ada data pengajuan akun yang sesuai dengan filter.
                                     </td>

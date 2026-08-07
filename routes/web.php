@@ -61,9 +61,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/admin-accounts', [App\Http\Controllers\AdminAdministratorAccountController::class, 'index'])->name('admin-accounts');
     Route::post('/admin-accounts', [App\Http\Controllers\AdminAdministratorAccountController::class, 'store'])->name('admin-accounts.store');
     Route::get('/asset-validation', [App\Http\Controllers\AdminAssetValidationController::class, 'index'])->name('asset-validation');
+    Route::patch('/asset-validation/{asset}/approve', [App\Http\Controllers\AdminAssetValidationController::class, 'approve'])->name('asset-validation.approve');
+    Route::patch('/asset-validation/{asset}/reject', [App\Http\Controllers\AdminAssetValidationController::class, 'reject'])->name('asset-validation.reject');
     Route::get('/property-assets', [App\Http\Controllers\AdminPropertyAssetController::class, 'index'])->name('property-assets');
     Route::get('/category-facility', [App\Http\Controllers\AdminCategoryFacilityController::class, 'index'])->name('category-facility');
     Route::get('/payment-system', [App\Http\Controllers\AdminPaymentSystemController::class, 'index'])->name('payment-system');
+    Route::patch('/payment-system/{payment}/approve', [App\Http\Controllers\AdminPaymentSystemController::class, 'approve'])->name('payment-system.approve');
+    Route::patch('/payment-system/{payment}/reject', [App\Http\Controllers\AdminPaymentSystemController::class, 'reject'])->name('payment-system.reject');
     Route::get('/service-fee', [App\Http\Controllers\AdminServiceFeeController::class, 'index'])->name('service-fee');
     Route::get('/promo-discount', [App\Http\Controllers\AdminPromoDiscountController::class, 'index'])->name('promo-discount');
     Route::get('/cms-manager', [App\Http\Controllers\AdminCMSManagerController::class, 'index'])->name('cms-manager');
