@@ -159,11 +159,11 @@ class DashboardController extends Controller
             ->toArray();
 
         $statusUnitData = [
-            ['name' => 'Siap Disewakan', 'value' => max(0, $totalUnit - $totalTersewa - $totalInactive - $totalPending - $totalRejected), 'fill' => 'var(--color-available)'],
-            ['name' => 'Disewa', 'value' => $totalTersewa, 'fill' => 'var(--color-booked)'],
-            ['name' => 'Menunggu Verifikasi', 'value' => $totalPending, 'fill' => '#F59E0B'],
-            ['name' => 'Ditolak', 'value' => $totalRejected, 'fill' => '#EF4444'],
-            ['name' => 'Tidak Aktif', 'value' => $totalInactive, 'fill' => 'var(--color-inactive)'],
+            ['name' => 'Siap Disewakan', 'value' => max(0, $totalUnit - $totalTersewa - $totalInactive - $totalPending - $totalRejected), 'fill' => '#10B981'], // Emerald
+            ['name' => 'Disewa', 'value' => $totalTersewa, 'fill' => '#F59E0B'], // Amber
+            ['name' => 'Menunggu Verifikasi', 'value' => $totalPending, 'fill' => '#3B82F6'], // Blue
+            ['name' => 'Ditolak', 'value' => $totalRejected, 'fill' => '#EF4444'], // Red
+            ['name' => 'Tidak Aktif', 'value' => $totalInactive, 'fill' => '#94A3B8'], // Slate/Gray
         ];
 
         $stats = [

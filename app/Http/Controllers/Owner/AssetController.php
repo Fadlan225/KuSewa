@@ -3,8 +3,18 @@
 namespace App\Http\Controllers\Owner;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Owner\StoreAssetRequest;
 use App\Models\asset;
+use App\Models\asset_category;
+use App\Models\asset_type;
+use App\Models\asset_units;
+use App\Models\asset_pricing;
+use App\Models\asset_image;
+use App\Models\asset_facility;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class AssetController extends Controller
 {
@@ -228,7 +238,7 @@ class AssetController extends Controller
             ];
         });
 
-        $kategoriPropertiGroups = \App\Models\asset_category::with('types')->get()->map(function($category) {
+        $kategoriPropertiGroups = asset_category::with('types')->get()->map(function($category) {
             return [
                 'label' => $category->name,
                 'options' => $category->types->pluck('name')->toArray()
@@ -244,18 +254,136 @@ class AssetController extends Controller
 
     /**
      * Show the form for creating a new resource.
+     * Pass all required data from DB to frontend.
      */
     public function create()
     {
-        return inertia('owner/Asset/Create/Index');
+        $ownerProfile = auth()->user()->ownerProfile;
+
+        if (!$ownerProfile) {
+            return redirect()->route('Home')->with('error', 'Silakan lengkapi profil owner Anda terlebih dahulu.');
+        }
+
+        // Kategori aset beserta jenis-jenis di dalamnya
+        $categories = asset_category::with(['types:id,category_id,name,rental_unit,allow_units'])
+            ->get(['id', 'name']);
+
+        return inertia('owner/Asset/Create/Index', [
+            'categories' => $categories,
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
+     * Menggunakan DB Transaction — jika satu bagian gagal, semua di-rollback.
      */
-    public function store(Request $request)
+    public function store(StoreAssetRequest $request)
     {
-        //
+        $ownerProfile = auth()->user()->ownerProfile;
+
+        $assetType = asset_type::findOrFail($request->asset_type_id);
+        $allowUnits = (bool) $assetType->allow_units;
+
+        DB::beginTransaction();
+
+        try {
+            // --- 1. Buat Aset ---
+            $slug = Str::slug($request->title) . '-' . Str::random(6);
+            // Pastikan slug unik
+            while (asset::where('slug', $slug)->exists()) {
+                $slug = Str::slug($request->title) . '-' . Str::random(6);
+            }
+
+            $assetRecord = asset::create([
+                'owner_profile_id' => $ownerProfile->id,
+                'asset_type_id'    => $request->asset_type_id,
+                'title'            => $request->title,
+                'slug'             => $slug,
+                'description'      => $request->description,
+                'detail'           => $request->detail ?? [],
+                'province_code'    => $request->province_code,
+                'city_code'        => $request->city_code,
+                'district_code'    => $request->district_code,
+                'village_code'     => $request->village_code,
+                'postal_code'      => $request->postal_code,
+                'address'          => $request->address,
+                'latitude'         => $request->latitude,
+                'longitude'        => $request->longitude,
+                'status'           => 'pending',
+            ]);
+
+            // --- 2. Fasilitas Aset (hanya jika tidak menggunakan unit) ---
+            if (!$allowUnits && !empty($request->facility_ids)) {
+                $assetRecord->facilities()->sync($request->facility_ids);
+            }
+
+            // --- 3. Harga Aset (jika tanpa unit) ---
+            if (!$allowUnits) {
+                asset_pricing::create([
+                    'asset_id'      => $assetRecord->id,
+                    'asset_unit_id' => null,
+                    'price'         => $request->price,
+                ]);
+            }
+
+            // --- 4. Unit Aset (jika allow_units = true) ---
+            if ($allowUnits && $request->units) {
+                foreach ($request->units as $unitData) {
+                    $unit = asset_units::create([
+                        'asset_id' => $assetRecord->id,
+                        'name'     => $unitData['name'],
+                        'detail'   => $unitData['detail'] ?? [],
+                        'quantity' => $unitData['quantity'],
+                        'status'   => 'active',
+                    ]);
+
+                    // Harga per unit
+                    asset_pricing::create([
+                        'asset_id'      => null,
+                        'asset_unit_id' => $unit->id,
+                        'price'         => $unitData['price'],
+                    ]);
+
+                    // Fasilitas unit
+                    if (!empty($unitData['facility_ids'])) {
+                        $unit->facilities()->sync($unitData['facility_ids']);
+                    }
+                }
+            }
+
+            // --- 5. Upload Foto ---
+            $photosInput = $request->input('photos', []);
+            $photosFiles = $request->file('photos') ?? [];
+
+            foreach ($photosInput as $index => $photoGroup) {
+                $galleryCategoryId = $photoGroup['gallery_category_id'] ?? null;
+                $files = $photosFiles[$index]['files'] ?? [];
+
+                foreach ($files as $file) {
+                    if ($file instanceof \Illuminate\Http\UploadedFile) {
+                        $path = $file->store('assets/images', 'public');
+                        asset_image::create([
+                            'asset_id'           => $assetRecord->id,
+                            'asset_unit_id'      => null,
+                            'gallery_category_id' => $galleryCategoryId,
+                            'image'              => $path,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('owner.asset.index')
+                ->with('success', 'Aset berhasil ditambahkan dan sedang menunggu verifikasi admin.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return back()->withErrors([
+                'general' => 'Terjadi kesalahan saat menyimpan aset: ' . $e->getMessage(),
+            ])->withInput();
+        }
     }
 
     /**
@@ -267,7 +395,7 @@ class AssetController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the existing resource.
      */
     public function edit(string $id)
     {

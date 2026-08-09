@@ -294,9 +294,18 @@ const availabilityText = computed(() => {
 
             <!-- ═══ AREA TEKS ═══ -->
             <div class="flex-1 min-w-0 flex flex-col justify-center">
-                <div class="flex items-center gap-1.5 mb-1">
+                <div class="flex items-center gap-1.5 mb-1 flex-wrap">
                     <span class="px-1.5 py-0.5 bg-[#6C757D]/10 text-[#6C757D] rounded text-[9px] font-bold">{{ categoryName }}</span>
-                    <div v-if="asset.reviews_avg_rating" class="flex items-center gap-1 text-[#FFC000] text-[9px] font-bold">
+                    
+                    <!-- STATUS BADGE (Owner Only) -->
+                    <template v-if="isOwner">
+                        <span v-if="asset.verification_status === 'pending'" class="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-clock"></i> Menunggu Verifikasi</span>
+                        <span v-else-if="asset.verification_status === 'rejected'" class="px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-circle-xmark"></i> Ditolak</span>
+                        <span v-else-if="asset.verification_status === 'inactive'" class="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-eye-slash"></i> Nonaktif</span>
+                        <span v-else-if="asset.verification_status === 'approved' && asset.status" class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-check-circle"></i> {{ asset.status === 'Tersedia' ? 'Tersedia' : 'Tersewa' }}</span>
+                    </template>
+
+                    <div v-if="asset.reviews_avg_rating" class="flex items-center gap-1 text-[#FFC000] text-[9px] font-bold ml-auto">
                         <div class="flex items-center gap-0.5">
                             <i class="fa-solid fa-star"></i> {{ Number(asset.reviews_avg_rating).toFixed(1) }}
                         </div>

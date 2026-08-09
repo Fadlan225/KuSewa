@@ -1,6 +1,7 @@
 <script setup>
 import { computed, watch, ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import L from 'leaflet';
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
 
 const props = defineProps({ form: Object, currentStep: Number });
 const form = props.form;
@@ -14,7 +15,8 @@ const villages = ref([]);
 const fetchProvinces = async () => {
     try {
         const res = await fetch('/api/provinces');
-        provinces.value = await res.json();
+        const json = await res.json();
+        provinces.value = json.data || [];
     } catch (e) {
         console.error('Gagal mengambil data provinsi', e);
     }
@@ -23,7 +25,8 @@ const fetchProvinces = async () => {
 const fetchCities = async (provinceCode) => {
     try {
         const res = await fetch(`/api/cities?province_code=${provinceCode}`);
-        cities.value = await res.json();
+        const json = await res.json();
+        cities.value = json.data || [];
     } catch (e) {
         console.error('Gagal mengambil data kota', e);
     }
@@ -32,7 +35,8 @@ const fetchCities = async (provinceCode) => {
 const fetchDistricts = async (cityCode) => {
     try {
         const res = await fetch(`/api/districts?city_code=${cityCode}`);
-        districts.value = await res.json();
+        const json = await res.json();
+        districts.value = json.data || [];
     } catch (e) {
         console.error('Gagal mengambil data kecamatan', e);
     }
@@ -41,7 +45,8 @@ const fetchDistricts = async (cityCode) => {
 const fetchVillages = async (districtCode) => {
     try {
         const res = await fetch(`/api/villages?district_code=${districtCode}`);
-        villages.value = await res.json();
+        const json = await res.json();
+        villages.value = json.data || [];
     } catch (e) {
         console.error('Gagal mengambil data kelurahan/desa', e);
     }
@@ -201,7 +206,7 @@ onBeforeUnmount(() => {
 
 <template>
 <div class="space-y-4">
-<!-- STEP 2: LOKASI & FASILITAS -->
+<!-- STEP 2: LOKASI -->
     <h2 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
         <i class="fa-solid fa-map-location-dot text-[#0A2540]"></i>
         <span>Detail Lokasi</span>
@@ -210,37 +215,44 @@ onBeforeUnmount(() => {
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Provinsi <span class="text-rose-500">*</span></label>
-            <select v-model="form.province_code" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition">
-                <option value="" disabled>Pilih Provinsi</option>
-                <option v-for="prov in provinces" :key="prov.code" :value="prov.code">{{ prov.name }}</option>
-            </select>
+            <SearchableSelect 
+                v-model="form.province_code" 
+                :options="provinces" 
+                placeholder="Cari atau pilih provinsi" 
+            />
         </div>
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Kota<span class="text-rose-500">*</span></label>
-            <select v-model="form.city_code" :disabled="!cities.length" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition disabled:bg-slate-50 disabled:text-slate-400">
-                <option value="" disabled>Pilih Kota</option>
-                <option v-for="city in cities" :key="city.code" :value="city.code">{{ city.name }}</option>
-            </select>
+            <SearchableSelect 
+                v-model="form.city_code" 
+                :options="cities" 
+                placeholder="Cari atau pilih kota" 
+                :disabled="!cities.length" 
+            />
         </div>
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Kecamatan <span class="text-rose-500">*</span></label>
-            <select v-model="form.district_code" :disabled="!districts.length" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition disabled:bg-slate-50 disabled:text-slate-400">
-                <option value="" disabled>Pilih Kecamatan</option>
-                <option v-for="dist in districts" :key="dist.code" :value="dist.code">{{ dist.name }}</option>
-            </select>
+            <SearchableSelect 
+                v-model="form.district_code" 
+                :options="districts" 
+                placeholder="Cari atau pilih kecamatan" 
+                :disabled="!districts.length" 
+            />
         </div>
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Kelurahan / Desa <span class="text-rose-500">*</span></label>
-            <select v-model="form.village_code" :disabled="!villages.length" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition disabled:bg-slate-50 disabled:text-slate-400">
-                <option value="" disabled>Pilih Kelurahan/Desa</option>
-                <option v-for="vill in villages" :key="vill.code" :value="vill.code">{{ vill.name }}</option>
-            </select>
+            <SearchableSelect 
+                v-model="form.village_code" 
+                :options="villages" 
+                placeholder="Cari atau pilih kelurahan/desa" 
+                :disabled="!villages.length" 
+            />
         </div>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-4">
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Lengkap <span class="text-rose-500">*</span></label>
-            <input v-model="form.alamat_lengkap" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 transition" required />
+            <input v-model="form.address" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition" required />
         </div>
         <div>
             <label class="block text-xs font-bold text-slate-700 mb-1">Kode Pos</label>

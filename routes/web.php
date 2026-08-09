@@ -32,6 +32,10 @@ Route::get('/api/cities', [\App\Http\Controllers\LocationController::class, 'get
 Route::get('/api/districts', [\App\Http\Controllers\LocationController::class, 'getDistricts'])->name('api.districts.index');
 Route::get('/api/villages', [\App\Http\Controllers\LocationController::class, 'getVillages'])->name('api.villages.index');
 
+// API for Asset Create Form
+Route::get('/api/asset-types', [\App\Http\Controllers\Api\AssetTypeController::class, 'byCategory'])->name('api.asset-types.by-category');
+Route::get('/api/asset-type/{id}/details', [\App\Http\Controllers\Api\AssetTypeController::class, 'details'])->name('api.asset-type.details');
+
 Route::resource('assets', AssetController::class)->only(['show']);
 
 Route::get('/bantuan', function () {

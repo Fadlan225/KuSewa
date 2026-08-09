@@ -186,7 +186,7 @@ const confirmDelete = () => {
                 class="bg-primary hover:bg-primary/80 active:scale-95 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs w-fit"
             >
                 <i class="fa-solid fa-plus text-xs"></i>
-                <span>Tambah Asset Baru</span>
+                <span>Ajukan Aset Baru</span>
             </Link>
         </template>
 

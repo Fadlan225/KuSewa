@@ -32,7 +32,10 @@ const pendapatanPersentase = computed(() => {
 const kotaList = computed(() => {
     const data = props.stats?.kotaData || {};
     return Object.keys(data)
-        .map(key => ({ name: key, count: data[key] }))
+        .map(key => ({ 
+            name: key.replace(/^(KOTA|KABUPATEN)\s+/i, ''), 
+            count: data[key] 
+        }))
         .sort((a, b) => b.count - a.count);
 });
 
@@ -85,16 +88,32 @@ const tickFormatY = (d) => {
     return d.toString();
 };
 
-const tickFormatX = (i) => {
-    const data = chartData.value[i];
-    if (!data) return '';
+const createTickFormatX = (dataRef, periodRef) => {
+    return (i) => {
+        const data = dataRef.value[i];
+        if (!data) return '';
 
-    // Agar label tidak bertabrakan di 90days / 30days
-    if (selectedTime.value === '90days' && i % 15 !== 0 && i !== chartData.value.length - 1) return '';
-    if (selectedTime.value === '30days' && i % 5 !== 0 && i !== chartData.value.length - 1) return '';
+        const period = periodRef.value;
+        const total = dataRef.value.length;
 
-    return data.label;
+        // Khusus 90 hari: Tampilkan awal, akhir, dan tiap awal bulan (tanggal '01')
+        if (period === '90days') {
+            if (i === 0 || i === total - 1 || data.label.startsWith('01 ')) return data.label;
+            return '';
+        }
+
+        // Khusus 30 hari: Tampilkan awal, akhir, dan tiap 7 hari
+        if (period === '30days') {
+            if (i === 0 || i === total - 1 || i % 7 === 0) return data.label;
+            return '';
+        }
+
+        // 7 hari & 1 tahun: Tampilkan semua label
+        return data.label;
+    };
 };
+
+const tickFormatXIncome = createTickFormatX(chartData, selectedTime);
 
 const formatTooltipDate = (dateStr, isMonthly) => {
     if (!dateStr) return '';
@@ -139,7 +158,14 @@ const totalBookingSelectedPeriod = computed(() => {
     return bookingChartData.value.reduce((acc, curr) => acc + (curr.booking_count || 0), 0);
 });
 const bookingY = [d => d._animBooking];
-const tickFormatYBooking = (d) => Math.round(d).toString();
+
+const tickFormatYBooking = (d) => {
+    if (d % 1 !== 0) return '';
+    return d.toString();
+};
+
+const tickFormatXBooking = createTickFormatX(bookingChartData, selectedBookingTime);
+
 const tooltipTemplateBooking = (d) => `
     <div class="flex flex-col gap-1 px-1">
         <span class="text-xs font-bold text-slate-500">${d.label}</span>
@@ -328,7 +354,7 @@ const unitChartSlices = computed(() => {
                             <VisStackedBar :x="x" :y="y" color="#FFC000" :roundedCorners="0" :barPadding="0.3" />
 
                             <!-- Hanya tampilkan grid Horizontal -->
-                            <VisAxis type="x" :tickFormat="tickFormatX" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400" />
+                            <VisAxis type="x" :tickFormat="tickFormatXIncome" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400" />
                             <VisAxis type="y" :tickFormat="tickFormatY" :gridLine="true" :tickLine="false" :domainLine="false" class="text-slate-400" />
 
                             <!-- Custom Tooltip & Crosshair Line -->
@@ -389,7 +415,7 @@ const unitChartSlices = computed(() => {
                 <div v-if="kotaList.length" class="p-4 bg-slate-50 border-t border-slate-100">
                     <div class="flex items-center gap-2 text-xs font-semibold text-slate-700">
                         <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i>
-                        <span>Kota <span class="font-bold text-emerald-600">{{ kotaList[0].name }}</span> memiliki aset terbanyak bulan ini.</span>
+                        <span><span class="font-bold text-emerald-600">{{ kotaList[0].name }}</span> memiliki aset terbanyak bulan ini.</span>
                     </div>
                 </div>
             </Card>
@@ -431,7 +457,7 @@ const unitChartSlices = computed(() => {
                     <div class="w-full h-[250px]" v-if="bookingChartData.length">
                         <VisXYContainer :data="bookingChartData" :duration="1000" height="250" :padding="{ top: 10, right: 10, left: 0, bottom: 0 }">
                             <VisLine :x="x" :y="bookingY" color="#FFC000" :lineWidth="2" />
-                            <VisAxis type="x" :tickFormat="tickFormatX" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400" />
+                            <VisAxis type="x" :tickFormat="tickFormatXBooking" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400" />
                             <VisAxis type="y" :tickFormat="tickFormatYBooking" :gridLine="true" :tickLine="false" :domainLine="false" class="text-slate-400" />
                             <VisTooltip />
                             <VisCrosshair :template="tooltipTemplateBooking" color="#0A2540" />
