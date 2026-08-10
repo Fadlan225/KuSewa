@@ -60,12 +60,12 @@ const rentalUnitLabel = computed(() => {
     </div>
 
     <!-- ============================================ -->
-    <!-- HARGA — Dengan Unit (harga per tipe unit) -->
+    <!-- HARGA — Dengan Unit (rangkuman dari Step 1) -->
     <!-- ============================================ -->
     <div v-if="allowUnits">
         <div class="flex items-center gap-2 mb-3">
-            <i class="fa-solid fa-info-circle text-[#0A2540] text-[10px]"></i>
-            <p class="text-[11px] text-slate-500">Harga sewa untuk setiap tipe unit sudah diisi di Step 1. Pastikan sudah sesuai.</p>
+            <i class="fa-solid fa-circle-check text-emerald-500 text-[12px]"></i>
+            <p class="text-[11px] text-slate-600 font-semibold">Harga & unit sudah diatur di Step 1. Berikut ringkasannya:</p>
         </div>
 
         <!-- Preview ringkasan unit + harga -->
@@ -75,24 +75,34 @@ const rentalUnitLabel = computed(() => {
                 :key="unit._id"
                 class="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-4 py-3"
             >
-                <div>
-                    <p class="text-xs font-bold text-slate-800">{{ unit.name || `Unit ${i + 1}` }}</p>
-                    <p class="text-[10px] text-slate-400">{{ unit.quantity }} unit tersedia</p>
-                </div>
-                <div class="text-right">
-                    <div class="relative inline-flex items-center">
-                        <span class="text-[10px] font-bold text-slate-400 mr-1">Rp</span>
-                        <input
-                            v-model="unit.price"
-                            type="number"
-                            min="0"
-                            placeholder="0"
-                            class="w-28 text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0A2540] transition text-right"
-                        />
-                        <span class="text-[10px] text-slate-400 ml-1">{{ rentalUnitLabel }}</span>
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-lg bg-[#0A2540]/10 flex items-center justify-center text-[10px] font-black text-[#0A2540]">
+                        {{ i + 1 }}
+                    </div>
+                    <div>
+                        <p class="text-xs font-bold text-slate-800">{{ unit.name || `Unit ${i + 1}` }}</p>
+                        <p class="text-[10px] text-slate-400">{{ unit.quantity }} unit tersedia</p>
                     </div>
                 </div>
+                <div class="text-right">
+                    <p class="text-xs font-black text-[#0A2540]">
+                        Rp {{ unit.price ? Number(unit.price).toLocaleString('id-ID') : '—' }}
+                        <span class="text-[10px] font-normal text-slate-400">{{ rentalUnitLabel }}</span>
+                    </p>
+                    <p v-if="!unit.price || Number(unit.price) <= 0" class="text-[10px] text-rose-500 font-bold mt-0.5">
+                        ⚠ Harga belum diisi
+                    </p>
+                </div>
             </div>
+        </div>
+
+        <!-- Warning jika ada unit tanpa harga -->
+        <div v-if="form.units.some(u => !u.price || Number(u.price) <= 0)"
+             class="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2">
+            <i class="fa-solid fa-triangle-exclamation text-rose-500 text-sm mt-0.5"></i>
+            <p class="text-[11px] text-rose-600 font-semibold">
+                Ada unit yang belum memiliki harga sewa. Kembali ke <strong>Step 1</strong> untuk mengisi harga setiap unit.
+            </p>
         </div>
     </div>
 

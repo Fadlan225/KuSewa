@@ -34,18 +34,27 @@ class BookingController extends Controller
         $asset = asset::with([
             'firstImage',
             'type.category',
-            'defaultPricing'
+            'defaultPricing',
+            'units',  // FIX: Perlu di-load agar $asset->units->isEmpty() berfungsi
         ])->findOrFail($assetId);
 
         // Tentukan unit_id dari pricing agar bookedDates spesifik per unit
         $selectedPricing = null;
         $unitId = null;
         if ($pricingId) {
-            $selectedPricing = asset_pricing::find($pricingId);
+            // FIX: Load relasi assetUnit agar nama unit tersedia di frontend
+            $selectedPricing = asset_pricing::with('assetUnit')->find($pricingId);
             $unitId = $selectedPricing?->asset_unit_id;
         }
 
-        $serviceFee = DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
+        $serviceFeeRecord = DB::table('service_fees')->first();
+        $serviceFee = $serviceFeeRecord ? [
+            'type'  => $serviceFeeRecord->fee_type,
+            'value' => (float) $serviceFeeRecord->fee_value
+        ] : [
+            'type'  => 'percentage',
+            'value' => 5
+        ];
 
         // Fetch bank accounts for the asset owner
         $bankAccounts = bank_account::where('owner_profile_id', $asset->owner_profile_id)->get();
@@ -56,12 +65,9 @@ class BookingController extends Controller
         // Fetch booked dates — scoped ke unit jika ada, atau asset-level jika tidak ada unit
         $bookedDates = collect();
         if ($asset->units->isEmpty()) {
+            // Aset tanpa unit: blokir tanggal di level asset
             $bookedDates = booking::where('asset_id', $assetId)
-                ->when(
-                    $unitId !== null,
-                    fn ($q) => $q->where('asset_unit_id', $unitId),  // Unit-level: only this unit
-                    fn ($q) => $q->whereNull('asset_unit_id')          // Asset-level: no unit bookings
-                )
+                ->whereNull('asset_unit_id')
                 ->where('end_date', '>=', now()->format('Y-m-d'))
                 ->whereNotIn('booking_status', ['cancelled', 'rejected'])
                 ->where(function ($q) {
@@ -82,14 +88,45 @@ class BookingController extends Controller
                         'to' => Carbon::parse($booking->end_date)->format('Y-m-d'),
                     ];
                 });
+        } elseif ($unitId) {
+            // Aset dengan unit: blokir tanggal khusus untuk unit yang dipilih
+            // (hanya jika unit kuantitasnya 1, atau semua slot sudah terisi)
+            $unit = $asset->units->firstWhere('id', $unitId);
+            $maxQty = $unit ? $unit->quantity : 1;
+
+            // Cari tanggal di mana jumlah booking >= kuantitas unit
+            $allBookings = booking::where('asset_unit_id', $unitId)
+                ->where('end_date', '>=', now()->format('Y-m-d'))
+                ->whereNotIn('booking_status', ['cancelled', 'rejected'])
+                ->where(function ($q) {
+                    $q->where('booking_status', '!=', 'pending')
+                      ->orWhere(function ($q2) {
+                          $q2->where('booking_status', 'pending')
+                             ->whereHas('payment', function ($q3) {
+                                 $q3->where('payment_status', 'pending')
+                                    ->where('expires_at', '>', now());
+                             });
+                      });
+                })
+                ->select('start_date', 'end_date')
+                ->get();
+
+            // Jika jumlah booking yang overlap dengan rentang tertentu >= maxQty, blokir
+            if ($maxQty === 1 && $allBookings->isNotEmpty()) {
+                $bookedDates = $allBookings->map(fn($b) => [
+                    'from' => Carbon::parse($b->start_date)->format('Y-m-d'),
+                    'to'   => Carbon::parse($b->end_date)->format('Y-m-d'),
+                ]);
+            }
         }
+
         return Inertia::render('Home/Bookings/Booking', [
-            'asset' => $asset,
-            'selectedPricing' => $selectedPricing,
-            'serviceFee' => $serviceFee,
-            'requestParams' => $request->all(),
-            'bankAccounts' => $bankAccounts,
-            'bookedDates' => $bookedDates
+            'asset'          => $asset,
+            'selectedPricing'=> $selectedPricing,
+            'serviceFee'     => $serviceFee['value'],
+            'requestParams'  => $request->all(),
+            'bankAccounts'   => $bankAccounts,
+            'bookedDates'    => $bookedDates
         ]);
     }
 
@@ -99,18 +136,30 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'asset_id' => 'required|exists:assets,id',
-            'pricing_id' => 'required|exists:asset_pricings,id',
-            'startDate' => 'required|date',
-            'endDate' => 'required|date|after_or_equal:startDate',
-            'duration' => 'required|integer|min:1',
-            'rental_mode' => 'nullable|string',
+            'asset_id'       => 'required|exists:assets,id',
+            'pricing_id'     => 'required|exists:asset_pricings,id',
+            'startDate'      => 'required|date',
+            // BUG 3 FIX: Untuk mode jam, endDate boleh sama dengan startDate (beda jam)
+            //             Untuk mode lain, endDate harus >= startDate
+            'endDate'        => 'required|date|' . ($request->rental_mode === 'hour' ? 'after_or_equal:startDate' : 'after_or_equal:startDate'),
+            'duration'       => 'required|integer|min:1',
+            // BUG 8 FIX: Validasi rental_mode dengan enum yang ketat
+            'rental_mode'    => 'nullable|string|in:hour,day,night,month,year',
             'payment_method' => 'required',
-            'booker_name' => 'required|string|max:255',
-            'booker_phone' => 'required|string|max:20',
-            'booker_email' => 'required|email|max:255',
-            'guest_name' => 'required|string|max:255',
+            'booker_name'    => 'required|string|max:255',
+            'booker_phone'   => 'required|string|max:20',
+            'booker_email'   => 'required|email|max:255',
+            'guest_name'     => 'required|string|max:255',
         ]);
+
+        // BUG 3 FIX (tambahan): Untuk mode jam, validasi waktu end > start secara manual
+        if (($validated['rental_mode'] ?? 'day') === 'hour') {
+            $start = \Carbon\Carbon::parse($validated['startDate']);
+            $end   = \Carbon\Carbon::parse($validated['endDate']);
+            if ($end->lte($start)) {
+                return back()->withErrors(['endDate' => 'Waktu selesai harus setelah waktu mulai.'])->withInput();
+            }
+        }
 
         try {
             $payment = DB::transaction(function () use ($validated) {

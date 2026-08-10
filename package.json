@@ -12,6 +12,7 @@
         "@tailwindcss/forms": "^0.5.3",
         "@tailwindcss/vite": "^4.3.2",
         "@vitejs/plugin-vue": "^6.0.0",
+        "browserslist": "^4.28.8",
         "concurrently": "^9.0.1",
         "laravel-echo": "^2.4.0",
         "laravel-vite-plugin": "^3.1",
@@ -21,7 +22,7 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
-        "@lucide/vue": "^1.29.0",
+        "@lucide/vue": "^1.31.0",
         "@unovis/ts": "^1.6.7",
         "@unovis/vue": "^1.6.7",
         "@vueuse/core": "^14.4.0",
@@ -29,6 +30,7 @@
         "clsx": "^2.1.1",
         "cropperjs": "^1.6.2",
         "flatpickr": "^4.6.13",
+        "gridstack": "^13.0.2",
         "html-to-image": "^1.11.13",
         "html2canvas": "^1.4.1",
         "jsbarcode": "^3.12.3",

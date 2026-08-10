@@ -66,6 +66,7 @@ class AssetController extends Controller
         }
 
         $stats = [
+            'totalAssetCount' => $statsQuery->count(),
             'totalAsset' => $totalAsset,
             'totalAvailable' => $totalAvailable,
             'totalOccupied' => $totalOccupied,
@@ -217,6 +218,7 @@ class AssetController extends Controller
 
             return [
                 'id' => $asset->id,
+                'slug' => $asset->slug,
                 'title' => $asset->title,
                 'city' => $asset->city->name ?? '',
                 'address' => $asset->address,
@@ -337,9 +339,9 @@ class AssetController extends Controller
                         'status'   => 'active',
                     ]);
 
-                    // Harga per unit
+                    // Harga per unit — simpan asset_id juga agar query per asset masih bisa menemukan pricing ini
                     asset_pricing::create([
-                        'asset_id'      => null,
+                        'asset_id'      => $assetRecord->id,
                         'asset_unit_id' => $unit->id,
                         'price'         => $unitData['price'],
                     ]);
@@ -361,7 +363,7 @@ class AssetController extends Controller
 
                 foreach ($files as $file) {
                     if ($file instanceof \Illuminate\Http\UploadedFile) {
-                        $path = $file->store('assets/images', 'public');
+                        $path = $file->store('uploads/assets', 'public');
                         asset_image::create([
                             'asset_id'           => $assetRecord->id,
                             'asset_unit_id'      => null,
@@ -389,9 +391,82 @@ class AssetController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Request $request, string $id)
     {
-        //
+        $asset = asset::with([
+            'type:id,name,allow_units,rental_unit,category_id',
+            'type.category:id,name,icon',
+            'images.gallery_category',
+            'thumbnailImages',
+            'pricings',
+            'city',
+            'province',
+            'district',
+            'village',
+            'ownerProfile.user',
+            'reviews.user',
+            'reviews.reviewTagItems.reviewTag',
+            'facilities:id,name,facility_category_id',
+            'facilities.category:id,name,icon',
+            'units.pricings',
+            'units.images.gallery_category',
+            'units.facilities:id,name,facility_category_id',
+            'units.facilities.category:id,name,icon',
+            'units.bookings' => function($q) {
+                $q->where('end_date', '>=', now()->format('Y-m-d'))
+                  ->whereNotIn('booking_status', ['cancelled', 'rejected']);
+            },
+            'bookings' => function($q) {
+                $q->where('end_date', '>=', now()->format('Y-m-d'))
+                  ->whereNotIn('booking_status', ['cancelled', 'rejected'])
+                  ->whereNull('asset_unit_id');
+            }
+        ])
+        ->withAvg('reviews', 'rating')
+        ->withCount([
+            'reviews',
+            'favorites'
+        ])
+        ->where(function($query) use ($id) {
+            $query->where('id', $id)->orWhere('slug', $id);
+        })
+        ->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengakses aset ini.');
+        }
+
+        // For owner page, we might want to calculate the summary
+        $hasUnits = $asset->type->allow_units ? true : false;
+        $totalUnits = 1;
+        $occupiedUnits = 0;
+        
+        if ($hasUnits) {
+            $totalUnits = $asset->units->count();
+            foreach ($asset->units as $unit) {
+                if ($unit->bookings->isNotEmpty()) {
+                    $occupiedUnits++;
+                }
+            }
+        } else {
+            if ($asset->bookings->isNotEmpty()) {
+                $occupiedUnits = 1;
+            }
+        }
+        
+        $availableUnits = $totalUnits - $occupiedUnits;
+        $status = $availableUnits > 0 ? 'Tersedia' : 'Tersewa';
+
+        $asset->owner_status = $status;
+        $asset->owner_occupancy = $hasUnits ? "{$occupiedUnits}/{$totalUnits} Unit" : ($status === 'Tersewa' ? '1/1 Unit' : '0/1 Unit');
+
+        $galleryCategories = \App\Models\galery_category::where('asset_type_id', $asset->asset_type_id)->get();
+
+        return inertia('owner/Asset/show', [
+            'asset' => $asset,
+            'galleryCategories' => $galleryCategories
+        ]);
     }
 
     /**
@@ -407,14 +482,47 @@ class AssetController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+        
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah aset ini.');
+        }
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'address' => 'required|string|max:500',
+        ]);
+
+        $asset->update($validated);
+
+        return redirect()->back()->with('success', 'Detail aset berhasil diperbarui.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        //
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+        
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak menonaktifkan aset ini.');
+        }
+
+        // Check for active bookings
+        $hasActiveBookings = \App\Models\booking::where('asset_id', $asset->id)
+            ->whereIn('booking_status', ['pending', 'confirmed', 'active'])
+            ->exists();
+
+        if ($hasActiveBookings) {
+            return redirect()->back()->with('error', 'Tidak dapat menonaktifkan aset karena terdapat penyewaan yang sedang aktif atau menunggu konfirmasi.');
+        }
+
+        $asset->update(['status' => 'inactive']);
+
+        return redirect()->route('owner.asset.index')->with('success', 'Aset berhasil dinonaktifkan.');
     }
 }

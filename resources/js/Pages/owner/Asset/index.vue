@@ -2,8 +2,9 @@
 import { ref, computed, watch } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import LazyAssetCard from '@/Components/UI/LazyAssetCard.vue';
-import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue';
+import OwnerAssetCard from '@/Components/owner/OwnerAssetCard.vue';
+import OwnerHorizontalAssetCard from '@/Components/owner/OwnerHorizontalAssetCard.vue';
+import { Card, CardContent } from '@/Components/UI/card';
 
 const page = usePage();
 
@@ -88,6 +89,7 @@ const filteredProperties = computed(() => {
 });
 
 // Summary Stat Computations
+const totalAset = computed(() => props.stats?.totalAssetCount || 0);
 const totalUnit = computed(() => props.stats?.totalAsset || 0);
 const totalTersewa = computed(() => props.stats?.totalOccupied || 0);
 const totalTersedia = computed(() => props.stats?.totalAvailable || 0);
@@ -193,46 +195,63 @@ const confirmDelete = () => {
         <div class="space-y-6 mt-6">
 
                 <!-- METRIC SUMMARY STATS -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-amber-50 text-[#FFC000] flex items-center justify-center text-base font-bold shrink-0">
-                            <i class="fa-solid fa-building"></i>
-                        </div>
-                        <div>
-                            <span class="text-[11px] font-medium text-slate-400 block">Total Aset Didaftarkan</span>
-                            <span class="text-xl font-black text-slate-900">{{ totalUnit }} Unit</span>
-                        </div>
-                    </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
 
-                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base font-bold shrink-0">
-                            <i class="fa-solid fa-house-lock"></i>
-                        </div>
-                        <div>
-                            <span class="text-[11px] font-medium text-slate-400 block">Sedang Tersewa</span>
-                            <span class="text-xl font-black text-emerald-600">{{ totalTersewa }} Unit</span>
-                        </div>
-                    </div>
+                    <Card class="hover:border-[#FFC000]/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
+                        <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
+                            <div class="flex items-start justify-between">
+                                <div class="min-w-0 pr-2">
+                                    <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Total Aset</p>
+                                    <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ totalAset }} Aset</p>
+                                </div>
+                                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-slate-50 flex shrink-0 items-center justify-center text-slate-400 group-hover:bg-[#FFC000]/10 group-hover:text-[#FFC000] transition-colors">
+                                    <i class="fa-solid fa-map-location-dot text-xs lg:text-sm"></i>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base font-bold shrink-0">
-                            <i class="fa-solid fa-door-open"></i>
-                        </div>
-                        <div>
-                            <span class="text-[11px] font-medium text-slate-400 block">Siap Disewakan (Kosong)</span>
-                            <span class="text-xl font-black text-blue-600">{{ totalTersedia }} Unit</span>
-                        </div>
-                    </div>
+                    <Card class="hover:border-blue-500/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
+                        <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
+                            <div class="flex items-start justify-between">
+                                <div class="min-w-0 pr-2">
+                                    <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Total Unit</p>
+                                    <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ totalUnit }} Unit</p>
+                                </div>
+                                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 flex shrink-0 items-center justify-center text-blue-500 group-hover:bg-blue-100 transition-colors">
+                                    <i class="fa-solid fa-building text-xs lg:text-sm"></i>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-                        <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-base font-bold shrink-0">
-                            <i class="fa-solid fa-clock"></i>
-                        </div>
-                        <div>
-                            <span class="text-[11px] font-medium text-slate-400 block">Menunggu Verifikasi</span>
-                            <span class="text-xl font-black text-amber-600">{{ totalPendingVerifikasi }} Unit</span>
-                        </div>
-                    </div>
+                    <Card class="hover:border-emerald-500/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
+                        <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
+                            <div class="flex items-start justify-between">
+                                <div class="min-w-0 pr-2">
+                                    <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Unit Terisi</p>
+                                    <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ totalTersewa }} Unit</p>
+                                </div>
+                                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 flex shrink-0 items-center justify-center text-emerald-500 group-hover:bg-emerald-100 transition-colors">
+                                    <i class="fa-solid fa-house-lock text-xs lg:text-sm"></i>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card class="hover:border-amber-500/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
+                        <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
+                            <div class="flex items-start justify-between">
+                                <div class="min-w-0 pr-2">
+                                    <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Unit Tersedia</p>
+                                    <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ totalTersedia }} Unit</p>
+                                </div>
+                                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 flex shrink-0 items-center justify-center text-amber-500 group-hover:bg-amber-100 transition-colors">
+                                    <i class="fa-solid fa-door-open text-xs lg:text-sm"></i>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <!-- FILTER BAR & SEARCH -->
@@ -259,11 +278,10 @@ const confirmDelete = () => {
 
                             <select v-model="selectedStatus" class="bg-slate-50 text-xs border border-slate-200 rounded-xl px-3 py-2.5 font-semibold focus:outline-none focus:border-[#0A2540]">
                                 <option value="Semua">Semua Status</option>
-                                <option value="Tersewa">Tersewa</option>
-                                <option value="Tersedia">Tersedia</option>
                                 <option value="pending">Menunggu Verifikasi</option>
                                 <option value="approved">Terverifikasi</option>
                                 <option value="rejected">Ditolak</option>
+                                <option value="inactive">Nonaktif</option>
                             </select>
 
                             <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/60">
@@ -306,25 +324,21 @@ const confirmDelete = () => {
 
                 <!-- VIEW 1: GRID CARDS (LazyAssetCard Style) -->
                 <div v-if="viewMode === 'grid' && filteredProperties.length > 0" class="flex flex-wrap gap-5">
-                    <LazyAssetCard
+                    <OwnerAssetCard
                         v-for="item in filteredProperties"
                         :key="item.id"
                         :asset="item"
                         :category-name="item.category"
-                        :is-owner="true"
-                        @delete="openDeleteModal"
                     />
                 </div>
 
                 <!-- VIEW 2: HORIZONTAL LIST (HorizontalAssetCard Style) -->
                 <div v-else-if="viewMode === 'table' && filteredProperties.length > 0" class="flex flex-col gap-3">
-                    <HorizontalAssetCard
+                    <OwnerHorizontalAssetCard
                         v-for="item in filteredProperties"
                         :key="item.id"
                         :asset="item"
                         :category-name="item.category"
-                        :is-owner="true"
-                        @delete="openDeleteModal"
                     />
                 </div>
 

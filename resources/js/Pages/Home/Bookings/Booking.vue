@@ -57,14 +57,23 @@ const form = useForm({
   payment_method: props.bankAccounts?.length ? props.bankAccounts[0].id : null
 })
 
+// BUG 4 FIX: Pakai selectedPricing sebagai harga utama, fallback ke defaultPricing
+const effectivePrice = computed(() => {
+    return props.selectedPricing?.price || props.asset?.default_pricing?.price || 0
+})
+
 const priceMultiplier = computed(() => {
     return (props.asset?.type?.rental_unit === 'night' && props.requestParams?.rental_mode === 'month') ? 30 : 1;
 })
 
 const totalPrice = computed(() => {
-    const price = (props.selectedPricing?.price || props.asset?.default_pricing?.price || 0) * priceMultiplier.value
+    const price = effectivePrice.value * priceMultiplier.value
     const base = price * form.duration
     return base + (base * (props.serviceFee / 100))
+})
+
+const subtotalPrice = computed(() => {
+    return effectivePrice.value * priceMultiplier.value * form.duration
 })
 
 const flatpickrConfig = computed(() => {
@@ -143,6 +152,16 @@ watch(() => form.endDate, (newEnd) => {
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
             form.duration = diffDays === 0 ? 1 : diffDays;
         }
+    }
+});
+
+// BUG 6 FIX: Jika mode month dan durasi berubah, update endDate
+watch(() => form.duration, (newDuration) => {
+    if (rentalMode === 'month' && form.startDate && newDuration > 0) {
+        const start = new Date(form.startDate);
+        const end = new Date(start);
+        end.setMonth(end.getMonth() + newDuration);
+        form.endDate = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().split('T')[0];
     }
 });
 
@@ -423,28 +442,56 @@ watch(() => form.namaPemesan, (val) => {
                                 </div>
                             </div>
                         </template>
-                        <div class="p-3.5 flex justify-between items-center bg-slate-50">
-                            <span class="text-xs font-medium text-slate-500">Durasi Sewa</span>
-                            <span class="text-sm font-bold text-slate-900">{{ form.duration }} {{ displayRentalUnit }}</span>
+                        <!-- BUG 6 FIX: Input durasi khusus mode bulan -->
+                <template v-if="form.rental_mode === 'month'">
+                    <div class="p-3.5 flex justify-between items-center bg-slate-50">
+                        <span class="text-xs font-medium text-slate-500">Durasi Sewa</span>
+                        <div class="flex items-center gap-2">
+                            <button
+                                type="button"
+                                @click="form.duration = Math.max(1, form.duration - 1)"
+                                class="w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-[#0A2540] font-black transition"
+                            >−</button>
+                            <span class="text-sm font-bold text-slate-900 min-w-[70px] text-center">{{ form.duration }} {{ displayRentalUnit }}</span>
+                            <button
+                                type="button"
+                                @click="form.duration = form.duration + 1"
+                                class="w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-[#0A2540] font-black transition"
+                            >+</button>
                         </div>
                     </div>
+                </template>
+                <template v-else>
+                    <div class="p-3.5 flex justify-between items-center bg-slate-50">
+                        <span class="text-xs font-medium text-slate-500">Durasi Sewa</span>
+                        <span class="text-sm font-bold text-slate-900">{{ form.duration }} {{ displayRentalUnit }}</span>
+                    </div>
+                </template>
+                    </div>
 
-                    <button @click="submitBooking" :disabled="form.processing || !form.payment_method" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] text-[#0A2540] font-extrabold py-3.5 rounded-xl transition-all text-sm mt-4 disabled:opacity-50 hidden lg:flex items-center justify-center gap-2">
-                        <template v-if="form.processing">
-                            <svg class="animate-spin h-4 w-4 text-[#0A2540]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Memproses...
-                        </template>
-                        <template v-else>Pesan Sekarang</template>
-                    </button>
+                    <!-- BUG 7 FIX: Tampilkan pesan jika tidak ada pricing -->
+                <div v-if="!effectivePrice" class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center text-amber-700 text-xs font-semibold mb-2">
+                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    Harga sewa belum tersedia. Hubungi pemilik.
+                </div>
 
+                <button @click="submitBooking" :disabled="form.processing || !form.payment_method || !effectivePrice" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] text-[#0A2540] font-extrabold py-3.5 rounded-xl transition-all text-sm mt-4 disabled:opacity-50 flex items-center justify-center gap-2">
+                    <template v-if="form.processing">
+                        <svg class="animate-spin h-4 w-4 text-[#0A2540]" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Memproses...
+                    </template>
+                    <template v-else>Pesan Sekarang</template>
+                </button>
+
+                    <!-- BUG 9 FIX: Gunakan effectivePrice (selectedPricing) bukan default_pricing -->
                     <div class="space-y-3 text-sm pt-5 mt-4 border-t border-slate-100">
                         <div class="flex justify-between text-slate-600">
                             <span>Subtotal</span>
-                            <span class="font-bold text-[#0A2540]">Rp {{ ((asset?.default_pricing?.price || 0) * form.duration).toLocaleString('id-ID') }}</span>
+                            <span class="font-bold text-[#0A2540]">Rp {{ subtotalPrice.toLocaleString('id-ID') }}</span>
                         </div>
                         <div class="flex justify-between text-slate-600">
                             <span>Biaya Layanan ({{ serviceFee }}%)</span>
-                            <span class="font-bold text-[#0A2540]">Rp {{ (((asset?.default_pricing?.price || 0) * form.duration) * (serviceFee / 100)).toLocaleString('id-ID') }}</span>
+                            <span class="font-bold text-[#0A2540]">Rp {{ (subtotalPrice * (serviceFee / 100)).toLocaleString('id-ID') }}</span>
                         </div>
 
                         <div class="border-t border-slate-100 pt-3 flex justify-between items-baseline mt-3">
@@ -465,8 +512,8 @@ watch(() => form.namaPemesan, (val) => {
                 :price="totalPrice"
                 :durationCount="form.duration"
                 :durationLabel="displayRentalUnit"
-                :disabled="form.processing || !form.payment_method"
-                buttonText="Pesan"
+                :disabled="form.processing || !form.payment_method || !effectivePrice"
+                buttonText="Pesan Sekarang"
                 @submit="submitBooking"
             />
 

@@ -5,8 +5,7 @@ import { usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     asset: { type: Object, required: true },
-    categoryName: { type: String, required: true },
-    isOwner: { type: Boolean, default: false }
+    categoryName: { type: String, required: true }
 });
 
 defineEmits(['delete']);
@@ -123,11 +122,7 @@ const toggleFavorite = () => {
 };
 
 const navigateToAsset = () => {
-    if (props.isOwner) {
-        router.visit(route('owner.asset.show', props.asset.id));
-    } else {
-        router.visit(route('assets.show', props.asset.slug));
-    }
+    router.visit(route('assets.show', props.asset.slug));
 };
 
 let lastTapTime = 0;
@@ -298,13 +293,6 @@ const availabilityText = computed(() => {
                 <div class="flex items-center gap-1.5 mb-1 flex-wrap">
                     <span class="px-1.5 py-0.5 bg-[#6C757D]/10 text-[#6C757D] rounded text-[9px] font-bold">{{ categoryName }}</span>
 
-                    <!-- STATUS BADGE (Owner Only) -->
-                    <template v-if="isOwner">
-                        <span v-if="asset.verification_status === 'pending'" class="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-clock"></i> Menunggu Verifikasi</span>
-                        <span v-else-if="asset.verification_status === 'rejected'" class="px-1.5 py-0.5 bg-rose-100 text-rose-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-circle-xmark"></i> Ditolak</span>
-                        <span v-else-if="asset.verification_status === 'inactive'" class="px-1.5 py-0.5 bg-slate-100 text-slate-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-eye-slash"></i> Nonaktif</span>
-                        <span v-else-if="asset.verification_status === 'approved' && asset.status" class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-check-circle"></i> {{ asset.status === 'Tersedia' ? 'Tersedia' : 'Tersewa' }}</span>
-                    </template>
 
                     <div v-if="asset.reviews_avg_rating" class="flex items-center gap-1.5 ml-auto">
                         <div class="flex items-center gap-[1px] text-[8px]">
@@ -355,7 +343,6 @@ const availabilityText = computed(() => {
 
                 <div class="mt-auto flex items-center gap-2">
                     <button
-                        v-if="!isOwner"
                         class="z-30 flex items-center justify-center transition-transform active:scale-125"
                         :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
                         @click.stop.prevent="toggleFavorite"

@@ -5,8 +5,7 @@ import { usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
     asset: { type: Object, required: true },
-    categoryName: { type: String, required: true },
-    isOwner: { type: Boolean, default: false }
+    categoryName: { type: String, required: true }
 });
 
 defineEmits(['delete']);
@@ -135,11 +134,7 @@ const toggleFavorite = () => {
 
 // ── Navigasi (tanpa <Link> agar tidak konflik di mobile) ──────────────
 const navigateToAsset = () => {
-    if (props.isOwner) {
-        router.visit(route('owner.asset.show', props.asset.id));
-    } else {
-        router.visit(route('assets.show', props.asset.slug));
-    }
+    router.visit(route('assets.show', props.asset.slug));
 };
 
 let lastTapTime = 0;
@@ -290,25 +285,8 @@ const periodLabel = {
                 <!-- Gradients overlay -->
                 <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10"></div>
 
-                <!-- Status Badge (Owner Only) -->
-                <div v-if="isOwner" class="absolute top-2 left-2 z-20 pointer-events-none flex flex-col gap-1 items-start">
-                    <span v-if="asset.verification_status === 'pending'" class="bg-amber-500/90 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md shadow-sm backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-clock"></i> Menunggu
-                    </span>
-                    <span v-else-if="asset.verification_status === 'rejected'" class="bg-rose-500/90 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md shadow-sm backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-circle-xmark"></i> Ditolak
-                    </span>
-                    <span v-else-if="asset.verification_status === 'inactive'" class="bg-slate-500/90 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md shadow-sm backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-eye-slash"></i> Nonaktif
-                    </span>
-                    <span v-else-if="asset.verification_status === 'approved' && asset.status" class="bg-emerald-500/90 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md shadow-sm backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-check-circle"></i> {{ asset.status === 'Tersedia' ? 'Tersedia' : 'Tersewa' }}
-                    </span>
-                </div>
-
                 <!-- ❤️ Tombol Favorit -->
                 <button
-                    v-if="!isOwner"
                     class="absolute top-2.5 right-2.5 z-30 bg-white/90 rounded-full w-7 h-7 sm:w-8 sm:h-8 drop-shadow-md flex items-center justify-center transition-transform active:scale-125"
                     :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
                     @touchstart.stop

@@ -32,9 +32,9 @@ const pendapatanPersentase = computed(() => {
 const kotaList = computed(() => {
     const data = props.stats?.kotaData || {};
     return Object.keys(data)
-        .map(key => ({ 
-            name: key.replace(/^(KOTA|KABUPATEN)\s+/i, ''), 
-            count: data[key] 
+        .map(key => ({
+            name: key.replace(/^(KOTA|KABUPATEN)\s+/i, ''),
+            count: data[key]
         }))
         .sort((a, b) => b.count - a.count);
 });
@@ -424,7 +424,7 @@ const unitChartSlices = computed(() => {
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             <!-- BOOKING TREND CHART -->
             <Card class="lg:col-span-2 border-gray-200 shadow-sm rounded-2xl overflow-hidden flex flex-col p-0 sm:p-0">
-                <CardHeader class="flex flex-col items-stretch border-b p-0 sm:flex-row">
+                <CardHeader class="flex flex-col items-stretch border-b border-gray-200 p-0 sm:flex-row">
                     <div class="flex flex-1 flex-col justify-center gap-1 px-6 py-5 text-left">
                         <CardTitle class="text-base font-black text-slate-800 tracking-tight">Tren Pemesanan</CardTitle>
                         <CardDescription class="text-xs text-slate-400">
@@ -447,7 +447,7 @@ const unitChartSlices = computed(() => {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <button class="w-full flex flex-1 flex-col justify-center gap-1 px-6 py-4 text-left sm:border-l sm:px-8 sm:py-6 bg-slate-50/50 transition hover:bg-slate-50">
+                        <button class="w-full flex flex-1 flex-col justify-center gap-1 px-6 py-4 text-left sm:border-l border-gray-200 sm:px-8 sm:py-6 bg-slate-50/50 transition hover:bg-slate-50">
                             <span class="text-xs text-slate-500 font-medium">Total Booking</span>
                             <span class="text-lg leading-none font-bold sm:text-3xl text-slate-800">{{ totalBookingSelectedPeriod }}</span>
                         </button>

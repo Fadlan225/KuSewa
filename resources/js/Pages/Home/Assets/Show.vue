@@ -179,6 +179,17 @@ const submitBooking = () => {
         return;
     }
 
+    // BUG 2 FIX: Untuk aset TANPA unit, otomatis ambil pricing_id dari lowestPrice
+    if ((!props.asset.units || props.asset.units.length === 0) && !form.pricing_id) {
+        if (lowestPrice.value?.id) {
+            form.pricing_id = lowestPrice.value.id;
+        } else {
+            // Tidak ada pricing sama sekali, tidak bisa booking
+            alert('Aset ini belum memiliki harga sewa yang tersedia.');
+            return;
+        }
+    }
+
     let date_start = null;
     let date_end = null;
 
@@ -658,7 +669,7 @@ const formattedDateRange = computed(() => {
                     :bookedDates="bookedDates"
                     :startDate="startDate"
                     :endDate="endDate"
-                    :selectedRentalMode="selectedRentalMode"
+                    :selectedRentalMode="activeScheduleMode"
                     :activeScheduleMode="activeScheduleMode"
                     :startTime="startTime"
                     :endTime="endTime"
@@ -668,7 +679,7 @@ const formattedDateRange = computed(() => {
                     :formattedDateRange="formattedDateRange"
                     @update:startDate="startDate = $event"
                     @update:endDate="endDate = $event"
-                    @update:selectedRentalMode="selectedRentalMode = $event"
+                    @update:selectedRentalMode="activeScheduleMode = $event"
                     @clearError="showDateError = false"
                 >
                         <!-- UI KHUSUS HOUR (Jam) -->
@@ -774,6 +785,12 @@ const formattedDateRange = computed(() => {
                             </div>
                         </div>
 
+                        <!-- BUG 8 FIX: Pesan jika tidak ada pricing -->
+                        <div v-if="!lowestPrice && (!asset.units || asset.units.length === 0)" class="text-center text-amber-600 text-xs font-bold mb-4 bg-amber-50 rounded-xl px-4 py-3 border border-amber-200">
+                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                            Pemilik belum menetapkan harga sewa. Hubungi pemilik untuk informasi.
+                        </div>
+
                         <button
                             v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
                             @click="() => document.getElementById('pilihan-unit')?.scrollIntoView({ behavior: 'smooth' })"
@@ -783,7 +800,7 @@ const formattedDateRange = computed(() => {
                         <button
                             v-else
                             @click="submitBooking"
-                            :disabled="asset.status !== 'approved' || !activePrice || !startDate || durationCount === 0"
+                            :disabled="asset.status !== 'approved' || !lowestPrice || !startDate || durationCount === 0"
                             class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
                             Booking Sekarang
                         </button>

@@ -262,14 +262,14 @@ const toggleUnitFasilitasDropdown = (index) => {
 
                 <p class="text-[11px] font-bold text-slate-500 mb-3">Tipe Unit {{ unitIndex + 1 }}</p>
 
-                <!-- Nama Unit & Jumlah -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <!-- Nama Unit, Jumlah & Harga -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Tipe Unit <span class="text-rose-500">*</span></label>
                         <input
                             v-model="unit.name"
                             type="text"
-                            placeholder="cth: Standard, Deluxe, Suite, VIP"
+                            placeholder="cth: Standard, Deluxe, VIP"
                             class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition"
                             required
                         />
@@ -284,6 +284,23 @@ const toggleUnitFasilitasDropdown = (index) => {
                             class="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition"
                             required
                         />
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 mb-1">
+                            Harga Sewa <span class="text-[10px] text-slate-400 font-normal">({{ rentalUnitLabel }})</span>
+                            <span class="text-rose-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">Rp</span>
+                            <input
+                                v-model="unit.price"
+                                type="number"
+                                min="0"
+                                placeholder="150000"
+                                class="w-full text-xs pl-8 pr-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition"
+                                required
+                            />
+                        </div>
                     </div>
                 </div>
 

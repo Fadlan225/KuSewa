@@ -26,12 +26,15 @@ class asset_image extends Model
             return $this->image;
         }
 
-        // Path assets/ → disimpan langsung di public/assets/ oleh seeder GD
+        // File seeder GD — disimpan langsung di public/assets/ (bukan via storage disk)
+        // Path tersimpan: "assets/foto/nama.jpg" → URL: /assets/foto/nama.jpg
         if (str_starts_with($this->image, 'assets/')) {
             return '/' . $this->image;
         }
 
-        // Path lainnya → storage (symlink public/storage → storage/app/public)
+        // File yang diupload owner via Storage::disk('public')
+        // Path tersimpan: "uploads/assets/nama.jpg" → URL: /storage/uploads/assets/nama.jpg
+        // (symlink: public/storage → storage/app/public)
         return '/storage/' . $this->image;
     }
 
