@@ -2,6 +2,10 @@
 import { onMounted, onUnmounted, computed } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
+import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
 
 const {
     desktopActiveMenu,
@@ -45,6 +49,7 @@ const {
     simpleDateString,
     priceDistribution,
     handleBucketClick,
+    initUserLocation,
 } = useHomeSearch();
 
 const maxDistributionCount = computed(() => {
@@ -72,6 +77,9 @@ const handleScroll = () => {
 
 onMounted(() => {
     window.addEventListener('scroll', handleScroll, { passive: true });
+    if (typeof initUserLocation === 'function') {
+        initUserLocation();
+    }
 });
 
 onUnmounted(() => {
@@ -83,63 +91,72 @@ onUnmounted(() => {
     <div class="hidden md:flex flex-col w-full max-w-[850px] relative z-[70]">
         <!-- Overlay untuk menutup modal jika di klik di luar -->
         <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/5 transition-opacity"></div>
-        
-        <!-- Card Utama (Slim & Compact) -->
+
+        <!-- Card Utama (Kapsul Utuh) -->
         <div class="bg-white rounded-full p-1.5 shadow-lg border border-gray-200/80 flex flex-row items-center justify-between w-full transition-all duration-300 relative z-50">
 
             <!-- Item 1: Jenis Aset -->
-            <div @click="desktopActiveMenu = desktopActiveMenu === 'jenis' ? null : 'jenis'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'jenis' ? 'bg-[#F8F9FA] shadow-inner' : ''">
+            <div @click="desktopActiveMenu = desktopActiveMenu === 'jenis' ? null : 'jenis'" class="flex-1 flex items-center justify-between px-5 py-2 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-300 hover:shadow-sm" :class="desktopActiveMenu === 'jenis' ? 'bg-white shadow-md ring-1 ring-[#0A2540]/20 scale-[1.02]' : ''">
                 <div class="flex flex-col">
-                    <span class="text-[12px] font-bold text-[#0A2540] tracking-wide">Jenis Aset</span>
-                    <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="selectedAssets.length > 0 ? 'text-[#0A2540] font-medium' : ''">
-                        {{ selectedAssets.length > 0 ? selectedAssets.join(', ') : 'Semua jenis' }}
+                    <span class="text-[13px] font-bold text-[#0A2540] tracking-wide group-hover:text-[#FFC000] transition-colors">Jenis Aset</span>
+                    <span class="text-[13px] text-[#6C757D] truncate max-w-[150px]" :class="selectedAssets.length > 0 ? 'text-[#0A2540] font-bold' : ''">
+                        {{ selectedAssets.length > 0 ? selectedAssets.join(', ') : 'Pilih jenis aset' }}
                     </span>
                 </div>
+                <i class="fa-solid fa-chevron-down text-[#6C757D]/70 text-[10px] transition-all duration-300 group-hover:text-[#0A2540] group-hover:translate-y-1" :class="desktopActiveMenu === 'jenis' ? 'rotate-180 text-[#0A2540]' : ''"></i>
             </div>
 
             <!-- Divider -->
-            <div class="h-6 w-px bg-gray-200 mx-1"></div>
+            <div class="h-8 w-px bg-gray-200 mx-1"></div>
 
             <!-- Item 2: Lokasi -->
-            <div @click="desktopActiveMenu = desktopActiveMenu === 'lokasi' ? null : 'lokasi'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'lokasi' ? 'bg-[#F8F9FA] shadow-inner' : ''">
+            <div @click="desktopActiveMenu = desktopActiveMenu === 'lokasi' ? null : 'lokasi'" class="flex-1 flex items-center justify-between px-5 py-2 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-300 hover:shadow-sm" :class="desktopActiveMenu === 'lokasi' ? 'bg-white shadow-md ring-1 ring-[#0A2540]/20 scale-[1.02]' : ''">
                 <div class="flex flex-col">
-                    <span class="text-[12px] font-bold text-[#0A2540] tracking-wide">Lokasi</span>
-                    <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="searchQuery ? 'text-[#0A2540] font-medium' : ''">
-                        {{ searchQuery || 'Semua lokasi' }}
+                    <span class="text-[13px] font-bold text-[#0A2540] tracking-wide relative z-10 group-hover:text-[#FFC000] transition-colors">Lokasi</span>
+                    <span v-if="searchQuery" class="text-[13px] text-[#0A2540] font-bold truncate max-w-[150px] relative z-10 mt-0.5">
+                        {{ searchQuery }}
+                    </span>
+                    <span v-else class="text-[13px] text-[#6C757D] truncate max-w-[150px] relative z-10 mt-0.5">
+                        Cari destinasi...
                     </span>
                 </div>
+                <i class="fa-solid fa-chevron-down text-[#6C757D]/70 text-[10px] transition-all duration-300 group-hover:text-[#0A2540] group-hover:translate-y-1" :class="desktopActiveMenu === 'lokasi' ? 'rotate-180 text-[#0A2540]' : ''"></i>
             </div>
 
             <!-- Divider -->
-            <div class="h-6 w-px bg-gray-200 mx-1"></div>
+            <div class="h-8 w-px bg-gray-200 mx-1"></div>
 
             <!-- Item 3: Jadwal -->
-            <div @click="desktopActiveMenu = desktopActiveMenu === 'jadwal' ? null : 'jadwal'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'jadwal' ? 'bg-[#F8F9FA] shadow-inner' : ''">
+            <div @click="desktopActiveMenu = desktopActiveMenu === 'jadwal' ? null : 'jadwal'" class="flex-1 flex items-center justify-between px-5 py-2 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-300 hover:shadow-sm" :class="desktopActiveMenu === 'jadwal' ? 'bg-white shadow-md ring-1 ring-[#0A2540]/20 scale-[1.02]' : ''">
                 <div class="flex flex-col">
-                    <span class="text-[12px] font-bold text-[#0A2540] tracking-wide">Jadwal</span>
-                    <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="formattedSchedule !== 'Pilih Tanggal' && formattedSchedule ? 'text-[#0A2540] font-medium' : ''">
-                        {{ formattedSchedule || 'Pilih tanggal' }}
+                    <span class="text-[13px] font-bold text-[#0A2540] tracking-wide group-hover:text-[#FFC000] transition-colors">Jadwal</span>
+                    <span class="text-[13px] text-[#6C757D] truncate max-w-[150px]" :class="formattedSchedule !== 'Pilih Tanggal' && formattedSchedule ? 'text-[#0A2540] font-bold' : ''">
+                        {{ formattedSchedule || 'Tentukan tanggal' }}
                     </span>
                 </div>
+                <i class="fa-solid fa-chevron-down text-[#6C757D]/70 text-[10px] transition-all duration-300 group-hover:text-[#0A2540] group-hover:translate-y-1" :class="desktopActiveMenu === 'jadwal' ? 'rotate-180 text-[#0A2540]' : ''"></i>
             </div>
 
             <!-- Divider -->
-            <div class="h-6 w-px bg-gray-200 mx-1"></div>
+            <div class="h-8 w-px bg-gray-200 mx-1"></div>
 
             <!-- Item 4: Rentang Harga -->
-            <div @click="desktopActiveMenu = desktopActiveMenu === 'harga' ? null : 'harga'" class="flex-1 flex items-center justify-between px-4 py-1.5 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-200" :class="desktopActiveMenu === 'harga' ? 'bg-[#F8F9FA] shadow-inner' : ''">
+            <div @click="desktopActiveMenu = desktopActiveMenu === 'harga' ? null : 'harga'" class="flex-1 flex items-center justify-between px-5 py-2 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-300 hover:shadow-sm" :class="desktopActiveMenu === 'harga' ? 'bg-white shadow-md ring-1 ring-[#0A2540]/20 scale-[1.02]' : ''">
                 <div class="flex flex-col">
-                    <span class="text-[12px] font-bold text-[#0A2540] tracking-wide">Harga</span>
-                    <span class="text-[11px] text-[#6C757D] truncate max-w-[150px]" :class="(parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? 'text-[#0A2540] font-medium' : ''">
-                        {{ (parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Budget Anda' }}
+                    <span class="text-[13px] font-bold text-[#0A2540] tracking-wide group-hover:text-[#FFC000] transition-colors">Harga</span>
+                    <span class="text-[13px] text-[#6C757D] truncate max-w-[150px]" :class="parsedMinPrice > 0 || parsedMaxPrice < maxLimit ? 'text-[#0A2540] font-bold' : ''">
+                        {{ parsedMinPrice > 0 || parsedMaxPrice < maxLimit ? 'Rp ' + formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice) : 'Batas budget' }}
                     </span>
                 </div>
+                <i class="fa-solid fa-chevron-down text-[#6C757D]/70 text-[10px] transition-all duration-300 group-hover:text-[#0A2540] group-hover:translate-y-1" :class="desktopActiveMenu === 'harga' ? 'rotate-180 text-[#0A2540]' : ''"></i>
             </div>
 
             <!-- Tombol Search -->
-            <button @click="performSearch" class="bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0 ml-1 active:scale-95 cursor-pointer">
-                <i class="fa-solid fa-magnifying-glass text-sm font-bold"></i>
-            </button>
+            <div class="relative ml-1 shrink-0">
+                <button @click="performSearch" class="relative h-12 w-12 bg-[#FFC000] hover:bg-[#e6ad00] rounded-full flex items-center justify-center shadow-md hover:shadow-[0_0_15px_rgba(255,192,0,0.6)] hover:scale-105 active:scale-95 transition-all duration-300 z-10 group">
+                    <i class="fa-solid fa-magnifying-glass text-[#0A2540] text-lg transition-transform duration-300 group-hover:scale-110"></i>
+                </button>
+            </div>
 
         </div>
 
@@ -155,7 +172,15 @@ onUnmounted(() => {
             leave-from-class="transform scale-100 opacity-100 translate-y-0"
             leave-to-class="transform scale-95 opacity-0 -translate-y-4"
         >
-            <div v-if="desktopActiveMenu" class="absolute top-[108%] w-full bg-white rounded-[32px] shadow-2xl border border-[#6C757D]/10 p-6 z-[70] origin-top flex flex-col max-h-[75vh] overflow-y-auto hide-scrollbar overscroll-contain">
+            <div v-if="desktopActiveMenu"
+                 class="absolute top-[108%] bg-white rounded-[32px] shadow-2xl border border-[#6C757D]/10 p-6 z-[70] flex flex-col max-h-[75vh] overflow-y-auto hide-scrollbar overscroll-contain transition-all"
+                 :class="{
+                    'w-[380px] left-0 origin-top-left': desktopActiveMenu === 'jenis',
+                    'w-[380px] left-[25%] origin-top': desktopActiveMenu === 'lokasi',
+                    'w-[700px] left-1/2 -translate-x-1/2 origin-top': desktopActiveMenu === 'jadwal',
+                    'w-[380px] right-0 origin-top-right': desktopActiveMenu === 'harga'
+                 }"
+            >
 
                 <!-- ================== DESKTOP: LOKASI ================== -->
                 <div v-if="desktopActiveMenu === 'lokasi'" class="w-full max-w-sm mx-auto">
@@ -167,6 +192,18 @@ onUnmounted(() => {
 
                     <h3 class="text-[11px] font-bold text-[#6C757D] mb-3 uppercase tracking-wider">Disarankan</h3>
                     <div class="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                        <!-- Gunakan Lokasi Saat Ini -->
+                        <div @click="initUserLocation(true); desktopActiveMenu = 'jadwal'" class="flex gap-3 items-center cursor-pointer group hover:bg-blue-50 p-2 -mx-2 rounded-xl transition border border-transparent hover:border-blue-100">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 text-blue-600">
+                                <i class="fa-solid fa-location-crosshairs text-sm"></i>
+                            </div>
+                            <div class="border-b border-[#6C757D]/10 pb-2 pt-1 w-full group-last:border-0">
+                                <h4 class="font-bold text-[13px] text-blue-700">Dekat lokasi Anda saat ini</h4>
+                                <p class="text-[11px] text-blue-600/70 mt-0.5 truncate">Gunakan GPS / Lokasi Anda</p>
+                            </div>
+                        </div>
+
+                        <!-- Disarankan dari sistem -->
                         <div v-for="item in filteredLocations" :key="item.id" @click="searchQuery = item.title; desktopActiveMenu = 'jadwal'" class="flex gap-3 items-center cursor-pointer group hover:bg-gray-50 p-2 -mx-2 rounded-xl transition">
                             <div :class="`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.bg}`">
                                 <i :class="`${item.icon} ${item.iconColor} text-sm`"></i>
@@ -316,7 +353,7 @@ onUnmounted(() => {
                             <label class="block text-xs font-bold text-[#6C757D] mb-2 text-center">Durasi Sewa (Bulan)</label>
                             <CircularMonthSlider v-model="durationMonths" />
                         </div>
-                        
+
                         <div v-if="endDate" class="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
                             <span class="text-[11px] text-[#6C757D] font-bold">Tanggal Selesai Otomatis:</span>
                             <span class="text-[11px] font-bold text-[#0A2540]">

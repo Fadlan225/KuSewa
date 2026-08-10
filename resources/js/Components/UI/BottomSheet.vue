@@ -53,7 +53,7 @@ const sheetTransform = computed(() => {
 </script>
 
 <template>
-    <div>
+    <Teleport to="body">
         <!-- OVERLAY -->
         <Transition
             enter-active-class="transition-opacity duration-300"
@@ -61,9 +61,8 @@ const sheetTransform = computed(() => {
             enter-to-class="opacity-100"
             leave-active-class="transition-opacity duration-300"
             leave-from-class="opacity-100"
-            leave-to-class="opacity-0"
         >
-            <div v-if="modelValue" @click="close" class="fixed inset-0 bg-black/60 z-[100] md:hidden"></div>
+            <div v-if="modelValue" @click="close" class="fixed inset-0 bg-black/60 z-[9999] md:hidden"></div>
         </Transition>
 
         <!-- BOTTOM SHEET -->
@@ -75,7 +74,7 @@ const sheetTransform = computed(() => {
             leave-from-class="translate-y-0"
             leave-to-class="translate-y-full"
         >
-            <div v-if="modelValue" class="fixed inset-x-0 bottom-0 z-[100] flex items-end justify-center md:hidden pointer-events-none">
+            <div v-if="modelValue" class="fixed inset-x-0 bottom-0 z-[9999] flex items-end justify-center md:hidden pointer-events-none">
                 <div
                     :class="['relative w-full bg-[#F8F9FA] rounded-t-[32px] flex flex-col shadow-2xl pointer-events-auto', heightClass]"
                     :style="{ transform: sheetTransform, transition: touchStartY === 0 ? 'transform 0.2s ease-out' : 'none' }"
@@ -115,5 +114,5 @@ const sheetTransform = computed(() => {
                 </div>
             </div>
         </Transition>
-    </div>
+    </Teleport>
 </template>

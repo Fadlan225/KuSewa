@@ -64,7 +64,7 @@ console.log(`║  Adapter   : ${adapterName.padEnd(44)}║`);
 console.log(`║  IP Laptop : ${localIP.padEnd(44)}║`);
 console.log('╠══════════════════════════════════════════════════════════╣');
 console.log(`║  Akses dari HP  : http://${localIP}:8080`.padEnd(61) + '║');
-console.log(`║  Vite HMR       : http://${localIP}:5173`.padEnd(61) + '║');
+console.log(`║  Vite HMR       : http://${localIP}:5174`.padEnd(61) + '║');
 console.log('╚══════════════════════════════════════════════════════════╝');
 console.log('');
 
@@ -74,7 +74,8 @@ const artisan = spawnProcess('php', ['artisan', 'serve', '--host=0.0.0.0', '--po
 // Jalankan Vite dev server dengan HMR ke IP terdeteksi
 const vite = spawnProcess('npm', ['run', 'dev'], {
     VITE_HMR_HOST: localIP,
-    VITE_HMR_PORT: '5173',
+    VITE_HMR_PORT: '5174',
+    VITE_PORT: '5174'
 });
 
 // Matikan keduanya bila salah satu keluar atau Ctrl+C

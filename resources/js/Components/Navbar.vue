@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, computed, watch, inject } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
+import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
 
 const isHome = computed(() => route().current('Home'));
 const isBantuan = computed(() => route().current('Bantuan.*'));
@@ -62,7 +63,20 @@ const {
     suggestions, isLoadingSuggestions, fetchSuggestions, performSearch,
     // Lokasi
     setLocationSuggestions,
+    
+    priceDistribution, handleBucketClick,
 } = useHomeSearch();
+
+const maxDistributionCount = computed(() => {
+    if (!priceDistribution.value || priceDistribution.value.length === 0) return 1;
+    return Math.max(...priceDistribution.value) || 1;
+});
+
+const isBucketActive = (idx) => {
+    const bucketMin = (idx / 30) * 100;
+    const bucketMax = ((idx + 1) / 30) * 100;
+    return bucketMax >= minPercent.value && bucketMin <= maxPercent.value;
+};
 
 // Inisialisasi lokasi dari DB props
 onMounted(() => {
@@ -207,9 +221,18 @@ const initials = computed(() => {
                                 <!-- Fake Input Search -->
                                 <div
                                     @click="isKeywordSheetOpen = true"
-                                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-10 pr-10 py-2.5 border border-gray-200/80 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all shadow-inner flex items-center cursor-pointer relative"
+                                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-10 pr-10 py-2.5 border border-gray-200/80 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all shadow-inner flex items-center cursor-pointer relative overflow-hidden"
+                                    style="min-height: 38px;"
                                 >
-                                    <span class="truncate pr-4" :class="keywordQuery ? 'text-[#0A2540]' : 'text-[#6C757D]'">{{ keywordQuery || 'Mau sewa apa hari ini?' }}</span>
+                                    <span v-if="keywordQuery" class="truncate pr-4 text-[#0A2540] relative z-10">{{ keywordQuery }}</span>
+                                    <AnimatedPlaceholder 
+                                        v-else
+                                        :placeholders="page.props.dynamicPlaceholders" 
+                                        :isFocused="false" 
+                                        :hasValue="!!keywordQuery" 
+                                        offsetClass="left-10"
+                                        class="text-[#6C757D]"
+                                    />
                                 </div>
 
                                 <!-- Tombol Clear Search (Mobile Fake Input) -->
@@ -354,19 +377,36 @@ const initials = computed(() => {
                         <div v-if="desktopNavActiveMenu" @click="desktopNavActiveMenu = null" class="fixed inset-0 z-40"></div>
 
                         <!-- Search Bar -->
-                        <div class="relative w-full z-50">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs transition-colors duration-300" :class="isCurrentlyTransparent ? 'text-white' : 'text-[#6C757D]'"></i>
+                        <div 
+                            class="relative w-full z-50 rounded-full transition-all border overflow-hidden" 
+                            :class="[
+                                isCurrentlyTransparent
+                                    ? 'bg-white/10 border-white/30'
+                                    : 'bg-[#F8F9FA] border-gray-200/80',
+                                desktopNavActiveMenu === 'keyword' && !isCurrentlyTransparent ? 'bg-white ring-1 ring-[#0A2540] border-[#0A2540]' : '',
+                                desktopNavActiveMenu === 'keyword' && isCurrentlyTransparent ? 'bg-white' : ''
+                            ]"
+                        >
+                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs transition-colors duration-300 z-[60]" :class="isCurrentlyTransparent && desktopNavActiveMenu !== 'keyword' ? 'text-white' : 'text-[#6C757D]'"></i>
+                            
+                            <AnimatedPlaceholder 
+                                :placeholders="page.props.dynamicPlaceholders" 
+                                :isFocused="desktopNavActiveMenu === 'keyword'" 
+                                :hasValue="!!keywordQuery" 
+                                offsetClass="left-9 text-xs"
+                                :class="isCurrentlyTransparent ? 'text-white' : 'text-[#6C757D]'"
+                            />
+
                             <input
                                 type="text"
                                 v-model="keywordQuery"
                                 @click="desktopNavActiveMenu = 'keyword'"
                                 @keyup.enter="handleNavSearch"
-                                placeholder="Mau sewa apa hari ini?"
                                 :class="[
-                                    'w-full text-xs font-medium rounded-full pl-9 pr-10 py-2 border focus:outline-none transition-all shadow-inner relative z-50',
-                                    isCurrentlyTransparent
-                                        ? 'bg-white/10 text-white placeholder-white border-white/30 focus:bg-white focus:text-[#0A2540] focus:placeholder-[#6C757D]'
-                                        : 'bg-[#F8F9FA] text-[#0A2540] placeholder-[#6C757D] border-gray-200/80 focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540]'
+                                    'w-full text-xs font-medium rounded-full pl-9 pr-10 py-2 border-none focus:outline-none focus:ring-0 transition-all shadow-inner relative z-50 bg-transparent placeholder-transparent',
+                                    isCurrentlyTransparent && desktopNavActiveMenu !== 'keyword'
+                                        ? 'text-white'
+                                        : 'text-[#0A2540]'
                                 ]"
                             />
 
@@ -613,9 +653,17 @@ const initials = computed(() => {
                                             </div>
                                         </div>
                                         <p v-if="priceError" class="text-[10px] font-bold text-red-500 mt-1 mb-4">{{ priceError }}</p>
-                                        <div v-else class="mb-4 mt-1 h-[14px]"></div>
+                                        <!-- Histogram -->
+                                        <div v-else class="h-[24px] w-full flex items-end justify-between px-2 gap-[1px] mb-2 mt-4">
+                                            <div v-for="(count, idx) in priceDistribution" :key="idx"
+                                                @click="handleBucketClick(idx)"
+                                                class="flex-1 rounded-t-[1px] transition-all duration-300 min-h-[2px] cursor-pointer hover:bg-opacity-80"
+                                                :style="{ height: `${Math.max((count / maxDistributionCount) * 100, 4)}%` }"
+                                                :class="isBucketActive(idx) ? 'bg-[#FFC000]' : 'bg-[#E2E8F0]'">
+                                            </div>
+                                        </div>
 
-                                        <div class="mb-2 mt-6 relative h-1.5 mx-2" ref="sliderTrack">
+                                        <div class="mb-2 mt-4 relative h-1.5 mx-2" ref="sliderTrack">
                                             <div class="absolute inset-0 bg-[#6C757D]/20 rounded-full"></div>
                                             <div class="absolute h-full bg-[#0A2540] rounded-full" :style="`left: ${minPercent}%; right: ${100 - maxPercent}%`"></div>
                                             <div @mousedown="startDrag($event, 'min')" @touchstart.prevent="startDrag($event, 'min')"

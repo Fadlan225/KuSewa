@@ -62,8 +62,9 @@ const startChat = () => {
             </div>
 
             <div>
-                <h2 class="flex items-center gap-1.5 text-lg font-extrabold text-[#0A2540]">
-                    Pemilik Aset : {{ ownerProfile?.user?.name || 'Anonim' }}
+                <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-0.5">Pemilik Aset</div>
+                <h2 class="flex items-center gap-1.5 text-base sm:text-lg font-bold text-[#0A2540]">
+                    {{ ownerProfile?.user?.name || 'Anonim' }}
                     <svg v-if="ownerProfile?.status === 'verified'" class="w-[18px] h-[18px] text-green-500" viewBox="0 0 24 24" fill="currentColor" title="Terverifikasi">
                         <path d="M23 11.99l-2.44-2.79.34-3.69-3.61-.82-1.89-3.2-3.4.14-3.4-.14-1.89 3.2-3.61.82.34 3.69L1 11.99l2.44 2.79-.34 3.69 3.61.82 1.89 3.2 3.4-.14 3.4.14 1.89-3.2 3.61-.82-.34-3.69L23 11.99zm-13.06 5.86l-4.59-4.58 1.41-1.41 3.18 3.18 8.18-8.18 1.41 1.41-9.59 9.58z"/>
                     </svg>

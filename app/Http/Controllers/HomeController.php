@@ -19,31 +19,84 @@ class HomeController extends Controller
     /**
      * Helper: ambil kota-kota unik dari DB untuk filter lokasi.
      */
-    private function getLocationSuggestions(?string $query = null): array
+    private function getLocationSuggestions(): array
     {
-        $q = asset::where('status', 'approved')
-            ->whereNotNull('city_code')
-            ->where('city_code', '!=', '')
-            ->join('cities', 'assets.city_code', '=', 'cities.code');
+        $suggestions = [];
 
-        if ($query) {
-            $q->where('cities.name', 'like', "%{$query}%");
-        }
-
-        return $q->select('cities.name as city')
+        // 1. Kota (Cities)
+        $cities = \App\Models\asset::where('status', 'approved')->whereNotNull('city_code')
+            ->join('cities', 'assets.city_code', '=', 'cities.code')
+            ->select('cities.name as city_name')
             ->distinct()
             ->orderBy('cities.name')
-            ->limit(10)
-            ->pluck('city')
-            ->map(fn($city) => [
-                'id'        => $city,
-                'title'     => $city,
-                'desc'      => "Aset di {$city}",
+            ->get();
+        foreach ($cities as $c) {
+            $suggestions[] = [
+                'id'        => $c->city_name,
+                'title'     => $c->city_name,
+                'desc'      => "Kota",
+                'icon'      => 'fa-solid fa-city',
+                'iconColor' => 'text-[#FFC000]',
+                'bg'        => 'bg-[#FFC000]/10',
+            ];
+        }
+
+        // 2. Kecamatan (Districts)
+        $districts = \App\Models\asset::where('status', 'approved')->whereNotNull('district_code')
+            ->join('districts', 'assets.district_code', '=', 'districts.code')
+            ->join('cities', 'districts.city_code', '=', 'cities.code')
+            ->select('districts.name as district_name', 'cities.name as city_name')
+            ->distinct()
+            ->orderBy('districts.name')
+            ->get();
+        foreach ($districts as $d) {
+            $suggestions[] = [
+                'id'        => $d->district_name,
+                'title'     => $d->district_name,
+                'desc'      => "Kecamatan di {$d->city_name}",
+                'icon'      => 'fa-solid fa-map-location-dot',
+                'iconColor' => 'text-[#FFC000]',
+                'bg'        => 'bg-[#FFC000]/10',
+            ];
+        }
+
+        // 3. Kelurahan (Villages)
+        $villages = \App\Models\asset::where('status', 'approved')->whereNotNull('village_code')
+            ->join('villages', 'assets.village_code', '=', 'villages.code')
+            ->join('districts', 'villages.district_code', '=', 'districts.code')
+            ->select('villages.name as village_name', 'districts.name as district_name')
+            ->distinct()
+            ->orderBy('villages.name')
+            ->get();
+        foreach ($villages as $v) {
+            $suggestions[] = [
+                'id'        => $v->village_name,
+                'title'     => $v->village_name,
+                'desc'      => "Kelurahan/Desa di {$v->district_name}",
                 'icon'      => 'fa-solid fa-location-dot',
                 'iconColor' => 'text-[#FFC000]',
                 'bg'        => 'bg-[#FFC000]/10',
-            ])
-            ->toArray();
+            ];
+        }
+
+        // 4. Alamat Spesifik (Address)
+        $addresses = \App\Models\asset::where('status', 'approved')->whereNotNull('address')
+            ->select('address')
+            ->distinct()
+            ->orderBy('address')
+            ->get();
+        foreach ($addresses as $a) {
+            $suggestions[] = [
+                'id'        => $a->address,
+                'title'     => $a->address,
+                'desc'      => "Alamat Lengkap",
+                'icon'      => 'fa-solid fa-map-pin',
+                'iconColor' => 'text-[#FFC000]',
+                'bg'        => 'bg-[#FFC000]/10',
+            ];
+        }
+
+        return $suggestions;
     }
 
     /**
@@ -106,6 +159,65 @@ class HomeController extends Controller
         }
 
         return $priceDistribution;
+    }
+
+    /**
+     * Helper: kumpulkan data untuk placeholder dinamis pencarian
+     */
+    private function getDynamicPlaceholders(): array
+    {
+        $placeholders = collect([]);
+
+        // 1. Aset Populer
+        $popular = asset::where('status', 'approved')
+            ->withCount(['views', 'reviews'])
+            ->orderByDesc('views_count')
+            ->limit(5)
+            ->pluck('title');
+        $placeholders = $placeholders->merge($popular);
+
+        if (auth()->check()) {
+            $userId = auth()->id();
+
+            // 2. Riwayat Pencarian User (Search Logs)
+            $history = search_log::where('user_id', $userId)
+                ->orderByDesc('searched_at')
+                ->limit(3)
+                ->pluck('keyword');
+            $placeholders = $placeholders->merge($history);
+
+            // 3. Aset Favorit User
+            $favorites = asset::whereHas('favorites', fn($q) => $q->where('user_id', $userId))
+                ->limit(3)
+                ->pluck('title');
+            $placeholders = $placeholders->merge($favorites);
+
+            // 4. Aset yang di-booking User
+            $bookings = asset::whereHas('bookings', fn($q) => $q->where('user_id', $userId))
+                ->limit(3)
+                ->pluck('title');
+            $placeholders = $placeholders->merge($bookings);
+            
+            // 5. Aset yang di-review User
+            $reviews = asset::whereHas('reviews', fn($q) => $q->where('reviews.user_id', $userId))
+                ->limit(3)
+                ->pluck('title');
+            $placeholders = $placeholders->merge($reviews);
+        }
+
+        // Jika tidak ada data sama sekali, beri fallback
+        if ($placeholders->isEmpty()) {
+            return [
+                "Rumah Asri Balikpapan",
+                "Gudang Logistik Samarinda",
+                "Apartemen Premium",
+                "Ruang Kantor Strategis",
+                "Lahan Kosong Siap Bangun"
+            ];
+        }
+
+        // Shuffle dan kembalikan array unik
+        return $placeholders->unique()->shuffle()->take(10)->values()->toArray();
     }
 
     /**
@@ -195,7 +307,9 @@ class HomeController extends Controller
 
         // 4. Karena anda menyukai (Perlu login)
         if (auth()->check()) {
-            $favTypes = favorite::where('favorites.user_id', auth()->id())
+            $userId = auth()->id();
+            
+            $favTypes = favorite::where('favorites.user_id', $userId)
                 ->join('assets', 'assets.id', '=', 'favorites.asset_id')
                 ->join('asset_types', 'asset_types.id', '=', 'assets.asset_type_id')
                 ->select('asset_types.id', 'asset_types.name', \DB::raw('count(*) as count'))
@@ -203,15 +317,19 @@ class HomeController extends Controller
                 ->orderByDesc('count')
                 ->limit(3)
                 ->get();
+                
+            $favoritedAssetIds = favorite::where('user_id', $userId)->pluck('asset_id');
 
             foreach ($favTypes as $favType) {
                 $recommendedAssets = asset::where('asset_type_id', $favType->id)
                     ->where('status', 'approved')
+                    ->whereNotIn('id', $favoritedAssetIds)
                     ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
                     ->orderByDesc('id')
                     ->withCommonRelations()
                     ->withCount('reviews')
-            ->withAvg('reviews as reviews_avg_rating', 'rating')
+                    ->withAvg('reviews as reviews_avg_rating', 'rating')
+                    ->limit(10)
                     ->get()
                     ->map($mapAsset);
 
@@ -285,6 +403,7 @@ class HomeController extends Controller
         $locationSuggestions = $this->getLocationSuggestions();
         $facilitiesByType = $this->getFacilitiesByType();
         $priceDistribution = $this->getPriceDistribution(); // Global distribution
+        $dynamicPlaceholders = $this->getDynamicPlaceholders();
 
         return inertia('Home/index', [
             'sections'            => $sections,
@@ -296,6 +415,7 @@ class HomeController extends Controller
             'locationSuggestions' => $locationSuggestions,
             'facilitiesByType'    => $facilitiesByType,
             'priceDistribution'   => $priceDistribution,
+            'dynamicPlaceholders' => $dynamicPlaceholders,
         ]);
     }
 
@@ -326,6 +446,8 @@ class HomeController extends Controller
                 'city:code,name',
                 'district:code,name',
                 'province:code,name',
+                'units' => fn($q) => $q->select(['id', 'asset_id', 'quantity', 'status'])->where('status', 'active'),
+                'units.pricings' => fn($q) => $q->select(['id', 'asset_unit_id', 'price']),
                 'favorites' => function ($q) {
                     $q->select(['id', 'user_id', 'asset_id'])
                         ->where('user_id', auth()->id());
@@ -348,10 +470,12 @@ class HomeController extends Controller
             $query->whereHas('type', fn($q) => $q->whereIn('name', $types));
         }
 
-        // Filter lokasi (city atau address)
+        // Filter lokasi (city, district, village, atau address)
         if ($location) {
             $query->where(function ($q) use ($location) {
                 $q->whereHas('city', function($q2) use ($location) { $q2->where('name', 'like', "%{$location}%"); })
+                  ->orWhereHas('district', function($q2) use ($location) { $q2->where('name', 'like', "%{$location}%"); })
+                  ->orWhereHas('village', function($q2) use ($location) { $q2->where('name', 'like', "%{$location}%"); })
                   ->orWhere('address', 'like', "%{$location}%");
             });
         }
@@ -447,14 +571,35 @@ class HomeController extends Controller
             $asset->district_name = $asset->district->name ?? '';
             $asset->province_name = $asset->province->name ?? '';
             
+            if ($asset->type && $asset->type->allow_units && $asset->units && $asset->units->isNotEmpty()) {
+                $minPrice = PHP_FLOAT_MAX;
+                $cheapestUnitQty = 0;
+                
+                foreach($asset->units as $unit) {
+                    if ($unit->pricings && $unit->pricings->isNotEmpty()) {
+                        $unitPrice = $unit->pricings->min('price');
+                        if ($unitPrice < $minPrice) {
+                            $minPrice = $unitPrice;
+                            $cheapestUnitQty = $unit->quantity;
+                        }
+                    }
+                }
+                
+                if ($minPrice !== PHP_FLOAT_MAX) {
+                    $asset->cheapest_unit_price = $minPrice;
+                    $asset->cheapest_unit_quantity = $cheapestUnitQty;
+                }
+            }
+            unset($asset->units);
+            
             return $asset;
         });
 
         $meta = $this->getSearchMeta();
-        $locationQuery = null; // Always fetch default suggestions for the dropdown
-        $locationSuggestions = $this->getLocationSuggestions($locationQuery);
+        $locationSuggestions = $this->getLocationSuggestions();
 
         $facilitiesByType = $this->getFacilitiesByType();
+        $dynamicPlaceholders = $this->getDynamicPlaceholders();
 
         return inertia('Home/Assets/Index', [
             'assets'              => $assets,
@@ -481,6 +626,7 @@ class HomeController extends Controller
             'trending'            => $meta['trending'],
             'locationSuggestions' => $locationSuggestions,
             'priceDistribution'   => $priceDistribution,
+            'dynamicPlaceholders' => $dynamicPlaceholders,
         ]);
     }
 

@@ -1,8 +1,7 @@
 <script setup>
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
-import AppLayout from '@/Layouts/AppLayout.vue';
-import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -327,18 +326,16 @@ const closeModalAndRedirect = () => {
 </script>
 
 <template>
-    <AppLayout hideNavbar hideBottombar>
+    <DashboardLayout 
+        title="Ajukan Aset Baru" 
+        description="Lengkapi data aset Anda agar calon penyewa bisa melihat unit Anda di platform kusewa." 
+        role="Owner"
+        :breadcrumbs="[{ label: 'Aset', route: '/owner/asset' }, { label: 'Ajukan Aset Baru' }]"
+    >
         <Head title="Ajukan Aset Baru" />
 
-        <DetailNavbar title="Ajukan Properti Baru" backUrl="/owner/asset" :showSections="false" :showShare="false" :showFavorite="false" />
-
-        <div class="min-h-screen bg-[#F8F9FA] pb-32 font-sans text-[#0A2540]">
-            <div class="max-w-6xl mx-auto px-6 lg:px-8 py-10 lg:py-12">
-                <!-- HEADER TITLE -->
-                <div class="mb-8">
-                    <h1 class="text-[22px] font-semibold text-[#0A2540]">Ajukan Aset Baru</h1>
-                    <p class="text-[14px] text-slate-500 mt-1.5 leading-relaxed">Lengkapi data aset Anda agar calon penyewa bisa melihat unit Anda di platform kusewa.</p>
-                </div>
+        <div class="pb-32 font-sans text-[#0A2540]">
+            <div class="max-w-6xl mx-auto py-2">
 
                 <div class="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
 
@@ -490,7 +487,7 @@ const closeModalAndRedirect = () => {
         </DetailBottomBar>
 
         <!-- STICKY BOTTOM ACTION BAR (Desktop) -->
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-muted/20 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-40 hidden md:block">
+        <div class="fixed bottom-0 left-0 lg:left-[260px] right-0 bg-white border-t border-muted/20 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-40 hidden md:block">
             <div class="max-w-6xl mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
                 <div>
                     <button type="button" @click="prevStep" class="h-[48px] px-6 rounded-[12px] border border-muted/30 text-[#0A2540] font-semibold text-[14px] hover:bg-slate-50 transition-colors bg-white shadow-sm flex items-center gap-2" :class="currentStep === 1 ? 'invisible' : ''">
@@ -557,5 +554,5 @@ const closeModalAndRedirect = () => {
                 </div>
             </Transition>
         </Teleport>
-    </AppLayout>
+    </DashboardLayout>
 </template>

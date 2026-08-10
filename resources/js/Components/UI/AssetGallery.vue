@@ -206,7 +206,7 @@ const closeGalleryModal = () => {
         <!-- ============================================================ -->
 
         <!-- MOBILE GALLERY CAROUSEL (Mobile Only) -->
-        <div id="foto" class="block md:hidden relative w-full h-[300px] sm:h-[400px] rounded-2xl overflow-hidden mb-8 touch-pan-y" @touchstart.passive="handleGalleryTouchStart" @touchend.passive="handleGalleryTouchEnd">
+        <div id="foto" class="block md:hidden relative w-full h-[200px] sm:h-[250px] rounded-2xl overflow-hidden mb-8 touch-pan-y" @touchstart.passive="handleGalleryTouchStart" @touchend.passive="handleGalleryTouchEnd">
             <transition :name="galleryTransitionName" mode="out-in">
                 <div :key="currentMobileImageIndex" class="w-full h-full relative" @click="hasImages && (showGalleryModal = true)">
                     <div v-if="!hasImages" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0 bg-gray-100">
@@ -237,7 +237,7 @@ const closeGalleryModal = () => {
         </div>
 
         <!-- HERO GALLERY GRID (Desktop Only) -->
-        <div class="hidden md:flex relative rounded-2xl overflow-hidden mb-12 h-[300px] sm:h-[400px] md:h-[500px] gap-2">
+        <div class="hidden md:flex relative rounded-2xl overflow-hidden mb-12 h-[200px] sm:h-[300px] md:h-[350px] gap-2">
             <!-- Left Large Image -->
             <div class="w-full md:w-1/2 h-full cursor-pointer hover:opacity-95 transition bg-gray-100 flex items-center justify-center relative overflow-hidden" @click="hasImages && (showGalleryModal = true)">
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">

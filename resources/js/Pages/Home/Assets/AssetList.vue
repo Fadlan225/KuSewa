@@ -15,7 +15,7 @@ const props = defineProps({
     },
     emptyStateType: {
         type: String,
-        default: 'no-data', 
+        default: 'no-data',
         validator: (value) => ['no-data', 'filter', 'search'].includes(value)
     },
     searchKeyword: {
@@ -47,7 +47,7 @@ onMounted(() => {
                                 lng: position.coords.longitude
                             }
                         });
-                        
+
                         if (response.data && response.data.length > 0) {
                             localSections.value[nearbyIndex].assets = response.data;
                         } else {
@@ -136,7 +136,7 @@ const skeletonCards = 6;
                         <div v-if="section.id === 'nearby' && isLocating" class="flex gap-3 sm:gap-4 pb-6 pt-2 overflow-hidden pr-4 sm:pr-6 lg:pr-8 animate-pulse">
                             <AssetCardSkeleton v-for="c in skeletonCards" :key="'nearby-sk-'+c" />
                         </div>
-                        
+
                         <!-- Horizontal Scroll - will-change agar GPU-accelerated -->
                         <div
                             v-else

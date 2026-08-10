@@ -59,7 +59,58 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('asset', \App\Http\Controllers\Owner\AssetController::class)->names('asset');
-    Route::get('/bookings', function(){ return Inertia::render('owner/BookingReview'); })->name('bookings');
+    Route::get('/bookings', function(){ 
+        return Inertia::render('owner/Workspace', [
+            'type' => 'bookings',
+            'title' => 'Daftar Pesanan',
+            'description' => 'Pantau dan kelola semua pesanan aset Anda di satu tempat.',
+            'bookings' => [
+                'data' => [
+                    [
+                        'id' => 1,
+                        'code' => 'BOOK-987654321',
+                        'asset' => 'Kamera Sony A7III',
+                        'status' => 'pending',
+                        'tenant' => 'Fadlan Firdaus',
+                        'period' => '12 Agust 2026 - 15 Agust 2026',
+                        'total' => 615000
+                    ],
+                    [
+                        'id' => 2,
+                        'code' => 'BOOK-123456789',
+                        'asset' => 'Vila Indah Permai (Unit A)',
+                        'status' => 'confirmed',
+                        'tenant' => 'John Doe',
+                        'period' => '10 Agust 2026 - 12 Agust 2026',
+                        'total' => 2100000
+                    ]
+                ],
+                'meta' => [
+                    'total' => 2,
+                    'from' => 1,
+                    'to' => 2,
+                    'links' => []
+                ]
+            ]
+        ]); 
+    })->name('bookings');
+    Route::get('/bookings/{id}', function(){ 
+        return Inertia::render('owner/BookingReview', [
+            'booking' => [
+                'id' => 1,
+                'code' => 'BOOK-987654321',
+                'asset' => 'Kamera Sony A7III',
+                'start_date' => '12 Agustus 2026',
+                'end_date' => '15 Agustus 2026',
+                'subtotal' => 600000,
+                'service_fee' => 15000,
+                'total' => 615000,
+                'tenant' => 'Fadlan Firdaus',
+                'tenant_email' => 'fadlan@example.com',
+                'tenant_phone' => '081234567890'
+            ]
+        ]); 
+    })->name('bookings.show');
     Route::get('/monthly-payment', function(){ return Inertia::render('owner/MonthlyPayment'); })->name('monthly-payment');
     Route::get('/finance', function(){ return Inertia::render('owner/finance'); })->name('finance');
     Route::get('/settings', function(){ return Inertia::render('owner/settings'); })->name('settings');

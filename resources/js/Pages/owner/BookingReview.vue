@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import Sidebar from '@/Components/sidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const props = defineProps({
     booking: Object,
@@ -28,28 +28,16 @@ const rejectBooking = () => {
 </script>
 
 <template>
-    <Head title="Tinjau Pengajuan Booking - kusewa.id" />
+    <DashboardLayout
+        title="Tinjau Pengajuan Booking"
+        description="Periksa detail penyewa sebelum mengonfirmasi atau menolak."
+        role="Owner"
+        :breadcrumbs="[{ label: 'Pemesanan', route: route('owner.bookings') }, { label: 'Tinjau Pengajuan' }]"
+    >
+        <Head title="Tinjau Pengajuan Booking - kusewa.id" />
 
-    <div class="min-h-screen bg-[#F8FAFC] text-slate-700 font-sans flex">
-        <Sidebar />
-        <main class="flex-1 min-w-0 p-6 md:p-8">
-            <div class="max-w-3xl mx-auto space-y-6">
-                <!-- Breadcrumb -->
-                <div class="flex items-center gap-2 text-xs text-slate-400">
-                    <Link :href="route('owner.dashboard')" class="hover:text-slate-800">Dashboard</Link>
-                    <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                    <Link :href="route('owner.bookings')" class="hover:text-slate-800">Pemesanan</Link>
-                    <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                    <span class="font-bold text-slate-800">Tinjau Pengajuan</span>
-                </div>
-
-                <!-- Header -->
-                <div>
-                    <h1 class="text-2xl font-black text-slate-900">Tinjau Pengajuan Booking</h1>
-                    <p class="text-sm text-slate-500 mt-1">Periksa detail penyewa sebelum mengonfirmasi atau menolak.</p>
-                </div>
-
-                <!-- Card: Detail Booking -->
+        <div class="max-w-3xl mx-auto space-y-6">
+            <!-- Card: Detail Booking -->
                 <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
                     <div class="flex items-center justify-between">
                         <h2 class="font-bold text-slate-800">Detail Pesanan</h2>
@@ -134,7 +122,6 @@ const rejectBooking = () => {
                         {{ confirming ? 'Mengonfirmasi...' : 'Konfirmasi Booking' }}
                     </button>
                 </div>
-            </div>
-        </main>
-    </div>
+        </div>
+    </DashboardLayout>
 </template>

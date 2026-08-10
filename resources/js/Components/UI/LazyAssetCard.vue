@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed, inject } from 'vue';
 import AssetCardSkeleton from './AssetCardSkeleton.vue';
 import { usePage, router } from '@inertiajs/vue3';
 
@@ -67,6 +67,7 @@ const favoriteId = ref(props.asset.favorite_id ?? null);
 const isPending  = ref(false);
 
 const page = usePage();
+const openAuthModal = inject('openAuthModal', () => { router.visit(route('login')); });
 
 function getXsrfToken() {
     const match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]*)'));
@@ -77,7 +78,7 @@ async function syncFavorite(newState) {
     const user = page.props.auth?.user;
     if (!user) {
         isFavorite.value = !newState;
-        router.visit(route('login'));
+        openAuthModal();
         return;
     }
 
@@ -308,7 +309,7 @@ const periodLabel = {
                 <!-- ❤️ Tombol Favorit -->
                 <button
                     v-if="!isOwner"
-                    class="absolute top-2.5 right-2.5 z-30 text-white drop-shadow-md flex items-center justify-center transition-transform active:scale-125"
+                    class="absolute top-2.5 right-2.5 z-30 bg-white/90 rounded-full w-7 h-7 sm:w-8 sm:h-8 drop-shadow-md flex items-center justify-center transition-transform active:scale-125"
                     :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
                     @touchstart.stop
                     @touchend.stop
@@ -316,9 +317,8 @@ const periodLabel = {
                     @click.stop.prevent="toggleFavorite"
                 >
                     <i
-                        :class="isFavorite ? 'fa-solid fa-heart' : 'fa-regular fa-heart'"
-                        class="text-lg sm:text-xl drop-shadow transition-all duration-200"
-                        :style="isFavorite ? 'color: #ff4d6d;' : 'color: white;'"
+                        class="fa-solid fa-heart text-[14px] sm:text-[16px] transition-all duration-200 mt-[1px]"
+                        :class="isFavorite ? 'text-[#ff4d6d]' : 'text-gray-300'"
                     ></i>
                 </button>
 

@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import BottomSheet from '@/Components/UI/BottomSheet.vue';
+import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
 
 const page = usePage();
 
@@ -43,6 +44,7 @@ const applySearch = (text) => {
 };
 
 const inputRef = ref(null);
+const isInputFocused = ref(false);
 watch(isKeywordSheetOpen, async (open) => {
     if (open) {
         await nextTick();
@@ -89,16 +91,26 @@ const clearAllHistory = () => {
 <template>
     <BottomSheet v-model="isKeywordSheetOpen" heightClass="h-[95vh]">
         <template #header-content>
-            <div class="flex-1 mr-3 relative flex items-center">
+            <div class="flex-1 mr-3 relative flex items-center overflow-hidden">
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C757D] text-xs z-10"></i>
+                
+                <AnimatedPlaceholder 
+                    :placeholders="page.props.dynamicPlaceholders" 
+                    :isFocused="isInputFocused" 
+                    :hasValue="!!keywordQuery" 
+                    offsetClass="left-9"
+                    class="text-[#6C757D]"
+                />
+
                 <input
                     ref="inputRef"
                     v-model="keywordQuery"
                     @keyup.enter="handleSearch"
+                    @focus="isInputFocused = true"
+                    @blur="isInputFocused = false"
                     type="text"
-                    placeholder="Mau sewa apa hari ini?"
                     autocomplete="off"
-                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-9 pr-10 py-2 border border-[#6C757D]/20 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all"
+                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-9 pr-10 py-2 border border-[#6C757D]/20 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all relative z-10 bg-transparent focus:bg-white placeholder-transparent"
                 />
                 <button
                     v-if="keywordQuery"

@@ -1,6 +1,10 @@
 <script setup>
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import DesktopSearchBar from '@/Components/UI/DesktopSearchBar.vue';
+import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
+import { usePage } from '@inertiajs/vue3';
+
+const page = usePage();
 
 const {
     keywordQuery,
@@ -45,18 +49,29 @@ const {
                         <!-- Fake Input that opens Keyword Sheet -->
                         <div
                             @click="isKeywordSheetOpen = true"
-                            class="w-full bg-white text-xs font-medium rounded-full pl-10 pr-12 py-3.5 shadow-lg active:scale-[0.98] transition-transform cursor-pointer flex items-center"
+                            class="w-full bg-white text-xs font-medium rounded-full pl-10 pr-12 py-3.5 shadow-lg hover:shadow-xl active:scale-[0.98] transition-all cursor-pointer flex items-center relative overflow-hidden group"
+                            style="min-height: 44px;"
                         >
-                            <span class="truncate" :class="keywordQuery ? 'text-[#0A2540]' : 'text-[#6C757D]'">{{ keywordQuery || 'Mau sewa apa hari ini?' }}</span>
+                            <span v-if="keywordQuery" class="truncate text-[#0A2540] relative z-10">{{ keywordQuery }}</span>
+                            <AnimatedPlaceholder
+                                v-else
+                                :placeholders="page.props.dynamicPlaceholders"
+                                :isFocused="false"
+                                :hasValue="!!keywordQuery"
+                                offsetClass="left-10"
+                                class="text-[#6C757D]"
+                            />
                         </div>
 
                         <!-- Filter Button that opens Filter Sheet (Kanan Dalam) -->
-                        <button
-                            @click.stop="isMobileSearchOpen = true"
-                            class="absolute right-1.5 w-8 h-8 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm"
-                        >
-                            <i class="fa-solid fa-sliders text-[11px] font-bold"></i>
-                        </button>
+                        <div class="absolute right-1.5 shrink-0 z-20">
+                            <button
+                                @click.stop="isMobileSearchOpen = true"
+                                class="relative w-8 h-8 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-full flex items-center justify-center hover:scale-105 hover:shadow-[0_0_10px_rgba(255,192,0,0.5)] active:scale-90 transition-all shadow-sm group-hover:rotate-12"
+                            >
+                                <i class="fa-solid fa-sliders text-[11px] font-bold"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -28,7 +28,8 @@ export default defineConfig({
     server: {
         // Selalu listen di semua interface agar bisa diakses dari luar
         host: '0.0.0.0',
-        port: 5173,
+        port: parseInt(process.env.VITE_PORT || '5173'),
+        strictPort: true,
 
         // CORS dinamis: izinkan origin dari IP saat ini + localhost
         cors: {

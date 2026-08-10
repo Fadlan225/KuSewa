@@ -55,7 +55,7 @@ const maxLimit = 16000000;
 const isSortOpenDesktop = ref(false);
 
 const sortOptions = [
-    { label: 'Popularitas Tertinggi', value: 'popular', icon: 'fa-solid fa-star' },
+    { label: 'Populer', value: 'popular', icon: 'fa-solid fa-star' },
     { label: 'Harga Terendah', value: 'price_asc', icon: 'fa-solid fa-arrow-down-short-wide' },
     { label: 'Harga Tertinggi', value: 'price_desc', icon: 'fa-solid fa-arrow-up-wide-short' }
 ];
@@ -279,7 +279,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 <!-- SIDEBAR KIRI (DESKTOP) -->
-                <div class="hidden lg:block lg:col-span-3 space-y-6 lg:sticky lg:top-[140px] h-fit">
+                <div class="hidden lg:block lg:col-span-3 space-y-6 lg:sticky lg:top-[140px] h-fit max-h-[calc(100vh-160px)] overflow-y-auto hide-scrollbar pb-6 pr-4 border-r border-gray-100 shadow-[4px_0_15px_-5px_rgba(0,0,0,0.05)]">
 
                     <!-- Dummy Map -->
                     <div class="bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden relative">
@@ -365,15 +365,15 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                 <!-- CONTENT KANAN -->
                 <div class="col-span-1 lg:col-span-9">
                     <!-- HEADER HASIL & SORTING -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
-                        <div>
-                            <h1 class="text-xl sm:text-2xl font-extrabold text-[#0A2540]">{{ searchQuery || 'Semua Lokasi' }}</h1>
-                            <p class="text-xs sm:text-sm text-[#6C757D] mt-0.5">{{ props.assets?.total ?? assetData.length }} properti ditemukan</p>
+                    <div class="flex flex-row items-center justify-between mb-6 gap-4">
+                        <div class="flex-1 min-w-0">
+                            <h1 class="text-lg sm:text-2xl font-extrabold text-[#0A2540] truncate">{{ searchQuery || 'Semua Lokasi' }}</h1>
+                            <p class="text-[11px] sm:text-sm text-[#6C757D] mt-0.5">{{ props.assets?.total ?? assetData.length }} Aset ditemukan</p>
                         </div>
 
-                        <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                             <span class="text-xs font-bold text-[#6C757D] hidden sm:inline">Urutkan:</span>
-                            <div class="relative w-48 z-40">
+                            <div class="relative w-36 sm:w-48 z-40">
                                 <button
                                     @click="isSortOpenDesktop = !isSortOpenDesktop"
                                     class="w-full flex items-center justify-between rounded-xl bg-slate-100/80 hover:bg-slate-200/60 border-0 px-3 py-2 text-xs font-medium text-[#1D1D1F] transition-colors"

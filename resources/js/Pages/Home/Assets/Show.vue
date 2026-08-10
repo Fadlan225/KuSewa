@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -16,6 +16,10 @@ import AssetCalendar from '@/Components/UI/AssetCalendar.vue';
 import flatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
 import { Indonesian } from "flatpickr/dist/l10n/id.js";
+import { useHomeSearch } from '@/Composables/useHomeSearch';
+import StickySubNavSearch from '@/Components/UI/StickySubNavSearch.vue';
+import Navbar from '@/Components/Navbar.vue';
+import MobileSearchSheet from '@/Pages/Home/Search/MobileSearchSheet.vue';
 
 const props = defineProps({
     asset: {
@@ -241,39 +245,58 @@ const handleBottomBarSubmit = () => {
 
 
 // ==========================================
-// KALENDER SEWA (Sama seperti Search/Filter)
+// KALENDER SEWA (Terhubung dengan Global State)
 // ==========================================
 
-const startDate = ref(null);
-const endDate = ref(null);
+const {
+    searchQuery, selectedAssets,
+    startDate, endDate, startTime, endTime,
+    durationMonths, activeScheduleMode, simpleDateString,
+    minPrice, maxPrice, parsedMinPrice, parsedMaxPrice,
+    maxLimit, formatPriceShort,
+    activeSearchStep, isMobileSearchOpen
+} = useHomeSearch();
 
+const openMobileSearch = (step) => {
+    activeSearchStep.value = step;
+    isMobileSearchOpen.value = true;
+};
 
+onMounted(() => {
+    // Auto-fill global search state when entering detail page
+    if (props.asset.city?.name || props.asset.address) {
+        searchQuery.value = props.asset.city?.name || props.asset.address || '';
+    }
+    if (props.asset.type?.name) {
+        selectedAssets.value = [props.asset.type.name];
+    }
 
-const selectedRentalMode = ref(null);
+    // Set default rental mode to asset's default if not set
+    if (!startDate.value) {
+        activeScheduleMode.value = props.asset.type?.rental_unit || 'day';
+    }
 
-const activeScheduleMode = computed(() => {
-    if (selectedRentalMode.value) return selectedRentalMode.value;
-    return props.asset.type?.rental_unit || 'day';
-});
+    // Auto-fill price to match this asset's price
+    let assetMinPrice = null;
+    let assetMaxPrice = null;
 
-const startTime = ref('09:00');
-const endTime = ref('10:00');
-const durationMonths = ref(1);
-
-// Untuk simple date input (v-model native date butuh format YYYY-MM-DD)
-const simpleDateString = computed({
-    get() {
-        if (!startDate.value) return '';
-        // Konversi Date ke 'YYYY-MM-DD' di local timezone
-        const d = startDate.value;
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-    },
-    set(val) {
-        if (!val) {
-            startDate.value = null;
-        } else {
-            startDate.value = new Date(val);
+    if (props.asset.units && props.asset.units.length > 0) {
+        let allPricings = [];
+        props.asset.units.forEach(unit => {
+            if (unit.pricings) allPricings = allPricings.concat(unit.pricings);
+        });
+        if (allPricings.length > 0) {
+            assetMinPrice = Math.min(...allPricings.map(p => p.price));
+            assetMaxPrice = Math.max(...allPricings.map(p => p.price));
         }
+    } else if (props.asset.pricings && props.asset.pricings.length > 0) {
+        assetMinPrice = Math.min(...props.asset.pricings.map(p => p.price));
+        assetMaxPrice = assetMinPrice;
+    }
+
+    if (assetMinPrice !== null && assetMaxPrice !== null) {
+        minPrice.value = assetMinPrice;
+        maxPrice.value = assetMaxPrice;
     }
 });
 
@@ -506,40 +529,76 @@ const formattedDateRange = computed(() => {
 
     <AppLayout :hideNavbar="true" :hideBottombar="true">
 
-    <!-- CUSTOM STICKY NAVBAR -->
-    <DetailNavbar :isFavorited="asset.isFavorite" @favorite="handleFavorite" />
+    <MobileSearchSheet />
+
+    <!-- NATURAL SCROLLING MAIN NAVBAR -->
+    <Navbar class="hidden md:block !absolute top-0 left-0 w-full z-[80] !transition-none" />
+
+    <!-- UNIFIED STICKY HEADER (Filters Top, Nav Bottom) -->
+    <div class="md:mt-16 sticky top-0 z-[70] w-full flex flex-col bg-white shadow-sm border-b border-gray-100">
+        <!-- TOP: SEARCH FILTER NAVBAR -->
+        <div class="hidden md:block">
+            <StickySubNavSearch class="!shadow-none !border-b-0 !static !bg-transparent !py-2" />
+        </div>
+
+        <!-- BOTTOM: CUSTOM STICKY NAVBAR -->
+        <DetailNavbar :isFavorited="asset.isFavorite" @favorite="handleFavorite" :showBackButton="true" :mobileBackOnly="true" class="!shadow-none !border-b-0 !static !bg-transparent" />
+
+        <!-- MOBILE SUB NAVBAR (Badges for Schedule and Price) -->
+        <div class="flex md:hidden items-center gap-2 px-4 pb-3 overflow-x-auto hide-scrollbar">
+            <div @click="openMobileSearch('jenis')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
+                <i class="fa-solid fa-layer-group text-gray-500"></i>
+                {{ selectedAssets.length ? selectedAssets.join(', ') : (asset.type?.name || 'Semua Tipe') }}
+            </div>
+            <div @click="openMobileSearch('lokasi')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
+                <i class="fa-solid fa-location-dot text-gray-500"></i>
+                {{ searchQuery || asset.city?.name || 'Pilih Lokasi' }}
+            </div>
+            <div @click="openMobileSearch('jadwal')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
+                <i class="fa-regular fa-calendar text-gray-500"></i>
+                {{ formattedDateRange || 'Pilih Jadwal' }}
+            </div>
+            <div @click="openMobileSearch('harga')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
+                <i class="fa-solid fa-rupiah-sign text-gray-500"></i>
+                {{ (parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Batas Harga' }}
+            </div>
+        </div>
+    </div>
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-[#0A2540] font-sans pb-32 lg:pb-10">
 
+        <!-- HERO GALLERY AND MODAL -->
+        <section id="foto">
+            <AssetGallery :images="asset.images" />
+        </section>
+
         <!-- TITLE & HEADER -->
-        <div class="mb-6">
-            <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight mb-2">{{ asset.title }}</h1>
-            <div class="flex flex-wrap items-center gap-4 text-sm font-medium text-gray-600">
-                <div class="flex items-center gap-1">
-                    <i class="fa-solid fa-location-dot text-gray-400"></i>
-                    <span class="underline decoration-gray-300">{{ asset.city?.name }}, {{ asset.province?.name }}, Indonesia</span>
+        <div class="mb-6 mt-6 min-w-0">
+            <h1 class="text-xl sm:text-3xl font-extrabold text-[#0A2540] mb-3 truncate" :title="asset.title">{{ asset.title }}</h1>
+
+            <div class="flex flex-col gap-2">
+                <!-- Rating & Favorit -->
+                <div class="flex items-center gap-4 text-sm mt-1">
+                    <div class="flex items-center gap-1.5">
+                        <div class="flex items-center gap-0.5 text-xs">
+                            <i v-for="n in 5" :key="n" class="fa-solid fa-star" :class="n <= Math.round(parseFloat(asset.reviews_avg_rating || 0)) ? 'text-[#FFC000]' : 'text-gray-300'"></i>
+                        </div>
+                        <span class="text-[#0A2540] font-bold">{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
+                        <span class="text-gray-500">({{ asset.reviews_count || 0 }} ulasan)</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-heart text-red-500"></i>
+                        <span class="text-gray-500">{{ asset.favorites_count || 0 }} favorit</span>
+                    </div>
                 </div>
 
-                <div class="flex items-center gap-1">
-                    <i class="fa-solid fa-star text-[#FFC000]"></i>
-                    <span class="text-[#0A2540] font-bold">{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
-                    <span class="text-gray-500 underline decoration-gray-300">· {{ asset.reviews_count || 0 }} Ulasan</span>
-                </div>
-
-                <div class="flex items-center gap-1">
-                    <i class="fa-solid fa-heart text-red-500"></i>
-                    <span class="text-gray-500">
-                        {{ asset.favorites_count || 0 }} favorit
-                    </span>
+                <!-- Lokasi -->
+                <div class="flex items-start gap-2 text-sm text-gray-500">
+                    <i class="fa-solid fa-location-dot mt-0.5 text-gray-400"></i>
+                    <span class="leading-relaxed">{{ asset.city?.name }}, {{ asset.province?.name }}</span>
                 </div>
             </div>
         </div>
-
-        <!-- HERO GALLERY AND MODAL -->
-         <section id="foto">
-            <AssetGallery :images="asset.images" />
-         </section>
-
 
         <!-- CONTENT LAYOUT (Kiri: Detail, Kanan: Booking Card) -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">

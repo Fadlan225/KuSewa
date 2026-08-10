@@ -103,7 +103,7 @@ const setLocationSuggestions = (data) => {
 };
 
 const filteredLocations = computed(() => {
-    if (!searchQuery.value) return locationSuggestions.value;
+    if (!searchQuery.value) return [];
     const query = searchQuery.value.toLowerCase();
     return locationSuggestions.value.filter(item =>
         item.title.toLowerCase().includes(query) ||
@@ -115,9 +115,22 @@ const isLokasiFullScreen = ref(false);
 const openLokasiFullScreen = () => { isLokasiFullScreen.value = true; };
 const closeLokasiFullScreen = () => { isLokasiFullScreen.value = false; };
 
+// Helper untuk default tanggal
+const getToday = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+};
+const getTomorrow = () => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 1);
+    return d;
+};
+
 // State Kalender / Jadwal
-const startDate = ref(null);
-const endDate = ref(null);
+const startDate = ref(getToday());
+const endDate = ref(getTomorrow());
 const startTime = ref('09:00');
 const endTime = ref('10:00');
 const durationMonths = ref(1);
@@ -154,8 +167,12 @@ const activeScheduleMode = computed(() => {
 // Watch mode change untuk me-reset jadwal jika mode berganti
 watch(activeScheduleMode, (newMode, oldMode) => {
     if (newMode !== oldMode) {
-        startDate.value = null;
-        endDate.value = null;
+        startDate.value = getToday();
+        if (newMode === 'day') {
+            endDate.value = getTomorrow();
+        } else {
+            endDate.value = null;
+        }
         startTime.value = '09:00';
         endTime.value = '10:00';
         durationMonths.value = 1;
@@ -656,6 +673,28 @@ const performSearch = () => {
         params.sort = sortOption.value;
     }
 
+    // Cek apakah sedang berada di halaman detail (assets.show)
+    if (route().current('assets.show')) {
+        const page = usePage();
+        if (page.props.asset) {
+            const asset = page.props.asset;
+            // Periksa apakah parameter selain tanggal ada yang berubah dari data aset saat ini
+            const isLocationUnchanged = !params.location || params.location === (asset.city?.name || asset.address || '');
+            const isTypeUnchanged = !params.type || (params.type.length === 1 && params.type[0] === asset.type?.name);
+            const isPriceUnchanged = !params.min_price && !params.max_price;
+            const isFacilitiesUnchanged = !params.facilities || params.facilities.length === 0;
+            const isKeywordUnchanged = !params.q;
+
+            // Jika hanya tanggal yang berubah (atau tidak ada yang berubah), jangan redirect
+            if (isLocationUnchanged && isTypeUnchanged && isPriceUnchanged && isFacilitiesUnchanged && isKeywordUnchanged) {
+                isMobileSearchOpen.value = false;
+                isKeywordSheetOpen.value = false;
+                desktopActiveMenu.value = null; // Tutup menu desktop
+                return; // Batalkan redirect
+            }
+        }
+    }
+
     router.get(route('assets.search'), params, { preserveState: true, preserveScroll: true });
 
     // Tutup semua UI
@@ -668,6 +707,31 @@ const performSearch = () => {
 export function useHomeSearch() {
     const page = usePage();
 
+    const hasFetchedLocation = ref(false);
+
+    const initUserLocation = (force = false) => {
+        if ((!hasFetchedLocation.value || force) && typeof window !== 'undefined' && navigator.geolocation) {
+            hasFetchedLocation.value = true;
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                try {
+                    const { latitude, longitude } = position.coords;
+                    const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=id`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        const city = data.city || data.locality || data.principalSubdivision;
+                        if (city && (!searchQuery.value || force)) { 
+                            searchQuery.value = city;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error fetching location data", error);
+                }
+            }, (error) => {
+                console.warn("Geolocation permission denied or error:", error);
+            });
+        }
+    };
+
     // Sync categories to global state
     watch(() => page.props.allCategories || page.props.categories, (newCats) => {
         if (newCats) {
@@ -675,7 +739,16 @@ export function useHomeSearch() {
         }
     }, { immediate: true });
 
-    const priceDistribution = computed(() => page.props.priceDistribution || []);
+    const priceDistribution = computed(() => {
+        const dist = page.props.priceDistribution;
+        if (dist && dist.length > 0) return dist;
+        // Fallback dummy histogram
+        return [
+            5, 10, 25, 40, 65, 80, 100, 130, 160, 200, 
+            220, 210, 180, 150, 120, 90, 70, 55, 45, 30,
+            25, 20, 15, 12, 10, 8, 5, 3, 2, 1
+        ];
+    });
 
     return {
         keywordQuery,
@@ -785,5 +858,6 @@ export function useHomeSearch() {
         toggleFacility,
         sortOption,
         hydrateFilters,
+        initUserLocation,
     };
 }

@@ -37,6 +37,14 @@ const props = defineProps({
     forceBackUrl: {
         type: Boolean,
         default: false
+    },
+    showBackButton: {
+        type: Boolean,
+        default: false
+    },
+    mobileBackOnly: {
+        type: Boolean,
+        default: false
     }
 });
 
@@ -124,10 +132,38 @@ const nativeShare = async () => {
     }
 };
 
+// Scroll Spy logic for active section
+const activeSection = ref('');
+
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
     supportsNativeShare.value = !!navigator.share;
+
+    // Intersection Observer for scroll spy
+    if (props.showSections) {
+        const observerOptions = {
+            root: null,
+            rootMargin: '-80px 0px -60% 0px',
+            threshold: 0
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    activeSection.value = entry.target.id;
+                }
+            });
+        }, observerOptions);
+
+        props.sections.forEach(section => {
+            const el = document.getElementById(section.id);
+            if (el) observer.observe(el);
+        });
+
+        onUnmounted(() => observer.disconnect());
+    }
 });
+
 onUnmounted(() => {
     window.removeEventListener('scroll', handleScroll);
     if (toastTimer) clearTimeout(toastTimer);
@@ -135,18 +171,22 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <nav class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between w-full">
+    <nav class="sticky top-0 z-[60] bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 md:h-16 flex items-center justify-between w-full">
             <slot name="content">
-                <button @click="goBack" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
-                    <i class="fa-solid fa-arrow-left text-[#0A2540]"></i>
-                </button>
+                <div class="flex items-center gap-6">
+                    <button v-if="showBackButton" @click="goBack" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors" :class="mobileBackOnly ? 'md:hidden' : ''">
+                        <i class="fa-solid fa-arrow-left text-[#0A2540]"></i>
+                    </button>
 
-                <!-- Desktop Scroll Menu -->
-                <div v-if="showSections" class="hidden md:flex gap-6 transition-all duration-300" :class="showDesktopNavMenu ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'">
-                    <a v-for="section in sections" :key="section.id" :href="`#${section.id}`" class="text-sm font-bold text-gray-500 hover:text-[#0A2540] transition">
-                        {{ section.label }}
-                    </a>
+                    <!-- Desktop Scroll Menu -->
+                    <div v-if="showSections" class="hidden md:flex gap-6 transition-all duration-300">
+                        <a v-for="section in sections" :key="section.id" :href="`#${section.id}`" 
+                           class="text-sm transition-all duration-200 border-b-2 py-1"
+                           :class="activeSection === section.id ? 'font-extrabold text-[#0A2540] border-[#FFC000]' : 'font-bold text-gray-500 hover:text-[#0A2540] border-transparent'">
+                            {{ section.label }}
+                        </a>
+                    </div>
                 </div>
 
                 <div class="flex items-center gap-2">
@@ -162,28 +202,30 @@ onUnmounted(() => {
     </nav>
 
     <!-- Desktop Share Modal -->
-    <Transition name="fade">
-        <div v-if="showShareUI" class="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm hidden md:flex items-center justify-center" @click.self="showShareUI = false">
-            <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm" @click.stop>
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-xl font-bold text-[#0A2540]">Bagikan Aset</h3>
-                    <button @click="showShareUI = false" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 text-gray-500 transition-colors">
-                        <i class="fa-solid fa-xmark"></i>
-                    </button>
-                </div>
-                <div class="flex flex-col gap-3">
-                    <button @click="copyLink" class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition font-bold text-[#0A2540]">
-                        <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"><i class="fa-solid fa-link"></i></div>
-                        Salin Tautan
-                    </button>
-                    <button v-if="supportsNativeShare" @click="nativeShare" class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition font-bold text-[#0A2540]">
-                        <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-share-nodes"></i></div>
-                        Opsi Lainnya
-                    </button>
+    <Teleport to="body">
+        <Transition name="fade">
+            <div v-if="showShareUI" class="fixed inset-0 z-[9999] bg-black/40 backdrop-blur-sm hidden md:flex items-center justify-center" @click.self="showShareUI = false">
+                <div class="bg-white rounded-3xl shadow-2xl p-6 w-full max-w-sm" @click.stop>
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-bold text-[#0A2540]">Bagikan Aset</h3>
+                        <button @click="showShareUI = false" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 text-gray-500 transition-colors">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <button @click="copyLink" class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition font-bold text-[#0A2540]">
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"><i class="fa-solid fa-link"></i></div>
+                            Salin Tautan
+                        </button>
+                        <button v-if="supportsNativeShare" @click="nativeShare" class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition font-bold text-[#0A2540]">
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-share-nodes"></i></div>
+                            Opsi Lainnya
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-    </Transition>
+        </Transition>
+    </Teleport>
 
     <!-- Mobile Share Bottom Sheet -->
     <BottomSheet v-model="showShareUI" title="Bagikan" heightClass="h-auto pb-10">

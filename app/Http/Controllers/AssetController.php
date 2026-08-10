@@ -174,6 +174,9 @@ class AssetController extends Controller
             'serviceFee'  => $serviceFee,
             'bookedDates' => $bookedDates,
             'assetView'   => $assetView,
+            'allCategories' => \App\Models\asset_category::select(['id', 'name', 'icon'])
+                                ->with(['types:id,category_id,name,allow_units,rental_unit'])
+                                ->get(),
         ]);
     }
 

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
-import Sidebar from '@/Components/sidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const props = defineProps({
     type: String,
@@ -55,21 +55,21 @@ const paginationMeta = computed(() => ({
 </script>
 
 <template>
-    <Head :title="`${title} - kusewa.id`" />
-    <div class="min-h-screen bg-[#F8FAFC] text-slate-700 font-sans flex">
-        <Sidebar />
-        <main class="flex-1 min-w-0 p-6 md:p-8">
-            <div class="max-w-6xl mx-auto space-y-6">
-                <header class="flex items-start justify-between gap-4">
-                    <div>
-                        <p class="text-xs font-bold text-[#FFC000] uppercase tracking-wider">Owner Center</p>
-                        <h1 class="mt-1 text-2xl font-black text-slate-900">{{ title }}</h1>
-                        <p class="mt-1 text-sm text-slate-500">{{ description }}</p>
-                    </div>
-                    <Link v-if="type === 'bookings'" :href="route('owner.asset.index')" class="bg-[#0A2540] text-white text-xs font-bold px-4 py-2.5 rounded-xl">Kelola Aset</Link>
-                </header>
+    <DashboardLayout
+        :title="title"
+        :description="description"
+        role="Owner"
+    >
+        <template #action v-if="type === 'bookings'">
+            <Link :href="route('owner.asset.index')" class="bg-[#0A2540] hover:bg-[#123e6b] text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-colors">
+                Kelola Aset
+            </Link>
+        </template>
 
-                <section v-if="type === 'bookings'" class="space-y-4">
+        <Head :title="`${title} - kusewa.id`" />
+
+        <div class="space-y-6">
+            <section v-if="type === 'bookings'" class="space-y-4">
                     <!-- Ringkasan -->
                     <div class="flex items-center justify-between">
                         <h2 class="font-bold text-slate-800">Daftar Pesanan</h2>
@@ -165,7 +165,6 @@ const paginationMeta = computed(() => ({
                 <section v-else-if="type === 'settings'" class="max-w-3xl bg-white border border-slate-200 rounded-2xl p-6"><h2 class="font-bold text-slate-800">Informasi Akun</h2><div class="mt-5 grid sm:grid-cols-2 gap-4"><label class="text-xs font-bold">Nama<input :value="user.name" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500"></label><label class="text-xs font-bold">Email<input :value="user.email" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500"></label><label class="text-xs font-bold">Nomor telepon<input :value="user.phone || '-'" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500"></label></div><Link :href="route('profile.edit')" class="inline-flex mt-5 bg-[#0A2540] text-white text-xs font-bold px-4 py-2.5 rounded-xl">Ubah profil & kata sandi</Link></section>
 
                 <section v-else-if="type === 'help'" class="max-w-3xl space-y-3"><div v-for="(faq, index) in faqs" :key="faq.question" class="bg-white border border-slate-200 rounded-xl"><button @click="activeFaq = activeFaq === index ? null : index" class="w-full p-4 text-left flex items-center justify-between font-bold text-sm"><span>{{ faq.question }}</span><i :class="activeFaq === index ? 'fa-minus' : 'fa-plus'" class="fa-solid text-slate-400"></i></button><p v-if="activeFaq === index" class="px-4 pb-4 text-sm text-slate-500 leading-relaxed">{{ faq.answer }}</p></div><div class="mt-6 bg-[#0A2540] text-white p-5 rounded-2xl"><p class="font-bold">Butuh bantuan langsung?</p><p class="text-sm text-slate-300 mt-1">Hubungi tim dukungan kusewa melalui email support@kusewa.id.</p></div></section>
-            </div>
-        </main>
-    </div>
+        </div>
+    </DashboardLayout>
 </template>

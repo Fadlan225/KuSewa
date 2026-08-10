@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, inject } from 'vue';
 import AssetCardSkeleton from './AssetCardSkeleton.vue';
 import { usePage, router } from '@inertiajs/vue3';
 
@@ -56,6 +56,7 @@ const favoriteId = ref(props.asset.favorite_id ?? null);
 const isPending  = ref(false);
 
 const page = usePage();
+const openAuthModal = inject('openAuthModal', () => { router.visit(route('login')); });
 
 function getXsrfToken() {
     const match = document.cookie.match(new RegExp('(^|;\\s*)XSRF-TOKEN=([^;]*)'));
@@ -66,7 +67,7 @@ async function syncFavorite(newState) {
     const user = page.props.auth?.user;
     if (!user) {
         isFavorite.value = !newState;
-        router.visit(route('login'));
+        openAuthModal();
         return;
     }
 
@@ -296,7 +297,7 @@ const availabilityText = computed(() => {
             <div class="flex-1 min-w-0 flex flex-col justify-center">
                 <div class="flex items-center gap-1.5 mb-1 flex-wrap">
                     <span class="px-1.5 py-0.5 bg-[#6C757D]/10 text-[#6C757D] rounded text-[9px] font-bold">{{ categoryName }}</span>
-                    
+
                     <!-- STATUS BADGE (Owner Only) -->
                     <template v-if="isOwner">
                         <span v-if="asset.verification_status === 'pending'" class="px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-clock"></i> Menunggu Verifikasi</span>
@@ -305,11 +306,12 @@ const availabilityText = computed(() => {
                         <span v-else-if="asset.verification_status === 'approved' && asset.status" class="px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-[9px] font-bold flex items-center gap-1"><i class="fa-solid fa-check-circle"></i> {{ asset.status === 'Tersedia' ? 'Tersedia' : 'Tersewa' }}</span>
                     </template>
 
-                    <div v-if="asset.reviews_avg_rating" class="flex items-center gap-1 text-[#FFC000] text-[9px] font-bold ml-auto">
-                        <div class="flex items-center gap-0.5">
-                            <i class="fa-solid fa-star"></i> {{ Number(asset.reviews_avg_rating).toFixed(1) }}
+                    <div v-if="asset.reviews_avg_rating" class="flex items-center gap-1.5 ml-auto">
+                        <div class="flex items-center gap-[1px] text-[8px]">
+                            <i v-for="n in 5" :key="n" class="fa-solid fa-star" :class="n <= Math.round(parseFloat(asset.reviews_avg_rating || 0)) ? 'text-[#FFC000]' : 'text-gray-300'"></i>
                         </div>
-                        <span v-if="asset.reviews_count" class="text-gray-400 font-medium">({{ asset.reviews_count }})</span>
+                        <span class="text-[#0A2540] text-[9px] font-bold">{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
+                        <span class="text-gray-500 text-[9px]">({{ asset.reviews_count || 0 }} ulasan)</span>
                     </div>
                 </div>
 
@@ -321,7 +323,7 @@ const availabilityText = computed(() => {
                     <i class="fa-solid fa-location-dot text-[#FFC000] mr-0.5"></i>
                     {{ [(asset.district?.name || asset.district), (asset.city?.name || asset.city)].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
                 </div>
-                
+
                 <div class="text-[10px] md:text-[11px] text-[#10B981] font-bold mt-1.5 flex items-center gap-1">
                     <i class="fa-solid fa-calendar-check"></i>
                     {{ availabilityText }}
@@ -331,27 +333,39 @@ const availabilityText = computed(() => {
             <!-- ═══ HARGA & AKSI ═══ -->
             <div class="shrink-0 flex flex-col items-end justify-between self-stretch py-0.5">
                 <div class="text-right mb-2 md:mb-0">
-                    <p class="font-extrabold text-xs md:text-sm text-[#FFC000] leading-none">
-                        <template v-if="asset.default_pricing || asset.price">
-                            {{ formatRupiah(asset.default_pricing?.price || asset.price) }}
-                        </template>
-                        <template v-else>
-                            Hubungi
-                        </template>
-                    </p>
-                    <p v-if="asset.default_pricing || asset.price" class="text-[9px] md:text-[10px] text-gray-400 mt-1">
-                        /{{ rentalUnitLabel(asset.type?.rental_unit || asset.rent_period) }}
-                    </p>
+                    <div class="font-black text-sm md:text-base text-[#FFC000] tracking-tight leading-none flex flex-col items-end gap-0.5">
+                        <div class="flex items-baseline justify-end gap-1">
+                            <template v-if="asset.cheapest_unit_price">
+                                <span>{{ formatRupiah(asset.cheapest_unit_price) }}</span>
+                                <span class="text-[10px] md:text-xs text-gray-500 font-semibold tracking-normal">/{{ rentalUnitLabel(asset.type?.rental_unit || asset.rent_period) }}</span>
+                            </template>
+                            <template v-else-if="asset.default_pricing || asset.price">
+                                <span>{{ formatRupiah(asset.default_pricing?.price || asset.price) }}</span>
+                                <span class="text-[10px] md:text-xs text-gray-500 font-semibold tracking-normal">/{{ rentalUnitLabel(asset.type?.rental_unit || asset.rent_period) }}</span>
+                            </template>
+                            <template v-else>
+                                <span>Hubungi</span>
+                            </template>
+                        </div>
+                        <div v-if="asset.cheapest_unit_quantity" class="text-[9px] md:text-[10px] text-red-500 font-bold tracking-normal mt-0.5">
+                            Sisa {{ asset.cheapest_unit_quantity }} {{ categoryName.toLowerCase().includes('kos') || categoryName.toLowerCase().includes('hotel') || categoryName.toLowerCase().includes('apartemen') || categoryName.toLowerCase().includes('penginapan') ? 'kamar' : 'unit' }} di harga ini!
+                        </div>
+                    </div>
                 </div>
 
-                <button
-                    v-if="!isOwner"
-                    class="mt-auto z-30 flex items-center justify-center transition-transform active:scale-125"
-                    :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
-                    @click.stop.prevent="toggleFavorite"
-                >
-                    <i :class="isFavorite ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-gray-400'" class="text-lg md:text-xl drop-shadow-sm transition-all duration-200"></i>
-                </button>
+                <div class="mt-auto flex items-center gap-2">
+                    <button
+                        v-if="!isOwner"
+                        class="z-30 flex items-center justify-center transition-transform active:scale-125"
+                        :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
+                        @click.stop.prevent="toggleFavorite"
+                    >
+                        <i :class="isFavorite ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-gray-400'" class="text-lg md:text-xl drop-shadow-sm transition-all duration-200"></i>
+                    </button>
+                    <button class="bg-[#0A2540] text-white text-[9px] md:text-xs font-bold px-3 py-1.5 md:px-4 md:py-1.5 rounded-full hover:bg-[#1a365d] transition shadow-sm z-30" @click.stop.prevent="navigateToAsset">
+                        Sewa
+                    </button>
+                </div>
             </div>
         </template>
     </div>
