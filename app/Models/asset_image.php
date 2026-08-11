@@ -10,7 +10,8 @@ class asset_image extends Model
         'asset_id',
         'asset_unit_id',
         'gallery_category_id',
-        'image'
+        'image',
+        'is_thumbnail'
     ];
 
     protected $appends = ['image_url'];

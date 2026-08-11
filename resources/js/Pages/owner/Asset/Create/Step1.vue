@@ -9,8 +9,11 @@ const props = defineProps({
     allowUnits: Boolean,
 });
 
-const emit = defineEmits(['tambahUnit', 'hapusUnit', 'toggleUnitFasilitas', 'toggleFasilitas']);
-
+const emit = defineEmits([
+    'tambahUnit', 'hapusUnit', 'toggleUnitFasilitas', 'toggleFasilitas', 
+    'tambahUnitKategoriFoto', 'hapusUnitKategoriFoto', 'handleUnitFileUpload', 'hapusUnitFoto',
+    'handleUnitThumbnailUpload', 'hapusUnitThumbnail'
+]);
 // Computed: label periode sewa
 const rentalUnitLabel = computed(() => {
     const map = {
@@ -29,6 +32,9 @@ const unitDetailFields = computed(() => props.assetTypeDetails?.unit_detail_fiel
 // Computed: fasilitas dari API
 const facilitiesFromDB = computed(() => props.assetTypeDetails?.facilities ?? []);
 const unitFacilitiesFromDB = computed(() => props.assetTypeDetails?.unit_facilities ?? []);
+
+// Computed: kategori galeri (global)
+const galleryCategoriesFromDB = computed(() => props.assetTypeDetails?.gallery_categories ?? []);
 
 // Fasilitas aset dropdown
 const fasilitasDropdownOpen = ref(false);
@@ -199,7 +205,7 @@ const toggleUnitFasilitasDropdown = (index) => {
     <!-- ============================================ -->
     <!-- FASILITAS ASET (dari DB, scope = asset) -->
     <!-- ============================================ -->
-    <div v-if="!allowUnits && facilitiesFromDB.length > 0" class="border-t border-slate-100 pt-4">
+    <div v-if="facilitiesFromDB.length > 0" class="border-t border-slate-100 pt-4">
         <h3 class="text-xs font-bold text-slate-700 mb-3 flex items-center gap-2">
             <i class="fa-solid fa-star text-[#0A2540] text-[10px]"></i>
             Fasilitas Aset
@@ -346,9 +352,125 @@ const toggleUnitFasilitasDropdown = (index) => {
                         </button>
                     </div>
                 </div>
+
+                <!-- ===================================== -->
+                <!-- THUMBNAIL UNIT (Upload 1 foto) -->
+                <!-- ===================================== -->
+                <div class="border-t border-slate-100 pt-3 mt-1">
+                    <label class="block text-[11px] font-bold text-slate-600 mb-2">
+                        <i class="fa-solid fa-image text-[#0A2540] mr-1 text-[10px]"></i>
+                        Thumbnail Unit <span class="text-[10px] text-slate-400 font-normal">(Maks. 1 foto sampul)</span>
+                    </label>
+
+                    <div v-if="!unit.thumbnail_preview" class="border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition cursor-pointer relative">
+                        <input
+                            type="file"
+                            accept="image/png, image/jpeg, image/webp"
+                            @change="emit('handleUnitThumbnailUpload', $event, unitIndex)"
+                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        />
+                        <i class="fa-solid fa-cloud-arrow-up text-xl text-slate-300 mb-2"></i>
+                        <p class="text-[10px] font-bold text-slate-500">Klik untuk upload thumbnail</p>
+                    </div>
+                    <div v-else class="relative w-32 h-24 group/thumb">
+                        <img :src="unit.thumbnail_preview" class="w-full h-full object-cover rounded-xl border border-slate-200" />
+                        <button
+                            type="button"
+                            @click="emit('hapusUnitThumbnail', unitIndex)"
+                            class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow opacity-0 group-hover/thumb:opacity-100 transition cursor-pointer"
+                            title="Hapus Thumbnail"
+                        >
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ===================================== -->
+                <!-- FOTO UNIT (upload per kategori) -->
+                <!-- ===================================== -->
+                <div v-if="galleryCategoriesFromDB.length > 0" class="border-t border-slate-100 pt-3 mt-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-[11px] font-bold text-slate-600">
+                            <i class="fa-solid fa-images text-[#0A2540] mr-1 text-[10px]"></i>
+                            Foto Unit
+                        </label>
+                        <button
+                            type="button"
+                            @click="emit('tambahUnitKategoriFoto', unitIndex)"
+                            class="text-[10px] font-bold text-[#0A2540] hover:text-[#FFC000] bg-slate-100 px-2.5 py-1 rounded-lg transition cursor-pointer"
+                        >
+                            + Tambah Kategori
+                        </button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div
+                            v-for="(photoGroup, photoIdx) in unit.photos"
+                            :key="photoGroup._id"
+                            class="border border-slate-200 rounded-xl p-3 relative bg-slate-50"
+                        >
+                            <!-- Hapus grup foto unit -->
+                            <button
+                                v-if="unit.photos.length > 1"
+                                type="button"
+                                @click="emit('hapusUnitKategoriFoto', unitIndex, photoIdx)"
+                                class="absolute top-2 right-2 w-5 h-5 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center text-[10px] cursor-pointer"
+                                title="Hapus Kategori Foto"
+                            >
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                                <!-- Pilih Kategori Foto -->
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Kategori / Area Foto <span class="text-rose-500">*</span></label>
+                                    <select
+                                        v-model="photoGroup.gallery_category_id"
+                                        class="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 focus:border-[#0A2540] transition"
+                                    >
+                                        <option :value="null" disabled>Pilih kategori</option>
+                                        <option v-for="gc in galleryCategoriesFromDB" :key="gc.id" :value="gc.id">
+                                            {{ gc.name }}
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <!-- Upload File Foto Unit -->
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Pilih File Foto</label>
+                                    <input
+                                        type="file"
+                                        multiple
+                                        accept="image/png, image/jpeg, image/webp"
+                                        @change="emit('handleUnitFileUpload', $event, unitIndex, photoIdx)"
+                                        class="w-full text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-[#0A2540] file:text-white hover:file:bg-[#123e6b] cursor-pointer"
+                                    />
+                                </div>
+                            </div>
+
+                            <!-- Preview foto unit -->
+                            <div v-if="photoGroup.previews && photoGroup.previews.length > 0" class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100">
+                                <div
+                                    v-for="(preview, fileIdx) in photoGroup.previews"
+                                    :key="fileIdx"
+                                    class="relative group/photo"
+                                >
+                                    <img :src="preview" class="w-14 h-14 object-cover rounded-lg border border-slate-200" />
+                                    <button
+                                        type="button"
+                                        @click="emit('hapusUnitFoto', unitIndex, photoIdx, fileIdx)"
+                                        class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[9px] shadow opacity-0 group-hover/photo:opacity-100 transition cursor-pointer"
+                                    >
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div v-else class="text-[10px] text-slate-400 mt-1">Belum ada foto diunggah.</div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
 </div>
 </template>

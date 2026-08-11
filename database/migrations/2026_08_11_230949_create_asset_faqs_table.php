@@ -8,15 +8,15 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     *
-     * Kategori galeri foto bersifat GLOBAL — tidak terikat ke asset_type tertentu
-     * maupun scope (asset/unit). Owner bebas memilih kategori mana saja saat upload foto.
      */
     public function up(): void
     {
-        Schema::create('galery_categories', function (Blueprint $table) {
+        Schema::create('asset_faqs', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->foreignId('asset_id')->constrained()->onDelete('cascade');
+            $table->text('question');
+            $table->text('answer');
+            $table->integer('sort_order');
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('galery_categories');
+        Schema::dropIfExists('asset_faqs');
     }
 };

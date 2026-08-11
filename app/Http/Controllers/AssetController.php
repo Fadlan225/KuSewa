@@ -63,6 +63,9 @@ class AssetController extends Controller
             // Fasilitas tambahan per unit
             'units.facilities:id,name,facility_category_id',
             'units.facilities.category:id,name,icon',
+            // FAQ & Kebijakan
+            'faqs',
+            'policies',
             // Bookings aktif per unit untuk cek sisa ketersediaan
             'units.bookings' => function ($query) {
                 $query->where('end_date', '>=', now()->format('Y-m-d'))

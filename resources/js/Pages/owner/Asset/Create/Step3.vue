@@ -4,15 +4,17 @@ import { computed } from 'vue';
 const props = defineProps({
     form: Object,
     allowUnits: Boolean,
-    assetTypeDetails: Object, // { gallery_categories: [{id, name, applies_to}] }
+    assetTypeDetails: Object, // { gallery_categories: [{id, name}] }
 });
 
-const emit = defineEmits(['tambahKategoriFoto', 'hapusKategoriFoto', 'handleFileUpload', 'hapusFoto']);
+const emit = defineEmits([
+    'tambahKategoriFoto', 'hapusKategoriFoto', 'handleFileUpload', 'hapusFoto',
+    'handleThumbnailUpload', 'hapusThumbnail'
+]);
 
-// Gallery categories untuk aset (applies_to = 'asset') — dari DB via API
+// Gallery categories bersifat GLOBAL — semua kategori tersedia untuk dipilih
 const galleryCategoriesAsset = computed(() =>
-    (props.assetTypeDetails?.gallery_categories ?? [])
-        .filter(gc => gc.applies_to === 'asset')
+    props.assetTypeDetails?.gallery_categories ?? []
 );
 
 // Jika tidak ada galery_categories dari DB, tampilkan pesan info
@@ -103,6 +105,38 @@ const rentalUnitLabel = computed(() => {
             <p class="text-[11px] text-rose-600 font-semibold">
                 Ada unit yang belum memiliki harga sewa. Kembali ke <strong>Step 1</strong> untuk mengisi harga setiap unit.
             </p>
+        </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- THUMBNAIL ASET (Satu Foto Utama) -->
+    <!-- ============================================ -->
+    <div class="mt-4 border-t border-slate-100 pt-4">
+        <label class="block text-xs font-bold text-slate-700 mb-2">
+            Thumbnail Aset <span class="text-[10px] text-slate-400 font-normal">(Maks. 1 foto sampul utama)</span>
+        </label>
+
+        <div v-if="!form.thumbnail_preview" class="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center hover:bg-slate-50 transition cursor-pointer relative max-w-sm">
+            <input
+                type="file"
+                accept="image/png, image/jpeg, image/webp"
+                @change="emit('handleThumbnailUpload', $event)"
+                class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-300 mb-3"></i>
+            <p class="text-xs font-bold text-slate-500">Klik untuk upload thumbnail</p>
+            <p class="text-[10px] text-slate-400 mt-1">Gunakan foto terbaik dari aset Anda (max 5MB)</p>
+        </div>
+        <div v-else class="relative w-48 h-32 group/thumb">
+            <img :src="form.thumbnail_preview" class="w-full h-full object-cover rounded-2xl border border-slate-200" />
+            <button
+                type="button"
+                @click="emit('hapusThumbnail')"
+                class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow opacity-0 group-hover/thumb:opacity-100 transition cursor-pointer"
+                title="Hapus Thumbnail"
+            >
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
     </div>
 

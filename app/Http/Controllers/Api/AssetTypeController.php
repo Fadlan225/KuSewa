@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\asset_type;
+use App\Models\galery_category;
 use Illuminate\Http\Request;
 
 class AssetTypeController extends Controller
@@ -31,7 +32,7 @@ class AssetTypeController extends Controller
      * - allow_units, rental_unit
      * - fasilitas yang diizinkan (scope: asset)
      * - fasilitas unit yang diizinkan (scope: unit)
-     * - kategori galeri foto (applies_to: asset / unit)
+     * - kategori galeri foto (GLOBAL — tidak terikat ke asset_type tertentu)
      *
      * Digunakan oleh form Create Asset untuk memuat fasilitas & kategori foto
      * secara dinamis setelah owner memilih jenis aset.
@@ -41,22 +42,22 @@ class AssetTypeController extends Controller
         $assetType = asset_type::with([
             'allowedFacilities:id,name,slug',
             'allowedUnitFacilities:id,name,slug',
-            'galery_categories' => function ($q) {
-                $q->select('id', 'asset_type_id', 'name', 'applies_to')
-                  ->orderBy('applies_to')
-                  ->orderBy('name');
-            },
         ])->findOrFail($id);
 
+        // Kategori galeri bersifat global — ambil semua, diurutkan alfabetis
+        $galleryCategories = galery_category::orderBy('name')
+            ->select('id', 'name')
+            ->get();
+
         return response()->json([
-            'id'            => $assetType->id,
-            'name'          => $assetType->name,
-            'rental_unit'   => $assetType->rental_unit,
-            'allow_units'   => (bool) $assetType->allow_units,
-            'facilities'    => $assetType->allowedFacilities,
-            'unit_facilities' => $assetType->allowedUnitFacilities,
-            'gallery_categories' => $assetType->galery_categories,
-            'detail_fields' => $this->getDetailFields($assetType->id),
+            'id'                 => $assetType->id,
+            'name'               => $assetType->name,
+            'rental_unit'        => $assetType->rental_unit,
+            'allow_units'        => (bool) $assetType->allow_units,
+            'facilities'         => $assetType->allowedFacilities,
+            'unit_facilities'    => $assetType->allowedUnitFacilities,
+            'gallery_categories' => $galleryCategories,
+            'detail_fields'      => $this->getDetailFields($assetType->id),
             'unit_detail_fields' => $this->getUnitDetailFields($assetType->id),
         ]);
     }

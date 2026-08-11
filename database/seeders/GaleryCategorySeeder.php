@@ -13,61 +13,61 @@ class GaleryCategorySeeder extends Seeder
         DB::table('galery_categories')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
-        $types = DB::table('asset_types')->get();
-        $allCategories = [];
+        /**
+         * Kategori galeri foto bersifat GLOBAL.
+         * Tidak terikat ke asset_type tertentu maupun scope (asset/unit).
+         * Owner bebas memilih kategori mana saja saat upload foto.
+         */
+        $categories = [
+            'Eksterior',
+            'Lobby',
+            'Resepsionis',
+            'Koridor',
+            'Ruang Tamu',
+            'Ruang Keluarga',
+            'Kamar Tidur',
+            'Kamar Mandi',
+            'Dapur',
+            'Ruang Makan',
+            'Balkon',
+            'Ruang Kerja',
+            'Ruang Bersama',
+            'Lounge',
+            'Kolam Renang',
+            'Gym',
+            'Taman',
+            'Area Parkir',
+            'Laundry',
+            'Area Jemur',
+            'Ruang Utama',
+            'Panggung',
+            'Ruang Ganti',
+            'Ruang Makeup',
+            'Control Room',
+            'Recording Room',
+            'Area Studio',
+            'Area Gudang',
+            'Area Bongkar Muat',
+            'Halaman',
+            'Lahan',
+            'Lingkungan Sekitar',
+            'Pemandangan',
+            'Denah',
+            'Tampak Depan',
+            'Area Sekitar',
+            'Tampilan Malam Hari',
+            'Akses Jalan',
+        ];
 
-        foreach ($types as $type) {
-            $name = $type->name;
-            $cats = [];
-            
-            if ($name == 'Hotel' || $name == 'Resort') {
-                $cats[] = ['name' => 'Exterior', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Lobby', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Restaurant', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Swimming Pool', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Room', 'applies_to' => 'unit'];
-                $cats[] = ['name' => 'Bathroom', 'applies_to' => 'unit'];
-            } elseif ($name == 'Rumah' || $name == 'Villa') {
-                $cats[] = ['name' => 'Tampak Depan', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Ruang Tamu', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Kamar Tidur', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Dapur', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Halaman', 'applies_to' => 'asset'];
-            } elseif ($name == 'Gudang') {
-                $cats[] = ['name' => 'Exterior', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Area Gudang', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Loading Dock', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Office', 'applies_to' => 'asset'];
-            } elseif ($name == 'Studio') {
-                $cats[] = ['name' => 'Control Room', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Studio Room', 'applies_to' => 'unit'];
-                $cats[] = ['name' => 'Equipment', 'applies_to' => 'unit'];
-            } elseif (strpos($name, 'Baliho') !== false) {
-                $cats[] = ['name' => 'Tampak Depan', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Sudut Jalan', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Lingkungan Sekitar', 'applies_to' => 'asset'];
-            } elseif ($type->allow_units) {
-                // Default for other types with units (Apartemen, Kos, dll)
-                $cats[] = ['name' => 'Exterior', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Fasilitas Umum', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Tampak Dalam Unit', 'applies_to' => 'unit'];
-                $cats[] = ['name' => 'Kamar Mandi', 'applies_to' => 'unit'];
-            } else {
-                // Default for types without units
-                $cats[] = ['name' => 'Exterior', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Interior', 'applies_to' => 'asset'];
-                $cats[] = ['name' => 'Fasilitas Khusus', 'applies_to' => 'asset'];
-            }
+        $now = now();
+        $rows = array_map(fn ($name) => [
+            'name'       => $name,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], $categories);
 
-            foreach ($cats as $cat) {
-                $cat['asset_type_id'] = $type->id;
-                $cat['created_at'] = now();
-                $cat['updated_at'] = now();
-                $allCategories[] = $cat;
-            }
-        }
+        DB::table('galery_categories')->insert($rows);
 
-        DB::table('galery_categories')->insert($allCategories);
-        $this->command->info("✓ " . count($allCategories) . " Gallery Categories berhasil dibuat!");
+        $this->command->info('✓ ' . count($rows) . ' Galery Categories berhasil dibuat (global)!');
     }
 }

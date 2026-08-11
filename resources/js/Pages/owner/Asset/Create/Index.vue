@@ -8,6 +8,7 @@ import 'leaflet/dist/leaflet.css';
 import Step1 from './Step1.vue';
 import Step2 from './Step2.vue';
 import Step3 from './Step3.vue';
+import Step4 from './Step4.vue';
 
 // Fix bug ikon marker default Leaflet yang tidak muncul di build Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -60,6 +61,9 @@ const makeEmptyUnit = () => ({
     price: '',
     detail: {},
     facility_ids: [],
+    thumbnail: null,
+    thumbnail_preview: null,
+    photos: [{ _id: Date.now(), gallery_category_id: null, files: [], previews: [] }],
 });
 
 const form = useForm({
@@ -84,6 +88,8 @@ const form = useForm({
 
     // Step 3: Harga & Foto
     price: '',       // digunakan jika allow_units = false
+    thumbnail: null,
+    thumbnail_preview: null,
     photos: [        // array grup foto
         {
             _id: Date.now(),
@@ -92,6 +98,10 @@ const form = useForm({
             previews: [],
         }
     ],
+
+    // Step 4: FAQ & Kebijakan
+    faqs: [],
+    policies: [],
 });
 
 // Auto-set asset_type_id saat category berubah
@@ -182,6 +192,56 @@ const toggleUnitFasilitas = (unitIndex, facilityId) => {
     }
 };
 
+// Foto unit management
+const tambahUnitKategoriFoto = (unitIndex) => {
+    form.units[unitIndex].photos.push({
+        _id: Date.now(),
+        gallery_category_id: null,
+        files: [],
+        previews: [],
+    });
+};
+
+const hapusUnitKategoriFoto = (unitIndex, photoIndex) => {
+    form.units[unitIndex].photos[photoIndex].previews.forEach(url => URL.revokeObjectURL(url));
+    form.units[unitIndex].photos.splice(photoIndex, 1);
+};
+
+const handleUnitFileUpload = (event, unitIndex, photoIndex) => {
+    const files = Array.from(event.target.files);
+    files.forEach(file => {
+        form.units[unitIndex].photos[photoIndex].files.push(file);
+        form.units[unitIndex].photos[photoIndex].previews.push(URL.createObjectURL(file));
+    });
+    event.target.value = null;
+};
+
+const hapusUnitFoto = (unitIndex, photoIndex, fileIndex) => {
+    URL.revokeObjectURL(form.units[unitIndex].photos[photoIndex].previews[fileIndex]);
+    form.units[unitIndex].photos[photoIndex].files.splice(fileIndex, 1);
+    form.units[unitIndex].photos[photoIndex].previews.splice(fileIndex, 1);
+};
+
+const handleUnitThumbnailUpload = (event, unitIndex) => {
+    const file = event.target.files[0];
+    if (file) {
+        form.units[unitIndex].thumbnail = file;
+        if (form.units[unitIndex].thumbnail_preview) {
+            URL.revokeObjectURL(form.units[unitIndex].thumbnail_preview);
+        }
+        form.units[unitIndex].thumbnail_preview = URL.createObjectURL(file);
+    }
+    event.target.value = null;
+};
+
+const hapusUnitThumbnail = (unitIndex) => {
+    if (form.units[unitIndex].thumbnail_preview) {
+        URL.revokeObjectURL(form.units[unitIndex].thumbnail_preview);
+    }
+    form.units[unitIndex].thumbnail = null;
+    form.units[unitIndex].thumbnail_preview = null;
+};
+
 // Foto management
 const tambahKategoriFoto = () => {
     form.photos.push({
@@ -212,14 +272,42 @@ const hapusFoto = (catIndex, fileIndex) => {
     form.photos[catIndex].previews.splice(fileIndex, 1);
 };
 
+const handleThumbnailUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        form.thumbnail = file;
+        if (form.thumbnail_preview) {
+            URL.revokeObjectURL(form.thumbnail_preview);
+        }
+        form.thumbnail_preview = URL.createObjectURL(file);
+    }
+    event.target.value = null;
+};
+
+const hapusThumbnail = () => {
+    if (form.thumbnail_preview) {
+        URL.revokeObjectURL(form.thumbnail_preview);
+    }
+    form.thumbnail = null;
+    form.thumbnail_preview = null;
+};
+
 // --- NAVIGASI ---
 const nextStep = () => {
-    if (currentStep.value < 3) currentStep.value++;
+    if (currentStep.value < 4) currentStep.value++;
 };
 
 const prevStep = () => {
     if (currentStep.value > 1) currentStep.value--;
 };
+
+// FAQ helpers
+const addFaq = () => form.faqs.push({ question: '', answer: '' });
+const removeFaq = (idx) => form.faqs.splice(idx, 1);
+
+// Policy helpers
+const addPolicy = () => form.policies.push({ title: '', description: '' });
+const removePolicy = (idx) => form.policies.splice(idx, 1);
 
 // --- SUBMIT ---
 const validationErrors = ref({});
@@ -296,14 +384,43 @@ const submitProperty = () => {
     // Kirim sebagai FormData karena ada file upload
     // Inertia useForm menangani multipart secara otomatis
     form.transform((data) => {
-        // Hapus field yang tidak relevan
         const payload = { ...data };
+
+        // Hapus grup foto aset yang tidak ada filenya
+        if (payload.photos) {
+            payload.photos = payload.photos.filter(p => p.files && p.files.length > 0);
+        }
+
+        // Bersihkan thumbnail_preview dari payload (hanya butuh thumbnail file-nya)
+        delete payload.thumbnail_preview;
+
+        // Bersihkan FAQ dan Policy kosong
+        if (payload.faqs) {
+            payload.faqs = payload.faqs.filter(f => f.question?.trim() && f.answer?.trim());
+        }
+        if (payload.policies) {
+            payload.policies = payload.policies.filter(p => p.title?.trim());
+        }
+
         if (allowUnits.value) {
             delete payload.price;
             delete payload.facility_ids;
+            
+            // Hapus grup foto unit yang tidak ada filenya, dan bersihkan thumbnail_preview
+            if (payload.units) {
+                payload.units = payload.units.map(unit => {
+                    const u = {
+                        ...unit,
+                        photos: unit.photos ? unit.photos.filter(p => p.files && p.files.length > 0) : []
+                    };
+                    delete u.thumbnail_preview;
+                    return u;
+                });
+            }
         } else {
             delete payload.units;
         }
+
         return payload;
     }).post(route('owner.asset.store'), {
         forceFormData: true,
@@ -379,6 +496,18 @@ const closeModalAndRedirect = () => {
                                 </div>
                             </div>
 
+                            <div class="flex items-start gap-4 mb-8 relative z-10 transition-colors">
+                                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ring-4 ring-[#F8F9FA]"
+                                     :class="currentStep === 4 ? 'bg-[#0A2540] text-white shadow-md shadow-[#0A2540]/20' : currentStep > 4 ? 'bg-[#FFC000] text-[#0A2540]' : 'bg-white border-2 border-slate-200 text-slate-400'">
+                                    <i v-if="currentStep > 4" class="fa-solid fa-check text-sm"></i>
+                                    <span v-else class="font-bold">4</span>
+                                </div>
+                                <div class="mt-0.5">
+                                    <h3 class="text-[15px] transition-colors duration-300" :class="currentStep === 4 ? 'font-bold text-[#0A2540]' : 'font-semibold text-[#0A2540]/80'">Kebijakan &amp; FAQ</h3>
+                                    <p class="text-[13px] mt-0.5 transition-colors duration-300" :class="currentStep === 4 ? 'text-[#0A2540]/70' : 'text-slate-400'">Aturan &amp; Pertanyaan Umum</p>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
 
@@ -407,6 +536,14 @@ const closeModalAndRedirect = () => {
                                  :class="currentStep === 3 ? 'bg-[#0A2540] text-white' : currentStep > 3 ? 'bg-[#FFC000] text-[#0A2540]' : 'bg-[#F8F9FA] border-2 border-slate-200/50 text-slate-400'">
                                 <i v-if="currentStep > 3" class="fa-solid fa-check text-[10px]"></i>
                                 <span v-else>3</span>
+                            </div>
+                        </div>
+
+                        <div class="relative z-10 bg-white px-2">
+                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors shadow-sm ring-4 ring-white"
+                                 :class="currentStep === 4 ? 'bg-[#0A2540] text-white' : currentStep > 4 ? 'bg-[#FFC000] text-[#0A2540]' : 'bg-[#F8F9FA] border-2 border-slate-200/50 text-slate-400'">
+                                <i v-if="currentStep > 4" class="fa-solid fa-check text-[10px]"></i>
+                                <span v-else>4</span>
                             </div>
                         </div>
                     </div>
@@ -450,6 +587,12 @@ const closeModalAndRedirect = () => {
                     @hapusUnit="hapusUnit"
                     @toggleUnitFasilitas="toggleUnitFasilitas"
                     @toggleFasilitas="toggleFasilitas"
+                    @tambahUnitKategoriFoto="tambahUnitKategoriFoto"
+                    @hapusUnitKategoriFoto="hapusUnitKategoriFoto"
+                    @handleUnitFileUpload="handleUnitFileUpload"
+                    @hapusUnitFoto="hapusUnitFoto"
+                    @handleUnitThumbnailUpload="handleUnitThumbnailUpload"
+                    @hapusUnitThumbnail="hapusUnitThumbnail"
                 />
 
                 <!-- STEP 2 -->
@@ -465,6 +608,18 @@ const closeModalAndRedirect = () => {
                     @hapusKategoriFoto="hapusKategoriFoto"
                     @handleFileUpload="handleFileUpload"
                     @hapusFoto="hapusFoto"
+                    @handleThumbnailUpload="handleThumbnailUpload"
+                    @hapusThumbnail="hapusThumbnail"
+                />
+
+                <!-- STEP 4 -->
+                <Step4
+                    v-show="currentStep === 4"
+                    :form="form"
+                    @addFaq="addFaq"
+                    @removeFaq="removeFaq"
+                    @addPolicy="addPolicy"
+                    @removePolicy="removePolicy"
                 />
 
                     </form>
@@ -475,8 +630,8 @@ const closeModalAndRedirect = () => {
 
         <!-- STICKY BOTTOM ACTION BAR (Mobile) -->
         <DetailBottomBar class="md:hidden"
-            :buttonText="currentStep < 3 ? 'Selanjutnya' : 'Selesaikan'"
-            @submit="currentStep < 3 ? nextStep() : submitProperty()"
+            :buttonText="currentStep < 4 ? 'Selanjutnya' : 'Selesaikan'"
+            @submit="currentStep < 4 ? nextStep() : submitProperty()"
             :disabled="form.processing">
 
             <template #left-content>
@@ -497,7 +652,7 @@ const closeModalAndRedirect = () => {
                 </div>
 
                 <div>
-                    <button v-if="currentStep < 3" type="button" @click="nextStep" :disabled="form.processing" class="h-[48px] px-8 rounded-[12px] bg-[#0A2540] text-white font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
+                    <button v-if="currentStep < 4" type="button" @click="nextStep" :disabled="form.processing" class="h-[48px] px-8 rounded-[12px] bg-[#0A2540] text-white font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
                         Selanjutnya
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
                     </button>

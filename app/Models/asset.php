@@ -59,12 +59,23 @@ class asset extends Model
         return $this->hasMany(asset_image::class);
     }
 
+    public function faqs(){
+        return $this->hasMany(asset_faq::class)->orderBy('sort_order');
+    }
+
+    public function policies(){
+        return $this->hasMany(asset_policy::class)->orderBy('sort_order');
+    }
+
     public function firstImage(){
         return $this->hasOne(asset_image::class)->orderBy('id');
     }
 
     public function thumbnailImages(){
-        return $this->hasMany(asset_image::class)->orderBy('id');
+        return $this->hasMany(asset_image::class)
+                    ->where('is_thumbnail', true)
+                    ->whereNull('asset_unit_id')
+                    ->orderBy('id');
     }
 
     public function type(){

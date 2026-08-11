@@ -11,6 +11,7 @@ import AssetHostProfile from '@/Components/UI/AssetHostProfile.vue';
 import AssetSpecifications from '@/Components/UI/AssetSpecifications.vue';
 import AssetReviews from '@/Components/UI/AssetReviews.vue';
 import AssetFaq from '@/Components/UI/AssetFaq.vue';
+import AssetPolicy from '@/Components/UI/AssetPolicy.vue';
 import flatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
 import { Indonesian } from "flatpickr/dist/l10n/id.js";
@@ -138,21 +139,6 @@ const assetFacilities = computed(() => props.asset.facilities || []);
 
 const showFasilitasModal = ref(false);
 const showFullDescription = ref(false);
-
-const assetFaqs = ref([
-    {
-        question: 'Bagaimana cara melakukan pembayaran?',
-        answer: 'Anda dapat melakukan pembayaran melalui transfer bank, e-wallet, atau kartu kredit setelah menyelesaikan proses pemesanan di website.'
-    },
-    {
-        question: 'Apakah bisa melakukan pembatalan pesanan?',
-        answer: 'Ya, pembatalan dapat dilakukan maksimal 24 jam sebelum waktu sewa dimulai dengan syarat dan ketentuan yang berlaku.'
-    },
-    {
-        question: 'Apakah ada biaya tambahan di luar harga sewa?',
-        answer: 'Harga sewa yang tertera sudah termasuk biaya dasar. Namun, beberapa aset mungkin memiliki biaya tambahan seperti biaya kebersihan atau deposit keamanan yang akan diinformasikan saat proses checkout.'
-    }
-]);
 
 const topFacilities = computed(() => {
     let flat = [];
@@ -696,7 +682,10 @@ const formattedDateRange = computed(() => {
 
             <AssetHostProfile :assetId="asset.id" :ownerProfile="asset.owner_profile" />
 
-            <AssetFaq :faqs="assetFaqs" :assetType="asset.type?.name" />
+            <!-- Kebijakan -->
+            <AssetPolicy :policies="asset.policies" />
+
+            <AssetFaq :faqs="asset.faqs ?? []" :assetType="asset.type?.name" />
 
             </div>
             <!-- KANAN (Booking & Contact Cards) -->

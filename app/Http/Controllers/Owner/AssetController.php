@@ -11,6 +11,8 @@ use App\Models\asset_units;
 use App\Models\asset_pricing;
 use App\Models\asset_image;
 use App\Models\asset_facility;
+use App\Models\asset_faq;
+use App\Models\asset_policy;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -314,8 +316,9 @@ class AssetController extends Controller
                 'status'           => 'pending',
             ]);
 
-            // --- 2. Fasilitas Aset (hanya jika tidak menggunakan unit) ---
-            if (!$allowUnits && !empty($request->facility_ids)) {
+            // --- 2. Fasilitas Aset ---
+            // Simpan fasilitas aset tanpa mempedulikan allowUnits, karena hotel pun punya fasilitas gedung (parkir, resepsionis)
+            if (!empty($request->facility_ids)) {
                 $assetRecord->facilities()->sync($request->facility_ids);
             }
 
@@ -330,7 +333,7 @@ class AssetController extends Controller
 
             // --- 4. Unit Aset (jika allow_units = true) ---
             if ($allowUnits && $request->units) {
-                foreach ($request->units as $unitData) {
+                foreach ($request->units as $index => $unitData) {
                     $unit = asset_units::create([
                         'asset_id' => $assetRecord->id,
                         'name'     => $unitData['name'],
@@ -349,6 +352,40 @@ class AssetController extends Controller
                     // Fasilitas unit
                     if (!empty($unitData['facility_ids'])) {
                         $unit->facilities()->sync($unitData['facility_ids']);
+                    }
+
+                    // Foto unit
+                    $unitPhotosInput = $unitData['photos'] ?? [];
+                    $unitPhotosFiles = $request->file("units.{$index}.photos") ?? [];
+
+                    foreach ($unitPhotosInput as $photoIdx => $photoGroup) {
+                        $galleryCategoryId = $photoGroup['gallery_category_id'] ?? null;
+                        $files = $unitPhotosFiles[$photoIdx]['files'] ?? [];
+
+                        foreach ($files as $file) {
+                            if ($file instanceof \Illuminate\Http\UploadedFile) {
+                                $path = $file->store('uploads/assets', 'public');
+                                asset_image::create([
+                                    'asset_id'           => $assetRecord->id,
+                                    'asset_unit_id'      => $unit->id,
+                                    'gallery_category_id' => $galleryCategoryId,
+                                    'image'              => $path,
+                                ]);
+                            }
+                        }
+                    }
+
+                    // Thumbnail unit
+                    if ($request->hasFile("units.{$index}.thumbnail")) {
+                        $thumbnailFile = $request->file("units.{$index}.thumbnail");
+                        $path = $thumbnailFile->store('uploads/assets/thumbnails', 'public');
+                        asset_image::create([
+                            'asset_id'           => $assetRecord->id,
+                            'asset_unit_id'      => $unit->id,
+                            'gallery_category_id' => null, // Thumbnail tidak wajib ada kategori
+                            'image'              => $path,
+                            'is_thumbnail'       => true,
+                        ]);
                     }
                 }
             }
@@ -369,6 +406,47 @@ class AssetController extends Controller
                             'asset_unit_id'      => null,
                             'gallery_category_id' => $galleryCategoryId,
                             'image'              => $path,
+                        ]);
+                    }
+                }
+            }
+
+            // --- 6. Thumbnail Aset ---
+            if ($request->hasFile('thumbnail')) {
+                $thumbnailFile = $request->file('thumbnail');
+                $path = $thumbnailFile->store('uploads/assets/thumbnails', 'public');
+                asset_image::create([
+                    'asset_id'           => $assetRecord->id,
+                    'asset_unit_id'      => null,
+                    'gallery_category_id' => null,
+                    'image'              => $path,
+                    'is_thumbnail'       => true,
+                ]);
+            }
+
+            // --- 7. FAQ ---
+            if ($request->has('faqs')) {
+                foreach ($request->faqs as $index => $faqData) {
+                    if (!empty($faqData['question']) && !empty($faqData['answer'])) {
+                        asset_faq::create([
+                            'asset_id'   => $assetRecord->id,
+                            'question'   => $faqData['question'],
+                            'answer'     => $faqData['answer'],
+                            'sort_order' => $index + 1,
+                        ]);
+                    }
+                }
+            }
+
+            // --- 8. Kebijakan ---
+            if ($request->has('policies')) {
+                foreach ($request->policies as $index => $policyData) {
+                    if (!empty($policyData['title'])) {
+                        asset_policy::create([
+                            'asset_id'    => $assetRecord->id,
+                            'title'       => $policyData['title'],
+                            'description' => $policyData['description'] ?? null,
+                            'sort_order'  => $index + 1,
                         ]);
                     }
                 }
@@ -398,6 +476,8 @@ class AssetController extends Controller
             'type.category:id,name,icon',
             'images.gallery_category',
             'thumbnailImages',
+            'faqs',
+            'policies',
             'pricings',
             'city',
             'province',
@@ -410,6 +490,7 @@ class AssetController extends Controller
             'facilities.category:id,name,icon',
             'units.pricings',
             'units.images.gallery_category',
+            'units.thumbnailImage',
             'units.facilities:id,name,facility_category_id',
             'units.facilities.category:id,name,icon',
             'units.bookings' => function($q) {
@@ -461,23 +542,17 @@ class AssetController extends Controller
         $asset->owner_status = $status;
         $asset->owner_occupancy = $hasUnits ? "{$occupiedUnits}/{$totalUnits} Unit" : ($status === 'Tersewa' ? '1/1 Unit' : '0/1 Unit');
 
-        $galleryCategories = \App\Models\galery_category::where('asset_type_id', $asset->asset_type_id)
-            ->where('applies_to', 'asset')
-            ->get();
-
-        $unitGalleryCategories = \App\Models\galery_category::where('asset_type_id', $asset->asset_type_id)
-            ->where('applies_to', 'unit')
-            ->get();    
+        // Kategori galeri bersifat global — satu set kategori untuk semua foto (asset & unit)
+        $galleryCategories = \App\Models\galery_category::orderBy('name')->get();
 
         $masterFacilityCategories = \App\Models\facility_category::with(['facilities' => function($q) {
             $q->where('is_active', true)->orderBy('sort_order');
         }])->orderBy('sort_order')->get();
 
         return inertia('owner/Asset/show', [
-            'asset' => $asset,
-            'galleryCategories' => $galleryCategories,
-            'unitGalleryCategories' => $unitGalleryCategories,
-            'masterFacilityCategories' => $masterFacilityCategories
+            'asset'                    => $asset,
+            'galleryCategories'        => $galleryCategories,
+            'masterFacilityCategories' => $masterFacilityCategories,
         ]);
     }
 
@@ -598,6 +673,7 @@ class AssetController extends Controller
             'new_images' => 'nullable|array',
             'new_images.*.file' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
             'new_images.*.category_id' => 'required|exists:galery_categories,id',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
         $unit = $asset->units()->create([
@@ -625,6 +701,15 @@ class AssetController extends Controller
                     'image' => $path,
                 ]);
             }
+        }
+
+        if ($request->hasFile('thumbnail')) {
+            $path = $request->file('thumbnail')->store('uploads/assets/thumbnails', 'public');
+            $asset->images()->create([
+                'asset_unit_id' => $unit->id,
+                'image' => $path,
+                'is_thumbnail' => true,
+            ]);
         }
 
         return redirect()->back()->with('success', 'Unit berhasil ditambahkan.');
@@ -656,6 +741,7 @@ class AssetController extends Controller
             'new_images.*.category_id' => 'required|exists:galery_categories,id',
             'deleted_images' => 'nullable|array',
             'deleted_images.*' => 'exists:asset_images,id',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
         $unit->update([
@@ -705,6 +791,25 @@ class AssetController extends Controller
             }
         }
 
+        // Handle Thumbnail Update
+        if ($request->hasFile('thumbnail')) {
+            // Hapus thumbnail lama
+            $oldThumbnail = $asset->images()->where('asset_unit_id', $unit->id)->where('is_thumbnail', true)->first();
+            if ($oldThumbnail) {
+                if ($oldThumbnail->image && !str_starts_with($oldThumbnail->image, 'http') && !str_starts_with($oldThumbnail->image, 'assets/')) {
+                    Storage::disk('public')->delete($oldThumbnail->image);
+                }
+                $oldThumbnail->delete();
+            }
+
+            $path = $request->file('thumbnail')->store('uploads/assets/thumbnails', 'public');
+            $asset->images()->create([
+                'asset_unit_id' => $unit->id,
+                'image' => $path,
+                'is_thumbnail' => true,
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Unit berhasil diperbarui.');
     }
 
@@ -720,9 +825,32 @@ class AssetController extends Controller
             abort(403, 'Anda tidak berhak mengubah aset ini.');
         }
 
+        // Jika request memiliki file 'thumbnail' (Untuk Aset Utama)
+        if ($request->hasFile('thumbnail')) {
+            $request->validate([
+                'thumbnail' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            ]);
+
+            // Hapus thumbnail lama jika ada
+            $oldThumbnail = $asset->images()->where('is_thumbnail', true)->whereNull('asset_unit_id')->first();
+            if ($oldThumbnail) {
+                if ($oldThumbnail->image && !str_starts_with($oldThumbnail->image, 'http') && !str_starts_with($oldThumbnail->image, 'assets/')) {
+                    Storage::disk('public')->delete($oldThumbnail->image);
+                }
+                $oldThumbnail->delete();
+            }
+
+            $path = $request->file('thumbnail')->store('uploads/assets/thumbnails', 'public');
+            $asset->images()->create([
+                'image' => $path,
+                'is_thumbnail' => true,
+            ]);
+            return redirect()->back()->with('success', 'Thumbnail berhasil diunggah.');
+        }
+
         $request->validate([
             'images' => 'required|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
             'gallery_category_id' => 'nullable|exists:galery_categories,id',
         ]);
 
@@ -762,5 +890,112 @@ class AssetController extends Controller
         $image->delete();
 
         return redirect()->back()->with('success', 'Foto berhasil dihapus.');
+    }
+
+    // =================== FAQ ===================
+
+    public function storeFaq(Request $request, string $id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+        $request->validate([
+            'question'   => 'required|string|max:300',
+            'answer'     => 'required|string|max:2000',
+            'sort_order' => 'nullable|integer',
+        ]);
+        $sortOrder = $request->sort_order ?? ($asset->faqs()->max('sort_order') + 1);
+        asset_faq::create([
+            'asset_id'   => $asset->id,
+            'question'   => $request->question,
+            'answer'     => $request->answer,
+            'sort_order' => $sortOrder,
+        ]);
+        return redirect()->back()->with('success', 'FAQ berhasil ditambahkan.');
+    }
+
+    public function updateFaq(Request $request, string $id, int $faqId)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+        $request->validate([
+            'question'   => 'required|string|max:300',
+            'answer'     => 'required|string|max:2000',
+        ]);
+        $faq = asset_faq::where('asset_id', $asset->id)->findOrFail($faqId);
+        $faq->update([
+            'question' => $request->question,
+            'answer'   => $request->answer,
+        ]);
+        return redirect()->back()->with('success', 'FAQ berhasil diperbarui.');
+    }
+
+    public function destroyFaq(Request $request, string $id, int $faqId)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+        asset_faq::where('asset_id', $asset->id)->findOrFail($faqId)->delete();
+        return redirect()->back()->with('success', 'FAQ berhasil dihapus.');
+    }
+
+    // =================== KEBIJAKAN ===================
+
+    public function storePolicy(Request $request, string $id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+        $request->validate([
+            'title'       => 'required|string|max:200',
+            'description' => 'nullable|string|max:2000',
+        ]);
+        $sortOrder = $asset->policies()->max('sort_order') + 1;
+        asset_policy::create([
+            'asset_id'    => $asset->id,
+            'title'       => $request->title,
+            'description' => $request->description,
+            'sort_order'  => $sortOrder,
+        ]);
+        return redirect()->back()->with('success', 'Kebijakan berhasil ditambahkan.');
+    }
+
+    public function updatePolicy(Request $request, string $id, int $policyId)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+        $request->validate([
+            'title'       => 'required|string|max:200',
+            'description' => 'nullable|string|max:2000',
+        ]);
+        $policy = asset_policy::where('asset_id', $asset->id)->findOrFail($policyId);
+        $policy->update([
+            'title'       => $request->title,
+            'description' => $request->description,
+        ]);
+        return redirect()->back()->with('success', 'Kebijakan berhasil diperbarui.');
+    }
+
+    public function destroyPolicy(Request $request, string $id, int $policyId)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403);
+        }
+        asset_policy::where('asset_id', $asset->id)->findOrFail($policyId)->delete();
+        return redirect()->back()->with('success', 'Kebijakan berhasil dihapus.');
     }
 }

@@ -20,10 +20,10 @@ const toggleFaq = (index) => {
 </script>
 
 <template>
-    <div v-if="faqs.length > 0" class="py-10 border-b border-gray-200">
+    <div class="py-10 border-b border-gray-200">
         <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Pertanyaan yang Sering Diajukan (FAQ)</h2>
         
-        <div class="space-y-4">
+        <div v-if="faqs.length > 0" class="space-y-4">
             <div 
                 v-for="(faq, index) in faqs" 
                 :key="index"
@@ -48,6 +48,14 @@ const toggleFaq = (index) => {
                     {{ faq.answer }}
                 </div>
             </div>
+        </div>
+
+        <div v-else class="flex flex-col items-center justify-center py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm border border-gray-100">
+                <i class="fa-solid fa-circle-question text-xl text-gray-300"></i>
+            </div>
+            <p class="text-sm font-bold text-gray-500">Belum ada FAQ</p>
+            <p class="text-xs text-gray-400 mt-1">Pemilik belum menambahkan pertanyaan umum untuk aset ini</p>
         </div>
     </div>
 </template>

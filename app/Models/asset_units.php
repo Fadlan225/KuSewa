@@ -38,6 +38,13 @@ class asset_units extends Model
         return $this->hasMany(asset_image::class, 'asset_unit_id');
     }
 
+    public function thumbnailImage()
+    {
+        return $this->hasOne(asset_image::class, 'asset_unit_id')
+                    ->where('is_thumbnail', true)
+                    ->orderBy('id');
+    }
+
     public function facilities()
     {
         return $this->belongsToMany(facility::class, 'asset_unit_facilities', 'asset_unit_id', 'facility_id')->withTimestamps();

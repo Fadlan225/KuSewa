@@ -76,12 +76,18 @@ const handleFileUpload = (event) => {
     if (!files.length) return;
 
     const formData = new FormData();
-    for (let i = 0; i < files.length; i++) {
-        formData.append('images[]', files[i]);
-    }
-    
-    if (uploadTargetCategoryId.value) {
-        formData.append('gallery_category_id', uploadTargetCategoryId.value);
+
+    if (uploadTargetCategoryId.value === 'thumbnail') {
+        // Kirim HANYA field thumbnail — jangan tambahkan images[]
+        formData.append('thumbnail', files[0]);
+    } else {
+        // Upload foto galeri biasa
+        for (let i = 0; i < files.length; i++) {
+            formData.append('images[]', files[i]);
+        }
+        if (uploadTargetCategoryId.value) {
+            formData.append('gallery_category_id', uploadTargetCategoryId.value);
+        }
     }
 
     router.post(route('owner.asset.images.store', props.asset.slug || props.asset.id), formData, {
@@ -147,6 +153,36 @@ const executeDelete = () => {
                     <div class="flex items-center gap-2 w-full sm:w-auto">
                         <button @click="addCategory" :disabled="!selectedCategoryId" :class="selectedCategoryId ? 'bg-[#0A2540] hover:bg-slate-800 text-white' : 'bg-slate-300 text-slate-500 cursor-not-allowed'" class="flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-bold shadow-sm transition">Tambah</button>
                         <button @click="showAddCategory = false" class="flex-1 sm:flex-none bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 px-4 py-2 rounded-lg text-sm font-bold transition">Batal</button>
+                    </div>
+                </div>
+
+                <!-- Thumbnail Aset -->
+                <div class="space-y-4 mb-6 pb-6 border-b border-slate-100">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-2">
+                        <h4 class="font-bold text-slate-700 text-sm">Thumbnail Aset</h4>
+                        <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">1 foto utama</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <div v-if="asset.thumbnail_images && asset.thumbnail_images.length > 0" class="aspect-square rounded-lg border border-slate-200 overflow-hidden relative group shadow-sm bg-slate-100">
+                            <img :src="asset.thumbnail_images[0].image_url" class="w-full h-full object-cover" />
+                            <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                                <button type="button" @click="openImageViewer(asset.thumbnail_images[0].image_url)" class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-blue-600 flex items-center justify-center shadow-sm" title="Lihat">
+                                    <i class="fa-solid fa-eye text-xs"></i>
+                                </button>
+                                <button type="button" @click="confirmDelete(asset.thumbnail_images[0].id)" class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-rose-600 flex items-center justify-center shadow-sm" title="Hapus">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button v-else @click="triggerUpload('thumbnail')" :disabled="isUploading" class="aspect-square rounded-lg border-2 border-dashed border-slate-300 hover:border-[#0A2540] hover:bg-slate-50 bg-slate-50/50 flex flex-col items-center justify-center gap-2 transition group shadow-sm">
+                            <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-[#0A2540] group-hover:scale-110 transition-transform">
+                                <i v-if="isUploading && uploadTargetCategoryId === 'thumbnail'" class="fa-solid fa-spinner fa-spin text-lg"></i>
+                                <i v-else class="fa-solid fa-plus text-lg"></i>
+                            </div>
+                            <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#0A2540]">
+                                {{ isUploading && uploadTargetCategoryId === 'thumbnail' ? 'Mengunggah...' : 'Unggah Thumbnail' }}
+                            </span>
+                        </button>
                     </div>
                 </div>
 

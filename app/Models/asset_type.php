@@ -23,11 +23,6 @@ class asset_type extends Model
         return $this->hasMany(asset::class);
     }
 
-    public function galery_categories()
-    {
-        return $this->hasMany(galery_category::class);
-    }
-
     public function assetTypeFacilities()
     {
         return $this->hasMany(asset_type_facility::class, 'asset_type_id');

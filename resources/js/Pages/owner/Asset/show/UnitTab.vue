@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useForm } from '@inertiajs/vue3';
+import { router } from '@inertiajs/vue3';
 import BottomSheet from '@/Components/UI/BottomSheet.vue';
 
 const props = defineProps({
@@ -43,7 +43,10 @@ onMounted(async () => {
 const existingImages = ref([]);
 const unitImageGroups = ref([]);
 
-const form = useForm({
+const isSubmitting = ref(false);
+const formErrors = ref({});
+
+const form = ref({
     id: null,
     name: '',
     quantity: 1,
@@ -52,15 +55,26 @@ const form = useForm({
     facilities: [],
     new_images: [],
     deleted_images: [],
+    thumbnail: null,
+    thumbnail_preview: null,
 });
 
 const openCreateModal = () => {
     isEditing.value = false;
-    form.reset();
-    form.detail = {};
-    form.facilities = [];
-    form.new_images = [];
-    form.deleted_images = [];
+    isSubmitting.value = false;
+    formErrors.value = {};
+    form.value = {
+        id: null,
+        name: '',
+        quantity: 1,
+        price: 0,
+        detail: {},
+        facilities: [],
+        new_images: [],
+        deleted_images: [],
+        thumbnail: null,
+        thumbnail_preview: null,
+    };
     existingImages.value = [];
     unitImageGroups.value = [];
     showModal.value = true;
@@ -68,17 +82,50 @@ const openCreateModal = () => {
 
 const openEditModal = (unit) => {
     isEditing.value = true;
-    form.id = unit.id;
-    form.name = unit.name;
-    form.quantity = unit.quantity || 1;
-    form.price = (unit.pricings && unit.pricings.length > 0) ? unit.pricings[0].price : 0;
-    form.detail = unit.detail || {};
-    form.facilities = (unit.facilities || []).map(f => f.id);
-    form.new_images = [];
-    form.deleted_images = [];
-    existingImages.value = unit.images ? [...unit.images] : [];
+    isSubmitting.value = false;
+    formErrors.value = {};
+    form.value = {
+        id: unit.id,
+        name: unit.name,
+        quantity: unit.quantity || 1,
+        price: (unit.pricings && unit.pricings.length > 0) ? unit.pricings[0].price : 0,
+        detail: unit.detail || {},
+        facilities: (unit.facilities || []).map(f => f.id),
+        new_images: [],
+        deleted_images: [],
+        thumbnail: null,
+        thumbnail_preview: null,
+    };
+
+    // Find thumbnail from thumbnail_image relation
+    if (unit.thumbnail_image) {
+        form.value.thumbnail_preview = unit.thumbnail_image.image_url;
+    }
+    existingImages.value = unit.images ? unit.images.filter(img => !img.is_thumbnail) : [];
+
     unitImageGroups.value = [];
     showModal.value = true;
+};
+
+// --- Thumbnail Logic ---
+const handleUnitThumbnailUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+        form.value.thumbnail = file;
+        if (form.value.thumbnail_preview && form.value.thumbnail_preview.startsWith('blob:')) {
+            URL.revokeObjectURL(form.value.thumbnail_preview);
+        }
+        form.value.thumbnail_preview = URL.createObjectURL(file);
+    }
+    e.target.value = '';
+};
+
+const removeUnitThumbnail = () => {
+    if (form.value.thumbnail_preview && form.value.thumbnail_preview.startsWith('blob:')) {
+        URL.revokeObjectURL(form.value.thumbnail_preview);
+    }
+    form.value.thumbnail = null;
+    form.value.thumbnail_preview = null;
 };
 
 // --- Image Handling Logic ---
@@ -118,7 +165,7 @@ const removeGroup = (groupIndex) => {
 };
 
 const removeExistingImage = (imageObj) => {
-    form.deleted_images.push(imageObj.id);
+    form.value.deleted_images.push(imageObj.id);
     existingImages.value = existingImages.value.filter(img => img.id !== imageObj.id);
 };
 
@@ -129,38 +176,57 @@ const triggerGroupFileInput = (groupId, isMobile = false) => {
 };
 
 const submit = () => {
-    // Build form.new_images from unitImageGroups
-    form.new_images = [];
+    // Build new_images from unitImageGroups
+    const newImages = [];
     for (const group of unitImageGroups.value) {
         if (!group.category_id && group.items.length > 0) {
             alert('Silakan pilih kategori untuk semua foto yang Anda tambahkan.');
             return;
         }
         for (const item of group.items) {
-            form.new_images.push({
-                file: item.file,
-                category_id: group.category_id
-            });
+            newImages.push({ file: item.file, category_id: group.category_id });
         }
     }
-    if (isEditing.value) {
-        form.transform((data) => ({
-            ...data,
-            _method: 'put',
-        })).post(route('owner.asset.units.update', [props.asset.slug || props.asset.id, form.id]), {
-            preserveScroll: true,
-            onSuccess: () => {
-                showModal.value = false;
-            }
-        });
-    } else {
-        form.post(route('owner.asset.units.store', props.asset.slug || props.asset.id), {
-            preserveScroll: true,
-            onSuccess: () => {
-                showModal.value = false;
-            }
-        });
+
+    // Build FormData manually agar file benar-benar terkirim
+    const fd = new FormData();
+    fd.append('name', form.value.name);
+    fd.append('quantity', form.value.quantity);
+    fd.append('price', form.value.price);
+    fd.append('detail', JSON.stringify(form.value.detail || {}));
+    (form.value.facilities || []).forEach(id => fd.append('facilities[]', id));
+    (form.value.deleted_images || []).forEach(id => fd.append('deleted_images[]', id));
+    newImages.forEach((img, i) => {
+        fd.append(`new_images[${i}][file]`, img.file);
+        fd.append(`new_images[${i}][category_id]`, img.category_id);
+    });
+    if (form.value.thumbnail instanceof File) {
+        fd.append('thumbnail', form.value.thumbnail);
     }
+
+    isSubmitting.value = true;
+    formErrors.value = {};
+
+    const url = isEditing.value
+        ? route('owner.asset.units.update', [props.asset.slug || props.asset.id, form.value.id])
+        : route('owner.asset.units.store', props.asset.slug || props.asset.id);
+
+    if (isEditing.value) fd.append('_method', 'PUT');
+
+    router.post(url, fd, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showModal.value = false;
+            isSubmitting.value = false;
+        },
+        onError: (errors) => {
+            formErrors.value = errors;
+            isSubmitting.value = false;
+        },
+        onFinish: () => {
+            isSubmitting.value = false;
+        },
+    });
 };
 </script>
 
@@ -195,7 +261,10 @@ const submit = () => {
                     <!-- Mobile View: Card Style -->
                     <div class="flex items-center gap-3 md:col-span-1 pr-10 md:pr-0">
                         <div class="w-16 h-12 md:w-12 md:h-10 rounded-md bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
-                            <template v-if="unit.images && unit.images.length > 0 && (unit.images[0].image_url || unit.images[0].url)">
+                            <template v-if="unit.thumbnail_image && unit.thumbnail_image.image_url">
+                                <img :src="unit.thumbnail_image.image_url" class="w-full h-full object-cover" />
+                            </template>
+                            <template v-else-if="unit.images && unit.images.length > 0 && (unit.images[0].image_url || unit.images[0].url)">
                                 <img :src="unit.images[0].image_url || unit.images[0].url" class="w-full h-full object-cover" />
                             </template>
                             <template v-else>
@@ -248,7 +317,7 @@ const submit = () => {
                         <div>
                             <label class="text-xs font-bold text-slate-500 block mb-1">Nama Unit</label>
                             <input v-model="form.name" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" placeholder="Contoh: Kamar Deluxe" required />
-                            <div v-if="form.errors.name" class="text-xs text-rose-500 mt-1">{{ form.errors.name }}</div>
+                            <div v-if="formErrors.name" class="text-xs text-rose-500 mt-1">{{ formErrors.name }}</div>
                         </div>
 
                         <!-- KUANTITAS & HARGA -->
@@ -256,12 +325,40 @@ const submit = () => {
                             <div>
                                 <label class="text-xs font-bold text-slate-500 block mb-1">Kuantitas (Jumlah)</label>
                                 <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" required />
-                                <div v-if="form.errors.quantity" class="text-xs text-rose-500 mt-1">{{ form.errors.quantity }}</div>
+                                <div v-if="formErrors.quantity" class="text-xs text-rose-500 mt-1">{{ formErrors.quantity }}</div>
                             </div>
                             <div>
                                 <label class="text-xs font-bold text-slate-500 block mb-1">Harga Sewa (Rp)</label>
                                 <input v-model="form.price" type="number" min="0" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" required />
-                                <div v-if="form.errors.price" class="text-xs text-rose-500 mt-1">{{ form.errors.price }}</div>
+                                <div v-if="formErrors.price" class="text-xs text-rose-500 mt-1">{{ formErrors.price }}</div>
+                            </div>
+                        </div>
+
+                        <!-- THUMBNAIL UNIT (Upload 1 foto) -->
+                        <div class="border-t border-slate-100 pt-5">
+                            <h4 class="text-sm font-bold text-slate-800 mb-3">Thumbnail Unit</h4>
+                            <div class="flex gap-4 items-start">
+                                <div v-if="!form.thumbnail_preview" class="flex-1 border-2 border-dashed border-slate-200 rounded-xl p-4 text-center hover:bg-slate-50 transition cursor-pointer relative">
+                                    <input
+                                        type="file"
+                                        accept="image/png, image/jpeg, image/webp"
+                                        @change="handleUnitThumbnailUpload"
+                                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    />
+                                    <i class="fa-solid fa-image text-2xl text-slate-300 mb-2"></i>
+                                    <p class="text-xs font-bold text-slate-500">Pilih Thumbnail Unit</p>
+                                </div>
+                                <div v-else class="relative w-32 h-24 group/thumb">
+                                    <img :src="form.thumbnail_preview" class="w-full h-full object-cover rounded-xl border border-slate-200" />
+                                    <button
+                                        type="button"
+                                        @click="removeUnitThumbnail"
+                                        class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow opacity-0 group-hover/thumb:opacity-100 transition cursor-pointer"
+                                        title="Hapus Thumbnail"
+                                    >
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -360,8 +457,8 @@ const submit = () => {
                         <button type="button" @click="showModal = false" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition text-sm">
                             Batal
                         </button>
-                        <button type="submit" :disabled="form.processing" class="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition text-sm flex items-center justify-center gap-2">
-                            <i v-if="form.processing" class="fa-solid fa-spinner fa-spin"></i>
+                        <button type="submit" :disabled="isSubmitting" class="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition text-sm flex items-center justify-center gap-2">
+                            <i v-if="isSubmitting" class="fa-solid fa-spinner fa-spin"></i>
                             {{ isEditing ? 'Simpan Perubahan' : 'Simpan Unit' }}
                         </button>
                     </div>
@@ -377,7 +474,7 @@ const submit = () => {
                     <div>
                         <label class="text-xs font-bold text-slate-500 block mb-1">Nama Unit</label>
                         <input v-model="form.name" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" placeholder="Contoh: Kamar Deluxe" required />
-                        <div v-if="form.errors.name" class="text-xs text-rose-500 mt-1">{{ form.errors.name }}</div>
+                        <div v-if="formErrors.name" class="text-xs text-rose-500 mt-1">{{ formErrors.name }}</div>
                     </div>
 
                     <!-- KUANTITAS & HARGA -->
@@ -385,12 +482,12 @@ const submit = () => {
                         <div>
                             <label class="text-xs font-bold text-slate-500 block mb-1">Kuantitas</label>
                             <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" required />
-                            <div v-if="form.errors.quantity" class="text-xs text-rose-500 mt-1">{{ form.errors.quantity }}</div>
+                            <div v-if="formErrors.quantity" class="text-xs text-rose-500 mt-1">{{ formErrors.quantity }}</div>
                         </div>
                         <div>
                             <label class="text-xs font-bold text-slate-500 block mb-1">Harga Sewa (Rp)</label>
                             <input v-model="form.price" type="number" min="0" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" required />
-                            <div v-if="form.errors.price" class="text-xs text-rose-500 mt-1">{{ form.errors.price }}</div>
+                            <div v-if="formErrors.price" class="text-xs text-rose-500 mt-1">{{ formErrors.price }}</div>
                         </div>
                     </div>
 
@@ -490,8 +587,8 @@ const submit = () => {
 
                 <!-- Footer (dalam form) -->
                 <div class="p-5 border-t border-[#6C757D]/10 bg-white shrink-0">
-                    <button type="submit" :disabled="form.processing" class="w-full py-3 bg-primary hover:bg-primary/90 text-slate-800 font-bold rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
-                        <i v-if="form.processing" class="fa-solid fa-spinner fa-spin"></i>
+                    <button type="submit" :disabled="isSubmitting" class="w-full py-3 bg-primary hover:bg-primary/90 text-slate-800 font-bold rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
+                        <i v-if="isSubmitting" class="fa-solid fa-spinner fa-spin"></i>
                         {{ isEditing ? 'Simpan Perubahan' : 'Simpan Unit' }}
                     </button>
                 </div>

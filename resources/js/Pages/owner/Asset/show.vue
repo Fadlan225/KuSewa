@@ -10,6 +10,7 @@ import FasilitasTab from './show/FasilitasTab.vue';
 import HargaTab from './show/HargaTab.vue';
 import KetersediaanTab from './show/KetersediaanTab.vue';
 import FotoTab from './show/FotoTab.vue';
+import KebijkanFaqTab from './show/KebijkanFaqTab.vue';
 
 const props = defineProps({
     asset: {
@@ -17,10 +18,6 @@ const props = defineProps({
         required: true,
     },
     galleryCategories: {
-        type: Array,
-        default: () => [],
-    },
-    unitGalleryCategories: {
         type: Array,
         default: () => [],
     },
@@ -115,10 +112,34 @@ const proceedDeactivate = () => {
     });
 };
 
+const fileInput = ref(null);
+const isUploadingThumbnail = ref(false);
+
+const triggerThumbnailUpload = () => {
+    fileInput.value.click();
+};
+
+const handleThumbnailUpload = (event) => {
+    const files = event.target.files;
+    if (!files.length) return;
+
+    const formData = new FormData();
+    formData.append('thumbnail', files[0]);
+
+    router.post(route('owner.asset.images.store', props.asset.slug || props.asset.id), formData, {
+        preserveScroll: true,
+        onStart: () => { isUploadingThumbnail.value = true; },
+        onFinish: () => {
+            isUploadingThumbnail.value = false;
+            event.target.value = '';
+        },
+    });
+};
+
 const placeholderImage = 'https://placehold.co/800x500?text=Belum+Ada+Foto';
 const thumbnail = computed(() => {
-    if (props.asset.thumbnailImages && props.asset.thumbnailImages.length > 0) {
-        const thumb = props.asset.thumbnailImages[0];
+    if (props.asset.thumbnail_images && props.asset.thumbnail_images.length > 0) {
+        const thumb = props.asset.thumbnail_images[0];
         return thumb.image_url || thumb.url || placeholderImage;
     }
     if (props.asset.images && props.asset.images.length > 0) {
@@ -170,6 +191,7 @@ const assetSubMenu = computed(() => [
     { key: 'harga',       label: 'Harga & Aturan',  icon: 'fa-solid fa-tag',           active: activeTab.value === 'harga',        onClick: () => activeTab.value = 'harga' },
     { key: 'ketersediaan',label: 'Ketersediaan',     icon: 'fa-solid fa-calendar-check',active: activeTab.value === 'ketersediaan', onClick: () => activeTab.value = 'ketersediaan' },
     { key: 'foto',        label: 'Foto & Dokumen',   icon: 'fa-solid fa-images',        active: activeTab.value === 'foto',         onClick: () => activeTab.value = 'foto' },
+    { key: 'kebijakan',   label: 'Kebijakan & FAQ',  icon: 'fa-solid fa-shield-halved', active: activeTab.value === 'kebijakan',    onClick: () => activeTab.value = 'kebijakan' },
 ]);
 
 </script>
@@ -194,7 +216,12 @@ const assetSubMenu = computed(() => [
                 <div class="w-full md:w-[320px] aspect-[4/3] shrink-0 bg-slate-100 relative group rounded-xl overflow-hidden shadow-sm">
                     <img :src="thumbnail" class="w-full h-full object-cover" />
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                        <button class="bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Ubah Foto Utama</button>
+                        <input type="file" ref="fileInput" class="hidden" accept="image/png, image/jpeg, image/webp" @change="handleThumbnailUpload" />
+                        <button @click="triggerThumbnailUpload" :disabled="isUploadingThumbnail" class="bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition flex items-center gap-2">
+                            <i v-if="isUploadingThumbnail" class="fa-solid fa-spinner fa-spin"></i>
+                            <i v-else class="fa-solid fa-camera"></i>
+                            {{ isUploadingThumbnail ? 'Mengunggah...' : 'Ubah Foto Utama' }}
+                        </button>
                     </div>
                 </div>
 
@@ -268,6 +295,7 @@ const assetSubMenu = computed(() => [
                 <button @click="activeTab = 'harga'" :class="activeTab === 'harga' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Harga & Aturan</button>
                 <button @click="activeTab = 'ketersediaan'" :class="activeTab === 'ketersediaan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Ketersediaan</button>
                 <button @click="activeTab = 'foto'" :class="activeTab === 'foto' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Foto & Dokumen</button>
+                <button @click="activeTab = 'kebijakan'" :class="activeTab === 'kebijakan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Kebijakan & FAQ</button>
             </div>
 
                 <!-- TAB CONTENTS -->
@@ -275,10 +303,11 @@ const assetSubMenu = computed(() => [
                     <RingkasanTab v-if="activeTab === 'ringkasan'" :asset="asset" :form="form" :specItems="specItems" :assetFacilities="assetFacilities" />
                     <LokasiTab v-if="activeTab === 'lokasi'" :asset="asset" :form="form" />
                     <FasilitasTab v-if="activeTab === 'fasilitas'" :asset="asset" :assetFacilities="assetFacilities" :masterFacilityCategories="masterFacilityCategories" />
-                    <UnitTab v-if="activeTab === 'unit' && asset.type?.allow_units" :asset="asset" :galleryCategories="unitGalleryCategories" />
+                    <UnitTab v-if="activeTab === 'unit' && asset.type?.allow_units" :asset="asset" :galleryCategories="galleryCategories" />
                     <HargaTab v-if="activeTab === 'harga'" :asset="asset" :lowestPrice="lowestPrice" />
                     <KetersediaanTab v-if="activeTab === 'ketersediaan'" :asset="asset" />
                     <FotoTab v-if="activeTab === 'foto'" :asset="asset" :galleryCategories="galleryCategories" />
+                    <KebijkanFaqTab v-if="activeTab === 'kebijakan'" :asset="asset" />
                 </div>
 
         </div>

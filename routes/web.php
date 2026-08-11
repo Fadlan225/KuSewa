@@ -70,6 +70,15 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::post('asset/{asset}/images', [\App\Http\Controllers\Owner\AssetController::class, 'storeImage'])->name('asset.images.store');
     Route::delete('asset/{asset}/images/{image}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyImage'])->name('asset.images.destroy');
 
+    // FAQ & Kebijakan
+    Route::post('asset/{asset}/faqs', [\App\Http\Controllers\Owner\AssetController::class, 'storeFaq'])->name('asset.faqs.store');
+    Route::put('asset/{asset}/faqs/{faq}', [\App\Http\Controllers\Owner\AssetController::class, 'updateFaq'])->name('asset.faqs.update');
+    Route::delete('asset/{asset}/faqs/{faq}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyFaq'])->name('asset.faqs.destroy');
+
+    Route::post('asset/{asset}/policies', [\App\Http\Controllers\Owner\AssetController::class, 'storePolicy'])->name('asset.policies.store');
+    Route::put('asset/{asset}/policies/{policy}', [\App\Http\Controllers\Owner\AssetController::class, 'updatePolicy'])->name('asset.policies.update');
+    Route::delete('asset/{asset}/policies/{policy}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyPolicy'])->name('asset.policies.destroy');
+
     Route::get('/bookings', [OwnerBookingController::class, 'index'])->name('bookings');
     Route::get('/bookings/{id}', [OwnerBookingController::class, 'show'])->name('bookings.show');
     Route::patch('/bookings/{id}/confirm', [OwnerBookingController::class, 'confirm'])->name('bookings.confirm');
