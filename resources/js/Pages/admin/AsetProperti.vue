@@ -34,6 +34,46 @@ const totals = computed(() => ({
     draft: properties.value.filter(item => item.status === 'Draft').length,
     rejected: properties.value.filter(item => item.status === 'Ditolak').length,
 }));
+
+// ==== Statistik: state & logic ====
+const showStatsModal = ref(false);
+
+const byType = computed(() => {
+    const map = {};
+    for (const item of properties.value) {
+        map[item.type] = (map[item.type] || 0) + 1;
+    }
+    return Object.entries(map)
+        .map(([type, count]) => ({ type, count }))
+        .sort((a, b) => b.count - a.count);
+});
+
+const byCity = computed(() => {
+    const map = {};
+    for (const item of properties.value) {
+        map[item.city] = (map[item.city] || 0) + 1;
+    }
+    return Object.entries(map)
+        .map(([city, count]) => ({ city, count }))
+        .sort((a, b) => b.count - a.count);
+});
+
+const totalRooms = computed(() =>
+    properties.value.reduce((sum, item) => sum + (item.rooms || 0), 0)
+);
+
+const publishRate = computed(() => {
+    if (properties.value.length === 0) return 0;
+    return Math.round((totals.value.published / properties.value.length) * 100);
+});
+
+function openStats() {
+    showStatsModal.value = true;
+}
+
+function closeStats() {
+    showStatsModal.value = false;
+}
 </script>
 
 <template>
@@ -109,7 +149,13 @@ const totals = computed(() => ({
                             <h2 class="text-sm font-bold text-slate-900">Daftar Properti</h2>
                             <p class="text-[11px] text-slate-400">Saring dan edit detail listing properti.</p>
                         </div>
-                        <button class="text-[11px] font-semibold text-[#0A2540] hover:underline">Lihat Statistik</button>
+                        <button
+                            type="button"
+                            @click="openStats"
+                            class="text-[11px] font-semibold text-[#0A2540] hover:underline"
+                        >
+                            Lihat Statistik
+                        </button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full w-full text-left text-xs border-collapse">
@@ -154,5 +200,93 @@ const totals = computed(() => ({
                 </div>
             </div>
         </main>
+
+        <!-- Modal Statistik -->
+        <Teleport to="body">
+            <div
+                v-if="showStatsModal"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
+                @click.self="closeStats"
+            >
+                <div class="w-full max-w-lg rounded-3xl bg-white shadow-xl border border-slate-100 overflow-hidden">
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">Statistik Properti</h3>
+                            <p class="text-[11px] text-slate-400">Ringkasan berdasarkan data listing saat ini.</p>
+                        </div>
+                        <button
+                            type="button"
+                            @click="closeStats"
+                            class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                            aria-label="Tutup"
+                        >
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
+                        <!-- Ringkasan cepat -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="rounded-2xl bg-slate-50 p-4">
+                                <p class="text-[10px] font-semibold uppercase text-slate-400">Total Kamar</p>
+                                <p class="mt-1 text-xl font-extrabold text-slate-900">{{ totalRooms }}</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-50 p-4">
+                                <p class="text-[10px] font-semibold uppercase text-slate-400">Tingkat Publikasi</p>
+                                <p class="mt-1 text-xl font-extrabold text-emerald-600">{{ publishRate }}%</p>
+                            </div>
+                            <div class="rounded-2xl bg-slate-50 p-4">
+                                <p class="text-[10px] font-semibold uppercase text-slate-400">Jenis Aktif</p>
+                                <p class="mt-1 text-xl font-extrabold text-slate-900">{{ byType.length }}</p>
+                            </div>
+                        </div>
+
+                        <!-- Per Jenis -->
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase mb-3">Berdasarkan Jenis</p>
+                            <div class="space-y-2.5">
+                                <div v-for="row in byType" :key="row.type" class="flex items-center gap-3">
+                                    <span class="w-24 text-xs text-slate-600 shrink-0">{{ row.type }}</span>
+                                    <div class="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                        <div
+                                            class="h-full bg-[#0A2540] rounded-full"
+                                            :style="{ width: (row.count / totals.totalProperties * 100) + '%' }"
+                                        ></div>
+                                    </div>
+                                    <span class="w-6 text-right text-xs font-semibold text-slate-700">{{ row.count }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Per Kota -->
+                        <div>
+                            <p class="text-[11px] font-bold text-slate-500 uppercase mb-3">Berdasarkan Kota</p>
+                            <div class="space-y-2.5">
+                                <div v-for="row in byCity" :key="row.city" class="flex items-center gap-3">
+                                    <span class="w-32 text-xs text-slate-600 shrink-0 truncate">{{ row.city }}</span>
+                                    <div class="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
+                                        <div
+                                            class="h-full bg-[#FFC000] rounded-full"
+                                            :style="{ width: (row.count / totals.totalProperties * 100) + '%' }"
+                                        ></div>
+                                    </div>
+                                    <span class="w-6 text-right text-xs font-semibold text-slate-700">{{ row.count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-6 py-4 border-t border-slate-100 flex justify-end">
+                        <button
+                            type="button"
+                            @click="closeStats"
+                            class="rounded-2xl bg-[#0A2540] px-4 py-2 text-xs font-bold text-white hover:bg-slate-900 transition"
+                        >
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>

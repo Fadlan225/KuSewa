@@ -34,6 +34,41 @@ const filteredItems = computed(() => {
         return [item.name, item.type].join(' ').toLowerCase().includes(query);
     });
 });
+
+// ==== Kelola Semua: state & logic ====
+const showManageModal = ref(false);
+const manageSearch = ref('');
+
+// Daftar penuh (tidak terpengaruh filter pencarian header) untuk tab yang sedang aktif
+const manageList = computed(() => {
+    const source = contentTab.value === 'Kategori' ? categories.value : facilities.value;
+    const query = manageSearch.value.toLowerCase();
+    if (!query) return source;
+    return source.filter(item => {
+        const haystack = contentTab.value === 'Kategori'
+            ? [item.name, item.description]
+            : [item.name, item.type];
+        return haystack.join(' ').toLowerCase().includes(query);
+    });
+});
+
+function openManage() {
+    manageSearch.value = '';
+    showManageModal.value = true;
+}
+
+function closeManage() {
+    showManageModal.value = false;
+}
+
+function toggleActive(item) {
+    item.active = !item.active;
+}
+
+function removeItem(item) {
+    const source = contentTab.value === 'Kategori' ? categories : facilities;
+    source.value = source.value.filter(i => i.id !== item.id);
+}
 </script>
 
 <template>
@@ -109,7 +144,13 @@ const filteredItems = computed(() => {
                             <h2 class="text-sm font-bold text-slate-900">Daftar {{ contentTab }}</h2>
                             <p class="text-[11px] text-slate-400">Atur nama, tipe, dan status aktif untuk {{ contentTab.toLowerCase() }}.</p>
                         </div>
-                        <button class="text-[11px] font-semibold text-[#0A2540] hover:underline">Kelola Semua</button>
+                        <button
+                            type="button"
+                            @click="openManage"
+                            class="text-[11px] font-semibold text-[#0A2540] hover:underline"
+                        >
+                            Kelola Semua
+                        </button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full w-full text-left text-xs border-collapse">
@@ -150,5 +191,92 @@ const filteredItems = computed(() => {
                 </section>
             </div>
         </main>
+
+        <!-- Modal Kelola Semua -->
+        <Teleport to="body">
+            <div
+                v-if="showManageModal"
+                class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4"
+                @click.self="closeManage"
+            >
+                <div class="w-full max-w-xl rounded-3xl bg-white shadow-xl border border-slate-100 overflow-hidden flex flex-col max-h-[80vh]">
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between shrink-0">
+                        <div>
+                            <h3 class="text-sm font-bold text-slate-900">Kelola Semua {{ contentTab }}</h3>
+                            <p class="text-[11px] text-slate-400">Ubah status aktif atau hapus item dari daftar {{ contentTab.toLowerCase() }}.</p>
+                        </div>
+                        <button
+                            type="button"
+                            @click="closeManage"
+                            class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
+                            aria-label="Tutup"
+                        >
+                            <i class="fa-solid fa-xmark text-sm"></i>
+                        </button>
+                    </div>
+
+                    <div class="px-6 pt-4 shrink-0">
+                        <div class="flex items-center gap-3 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            <input
+                                type="text"
+                                v-model="manageSearch"
+                                :placeholder="`Cari ${contentTab.toLowerCase()}...`"
+                                class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400 text-slate-700"
+                            />
+                        </div>
+                    </div>
+
+                    <div class="p-6 space-y-2 overflow-y-auto">
+                        <div
+                            v-for="item in manageList"
+                            :key="item.id"
+                            class="flex items-center justify-between gap-4 rounded-2xl border border-slate-100 px-4 py-3"
+                        >
+                            <div class="min-w-0">
+                                <p class="text-xs font-semibold text-slate-900 truncate">{{ item.name }}</p>
+                                <p class="text-[11px] text-slate-400 truncate">
+                                    {{ contentTab === 'Kategori' ? item.description : item.type }}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <button
+                                    type="button"
+                                    @click="toggleActive(item)"
+                                    :class="[
+                                        'inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold transition',
+                                        item.active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100'
+                                    ]"
+                                >
+                                    {{ item.active ? 'Aktif' : 'Nonaktif' }}
+                                </button>
+                                <button
+                                    type="button"
+                                    @click="removeItem(item)"
+                                    class="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+                                    aria-label="Hapus"
+                                >
+                                    <i class="fa-solid fa-trash text-[11px]"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <p v-if="manageList.length === 0" class="text-center text-xs text-slate-400 py-8">
+                            Tidak ada {{ contentTab.toLowerCase() }} sesuai pencarian.
+                        </p>
+                    </div>
+
+                    <div class="px-6 py-4 border-t border-slate-100 flex justify-end shrink-0">
+                        <button
+                            type="button"
+                            @click="closeManage"
+                            class="rounded-2xl bg-[#0A2540] px-4 py-2 text-xs font-bold text-white hover:bg-slate-900 transition"
+                        >
+                            Selesai
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </Teleport>
     </div>
 </template>

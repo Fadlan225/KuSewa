@@ -7,6 +7,7 @@ import AdminSidebar from '@/Components/AdminSidebar.vue';
 const activeFilter = ref('Pending');
 const filters = ['Semua', 'Pending', 'Disetujui', 'Ditolak'];
 
+
 const searchQuery = ref('');
 
 // Mock Data Pengajuan Akun Owner & Administrator
@@ -170,7 +171,7 @@ const handleReject = (id) => {
                                     <th class="py-4 px-6">Calon Pengguna</th>
                                     <th class="py-4 px-4">Target Peran</th>
                                     <th class="py-4 px-4">NIK Terdaftar</th>
-                                    <th class="py-4 px-4">Tanggal Pengajuan</th>
+                                    <th class="py-4 px-4">Tanggal Pengajuan</th>    
                                     <th class="py-4 px-4">Status</th>
                                     <th class="py-4 px-6 text-right">Aksi</th>
                                 </tr>
