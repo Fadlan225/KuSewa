@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 import RingkasanTab from './show/RingkasanTab.vue';
 import UnitTab from './show/UnitTab.vue';
-import InformasiTab from './show/InformasiTab.vue';
+import LokasiTab from './show/LokasiTab.vue';
+import FasilitasTab from './show/FasilitasTab.vue';
 import HargaTab from './show/HargaTab.vue';
 import KetersediaanTab from './show/KetersediaanTab.vue';
 import FotoTab from './show/FotoTab.vue';
@@ -18,34 +19,41 @@ const props = defineProps({
     galleryCategories: {
         type: Array,
         default: () => [],
+    },
+    unitGalleryCategories: {
+        type: Array,
+        default: () => [],
+    },
+    masterFacilityCategories: {
+        type: Array,
+        default: () => [],
     }
 });
 
-// Edit Mode State
-const isEditing = ref(false);
-const activeTab = ref('ketersediaan'); // Set to ketersediaan temporarily to show user the changes
+const activeTab = ref('ringkasan');
 
 const form = useForm({
     title: props.asset.title || '',
     address: props.asset.address || '',
+    postal_code: props.asset.postal_code || '',
     description: props.asset.description || '',
+    detail: props.asset.detail || {},
 });
-
-const toggleEdit = () => {
-    if (isEditing.value) {
-        form.reset(); // Cancel changes
-    }
-    isEditing.value = !isEditing.value;
-};
 
 const submitForm = () => {
     form.put(route('owner.asset.update', props.asset.slug || props.asset.id), {
         preserveScroll: true,
-        onSuccess: () => {
-            isEditing.value = false;
-        },
     });
 };
+
+let saveTimeout = null;
+watch(() => form.data(), (newVal, oldVal) => {
+    // Terapkan auto-save dengan debounce (1 detik)
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+        submitForm();
+    }, 1000);
+}, { deep: true });
 
 // Helper Formatting
 const formatRupiah = (value) => {
@@ -153,29 +161,30 @@ const availableUnitsCount = computed(() => {
 
 
 
+// Sub-menu sidebar untuk tab navigasi aset (desktop only)
+const assetSubMenu = computed(() => [
+    { key: 'ringkasan',    label: 'Ringkasan',       icon: 'fa-solid fa-chart-pie',     active: activeTab.value === 'ringkasan',    onClick: () => activeTab.value = 'ringkasan' },
+    { key: 'lokasi',      label: 'Lokasi',           icon: 'fa-solid fa-location-dot',  active: activeTab.value === 'lokasi',       onClick: () => activeTab.value = 'lokasi' },
+    { key: 'fasilitas',   label: 'Fasilitas',        icon: 'fa-solid fa-star',          active: activeTab.value === 'fasilitas',    onClick: () => activeTab.value = 'fasilitas' },
+    ...(props.asset.type?.allow_units ? [{ key: 'unit', label: 'Unit', icon: 'fa-solid fa-door-open', active: activeTab.value === 'unit', onClick: () => activeTab.value = 'unit' }] : []),
+    { key: 'harga',       label: 'Harga & Aturan',  icon: 'fa-solid fa-tag',           active: activeTab.value === 'harga',        onClick: () => activeTab.value = 'harga' },
+    { key: 'ketersediaan',label: 'Ketersediaan',     icon: 'fa-solid fa-calendar-check',active: activeTab.value === 'ketersediaan', onClick: () => activeTab.value = 'ketersediaan' },
+    { key: 'foto',        label: 'Foto & Dokumen',   icon: 'fa-solid fa-images',        active: activeTab.value === 'foto',         onClick: () => activeTab.value = 'foto' },
+]);
+
 </script>
 
 <template>
     <Head :title="`Manajemen: ${asset.title}`" />
 
-    <DashboardLayout>
-
-        <!-- STICKY SAVE BAR (Appears when editing) -->
-        <transition enter-active-class="transition ease-out duration-200" enter-from-class="transform -translate-y-full" enter-to-class="transform translate-y-0" leave-active-class="transition ease-in duration-200" leave-from-class="transform translate-y-0" leave-to-class="transform -translate-y-full">
-            <div v-if="isEditing" class="fixed top-[70px] left-0 right-0 z-50 flex items-center justify-center pointer-events-none mt-4">
-                <div class="bg-[#0A2540] text-white px-6 py-3 rounded-full shadow-lg pointer-events-auto flex items-center gap-4 border border-[#14385f]">
-                    <span class="text-sm font-semibold">Anda sedang dalam Mode Edit</span>
-                    <div class="flex items-center gap-2 border-l border-[#14385f] pl-4">
-                        <button @click="toggleEdit" class="text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-slate-700 transition" :disabled="form.processing">Batal</button>
-                        <button @click="submitForm" class="text-xs font-bold px-4 py-1.5 bg-emerald-500 hover:bg-emerald-600 rounded-lg shadow-sm transition flex items-center gap-1.5" :disabled="form.processing">
-                            <i v-if="form.processing" class="fa-solid fa-spinner fa-spin"></i>
-                            <i v-else class="fa-solid fa-check"></i> Simpan
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </transition>
-
+    <DashboardLayout
+        :title="asset.title"
+        description="Kelola informasi, harga, ketersediaan, dan foto aset Anda."
+        role="Owner"
+        :breadcrumbs="[{ label: 'Dashboard', route: route('owner.dashboard') }, { label: 'Aset & Unit', route: route('owner.asset.index') }, { label: asset.title }]"
+        :subMenu="assetSubMenu"
+        subMenuParentRouteName="owner.asset.*"
+    >
         <div class="w-full space-y-6">
 
             <!-- COMPACT HEADER SECTION -->
@@ -184,7 +193,7 @@ const availableUnitsCount = computed(() => {
                 <!-- Left Image -->
                 <div class="w-full md:w-[320px] aspect-[4/3] shrink-0 bg-slate-100 relative group rounded-xl overflow-hidden shadow-sm">
                     <img :src="thumbnail" class="w-full h-full object-cover" />
-                    <div v-if="isEditing" class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                         <button class="bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Ubah Foto Utama</button>
                     </div>
                 </div>
@@ -194,14 +203,16 @@ const availableUnitsCount = computed(() => {
                     <!-- Top Info (Title & Actions) -->
                     <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
                         <div class="flex-1 min-w-0">
-                            <!-- Title (View/Edit) -->
+                            <!-- Title -->
                             <div class="flex items-center gap-3 flex-wrap mb-1.5">
-                                <h1 v-if="!isEditing" class="text-2xl font-black text-[#0A2540] truncate">{{ asset.title }}</h1>
-                                <input v-else v-model="form.title" type="text" class="text-2xl font-black text-slate-900 border-b-2 border-indigo-400 focus:border-indigo-600 focus:ring-0 px-0 py-1 w-full bg-transparent transition" placeholder="Nama Properti" />
+                                <input v-model="form.title" type="text" class="text-2xl font-black text-[#0A2540] border-b-2 border-transparent hover:border-slate-200 focus:border-indigo-600 focus:ring-0 px-0 py-1 w-full max-w-lg bg-transparent transition truncate" placeholder="Nama Properti" />
 
                                 <span v-if="asset.status === 'pending'" class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-clock"></i> Menunggu</span>
                                 <span v-else-if="asset.status === 'approved'" class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Terverifikasi</span>
                                 <span v-else-if="asset.status === 'rejected'" class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-circle-xmark"></i> Ditolak</span>
+                                
+                                <span v-if="form.processing" class="text-xs text-slate-400 flex items-center gap-1"><i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...</span>
+                                <span v-else-if="form.recentlySuccessful" class="text-xs text-emerald-500 flex items-center gap-1"><i class="fa-solid fa-check"></i> Tersimpan</span>
                             </div>
                             <div v-if="form.errors.title" class="text-xs text-rose-500 mt-1 mb-2">{{ form.errors.title }}</div>
 
@@ -217,9 +228,6 @@ const availableUnitsCount = computed(() => {
 
                         <!-- Right actions -->
                         <div class="shrink-0 flex items-center gap-2">
-                            <button @click="toggleEdit" :class="isEditing ? 'bg-amber-100 text-amber-700 hover:bg-amber-200' : 'bg-white border border-slate-200 text-[#0A2540] hover:bg-slate-50'" class="px-4 py-2 rounded-lg text-[11px] font-bold transition shadow-sm">
-                                {{ isEditing ? 'Batal Edit' : 'Edit Informasi Aset' }}
-                            </button>
                             <button class="bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 px-3 py-2 rounded-lg text-xs transition shadow-sm" @click="confirmDelete" title="Opsi Lanjutan">
                                 <i class="fa-solid fa-ellipsis-vertical px-1"></i>
                             </button>
@@ -254,8 +262,9 @@ const availableUnitsCount = computed(() => {
             <!-- TAB MENU -->
             <div class="bg-white border-b border-slate-200 flex overflow-x-auto hide-scrollbar sticky top-[70px] z-40 px-2 sm:px-6">
                 <button @click="activeTab = 'ringkasan'" :class="activeTab === 'ringkasan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Ringkasan</button>
-                <button @click="activeTab = 'unit'" :class="activeTab === 'unit' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Unit <span class="ml-1 bg-slate-100 text-slate-500 py-0.5 px-1.5 rounded-full text-[10px]">{{ asset.units?.length || 0 }}</span></button>
-                <button @click="activeTab = 'informasi'" :class="activeTab === 'informasi' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Informasi Aset</button>
+                <button @click="activeTab = 'lokasi'" :class="activeTab === 'lokasi' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Lokasi</button>
+                <button @click="activeTab = 'fasilitas'" :class="activeTab === 'fasilitas' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Fasilitas Aset</button>
+                <button v-if="asset.type?.allow_units" @click="activeTab = 'unit'" :class="activeTab === 'unit' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Unit <span class="ml-1 bg-slate-100 text-slate-500 py-0.5 px-1.5 rounded-full text-[10px]">{{ asset.units?.length || 0 }}</span></button>
                 <button @click="activeTab = 'harga'" :class="activeTab === 'harga' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Harga & Aturan</button>
                 <button @click="activeTab = 'ketersediaan'" :class="activeTab === 'ketersediaan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Ketersediaan</button>
                 <button @click="activeTab = 'foto'" :class="activeTab === 'foto' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Foto & Dokumen</button>
@@ -263,9 +272,10 @@ const availableUnitsCount = computed(() => {
 
                 <!-- TAB CONTENTS -->
                 <div class="mt-4">
-                    <RingkasanTab v-if="activeTab === 'ringkasan'" :asset="asset" :isEditing="isEditing" :form="form" :specItems="specItems" :assetFacilities="assetFacilities" />
-                    <UnitTab v-if="activeTab === 'unit'" :asset="asset" />
-                    <InformasiTab v-if="activeTab === 'informasi'" :asset="asset" :isEditing="isEditing" :form="form" :specItems="specItems" />
+                    <RingkasanTab v-if="activeTab === 'ringkasan'" :asset="asset" :form="form" :specItems="specItems" :assetFacilities="assetFacilities" />
+                    <LokasiTab v-if="activeTab === 'lokasi'" :asset="asset" :form="form" />
+                    <FasilitasTab v-if="activeTab === 'fasilitas'" :asset="asset" :assetFacilities="assetFacilities" :masterFacilityCategories="masterFacilityCategories" />
+                    <UnitTab v-if="activeTab === 'unit' && asset.type?.allow_units" :asset="asset" :galleryCategories="unitGalleryCategories" />
                     <HargaTab v-if="activeTab === 'harga'" :asset="asset" :lowestPrice="lowestPrice" />
                     <KetersediaanTab v-if="activeTab === 'ketersediaan'" :asset="asset" />
                     <FotoTab v-if="activeTab === 'foto'" :asset="asset" :galleryCategories="galleryCategories" />

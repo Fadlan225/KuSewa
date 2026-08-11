@@ -56,10 +56,10 @@ class AssetController extends Controller
             if ($assetStat->status === 'inactive') {
                 $totalPendingVerification++;
             }
-            
+
             $tUnits = $assetStat->total_units_count > 0 ? $assetStat->total_units_count : 1;
             $oUnits = $assetStat->total_units_count > 0 ? $assetStat->occupied_units_count : $assetStat->active_bookings_count;
-            
+
             $totalAsset += $tUnits;
             $totalOccupied += $oUnits;
             $totalAvailable += ($tUnits - $oUnits);
@@ -129,9 +129,9 @@ class AssetController extends Controller
             } elseif ($status === 'approved') {
                 $query->where('status', 'approved');
             } elseif ($status === 'rejected') {
-                $query->where('status', 'rejected'); 
+                $query->where('status', 'rejected');
             } elseif ($status === 'inactive') {
-                $query->where('status', 'inactive'); 
+                $query->where('status', 'inactive');
             } elseif ($status === 'Tersedia') {
                 $query->where(function($q) {
                     $q->where(function($q2) {
@@ -169,7 +169,7 @@ class AssetController extends Controller
             $hasUnits = $asset->type->allow_units ? true : false;
             $totalUnits = 1;
             $occupiedUnits = 0;
-            
+
             if ($hasUnits) {
                 $totalUnits = $asset->units->count();
                 foreach ($asset->units as $unit) {
@@ -182,7 +182,7 @@ class AssetController extends Controller
                     $occupiedUnits = 1;
                 }
             }
-            
+
             $availableUnits = $totalUnits - $occupiedUnits;
             $status = $availableUnits > 0 ? 'Tersedia' : 'Tersewa';
 
@@ -441,7 +441,7 @@ class AssetController extends Controller
         $hasUnits = $asset->type->allow_units ? true : false;
         $totalUnits = 1;
         $occupiedUnits = 0;
-        
+
         if ($hasUnits) {
             $totalUnits = $asset->units->count();
             foreach ($asset->units as $unit) {
@@ -454,18 +454,30 @@ class AssetController extends Controller
                 $occupiedUnits = 1;
             }
         }
-        
+
         $availableUnits = $totalUnits - $occupiedUnits;
         $status = $availableUnits > 0 ? 'Tersedia' : 'Tersewa';
 
         $asset->owner_status = $status;
         $asset->owner_occupancy = $hasUnits ? "{$occupiedUnits}/{$totalUnits} Unit" : ($status === 'Tersewa' ? '1/1 Unit' : '0/1 Unit');
 
-        $galleryCategories = \App\Models\galery_category::where('asset_type_id', $asset->asset_type_id)->get();
+        $galleryCategories = \App\Models\galery_category::where('asset_type_id', $asset->asset_type_id)
+            ->where('applies_to', 'asset')
+            ->get();
+
+        $unitGalleryCategories = \App\Models\galery_category::where('asset_type_id', $asset->asset_type_id)
+            ->where('applies_to', 'unit')
+            ->get();    
+
+        $masterFacilityCategories = \App\Models\facility_category::with(['facilities' => function($q) {
+            $q->where('is_active', true)->orderBy('sort_order');
+        }])->orderBy('sort_order')->get();
 
         return inertia('owner/Asset/show', [
             'asset' => $asset,
-            'galleryCategories' => $galleryCategories
+            'galleryCategories' => $galleryCategories,
+            'unitGalleryCategories' => $unitGalleryCategories,
+            'masterFacilityCategories' => $masterFacilityCategories
         ]);
     }
 
@@ -483,7 +495,7 @@ class AssetController extends Controller
     public function update(Request $request, string $id)
     {
         $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
-        
+
         $ownerProfile = $request->user()->ownerProfile;
         if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
             abort(403, 'Anda tidak berhak mengubah aset ini.');
@@ -506,7 +518,7 @@ class AssetController extends Controller
     public function destroy(Request $request, string $id)
     {
         $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
-        
+
         $ownerProfile = $request->user()->ownerProfile;
         if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
             abort(403, 'Anda tidak berhak menonaktifkan aset ini.');
@@ -524,5 +536,231 @@ class AssetController extends Controller
         $asset->update(['status' => 'inactive']);
 
         return redirect()->route('owner.asset.index')->with('success', 'Aset berhasil dinonaktifkan.');
+    }
+
+    /**
+     * Menambahkan fasilitas ke aset
+     */
+    public function storeFacility(Request $request, string $id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah aset ini.');
+        }
+
+        $validated = $request->validate([
+            'facility_id' => 'required|exists:facilities,id',
+        ]);
+
+        $asset->facilities()->syncWithoutDetaching([$validated['facility_id']]);
+
+        return redirect()->back()->with('success', 'Fasilitas berhasil ditambahkan.');
+    }
+
+    /**
+     * Menghapus fasilitas dari aset
+     */
+    public function destroyFacility(Request $request, string $id, string $facility_id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah aset ini.');
+        }
+
+        $asset->facilities()->detach($facility_id);
+
+        return redirect()->back()->with('success', 'Fasilitas berhasil dihapus.');
+    }
+
+    /**
+     * Menambahkan unit baru ke aset
+     */
+    public function storeUnit(Request $request, string $id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah aset ini.');
+        }
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
+            'detail' => 'nullable|array',
+            'facilities' => 'nullable|array',
+            'facilities.*' => 'exists:facilities,id',
+            'new_images' => 'nullable|array',
+            'new_images.*.file' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'new_images.*.category_id' => 'required|exists:galery_categories,id',
+        ]);
+
+        $unit = $asset->units()->create([
+            'name' => $validated['name'],
+            'quantity' => $validated['quantity'],
+            'detail' => $validated['detail'] ?? [],
+            'status' => 'active',
+        ]);
+
+        $unit->pricings()->create([
+            'asset_id' => $asset->id,
+            'price' => $validated['price'],
+        ]);
+
+        if (!empty($validated['facilities'])) {
+            $unit->facilities()->sync($validated['facilities']);
+        }
+
+        if (!empty($validated['new_images'])) {
+            foreach ($validated['new_images'] as $imgData) {
+                $path = $imgData['file']->store('uploads/assets', 'public');
+                $asset->images()->create([
+                    'asset_unit_id' => $unit->id,
+                    'gallery_category_id' => $imgData['category_id'],
+                    'image' => $path,
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Unit berhasil ditambahkan.');
+    }
+
+    /**
+     * Memperbarui data unit
+     */
+    public function updateUnit(Request $request, string $id, string $unit_id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah aset ini.');
+        }
+
+        $unit = $asset->units()->findOrFail($unit_id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'quantity' => 'required|integer|min:1',
+            'price' => 'required|numeric|min:0',
+            'detail' => 'nullable|array',
+            'facilities' => 'nullable|array',
+            'facilities.*' => 'exists:facilities,id',
+            'new_images' => 'nullable|array',
+            'new_images.*.file' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'new_images.*.category_id' => 'required|exists:galery_categories,id',
+            'deleted_images' => 'nullable|array',
+            'deleted_images.*' => 'exists:asset_images,id',
+        ]);
+
+        $unit->update([
+            'name' => $validated['name'],
+            'quantity' => $validated['quantity'],
+            'detail' => $validated['detail'] ?? [],
+        ]);
+
+        $pricing = $unit->pricings()->first();
+        if ($pricing) {
+            $pricing->update(['price' => $validated['price']]);
+        } else {
+            $unit->pricings()->create([
+                'asset_id' => $asset->id,
+                'price' => $validated['price'],
+            ]);
+        }
+
+        if (isset($validated['facilities'])) {
+            $unit->facilities()->sync($validated['facilities']);
+        } else {
+            $unit->facilities()->detach();
+        }
+
+        // Handle deleted images
+        if (!empty($validated['deleted_images'])) {
+            foreach ($validated['deleted_images'] as $imageId) {
+                $img = $asset->images()->where('asset_unit_id', $unit->id)->find($imageId);
+                if ($img) {
+                    if ($img->image && !str_starts_with($img->image, 'http') && !str_starts_with($img->image, 'assets/')) {
+                        Storage::disk('public')->delete($img->image);
+                    }
+                    $img->delete();
+                }
+            }
+        }
+
+        // Handle new images
+        if (!empty($validated['new_images'])) {
+            foreach ($validated['new_images'] as $imgData) {
+                $path = $imgData['file']->store('uploads/assets', 'public');
+                $asset->images()->create([
+                    'asset_unit_id' => $unit->id,
+                    'gallery_category_id' => $imgData['category_id'],
+                    'image' => $path,
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Unit berhasil diperbarui.');
+    }
+
+    /**
+     * Menambahkan foto ke aset
+     */
+    public function storeImage(Request $request, string $id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah aset ini.');
+        }
+
+        $request->validate([
+            'images' => 'required|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:2048',
+            'gallery_category_id' => 'nullable|exists:galery_categories,id',
+        ]);
+
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $path = $file->store('uploads/assets', 'public');
+
+                $asset->images()->create([
+                    'gallery_category_id' => $request->gallery_category_id,
+                    'image' => $path,
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Foto berhasil diunggah.');
+    }
+
+    /**
+     * Menghapus foto dari aset
+     */
+    public function destroyImage(Request $request, string $id, string $image_id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah aset ini.');
+        }
+
+        $image = $asset->images()->findOrFail($image_id);
+
+        // Hapus file fisik dari storage jika ada dan bukan dari seeder assets/
+        if ($image->image && !str_starts_with($image->image, 'http') && !str_starts_with($image->image, 'assets/')) {
+            Storage::disk('public')->delete($image->image);
+        }
+
+        $image->delete();
+
+        return redirect()->back()->with('success', 'Foto berhasil dihapus.');
     }
 }

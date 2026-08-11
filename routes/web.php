@@ -17,6 +17,7 @@ use App\Http\Controllers\AssetViewController;
 use App\Http\Controllers\OwnerRegistrationController;
 use App\Http\Controllers\Owner\DashboardController;
 use App\Http\Controllers\Owner\BookingController as OwnerBookingController;
+use App\Http\Controllers\Owner\MonthlyPaymentController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -60,14 +61,25 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('asset', \App\Http\Controllers\Owner\AssetController::class)->names('asset');
+    Route::post('asset/{asset}/facilities', [\App\Http\Controllers\Owner\AssetController::class, 'storeFacility'])->name('asset.facilities.store');
+    Route::delete('asset/{asset}/facilities/{facility}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyFacility'])->name('asset.facilities.destroy');
+    
+    Route::post('asset/{asset}/units', [\App\Http\Controllers\Owner\AssetController::class, 'storeUnit'])->name('asset.units.store');
+    Route::put('asset/{asset}/units/{unit}', [\App\Http\Controllers\Owner\AssetController::class, 'updateUnit'])->name('asset.units.update');
+    
+    Route::post('asset/{asset}/images', [\App\Http\Controllers\Owner\AssetController::class, 'storeImage'])->name('asset.images.store');
+    Route::delete('asset/{asset}/images/{image}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyImage'])->name('asset.images.destroy');
+
     Route::get('/bookings', [OwnerBookingController::class, 'index'])->name('bookings');
     Route::get('/bookings/{id}', [OwnerBookingController::class, 'show'])->name('bookings.show');
     Route::patch('/bookings/{id}/confirm', [OwnerBookingController::class, 'confirm'])->name('bookings.confirm');
     Route::patch('/bookings/{id}/verify-payment', [OwnerBookingController::class, 'verifyPayment'])->name('bookings.verify-payment');
     Route::patch('/bookings/{id}/reject', [OwnerBookingController::class, 'reject'])->name('bookings.reject');
     Route::patch('/bookings/{id}/complete', [OwnerBookingController::class, 'complete'])->name('bookings.complete');
-    Route::get('/monthly-payment', function(){ return Inertia::render('owner/MonthlyPayment'); })->name('monthly-payment');
+    Route::get('/monthly-payment', [MonthlyPaymentController::class, 'index'])->name('monthly-payment');
+    Route::post('/monthly-payment/submit', [MonthlyPaymentController::class, 'store'])->name('monthly-payment.store');
     Route::get('/finance', function(){ return Inertia::render('owner/finance'); })->name('finance');
+    Route::get('/income', function(){ return Inertia::render('owner/Income'); })->name('income');
     Route::get('/settings', function(){ return Inertia::render('owner/settings'); })->name('settings');
     Route::get('/help', function(){ return Inertia::render('owner/help'); })->name('help');
 });

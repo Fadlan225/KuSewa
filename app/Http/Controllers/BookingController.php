@@ -123,7 +123,7 @@ class BookingController extends Controller
         return Inertia::render('Home/Bookings/Booking', [
             'asset'          => $asset,
             'selectedPricing'=> $selectedPricing,
-            'serviceFee'     => $serviceFee['value'],
+            'serviceFee'     => $serviceFee,
             'requestParams'  => $request->all(),
             'bankAccounts'   => $bankAccounts,
             'bookedDates'    => $bookedDates
@@ -220,8 +220,16 @@ class BookingController extends Controller
                 $priceMultiplier = ($asset->type->rental_unit === 'night' && ($validated['rental_mode'] ?? '') === 'month') ? 30 : 1;
                 $subtotal = ($pricing->price * $priceMultiplier) * $validated['duration'];
 
-                $serviceFeePercent = DB::table('service_fees')->where('fee_type', 'percentage')->value('fee_value') ?? 5;
-                $serviceFee = $subtotal * ($serviceFeePercent / 100);
+                $serviceFeeRecord = DB::table('service_fees')->orderByDesc('id')->first();
+                $serviceFeeType = $serviceFeeRecord ? $serviceFeeRecord->fee_type : 'percentage';
+                $serviceFeeValue = $serviceFeeRecord ? (float) $serviceFeeRecord->fee_value : 5;
+
+                if ($serviceFeeType === 'fixed') {
+                    $serviceFee = $serviceFeeValue;
+                } else {
+                    $serviceFee = $subtotal * ($serviceFeeValue / 100);
+                }
+                
                 $total = $subtotal + $serviceFee;
 
                 $unitName = null;

@@ -11,7 +11,10 @@ import { Indonesian } from "flatpickr/dist/l10n/id.js"
 const props = defineProps({
     asset: Object,
     selectedPricing: Object,
-    serviceFee: Number,
+    serviceFee: {
+        type: Object,
+        default: () => ({ type: 'percentage', value: 5 })
+    },
     requestParams: Object,
     bankAccounts: {
         type: Array,
@@ -66,14 +69,20 @@ const priceMultiplier = computed(() => {
     return (props.asset?.type?.rental_unit === 'night' && props.requestParams?.rental_mode === 'month') ? 30 : 1;
 })
 
-const totalPrice = computed(() => {
-    const price = effectivePrice.value * priceMultiplier.value
-    const base = price * form.duration
-    return base + (base * (props.serviceFee / 100))
-})
-
 const subtotalPrice = computed(() => {
     return effectivePrice.value * priceMultiplier.value * form.duration
+})
+
+const calculatedServiceFee = computed(() => {
+    if (props.serviceFee?.type === 'fixed') {
+        return props.serviceFee.value;
+    }
+    const val = props.serviceFee?.value ?? 5;
+    return subtotalPrice.value * (val / 100);
+})
+
+const totalPrice = computed(() => {
+    return subtotalPrice.value + calculatedServiceFee.value;
 })
 
 const flatpickrConfig = computed(() => {
@@ -490,8 +499,8 @@ watch(() => form.namaPemesan, (val) => {
                             <span class="font-bold text-[#0A2540]">Rp {{ subtotalPrice.toLocaleString('id-ID') }}</span>
                         </div>
                         <div class="flex justify-between text-slate-600">
-                            <span>Biaya Layanan ({{ serviceFee }}%)</span>
-                            <span class="font-bold text-[#0A2540]">Rp {{ (subtotalPrice * (serviceFee / 100)).toLocaleString('id-ID') }}</span>
+                            <span>Biaya Layanan <template v-if="serviceFee.type === 'percentage'">({{ serviceFee.value }}%)</template></span>
+                            <span class="font-bold text-[#0A2540]">Rp {{ calculatedServiceFee.toLocaleString('id-ID') }}</span>
                         </div>
 
                         <div class="border-t border-slate-100 pt-3 flex justify-between items-baseline mt-3">

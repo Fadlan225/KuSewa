@@ -11,23 +11,14 @@ export const getOwnerMenu = (sidebarCounts) => [
     {
         label: 'Pemesanan',
         route: route('owner.bookings'),
-        routeName: 'owner.bookings',
+        routeName: 'owner.bookings*',
         icon: 'fa-solid fa-receipt',
         badge: sidebarCounts?.pendingBookingCount,
         badgeClass: 'bg-rose-500 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full'
     },
     { label: 'Biaya Bulanan', route: route('owner.monthly-payment'), routeName: 'owner.monthly-payment', icon: 'fa-solid fa-credit-card' },
-    { label: 'Keuangan', route: route('owner.finance'), routeName: 'owner.finance', icon: 'fa-solid fa-wallet' },
+    { label: 'Keuangan', route: route('owner.income'), routeName: 'owner.income', icon: 'fa-solid fa-wallet' },
     { divider: true },
-    {
-        label: 'Verifikasi Berkas',
-        route: route('owner.verification'),
-        routeName: 'owner.verification',
-        icon: 'fa-solid fa-id-card',
-        badge: sidebarCounts?.verificationCount,
-        badgeClass: sidebarCounts?.verificationCount ? 'bg-amber-100 text-amber-700 text-[9px] font-bold px-1.5 py-0.5 rounded-full' : '',
-        badgeIcon: sidebarCounts?.verificationCount ? '' : 'fa-solid fa-check text-emerald-500 text-[10px]'
-    }
 ];
 
 export const getOwnerBottomMenu = () => [

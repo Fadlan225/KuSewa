@@ -130,11 +130,11 @@ const checkAvailability = () => {
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 relative">
                 <!-- Desktop Nav Left -->
                 <button @click="prevMonth" class="hidden md:block text-slate-400 hover:text-slate-700 transition px-2 py-1 absolute left-0"><i class="fa-solid fa-chevron-left text-lg"></i></button>
-                
+
                 <!-- Search Bar Pill -->
                 <div class="flex-1 flex justify-center w-full px-0 md:px-12">
                     <div class="flex flex-col sm:flex-row items-center bg-white p-1.5 rounded-2xl sm:rounded-full border border-slate-200 shadow-sm w-full max-w-fit mx-auto gap-2 sm:gap-0">
-                        
+
                         <!-- Unit Select -->
                         <div v-if="asset.type?.allow_units && asset.units?.length > 0" class="w-full sm:w-auto px-4 border-b sm:border-b-0 sm:border-r border-slate-100 flex items-center relative">
                             <select v-model="selectedUnitForCalendar" class="w-full text-sm border-none focus:ring-0 py-2.5 bg-transparent text-slate-700 font-medium cursor-pointer appearance-none pr-8">
@@ -142,14 +142,14 @@ const checkAvailability = () => {
                             </select>
                             <i class="fa-solid fa-chevron-down absolute right-4 text-slate-400 pointer-events-none text-xs"></i>
                         </div>
-                        
+
                         <!-- Dates -->
                         <div class="flex items-center px-4 w-full sm:w-auto justify-center">
                             <input type="date" v-model="searchCheckIn" class="text-sm border-none focus:ring-0 py-2.5 bg-transparent text-slate-700 font-medium w-full max-w-[130px] cursor-pointer" title="Check In">
                             <span class="text-slate-300 px-2">-</span>
                             <input type="date" v-model="searchCheckOut" class="text-sm border-none focus:ring-0 py-2.5 bg-transparent text-slate-700 font-medium w-full max-w-[130px] cursor-pointer" title="Check Out">
                         </div>
-                        
+
                         <!-- Button -->
                         <div class="px-1.5 pb-1.5 sm:pb-0 w-full sm:w-auto mt-1 sm:mt-0">
                             <button @click="checkAvailability" class="w-full sm:w-auto bg-[#0A2540] hover:bg-slate-800 text-white rounded-xl sm:rounded-full px-7 py-2.5 text-sm font-bold transition">
@@ -208,17 +208,6 @@ const checkAvailability = () => {
                 </div>
             </div>
             
-            <!-- Legend -->
-            <div class="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-6">
-                <div class="flex items-center gap-2">
-                    <span class="font-bold text-sm text-[#0A2540]">15</span>
-                    <span class="text-xs font-semibold text-slate-500">= Tersedia</span>
-                </div>
-                <div class="flex items-center gap-2">
-                    <span class="font-bold text-sm text-slate-300">16</span>
-                    <span class="text-xs font-semibold text-slate-500">= Terisi / Diblokir</span>
-                </div>
-            </div>
         </div>
     </div>
 </template>

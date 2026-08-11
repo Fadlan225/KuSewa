@@ -96,21 +96,63 @@ const completeBooking = () => {
 };
 
 const isActionable = computed(() => ['pending', 'confirmed', 'active'].includes(props.booking.status));
+
+// ========== SUB-MENU SIDEBAR: scroll ke section ==========
+const activeSection = ref('detail');
+
+const scrollTo = (sectionId) => {
+    activeSection.value = sectionId;
+    const el = document.getElementById(sectionId);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const bookingSubMenu = computed(() => [
+    {
+        key: 'detail',
+        label: 'Detail Pesanan',
+        icon: 'fa-solid fa-file-lines',
+        active: activeSection.value === 'detail',
+        onClick: () => scrollTo('section-detail')
+    },
+    ...(props.booking.payment ? [{
+        key: 'payment',
+        label: 'Informasi Pembayaran',
+        icon: 'fa-solid fa-credit-card',
+        active: activeSection.value === 'payment',
+        onClick: () => scrollTo('section-payment')
+    }] : []),
+    {
+        key: 'penyewa',
+        label: 'Info Penyewa',
+        icon: 'fa-solid fa-user',
+        active: activeSection.value === 'penyewa',
+        onClick: () => scrollTo('section-penyewa')
+    },
+    ...(isActionable.value ? [{
+        key: 'aksi',
+        label: 'Aksi Pesanan',
+        icon: 'fa-solid fa-bolt',
+        active: activeSection.value === 'aksi',
+        onClick: () => scrollTo('section-aksi')
+    }] : []),
+]);
 </script>
 
 <template>
     <DashboardLayout
-        title="Detail Pesanan"
+        :title="`Pesanan #${booking.code}`"
         description="Tinjau detail penyewa sebelum mengonfirmasi, menolak, atau menyelesaikan pesanan."
         role="Owner"
-        :breadcrumbs="[{ label: 'Pemesanan', route: route('owner.bookings') }, { label: 'Detail Pesanan' }]"
+        :breadcrumbs="[{ label: 'Pemesanan', route: route('owner.bookings') }, { label: booking.code }]"
+        :subMenu="bookingSubMenu"
+        subMenuParentRouteName="owner.bookings*"
     >
         <Head title="Detail Pesanan - kusewa.id" />
 
         <div class="max-w-3xl mx-auto space-y-5 mt-2">
 
             <!-- ============ CARD: STATUS & IDENTITAS ============ -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5">
+            <div id="section-detail" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-5 scroll-mt-20">
                 <div class="flex items-center justify-between">
                     <h2 class="font-bold text-slate-800">Detail Pesanan</h2>
                     <span :class="['text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1.5', statusClass(booking.status)]">
@@ -165,7 +207,7 @@ const isActionable = computed(() => ['pending', 'confirmed', 'active'].includes(
             </div>
 
             <!-- ============ CARD: INFO PEMBAYARAN ============ -->
-            <div v-if="booking.payment" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+            <div v-if="booking.payment" id="section-payment" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 scroll-mt-20">
                 <h2 class="font-bold text-slate-800">Informasi Pembayaran</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
@@ -190,7 +232,7 @@ const isActionable = computed(() => ['pending', 'confirmed', 'active'].includes(
             </div>
 
             <!-- ============ CARD: INFO PENYEWA ============ -->
-            <div class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+            <div id="section-penyewa" class="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 scroll-mt-20">
                 <h2 class="font-bold text-slate-800">Informasi Penyewa</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                     <div>
@@ -213,7 +255,7 @@ const isActionable = computed(() => ['pending', 'confirmed', 'active'].includes(
             </div>
 
             <!-- ============ TOMBOL AKSI ============ -->
-            <div v-if="isActionable" class="bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-3 flex-wrap justify-end">
+            <div v-if="isActionable" id="section-aksi" class="bg-white rounded-2xl border border-slate-200 p-5 flex items-center gap-3 flex-wrap justify-end scroll-mt-20">
 
                 <!-- Jika ada pembayaran yang perlu diverifikasi -->
                 <template v-if="booking.payment?.status === 'verifying'">

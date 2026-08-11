@@ -7,12 +7,10 @@ import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
 import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
 import AssetGallery from '@/Components/UI/AssetGallery.vue';
 import AssetUnitList from '@/Components/UI/AssetUnitList.vue';
-import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
 import AssetHostProfile from '@/Components/UI/AssetHostProfile.vue';
 import AssetSpecifications from '@/Components/UI/AssetSpecifications.vue';
 import AssetReviews from '@/Components/UI/AssetReviews.vue';
-
-import AssetCalendar from '@/Components/UI/AssetCalendar.vue';
+import AssetFaq from '@/Components/UI/AssetFaq.vue';
 import flatPickr from 'vue-flatpickr-component';
 import 'flatpickr/dist/flatpickr.css';
 import { Indonesian } from "flatpickr/dist/l10n/id.js";
@@ -139,6 +137,22 @@ import FasilitasModal from './Fasilitas.vue';
 const assetFacilities = computed(() => props.asset.facilities || []);
 
 const showFasilitasModal = ref(false);
+const showFullDescription = ref(false);
+
+const assetFaqs = ref([
+    {
+        question: 'Bagaimana cara melakukan pembayaran?',
+        answer: 'Anda dapat melakukan pembayaran melalui transfer bank, e-wallet, atau kartu kredit setelah menyelesaikan proses pemesanan di website.'
+    },
+    {
+        question: 'Apakah bisa melakukan pembatalan pesanan?',
+        answer: 'Ya, pembatalan dapat dilakukan maksimal 24 jam sebelum waktu sewa dimulai dengan syarat dan ketentuan yang berlaku.'
+    },
+    {
+        question: 'Apakah ada biaya tambahan di luar harga sewa?',
+        answer: 'Harga sewa yang tertera sudah termasuk biaya dasar. Namun, beberapa aset mungkin memiliki biaya tambahan seperti biaya kebersihan atau deposit keamanan yang akan diinformasikan saat proses checkout.'
+    }
+]);
 
 const topFacilities = computed(() => {
     let flat = [];
@@ -579,7 +593,7 @@ const formattedDateRange = computed(() => {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-[#0A2540] font-sans pb-32 lg:pb-10">
 
         <!-- HERO GALLERY AND MODAL -->
-        <section id="foto">
+        <section id="foto" class="scroll-mt-32 md:scroll-mt-40">
             <AssetGallery :images="asset.images" />
         </section>
 
@@ -617,27 +631,30 @@ const formattedDateRange = computed(() => {
             <!-- KIRI (Detail) -->
             <div class="lg:col-span-2 space-y-10">
 
-                <AssetHostProfile :assetId="asset.id" :ownerProfile="asset.owner_profile" />
-
                 <AssetSpecifications :detail="asset.detail" />
 
                 <!-- Deskripsi -->
                 <div class="py-6 border-b border-gray-200">
                     <h3 class="text-lg font-bold mb-4">Tentang Aset Ini</h3>
-                    <div class="text-gray-600 leading-relaxed whitespace-pre-line text-justify">
-                        {{ asset.description }}
+                    <div class="text-gray-600 leading-relaxed whitespace-pre-line text-justify relative">
+                        <div :class="{ 'line-clamp-4': !showFullDescription, 'overflow-hidden': !showFullDescription }">
+                            {{ asset.description }}
+                        </div>
                     </div>
+                    <button v-if="asset.description && asset.description.length > 200" @click="showFullDescription = !showFullDescription" class="mt-2 text-black font-semibold underline hover:text-gray-700">
+                        {{ showFullDescription ? 'Tampilkan lebih sedikit' : 'Lihat selengkapnya >' }}
+                    </button>
                 </div>
 
                 <!-- Fasilitas Utama -->
-                <div id="fasilitas" v-if="assetFacilities.length > 0" class="py-8 border-b border-gray-200">
+                <div id="fasilitas" v-if="assetFacilities.length > 0" class="py-8 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
                     <h3 class="text-[22px] font-semibold text-[#222222] mb-6">Fasilitas yang ditawarkan</h3>
 
                     <!-- Grid Top Facilities -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-4">
-                        <div v-for="fac in topFacilities" :key="fac.id" class="flex items-center gap-4">
-                            <i :class="['fa-solid text-[18px] text-[#222222] w-6 text-center shrink-0', 'fa-' + (fac.category?.icon || 'check')]"></i>
-                            <span class="text-[15px] text-[#222222]">{{ fac.name }}</span>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6">
+                        <div v-for="fac in topFacilities" :key="fac.id" class="flex items-start gap-3">
+                            <i class="fa-solid fa-check mt-1 text-[#FFC000] text-sm shrink-0"></i>
+                            <span class="text-[15px] text-gray-700">{{ fac.name }}</span>
                         </div>
                     </div>
 
@@ -649,96 +666,8 @@ const formattedDateRange = computed(() => {
                 <!-- Modal Fasilitas -->
                 <FasilitasModal :show="showFasilitasModal" :facilitiesGrouped="facilitiesGrouped" @close="showFasilitasModal = false" />
 
-                <!-- Lokasi Map Placeholder -->
-                <div id="lokasi" class="py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold mb-4">Lokasi</h3>
-                    <p class="text-gray-600 mb-4">{{ [asset.address, asset.village?.name, asset.district?.name, asset.city?.name, asset.province?.name, 'Indonesia'].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
-                    <div class="w-full h-64 bg-gray-200 rounded-xl overflow-hidden relative flex items-center justify-center">
-                        <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://map.viamichelin.com/map/carte?map=viamichelin&z=10&lat=-0.502&lon=117.153&width=800&height=400&format=png&version=latest&layer=background')"></div>
-                        <div class="z-10 flex flex-col items-center bg-white/90 p-4 rounded-xl shadow-lg">
-                            <i class="fa-solid fa-location-dot text-red-500 text-3xl mb-2"></i>
-                            <span class="font-bold">Peta belum diintegrasikan</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SEKSI PEMILIHAN TANGGAL (KALENDER) -->
-                <AssetCalendar
-                    :assetTitle="asset.title"
-                    :assetType="asset.type?.name"
-                    :bookedDates="bookedDates"
-                    :startDate="startDate"
-                    :endDate="endDate"
-                    :selectedRentalMode="activeScheduleMode"
-                    :activeScheduleMode="activeScheduleMode"
-                    :startTime="startTime"
-                    :endTime="endTime"
-                    :durationMonths="durationMonths"
-                    :nightsCount="nightsCount"
-                    :showDateError="showDateError"
-                    :formattedDateRange="formattedDateRange"
-                    @update:startDate="startDate = $event"
-                    @update:endDate="endDate = $event"
-                    @update:selectedRentalMode="activeScheduleMode = $event"
-                    @clearError="showDateError = false"
-                >
-                        <!-- UI KHUSUS HOUR (Jam) -->
-                        <div v-if="activeScheduleMode === 'hour'" class="pt-6">
-                            <div class="mb-6">
-                                <label class="block text-sm font-bold text-[#0A2540] mb-2">Tanggal Sewa</label>
-                                <flat-pickr v-model="simpleDateString" :config="flatpickrConfig" class="w-full sm:w-1/2 border border-gray-200 rounded-xl p-3 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] placeholder:text-gray-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
-                            </div>
-
-                            <h4 class="text-sm font-bold text-[#0A2540] mb-4">Tentukan Waktu (Jam)</h4>
-                            <div class="flex items-center gap-4 max-w-md">
-                                <div class="flex-1">
-                                    <label class="block text-[11px] font-bold text-[#6C757D] mb-1.5 uppercase tracking-wider">Mulai</label>
-                                    <div class="relative">
-                                        <input v-model="startTime" type="time" :min="minTime" class="w-full border border-gray-200 rounded-xl p-3 pr-10 text-[#0A2540] font-bold text-base bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-8 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
-                                        <i class="fa-regular fa-clock text-lg absolute right-3 top-1/2 -translate-y-1/2 text-[#0A2540] pointer-events-none"></i>
-                                    </div>
-                                </div>
-                                <div class="flex-1">
-                                    <label class="block text-[11px] font-bold text-[#6C757D] mb-1.5 uppercase tracking-wider">Selesai</label>
-                                    <div class="relative">
-                                        <input v-model="endTime" type="time" :min="startTime" class="w-full border border-gray-200 rounded-xl p-3 pr-10 text-[#0A2540] font-bold text-base bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-8 [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer" />
-                                        <i class="fa-regular fa-clock text-lg absolute right-3 top-1/2 -translate-y-1/2 text-[#0A2540] pointer-events-none"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- UI KHUSUS MONTH (Bulan) -->
-                        <div v-if="activeScheduleMode === 'month'" class="pt-6">
-                            <div class="mb-4">
-                                <label class="block text-xs font-bold text-[#6C757D] mb-2 text-center">Durasi Sewa (Bulan)</label>
-                                <CircularMonthSlider v-model="durationMonths" />
-                            </div>
-
-                            <div class="mb-8">
-                                <label class="block text-sm font-bold text-[#0A2540] mb-2">Mulai Dari Tanggal</label>
-                                <p class="text-[11px] text-[#6C757D] mb-2">Tanggal yang diarsir tidak tersedia berdasarkan durasi <strong>{{ durationMonths }} bulan</strong> yang dipilih.</p>
-                                <flat-pickr v-model="simpleDateString" :config="flatpickrConfig" class="w-full sm:w-1/2 border border-gray-200 rounded-xl p-3 text-[#0A2540] font-bold text-sm bg-gray-50 focus:bg-white transition outline-none focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] placeholder:text-gray-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
-                            </div>
-
-                            <div v-if="endDate" class="mt-2 p-4 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-between">
-                                <span class="text-sm text-gray-500 font-medium">Tanggal Selesai :</span>
-                                <span class="text-sm font-bold text-[#0A2540]">
-                                    {{ endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) }}
-                                </span>
-                            </div>
-                        </div>
-
-                        <!-- Tombol Kosongkan Tanggal -->
-                        <div class="mt-8 mb-6 mr-2 flex justify-end">
-                            <button @click="clearDates" class="text-sm font-bold text-[#0A2540] hover:underline underline-offset-2 transition-all px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg">
-                                Kosongkan tanggal
-                            </button>
-                        </div>
-                </AssetCalendar>
-
             <!-- SEKSI PEMILIHAN UNIT (Jika ada units) -->
-            <div v-if="asset.units && asset.units.length > 0" id="pilihan-unit" class="py-10 border-b border-gray-200">
+            <div v-if="asset.units && asset.units.length > 0" id="pilihan-unit" class="py-10 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
                 <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Unit</h2>
                 <AssetUnitList
                     :units="asset.units"
@@ -751,6 +680,23 @@ const formattedDateRange = computed(() => {
                     @select="handleUnitSelect"
                 />
             </div>
+
+            <!-- Lokasi Map Placeholder -->
+            <div id="lokasi" class="py-6 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
+                <h3 class="text-lg font-bold mb-4">Lokasi</h3>
+                <p class="text-gray-600 mb-4">{{ [asset.address, asset.village?.name, asset.district?.name, asset.city?.name, asset.province?.name, 'Indonesia'].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
+                <div class="w-full h-64 bg-gray-200 rounded-xl overflow-hidden relative flex items-center justify-center">
+                    <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://map.viamichelin.com/map/carte?map=viamichelin&z=10&lat=-0.502&lon=117.153&width=800&height=400&format=png&version=latest&layer=background')"></div>
+                    <div class="z-10 flex flex-col items-center bg-white/90 p-4 rounded-xl shadow-lg">
+                        <i class="fa-solid fa-location-dot text-red-500 text-3xl mb-2"></i>
+                        <span class="font-bold">Peta belum diintegrasikan</span>
+                    </div>
+                </div>
+            </div>
+
+            <AssetHostProfile :assetId="asset.id" :ownerProfile="asset.owner_profile" />
+
+            <AssetFaq :faqs="assetFaqs" :assetType="asset.type?.name" />
 
             </div>
             <!-- KANAN (Booking & Contact Cards) -->
@@ -842,7 +788,7 @@ const formattedDateRange = computed(() => {
 
             <!-- SEKSI ULASAN -->
             <div class="lg:col-span-2 lg:col-start-1 order-3 lg:order-3">
-                <div id="ulasan" class="mt-8 mb-10">
+                <div id="ulasan" class="mt-8 mb-10 scroll-mt-32 md:scroll-mt-40">
                     <!-- Judul Seksi -->
                     <div class="mb-6">
                         <span class="text-primary font-extrabold text-[11px] tracking-widest uppercase">

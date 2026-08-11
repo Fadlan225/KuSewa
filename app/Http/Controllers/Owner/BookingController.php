@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\asset;
 use App\Models\asset_category;
 use App\Models\booking;
+use App\Models\OwnerBilling;
+use App\Models\service_fee as ServiceFee;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -248,6 +250,7 @@ class BookingController extends Controller
 
     /**
      * Owner menandai booking sebagai selesai: active → completed.
+     * Opsi B: Langsung update/buat invoice bulan berjalan secara real-time.
      */
     public function complete(Request $request, $id)
     {
@@ -259,8 +262,81 @@ class BookingController extends Controller
 
         $booking->update(['booking_status' => 'completed']);
 
+        // ─── Opsi B: Real-time invoice update ───────────────────────────
+        $this->upsertMonthlyBilling($booking);
+        // ────────────────────────────────────────────────────────────────
+
         return redirect()->route('owner.bookings')
             ->with('success', 'Pesanan telah ditandai selesai.');
+    }
+
+    /**
+     * Buat atau update invoice bulan berjalan milik owner yang asetnya di-complete.
+     * Dipanggil setiap kali booking berhasil di-complete (Opsi B).
+     */
+    private function upsertMonthlyBilling(booking $booking): void
+    {
+        // Ambil user_id owner dari aset
+        $booking->loadMissing('asset.ownerProfile');
+        $ownerUserId = $booking->asset?->ownerProfile?->user_id;
+        if (!$ownerUserId) return;
+
+        // Ambil tarif biaya layanan aktif
+        $serviceFee = ServiceFee::orderByDesc('id')->first();
+        if (!$serviceFee) return;
+
+        $now   = Carbon::now();
+        $year  = $now->year;
+        $month = $now->month;
+
+        // Jatuh tempo: tanggal 10 bulan berjalan (atau bulan depan jika sudah lewat)
+        $dueDate = Carbon::create($year, $month, 10);
+        if ($now->day > 10) {
+            $dueDate = $dueDate->addMonth();
+        }
+
+        DB::transaction(function () use ($ownerUserId, $year, $month, $booking, $serviceFee, $dueDate) {
+            // Cari invoice bulan ini, atau buat baru jika belum ada
+            $billing = OwnerBilling::firstOrCreate(
+                [
+                    'owner_id'     => $ownerUserId,
+                    'period_year'  => $year,
+                    'period_month' => $month,
+                ],
+                [
+                    'invoice_number'      => sprintf('INV/%d%02d/KSW/%04d', $year, $month, OwnerBilling::count() + 1),
+                    'total_transactions'  => 0,
+                    'fee_per_transaction' => $serviceFee->fee_value,
+                    'total_amount'        => 0,
+                    'status'              => 'unpaid',
+                    'due_date'            => $dueDate,
+                ]
+            );
+
+            // Jangan update jika sudah lunas atau sedang diverifikasi
+            if (in_array($billing->status, ['paid', 'waiting_verification'])) return;
+
+            // Hitung ulang dari database (akurat, anti race condition)
+            $stats = booking::where('booking_status', 'completed')
+                ->whereHas('asset', fn($q) => $q->whereHas(
+                    'ownerProfile', fn($q2) => $q2->where('user_id', $ownerUserId)
+                ))
+                ->whereYear('updated_at', $year)
+                ->whereMonth('updated_at', $month)
+                ->selectRaw('COUNT(*) as total_trx, SUM(service_fee) as total_fee')
+                ->first();
+
+            $totalTrx = (int) ($stats->total_trx ?? 0);
+            $totalAmount = $serviceFee->fee_type === 'fixed'
+                ? $serviceFee->fee_value * $totalTrx
+                : (float) ($stats->total_fee ?? 0);
+
+            $billing->update([
+                'total_transactions'  => $totalTrx,
+                'fee_per_transaction' => $serviceFee->fee_value,
+                'total_amount'        => $totalAmount,
+            ]);
+        });
     }
 
     /**

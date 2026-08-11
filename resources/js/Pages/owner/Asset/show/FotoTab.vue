@@ -1,5 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { router } from '@inertiajs/vue3';
+import ImageViewerModal from '@/Components/UI/ImageViewerModal.vue';
 
 const props = defineProps({
     asset: Object,
@@ -59,6 +61,70 @@ const addCategory = () => {
     selectedCategoryId.value = '';
     showAddCategory.value = false;
 };
+
+const fileInput = ref(null);
+const uploadTargetCategoryId = ref(null);
+const isUploading = ref(false);
+
+const triggerUpload = (categoryId) => {
+    uploadTargetCategoryId.value = categoryId;
+    fileInput.value.click();
+};
+
+const handleFileUpload = (event) => {
+    const files = event.target.files;
+    if (!files.length) return;
+
+    const formData = new FormData();
+    for (let i = 0; i < files.length; i++) {
+        formData.append('images[]', files[i]);
+    }
+    
+    if (uploadTargetCategoryId.value) {
+        formData.append('gallery_category_id', uploadTargetCategoryId.value);
+    }
+
+    router.post(route('owner.asset.images.store', props.asset.slug || props.asset.id), formData, {
+        preserveScroll: true,
+        onStart: () => { isUploading.value = true; },
+        onFinish: () => {
+            isUploading.value = false;
+            event.target.value = ''; // Reset input
+        },
+    });
+};
+
+// Image Viewer State
+const showImageViewer = ref(false);
+const viewerImages = ref([]);
+const viewerInitialIndex = ref(0);
+
+const openImageViewer = (imgUrl) => {
+    viewerImages.value = props.asset.images.map(img => img.image_url);
+    const idx = viewerImages.value.indexOf(imgUrl);
+    viewerInitialIndex.value = idx !== -1 ? idx : 0;
+    showImageViewer.value = true;
+};
+
+// Delete Modal State
+const showDeleteModal = ref(false);
+const imageToDelete = ref(null);
+
+const confirmDelete = (imageId) => {
+    imageToDelete.value = imageId;
+    showDeleteModal.value = true;
+};
+
+const executeDelete = () => {
+    if (!imageToDelete.value) return;
+    router.delete(route('owner.asset.images.destroy', [props.asset.slug || props.asset.id, imageToDelete.value]), {
+        preserveScroll: true,
+        onSuccess: () => {
+            showDeleteModal.value = false;
+            imageToDelete.value = null;
+        }
+    });
+};
 </script>
 
 <template>
@@ -96,21 +162,24 @@ const addCategory = () => {
                         <div v-for="img in group.images" :key="img.id" class="aspect-square rounded-lg border border-slate-200 overflow-hidden relative group shadow-sm bg-slate-100">
                             <img :src="img.image_url" class="w-full h-full object-cover" />
                             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
-                                <button class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-blue-600 flex items-center justify-center shadow-sm" title="Lihat">
+                                <button type="button" @click="openImageViewer(img.image_url)" class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-blue-600 flex items-center justify-center shadow-sm" title="Lihat">
                                     <i class="fa-solid fa-eye text-xs"></i>
                                 </button>
-                                <button class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-rose-600 flex items-center justify-center shadow-sm" title="Hapus">
+                                <button type="button" @click="confirmDelete(img.id)" class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-rose-600 flex items-center justify-center shadow-sm" title="Hapus">
                                     <i class="fa-solid fa-trash text-xs"></i>
                                 </button>
                             </div>
                         </div>
 
                         <!-- Upload Button (Card +) -->
-                        <button class="aspect-square rounded-lg border-2 border-dashed border-slate-300 hover:border-[#0A2540] hover:bg-slate-50 bg-slate-50/50 flex flex-col items-center justify-center gap-2 transition group shadow-sm">
+                        <button @click="triggerUpload(group.id)" :disabled="isUploading" class="aspect-square rounded-lg border-2 border-dashed border-slate-300 hover:border-[#0A2540] hover:bg-slate-50 bg-slate-50/50 flex flex-col items-center justify-center gap-2 transition group shadow-sm">
                             <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-[#0A2540] group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-plus text-lg"></i>
+                                <i v-if="isUploading && uploadTargetCategoryId === group.id" class="fa-solid fa-spinner fa-spin text-lg"></i>
+                                <i v-else class="fa-solid fa-plus text-lg"></i>
                             </div>
-                            <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#0A2540]">Unggah Foto</span>
+                            <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#0A2540]">
+                                {{ isUploading && uploadTargetCategoryId === group.id ? 'Mengunggah...' : 'Unggah Foto' }}
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -122,5 +191,33 @@ const addCategory = () => {
                 </div>
             </div>
         </div>
+        
+        <!-- Hidden File Input -->
+        <input type="file" ref="fileInput" class="hidden" multiple accept="image/*" @change="handleFileUpload" />
+
+        <!-- Custom Delete Modal -->
+        <div v-if="showDeleteModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
+                <div class="p-6 text-center">
+                    <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-2">Hapus Foto?</h3>
+                    <p class="text-sm text-slate-500">Tindakan ini tidak dapat dibatalkan. Foto akan dihapus secara permanen.</p>
+                </div>
+                <div class="flex border-t border-slate-100">
+                    <button @click="showDeleteModal = false" class="flex-1 py-3.5 text-slate-600 font-bold text-sm hover:bg-slate-50 transition border-r border-slate-100">Batal</button>
+                    <button @click="executeDelete" class="flex-1 py-3.5 text-rose-600 font-bold text-sm hover:bg-rose-50 transition">Hapus</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fullscreen Image Viewer -->
+        <ImageViewerModal 
+            :show="showImageViewer" 
+            :images="viewerImages" 
+            :initial-index="viewerInitialIndex" 
+            @close="showImageViewer = false" 
+        />
     </div>
 </template>

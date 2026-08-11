@@ -1,8 +1,14 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { ref, onMounted } from 'vue';
+import { useForm } from '@inertiajs/vue3';
+import BottomSheet from '@/Components/UI/BottomSheet.vue';
 
 const props = defineProps({
     asset: Object,
+    galleryCategories: {
+        type: Array,
+        default: () => []
+    }
 });
 
 const formatRupiah = (value) => {
@@ -13,64 +19,483 @@ const formatRupiah = (value) => {
         minimumFractionDigits: 0
     }).format(value);
 };
+
+// Modal State
+const showModal = ref(false);
+const isEditing = ref(false);
+
+const unitDetailFields = ref([]);
+const unitFacilitiesFromDB = ref([]);
+
+onMounted(async () => {
+    if (props.asset?.type?.id) {
+        try {
+            const res = await fetch(`/api/asset-type/${props.asset.type.id}/details`);
+            const json = await res.json();
+            unitDetailFields.value = json.unit_detail_fields || [];
+            unitFacilitiesFromDB.value = json.unit_facilities || [];
+        } catch (e) {
+            console.error('Gagal mengambil detail tipe aset', e);
+        }
+    }
+});
+
+const existingImages = ref([]);
+const unitImageGroups = ref([]);
+
+const form = useForm({
+    id: null,
+    name: '',
+    quantity: 1,
+    price: 0,
+    detail: {},
+    facilities: [],
+    new_images: [],
+    deleted_images: [],
+});
+
+const openCreateModal = () => {
+    isEditing.value = false;
+    form.reset();
+    form.detail = {};
+    form.facilities = [];
+    form.new_images = [];
+    form.deleted_images = [];
+    existingImages.value = [];
+    unitImageGroups.value = [];
+    showModal.value = true;
+};
+
+const openEditModal = (unit) => {
+    isEditing.value = true;
+    form.id = unit.id;
+    form.name = unit.name;
+    form.quantity = unit.quantity || 1;
+    form.price = (unit.pricings && unit.pricings.length > 0) ? unit.pricings[0].price : 0;
+    form.detail = unit.detail || {};
+    form.facilities = (unit.facilities || []).map(f => f.id);
+    form.new_images = [];
+    form.deleted_images = [];
+    existingImages.value = unit.images ? [...unit.images] : [];
+    unitImageGroups.value = [];
+    showModal.value = true;
+};
+
+// --- Image Handling Logic ---
+const addUnitImageGroup = () => {
+    unitImageGroups.value.push({
+        id: Date.now() + '_' + Math.random().toString(36).substring(2, 9),
+        category_id: '',
+        items: []
+    });
+};
+
+const handleGroupImageChange = (e, groupIndex) => {
+    const files = e.target.files;
+    if (!files.length) return;
+    
+    for (let i=0; i<files.length; i++) {
+        unitImageGroups.value[groupIndex].items.push({
+            id: Date.now() + '_' + i,
+            file: files[i],
+            preview: URL.createObjectURL(files[i])
+        });
+    }
+    e.target.value = ''; // reset
+};
+
+const removeGroupItem = (groupIndex, itemIndex) => {
+    const item = unitImageGroups.value[groupIndex].items[itemIndex];
+    if (item.preview) URL.revokeObjectURL(item.preview);
+    unitImageGroups.value[groupIndex].items.splice(itemIndex, 1);
+};
+
+const removeGroup = (groupIndex) => {
+    unitImageGroups.value[groupIndex].items.forEach(item => {
+        if (item.preview) URL.revokeObjectURL(item.preview);
+    });
+    unitImageGroups.value.splice(groupIndex, 1);
+};
+
+const removeExistingImage = (imageObj) => {
+    form.deleted_images.push(imageObj.id);
+    existingImages.value = existingImages.value.filter(img => img.id !== imageObj.id);
+};
+
+const triggerGroupFileInput = (groupId, isMobile = false) => {
+    const refName = isMobile ? `fileInput_mobile_${groupId}` : `fileInput_desktop_${groupId}`;
+    const el = document.getElementById(refName);
+    if (el) el.click();
+};
+
+const submit = () => {
+    // Build form.new_images from unitImageGroups
+    form.new_images = [];
+    for (const group of unitImageGroups.value) {
+        if (!group.category_id && group.items.length > 0) {
+            alert('Silakan pilih kategori untuk semua foto yang Anda tambahkan.');
+            return;
+        }
+        for (const item of group.items) {
+            form.new_images.push({
+                file: item.file,
+                category_id: group.category_id
+            });
+        }
+    }
+    if (isEditing.value) {
+        form.transform((data) => ({
+            ...data,
+            _method: 'put',
+        })).post(route('owner.asset.units.update', [props.asset.slug || props.asset.id, form.id]), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showModal.value = false;
+            }
+        });
+    } else {
+        form.post(route('owner.asset.units.store', props.asset.slug || props.asset.id), {
+            preserveScroll: true,
+            onSuccess: () => {
+                showModal.value = false;
+            }
+        });
+    }
+};
 </script>
 
 <template>
     <div class="animate-in fade-in duration-300">
-        <div v-if="asset.type?.allow_units" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="border-b border-slate-100 bg-white px-5 py-4 flex items-center justify-between">
                 <h2 class="font-bold text-slate-800">Daftar Unit</h2>
-                <Link :href="`/owner/asset/${asset.slug || asset.id}/units/create`" class="text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg transition shadow-sm">
+                <button @click="openCreateModal" class="text-xs font-bold text-secondary bg-primary hover:opacity-90 px-3 py-1.5 rounded-lg transition shadow-sm">
                     + Tambah Unit
-                </Link>
+                </button>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-slate-50 text-xs text-slate-500 uppercase border-y border-slate-100">
-                        <tr>
-                            <th class="px-5 py-3 font-semibold">Nama Unit</th>
-                            <th class="px-5 py-3 font-semibold">Harga Sewa</th>
-                            <th class="px-5 py-3 font-semibold">Status</th>
-                            <th class="px-5 py-3 font-semibold text-right">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100">
-                        <tr v-if="!asset.units || asset.units.length === 0">
-                            <td colspan="4" class="px-5 py-12 text-center text-slate-400">Belum ada unit yang ditambahkan.</td>
-                        </tr>
-                        <tr v-for="unit in asset.units" :key="unit.id" class="hover:bg-slate-50/80 transition">
-                            <td class="px-5 py-3 font-bold text-slate-800">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-12 h-10 rounded-md bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
-                                        <img v-if="unit.images && unit.images.length > 0" :src="unit.images[0].image_url" class="w-full h-full object-cover" />
-                                        <i v-else class="fa-solid fa-image text-slate-300 w-full h-full flex items-center justify-center"></i>
-                                    </div>
-                                    {{ unit.name }}
+            <!-- List / Table View -->
+            <div class="flex flex-col divide-y divide-slate-100">
+                <!-- Header (Desktop Only) -->
+                <div class="hidden md:grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-y border-slate-100">
+                    <div>Nama Unit</div>
+                    <div>Jumlah</div>
+                    <div>Harga Sewa</div>
+                    <div class="text-right w-10">Aksi</div>
+                </div>
+
+                <!-- Empty State -->
+                <div v-if="!asset.units || asset.units.length === 0" class="px-5 py-12 text-center text-slate-400 text-sm">
+                    Belum ada unit yang ditambahkan.
+                </div>
+
+                <!-- List Items -->
+                <div v-for="unit in asset.units" :key="unit.id" class="group relative hover:bg-slate-50/80 transition p-4 md:px-5 md:py-3 grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_auto] items-start md:items-center gap-3 md:gap-4">
+
+                    <!-- Mobile View: Card Style -->
+                    <div class="flex items-center gap-3 md:col-span-1 pr-10 md:pr-0">
+                        <div class="w-16 h-12 md:w-12 md:h-10 rounded-md bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
+                            <template v-if="unit.images && unit.images.length > 0 && (unit.images[0].image_url || unit.images[0].url)">
+                                <img :src="unit.images[0].image_url || unit.images[0].url" class="w-full h-full object-cover" />
+                            </template>
+                            <template v-else>
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <i class="fa-solid fa-image text-slate-300"></i>
                                 </div>
-                            </td>
-                            <td class="px-5 py-3 font-semibold text-[#F97316]">
-                                {{ unit.pricings && unit.pricings.length > 0 ? formatRupiah(unit.pricings[0].price) : '-' }}
-                            </td>
-                            <td class="px-5 py-3">
-                                <span :class="unit.bookings?.length ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'" class="px-2 py-1 rounded text-[10px] font-bold">
-                                    {{ unit.bookings?.length ? 'Terisi' : 'Kosong' }}
-                                </span>
-                            </td>
-                            <td class="px-5 py-3 text-right">
-                                <Link :href="`/owner/asset/${asset.slug || asset.id}/units/${unit.id}/edit`" class="text-slate-400 hover:text-blue-600 transition p-2">
-                                    <i class="fa-solid fa-pen"></i>
-                                </Link>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+                            </template>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <span class="font-bold text-slate-800 text-sm truncate">{{ unit.name }}</span>
+                            <span class="font-medium text-slate-500 text-xs md:hidden mt-0.5">
+                                {{ unit.quantity }} Unit <span class="mx-1">&bull;</span> <span class="font-semibold text-[#F97316]">{{ unit.pricings && unit.pricings.length > 0 ? formatRupiah(unit.pricings[0].price) : '-' }}</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Desktop View: Kuantitas Column -->
+                    <div class="hidden md:block font-medium text-slate-700 text-sm">
+                        {{ unit.quantity }} Unit
+                    </div>
+
+                    <!-- Desktop View: Price Column -->
+                    <div class="hidden md:block font-semibold text-[#F97316] text-sm">
+                        {{ unit.pricings && unit.pricings.length > 0 ? formatRupiah(unit.pricings[0].price) : '-' }}
+                    </div>
+
+                    <!-- Action Button -->
+                    <div class="absolute top-4 right-4 md:static md:text-right">
+                        <button @click="openEditModal(unit)" class="text-slate-400 hover:text-primary hover:bg-yellow-50 transition w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 md:border-transparent bg-slate-50 md:bg-transparent">
+                            <i class="fa-solid fa-pen text-xs"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-        <div v-else class="text-center py-12 bg-white rounded-xl border border-slate-200">
-            <i class="fa-solid fa-door-closed text-4xl text-slate-300 mb-3"></i>
-            <h3 class="text-slate-600 font-bold mb-1">Tipe Properti Tidak Mendukung Unit</h3>
-            <p class="text-sm text-slate-400">Properti ini disewakan sebagai satu kesatuan utuh.</p>
+
+        <!-- Modal Tambah/Edit Unit (Desktop Only) -->
+        <div v-if="showModal" class="hidden md:flex fixed inset-0 z-[100] items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+                <div class="p-6 border-b border-slate-100 shrink-0 flex justify-between items-center">
+                    <h3 class="text-lg font-bold text-slate-900">{{ isEditing ? 'Edit Unit' : 'Tambah Unit Baru' }}</h3>
+                    <button type="button" @click="showModal = false" class="text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                
+                <form @submit.prevent="submit" class="flex flex-col overflow-hidden min-h-0">
+                    <div class="p-6 space-y-5 overflow-y-auto min-h-0">
+                        <!-- NAMA UNIT -->
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 block mb-1">Nama Unit</label>
+                            <input v-model="form.name" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" placeholder="Contoh: Kamar Deluxe" required />
+                            <div v-if="form.errors.name" class="text-xs text-rose-500 mt-1">{{ form.errors.name }}</div>
+                        </div>
+
+                        <!-- KUANTITAS & HARGA -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 block mb-1">Kuantitas (Jumlah)</label>
+                                <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" required />
+                                <div v-if="form.errors.quantity" class="text-xs text-rose-500 mt-1">{{ form.errors.quantity }}</div>
+                            </div>
+                            <div>
+                                <label class="text-xs font-bold text-slate-500 block mb-1">Harga Sewa (Rp)</label>
+                                <input v-model="form.price" type="number" min="0" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" required />
+                                <div v-if="form.errors.price" class="text-xs text-rose-500 mt-1">{{ form.errors.price }}</div>
+                            </div>
+                        </div>
+
+                        <!-- Dynamic Detail Fields -->
+                        <div v-if="unitDetailFields.length > 0" class="border-t border-slate-100 pt-5">
+                            <h4 class="text-sm font-bold text-slate-800 mb-3">Spesifikasi Unit</h4>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div v-for="field in unitDetailFields" :key="field.key">
+                                    <label class="text-xs font-bold text-slate-500 block mb-1">
+                                        {{ field.label }} <span v-if="field.required" class="text-rose-500">*</span>
+                                    </label>
+
+                                    <template v-if="field.type === 'select'">
+                                        <select v-model="form.detail[field.key]" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" :required="field.required">
+                                            <option value="" disabled>Pilih {{ field.label }}</option>
+                                            <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+                                        </select>
+                                    </template>
+                                    <template v-else-if="field.type === 'number'">
+                                        <input v-model="form.detail[field.key]" type="number" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" :placeholder="field.label" :required="field.required" min="0" />
+                                    </template>
+                                    <template v-else>
+                                        <input v-model="form.detail[field.key]" :type="field.type === 'time' ? 'time' : 'text'" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" :placeholder="field.label" :required="field.required" />
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Unit Facilities -->
+                        <div v-if="unitFacilitiesFromDB.length > 0" class="border-t border-slate-100 pt-5">
+                            <h4 class="text-sm font-bold text-slate-800 mb-3">Fasilitas Unit</h4>
+                            <div class="grid grid-cols-3 gap-3">
+                                <label v-for="fac in unitFacilitiesFromDB" :key="fac.id" class="flex items-center gap-2 cursor-pointer group">
+                                    <input type="checkbox" :value="fac.id" v-model="form.facilities" class="w-4 h-4 text-[#FFC000] border-slate-300 rounded focus:ring-[#FFC000]" />
+                                    <span class="text-xs text-slate-600 group-hover:text-slate-800 transition line-clamp-1">{{ fac.name }}</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Foto Unit (Desktop) -->
+                        <div class="border-t border-slate-100 pt-5">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="text-sm font-bold text-slate-800">Foto Unit</h4>
+                                <button type="button" @click="addUnitImageGroup" class="text-xs font-bold text-[#0A2540] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition shadow-sm">
+                                    + Tambah Kategori Foto
+                                </button>
+                            </div>
+
+                            <div class="space-y-4">
+                                <!-- Existing Images (Edit Mode) -->
+                                <div v-if="existingImages.length > 0" class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-3 mb-6">
+                                    <div v-for="img in existingImages" :key="img.id" class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
+                                        <img :src="img.image_url" class="w-full h-full object-cover" />
+                                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center p-2">
+                                            <span class="text-white text-[10px] font-bold text-center bg-black/50 px-2 py-1 rounded-full mb-2 truncate max-w-full">
+                                                {{ img.gallery_category?.name || 'Umum' }}
+                                            </span>
+                                            <button type="button" @click="removeExistingImage(img)" class="w-8 h-8 rounded-full bg-white text-rose-500 hover:text-rose-600 flex items-center justify-center shadow-sm">
+                                                <i class="fa-solid fa-trash text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Grouped New Images -->
+                                <div v-for="(group, gIdx) in unitImageGroups" :key="group.id" class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <select v-model="group.category_id" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full max-w-[250px] transition" required>
+                                            <option value="" disabled>Pilih Kategori Foto</option>
+                                            <option v-for="cat in galleryCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                                        </select>
+                                        <button type="button" @click="removeGroup(gIdx)" class="text-xs font-bold text-rose-500 hover:underline px-2">Hapus Kategori</button>
+                                    </div>
+                                    
+                                    <div class="flex flex-wrap gap-3">
+                                        <div v-for="(item, iIdx) in group.items" :key="item.id" class="w-20 h-20 rounded-lg overflow-hidden border border-slate-300 relative group/item">
+                                            <img :src="item.preview" class="w-full h-full object-cover" />
+                                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition flex items-center justify-center">
+                                                <button type="button" @click="removeGroupItem(gIdx, iIdx)" class="text-white text-xs bg-rose-500 rounded-full w-6 h-6 flex items-center justify-center shadow-sm">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="w-20 h-20 shrink-0 bg-white rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-100 transition" @click="triggerGroupFileInput(group.id, false)">
+                                            <i class="fa-solid fa-plus text-slate-400 text-xl"></i>
+                                            <input :id="'fileInput_desktop_' + group.id" type="file" class="hidden" multiple accept="image/*" @change="e => handleGroupImageChange(e, gIdx)" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-6 border-t border-slate-100 shrink-0 flex items-center gap-3">
+                        <button type="button" @click="showModal = false" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition text-sm">
+                            Batal
+                        </button>
+                        <button type="submit" :disabled="form.processing" class="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition text-sm flex items-center justify-center gap-2">
+                            <i v-if="form.processing" class="fa-solid fa-spinner fa-spin"></i>
+                            {{ isEditing ? 'Simpan Perubahan' : 'Simpan Unit' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
+
+        <!-- Bottom Sheet Tambah/Edit Unit (Mobile Only) -->
+        <BottomSheet v-model="showModal" :title="isEditing ? 'Edit Unit' : 'Tambah Unit Baru'" heightClass="h-[90vh]">
+            <form @submit.prevent="submit" class="flex flex-col h-full overflow-hidden">
+                <div class="p-5 space-y-5 overflow-y-auto flex-1 pb-10">
+                    <!-- NAMA UNIT -->
+                    <div>
+                        <label class="text-xs font-bold text-slate-500 block mb-1">Nama Unit</label>
+                        <input v-model="form.name" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" placeholder="Contoh: Kamar Deluxe" required />
+                        <div v-if="form.errors.name" class="text-xs text-rose-500 mt-1">{{ form.errors.name }}</div>
+                    </div>
+
+                    <!-- KUANTITAS & HARGA -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 block mb-1">Kuantitas</label>
+                            <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" required />
+                            <div v-if="form.errors.quantity" class="text-xs text-rose-500 mt-1">{{ form.errors.quantity }}</div>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 block mb-1">Harga Sewa (Rp)</label>
+                            <input v-model="form.price" type="number" min="0" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" required />
+                            <div v-if="form.errors.price" class="text-xs text-rose-500 mt-1">{{ form.errors.price }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Detail Fields -->
+                    <div v-if="unitDetailFields.length > 0" class="border-t border-slate-100 pt-5">
+                        <h4 class="text-sm font-bold text-slate-800 mb-3">Spesifikasi Unit</h4>
+                        <div class="grid grid-cols-1 gap-4">
+                            <div v-for="field in unitDetailFields" :key="field.key">
+                                <label class="text-xs font-bold text-slate-500 block mb-1">
+                                    {{ field.label }} <span v-if="field.required" class="text-rose-500">*</span>
+                                </label>
+
+                                <template v-if="field.type === 'select'">
+                                    <select v-model="form.detail[field.key]" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" :required="field.required">
+                                        <option value="" disabled>Pilih {{ field.label }}</option>
+                                        <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+                                    </select>
+                                </template>
+                                <template v-else-if="field.type === 'number'">
+                                    <input v-model="form.detail[field.key]" type="number" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" :placeholder="field.label" :required="field.required" min="0" />
+                                </template>
+                                <template v-else>
+                                    <input v-model="form.detail[field.key]" :type="field.type === 'time' ? 'time' : 'text'" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" :placeholder="field.label" :required="field.required" />
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Unit Facilities -->
+                    <div v-if="unitFacilitiesFromDB.length > 0" class="border-t border-slate-100 pt-5">
+                        <h4 class="text-sm font-bold text-slate-800 mb-3">Fasilitas Unit</h4>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label v-for="fac in unitFacilitiesFromDB" :key="fac.id" class="flex items-center gap-2 cursor-pointer group py-1">
+                                <input type="checkbox" :value="fac.id" v-model="form.facilities" class="w-5 h-5 text-[#FFC000] border-slate-300 rounded focus:ring-[#FFC000]" />
+                                <span class="text-xs text-slate-600 transition">{{ fac.name }}</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Foto Unit (Mobile) -->
+                    <div class="border-t border-slate-100 pt-5">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-sm font-bold text-slate-800">Foto Unit</h4>
+                            <button type="button" @click="addUnitImageGroup" class="text-xs font-bold text-[#0A2540] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition shadow-sm">
+                                + Kategori Foto
+                            </button>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- Existing Images -->
+                            <div v-if="existingImages.length > 0" class="grid grid-cols-2 gap-3 mb-4">
+                                <div v-for="img in existingImages" :key="img.id" class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
+                                    <img :src="img.image_url" class="w-full h-full object-cover" />
+                                    <div class="absolute inset-0 bg-black/40 transition flex flex-col items-center justify-center p-2">
+                                        <span class="text-white text-[10px] font-bold text-center bg-black/60 px-2 py-1 rounded-full mb-2 truncate max-w-full">
+                                            {{ img.gallery_category?.name || 'Umum' }}
+                                        </span>
+                                        <button type="button" @click="removeExistingImage(img)" class="w-8 h-8 rounded-full bg-white text-rose-500 hover:text-rose-600 flex items-center justify-center shadow-sm">
+                                            <i class="fa-solid fa-trash text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Grouped New Images (Mobile) -->
+                            <div v-for="(group, gIdx) in unitImageGroups" :key="group.id" class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                                <div class="flex items-center gap-2">
+                                    <select v-model="group.category_id" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2.5 flex-1 transition" required>
+                                        <option value="" disabled>Pilih Kategori</option>
+                                        <option v-for="cat in galleryCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
+                                    </select>
+                                    <button type="button" @click="removeGroup(gIdx)" class="w-10 h-10 shrink-0 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-rose-500 shadow-sm">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <div class="flex gap-3 overflow-x-auto pb-1 snap-x">
+                                    <div v-for="(item, iIdx) in group.items" :key="item.id" class="w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-slate-300 relative snap-start">
+                                        <img :src="item.preview" class="w-full h-full object-cover" />
+                                        <div class="absolute top-1 right-1">
+                                            <button type="button" @click="removeGroupItem(gIdx, iIdx)" class="text-white text-xs bg-rose-500 rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="w-20 h-20 shrink-0 bg-white rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer snap-start" @click="triggerGroupFileInput(group.id, true)">
+                                        <i class="fa-solid fa-plus text-slate-400 text-lg mb-1"></i>
+                                        <span class="text-[9px] font-semibold text-slate-500">Tambah</span>
+                                        <input :id="'fileInput_mobile_' + group.id" type="file" class="hidden" multiple accept="image/*" @change="e => handleGroupImageChange(e, gIdx)" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer (dalam form) -->
+                <div class="p-5 border-t border-[#6C757D]/10 bg-white shrink-0">
+                    <button type="submit" :disabled="form.processing" class="w-full py-3 bg-primary hover:bg-primary/90 text-slate-800 font-bold rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
+                        <i v-if="form.processing" class="fa-solid fa-spinner fa-spin"></i>
+                        {{ isEditing ? 'Simpan Perubahan' : 'Simpan Unit' }}
+                    </button>
+                </div>
+            </form>
+        </BottomSheet>
     </div>
 </template>

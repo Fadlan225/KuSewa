@@ -93,7 +93,7 @@ const topFacilities = computed(() => {
                          @touchend="onTouchEnd">
                         <div class="w-12 h-1.5 bg-[#6C757D]/30 rounded-full"></div>
                     </div>
-                    
+
                     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
                         <h2 class="text-lg md:text-xl font-extrabold text-[#0A2540]">Semua Fasilitas</h2>
                         <button @click="close" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-[#0A2540] transition">
@@ -103,27 +103,17 @@ const topFacilities = computed(() => {
 
                     <!-- Content -->
                     <div class="flex-1 overflow-y-auto p-6 hide-scrollbar bg-white">
-                        
-                        <!-- Top facilities preview (Flat list combined) -->
-                        <div class="bg-white border border-[#EBEBEB] rounded-xl p-6 mb-8">
-                            <div class="grid grid-cols-3 md:grid-cols-4 gap-y-6 gap-x-2">
-                                <div v-for="fac in topFacilities" :key="fac.id" class="flex flex-col items-center justify-start text-center gap-2.5">
-                                    <i :class="['fa-solid text-[20px] text-[#222222]', 'fa-' + (fac.category?.icon || 'check')]"></i>
-                                    <span class="text-[13px] text-[#222222] leading-tight px-1">{{ fac.name }}</span>
-                                </div>
-                            </div>
-                        </div>
 
                         <!-- All Facilities Grouped -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
                             <div v-for="group in facilitiesGrouped" :key="group.name" class="flex flex-col">
-                                <div class="flex items-center gap-3 mb-5 pb-2">
-                                    <span class="text-[16px] font-semibold text-[#222222] capitalize">{{ group.name }}</span>
+                                <div class="flex items-center gap-3 mb-4 pb-2 border-b border-gray-100">
+                                    <span class="text-[16px] font-bold text-[#0A2540] capitalize">{{ group.name }}</span>
                                 </div>
-                                <ul class="space-y-4 pl-4">
-                                    <li v-for="fac in group.facilities" :key="fac.id" class="flex items-start gap-3 text-[15px] text-[#222222]">
-                                        <i class="fa-regular fa-circle text-[6px] mt-[8px] shrink-0 text-[#222222]"></i>
-                                        <span class="leading-relaxed">{{ fac.name }}</span>
+                                <ul class="space-y-4">
+                                    <li v-for="fac in group.facilities" :key="fac.id" class="flex items-start gap-3">
+                                        <i class="fa-solid fa-check mt-1 text-[#FFC000] text-sm shrink-0"></i>
+                                        <span class="text-[15px] text-gray-700 leading-relaxed">{{ fac.name }}</span>
                                     </li>
                                 </ul>
                             </div>

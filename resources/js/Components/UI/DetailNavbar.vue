@@ -135,6 +135,16 @@ const nativeShare = async () => {
 // Scroll Spy logic for active section
 const activeSection = ref('');
 
+const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (el) {
+        // Offset for sticky headers: Navbar (~64px) + StickySubNavSearch (~60px) + some padding
+        const yOffset = -140; 
+        const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+};
+
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
     supportsNativeShare.value = !!navigator.share;
@@ -182,6 +192,7 @@ onUnmounted(() => {
                     <!-- Desktop Scroll Menu -->
                     <div v-if="showSections" class="hidden md:flex gap-6 transition-all duration-300">
                         <a v-for="section in sections" :key="section.id" :href="`#${section.id}`" 
+                           @click.prevent="scrollToSection(section.id)"
                            class="text-sm transition-all duration-200 border-b-2 py-1"
                            :class="activeSection === section.id ? 'font-extrabold text-[#0A2540] border-[#FFC000]' : 'font-bold text-gray-500 hover:text-[#0A2540] border-transparent'">
                             {{ section.label }}

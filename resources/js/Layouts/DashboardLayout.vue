@@ -10,6 +10,9 @@ const props = defineProps({
     description: { type: String, default: '' },
     role: { type: String, required: true },
     breadcrumbs: { type: Array, default: () => [] },
+    // Sub-menu kontekstual untuk detail page (misal: tab aset)
+    subMenu: { type: Array, default: () => [] },
+    subMenuParentRouteName: { type: String, default: null },
 });
 
 const page = usePage();
@@ -61,6 +64,8 @@ watch(() => page.url, () => {
             :role="role"
             :menu="menu"
             :bottomMenu="bottomMenu"
+            :subMenu="subMenu"
+            :subMenuParentRouteName="subMenuParentRouteName"
         />
 
         <!-- Mobile Sidebar Overlay -->

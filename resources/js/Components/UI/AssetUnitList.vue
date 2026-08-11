@@ -214,17 +214,17 @@ const handleSelect = (unit, pricing) => {
                     <!-- Title -->
                     <h3 class="font-extrabold text-[#0A2540] text-lg mb-3">{{ unit.name }}</h3>
 
-                    <!-- Specs Row (Luas, Bed, View) -->
+                    <!-- Specs Row (Dynamic Details) -->
                     <div class="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-[#0A2540] mb-2">
-                        <span v-if="unit.detail?.luas" class="flex items-center gap-1.5"><i class="fa-solid fa-ruler-combined"></i> {{ unit.detail.luas }}</span>
-                        <span v-if="unit.detail?.bed" class="flex items-center gap-1.5"><i class="fa-solid fa-bed"></i> {{ unit.detail.bed }}</span>
-                        <span v-if="unit.detail?.view" class="flex items-center gap-1.5"><i class="fa-solid fa-mountain-sun"></i> {{ unit.detail.view }}</span>
+                        <span v-for="(val, key) in (unit.detail || {})" :key="key" class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle text-[4px] text-gray-400"></i> {{ val }} {{ key }}
+                        </span>
                     </div>
 
                     <!-- Facility Row (Highlights) -->
-                    <div v-if="unit.detail?.fasilitas?.length" class="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-[#FFC000]">
-                        <span v-for="fac in unit.detail.fasilitas.slice(0, 3)" :key="fac" class="flex items-center gap-1.5 text-[#0A2540]">
-                            <i class="fa-solid fa-check text-[#FFC000]"></i> {{ fac }}
+                    <div v-if="unit.facilities && unit.facilities.length" class="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-[#FFC000]">
+                        <span v-for="fac in unit.facilities.slice(0, 3)" :key="fac.id" class="flex items-center gap-1.5 text-[#0A2540]">
+                            <i class="fa-solid fa-check text-[#FFC000]"></i> {{ fac.name }}
                         </span>
                     </div>
 
@@ -238,11 +238,8 @@ const handleSelect = (unit, pricing) => {
 
                         <!-- Main Info in Card -->
                         <div class="space-y-2 mb-4 text-[12px] font-bold text-[#0A2540]">
-                            <div v-if="unit.detail?.kapasitas" class="flex items-center gap-3">
-                                <i class="fa-solid fa-user-group w-4 text-center"></i> {{ unit.detail.kapasitas }}
-                            </div>
-                            <div v-if="unit.detail?.bed" class="flex items-center gap-3">
-                                <i class="fa-solid fa-bed w-4 text-center"></i> {{ unit.detail.bed }}
+                            <div v-for="(val, key) in Object.entries(unit.detail || {}).slice(0, 2)" :key="key" class="flex items-center gap-3">
+                                <i class="fa-solid fa-circle text-[4px] text-gray-400 w-4 text-center"></i> {{ val[1] }} {{ val[0] }}
                             </div>
                         </div>
 
@@ -405,17 +402,12 @@ const handleSelect = (unit, pricing) => {
                             <div>
                                 <h4 class="text-sm font-bold text-[#6C757D] uppercase tracking-wider mb-3">Info Kamar</h4>
                                 <div class="space-y-3 text-sm text-[#0A2540]">
-                                    <div v-if="selectedDetailUnit.detail?.luas" class="flex items-center gap-3">
-                                        <i class="fa-solid fa-ruler-combined w-5 text-center text-[#FFC000]"></i>
-                                        <span class="font-medium">{{ selectedDetailUnit.detail.luas }}</span>
-                                    </div>
-                                    <div v-if="selectedDetailUnit.detail?.bed" class="flex items-center gap-3">
-                                        <i class="fa-solid fa-bed w-5 text-center text-[#FFC000]"></i>
-                                        <span class="font-medium">{{ selectedDetailUnit.detail.bed }}</span>
-                                    </div>
-                                    <div v-if="selectedDetailUnit.detail?.kapasitas" class="flex items-center gap-3">
-                                        <i class="fa-solid fa-user-group w-5 text-center text-[#FFC000]"></i>
-                                        <span class="font-medium">{{ selectedDetailUnit.detail.kapasitas }}</span>
+                                    <div v-for="(val, key) in (selectedDetailUnit?.detail || {})" :key="key" class="flex items-center gap-3">
+                                        <i class="fa-solid fa-circle text-[6px] w-5 text-center text-gray-400"></i>
+                                        <div class="flex flex-col">
+                                            <span class="text-xs text-gray-500">{{ key }}</span>
+                                            <span class="font-medium">{{ val }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -423,14 +415,15 @@ const handleSelect = (unit, pricing) => {
                             <hr class="border-gray-200" />
 
                             <!-- Fasilitas -->
-                            <div v-if="selectedDetailUnit.detail?.fasilitas?.length">
+                            <div>
                                 <h4 class="text-sm font-bold text-[#6C757D] uppercase tracking-wider mb-3">Fasilitas Kamar</h4>
                                 <ul class="grid grid-cols-2 gap-y-2 gap-x-4 text-sm text-[#0A2540]">
-                                    <li v-for="fac in selectedDetailUnit.detail.fasilitas" :key="fac" class="flex items-center gap-2">
+                                    <li v-for="fac in selectedDetailUnit?.facilities" :key="fac.id" class="flex items-center gap-2">
                                         <div class="w-1.5 h-1.5 bg-[#FFC000] rounded-full shrink-0"></div>
-                                        <span>{{ fac }}</span>
+                                        <span>{{ fac.name }}</span>
                                     </li>
                                 </ul>
+                                <div v-if="!selectedDetailUnit?.facilities?.length" class="text-sm text-gray-500 italic">Belum ada fasilitas.</div>
                             </div>
                         </div>
                     </div>
@@ -493,17 +486,12 @@ const handleSelect = (unit, pricing) => {
                         <div>
                             <h4 class="text-[11px] font-bold text-[#6C757D] uppercase tracking-wider mb-3">Info Kamar</h4>
                             <div class="space-y-3 text-sm text-[#0A2540]">
-                                <div v-if="selectedDetailUnit.detail?.luas" class="flex items-center gap-3">
-                                    <i class="fa-solid fa-ruler-combined w-5 text-center text-[#FFC000]"></i>
-                                    <span class="font-medium">{{ selectedDetailUnit.detail.luas }}</span>
-                                </div>
-                                <div v-if="selectedDetailUnit.detail?.bed" class="flex items-center gap-3">
-                                    <i class="fa-solid fa-bed w-5 text-center text-[#FFC000]"></i>
-                                    <span class="font-medium">{{ selectedDetailUnit.detail.bed }}</span>
-                                </div>
-                                <div v-if="selectedDetailUnit.detail?.kapasitas" class="flex items-center gap-3">
-                                    <i class="fa-solid fa-user-group w-5 text-center text-[#FFC000]"></i>
-                                    <span class="font-medium">{{ selectedDetailUnit.detail.kapasitas }}</span>
+                                <div v-for="(val, key) in (selectedDetailUnit?.detail || {})" :key="key" class="flex items-center gap-3">
+                                    <i class="fa-solid fa-circle text-[6px] w-5 text-center text-gray-400"></i>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs text-gray-500">{{ key }}</span>
+                                        <span class="font-medium">{{ val }}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -511,14 +499,15 @@ const handleSelect = (unit, pricing) => {
                         <hr class="border-gray-200" />
 
                         <!-- Fasilitas -->
-                        <div v-if="selectedDetailUnit.detail?.fasilitas?.length">
+                        <div>
                             <h4 class="text-[11px] font-bold text-[#6C757D] uppercase tracking-wider mb-3">Fasilitas Kamar</h4>
-                            <ul class="flex flex-col gap-3 text-sm text-[#0A2540]">
-                                <li v-for="fac in selectedDetailUnit.detail.fasilitas" :key="fac" class="flex items-center gap-3">
-                                    <div class="w-1.5 h-1.5 bg-[#FFC000] rounded-full shrink-0"></div>
-                                    <span>{{ fac }}</span>
-                                </li>
-                            </ul>
+                            <div class="grid grid-cols-1 gap-3">
+                                <div v-for="fac in selectedDetailUnit?.facilities" :key="fac.id" class="flex items-center gap-3">
+                                    <i class="fa-solid fa-check text-[#FFC000] text-sm"></i>
+                                    <span class="text-sm text-gray-700">{{ fac.name }}</span>
+                                </div>
+                                <div v-if="!selectedDetailUnit?.facilities?.length" class="text-sm text-gray-500 italic">Belum ada fasilitas.</div>
+                            </div>
                         </div>
                     </div>
                 </div>

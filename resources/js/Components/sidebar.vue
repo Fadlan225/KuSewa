@@ -6,6 +6,9 @@ const props = defineProps({
     role: { type: String, default: 'User' },
     menu: { type: Array, default: () => [] },
     bottomMenu: { type: Array, default: () => [] },
+    // Sub-menu kontekstual (tampil di bawah parent aktif saat di detail page)
+    subMenu: { type: Array, default: () => [] },
+    subMenuParentRouteName: { type: String, default: null },
 });
 
 const roleBadgeClass = computed(() => props.role === 'Admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-[#FFC000]/20 text-[#0A2540]');
@@ -127,23 +130,50 @@ const handleLogout = () => {
                     </div>
 
                     <!-- Otomatis mendeteksi status aktif dari rute laravel menggunakan routeName -->
-                    <Link
-                        v-else
-                        :href="item.route"
-                        :class="[route().current(item.routeName) ? 'bg-slate-100 text-[#0A2540] font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium', 'flex items-center justify-between px-3 py-2 rounded-lg transition-colors']"
-                    >
-                        <div class="flex items-center gap-3">
-                            <i :class="[item.icon, route().current(item.routeName) ? 'text-[#0A2540]' : 'text-slate-400', 'w-4 text-center']"></i>
-                            <span>{{ item.label }}</span>
-                        </div>
+                    <template v-else>
+                        <Link
+                            :href="item.route"
+                            :class="[route().current(item.routeName) ? 'bg-slate-100 text-[#0A2540] font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium', 'flex items-center justify-between px-3 py-2 rounded-lg transition-colors']"
+                        >
+                            <div class="flex items-center gap-3">
+                                <i :class="[item.icon, route().current(item.routeName) ? 'text-[#0A2540]' : 'text-slate-400', 'w-4 text-center']"></i>
+                                <span>{{ item.label }}</span>
+                            </div>
 
-                        <template v-if="item.badge || item.badgeIcon">
-                            <i v-if="item.badgeIcon && !item.badge" :class="item.badgeIcon"></i>
-                            <span v-else-if="item.badge" :class="item.badgeClass || 'bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold'">
-                                {{ item.badge }}
-                            </span>
-                        </template>
-                    </Link>
+                            <template v-if="item.badge || item.badgeIcon">
+                                <i v-if="item.badgeIcon && !item.badge" :class="item.badgeIcon"></i>
+                                <span v-else-if="item.badge" :class="item.badgeClass || 'bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold'">
+                                    {{ item.badge }}
+                                </span>
+                            </template>
+                        </Link>
+
+                        <!-- Sub-menu kontekstual (tampil jika parent aktif & ada subMenu) -->
+                        <div
+                            v-if="subMenu.length > 0 && subMenuParentRouteName && item.routeName === subMenuParentRouteName && route().current(item.routeName)"
+                            class="ml-3 pl-3 border-l-2 border-slate-200 space-y-0.5 py-1"
+                        >
+                            <button
+                                v-for="sub in subMenu"
+                                :key="sub.key"
+                                @click="sub.onClick && sub.onClick()"
+                                :class="[
+                                    sub.active
+                                        ? 'bg-[#FFC000]/10 text-[#0A2540] font-bold'
+                                        : 'text-slate-500 hover:bg-slate-50 font-medium',
+                                    'w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg transition-colors text-left'
+                                ]"
+                            >
+                                <div class="flex items-center gap-2">
+                                    <i :class="[sub.icon, sub.active ? 'text-[#0A2540]' : 'text-slate-400', 'w-3.5 text-center text-[11px]']"></i>
+                                    <span class="text-[11px]">{{ sub.label }}</span>
+                                </div>
+                                <span v-if="sub.badge" class="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full shrink-0">
+                                    {{ sub.badge }}
+                                </span>
+                            </button>
+                        </div>
+                    </template>
                 </template>
             </nav>
         </div>
