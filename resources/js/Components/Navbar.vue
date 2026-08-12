@@ -33,6 +33,7 @@ const ownerStatus = computed(() => {
 
 const isVerifiedOwner = computed(() => ownerStatus.value === 'verified');
 const isPendingOwner = computed(() => ownerStatus.value === 'pending' || ownerStatus.value === 'rejected');
+const isAdmin = computed(() => page.props.auth.user?.role === 'admin');
 
 const userProfilePhoto = computed(() => {
     const photo = page.props.auth.user?.profile_photo;
@@ -63,7 +64,7 @@ const {
     suggestions, isLoadingSuggestions, fetchSuggestions, performSearch,
     // Lokasi
     setLocationSuggestions,
-    
+
     priceDistribution, handleBucketClick,
 } = useHomeSearch();
 
@@ -225,11 +226,11 @@ const initials = computed(() => {
                                     style="min-height: 38px;"
                                 >
                                     <span v-if="keywordQuery" class="truncate pr-4 text-[#0A2540] relative z-10">{{ keywordQuery }}</span>
-                                    <AnimatedPlaceholder 
+                                    <AnimatedPlaceholder
                                         v-else
-                                        :placeholders="page.props.dynamicPlaceholders" 
-                                        :isFocused="false" 
-                                        :hasValue="!!keywordQuery" 
+                                        :placeholders="page.props.dynamicPlaceholders"
+                                        :isFocused="false"
+                                        :hasValue="!!keywordQuery"
                                         offsetClass="left-10"
                                         class="text-[#6C757D]"
                                     />
@@ -377,8 +378,8 @@ const initials = computed(() => {
                         <div v-if="desktopNavActiveMenu" @click="desktopNavActiveMenu = null" class="fixed inset-0 z-40"></div>
 
                         <!-- Search Bar -->
-                        <div 
-                            class="relative w-full z-50 rounded-full transition-all border overflow-hidden" 
+                        <div
+                            class="relative w-full z-50 rounded-full transition-all border overflow-hidden"
                             :class="[
                                 isCurrentlyTransparent
                                     ? 'bg-white/10 border-white/30'
@@ -388,11 +389,11 @@ const initials = computed(() => {
                             ]"
                         >
                             <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs transition-colors duration-300 z-[60]" :class="isCurrentlyTransparent && desktopNavActiveMenu !== 'keyword' ? 'text-white' : 'text-[#6C757D]'"></i>
-                            
-                            <AnimatedPlaceholder 
-                                :placeholders="page.props.dynamicPlaceholders" 
-                                :isFocused="desktopNavActiveMenu === 'keyword'" 
-                                :hasValue="!!keywordQuery" 
+
+                            <AnimatedPlaceholder
+                                :placeholders="page.props.dynamicPlaceholders"
+                                :isFocused="desktopNavActiveMenu === 'keyword'"
+                                :hasValue="!!keywordQuery"
                                 offsetClass="left-9 text-xs"
                                 :class="isCurrentlyTransparent ? 'text-white' : 'text-[#6C757D]'"
                             />
@@ -779,8 +780,35 @@ const initials = computed(() => {
 
                                     <div class="h-px bg-gray-100 my-2"></div>
 
-                                    <!-- 2. Mulai Sewakan Aset Card Banner (Only if NOT owner and not pending) -->
-                                    <template v-if="!isVerifiedOwner && !isPendingOwner">
+                                    <!-- 1.5 Dashboard Admin Banner (Only if admin) -->
+                                    <template v-if="isAdmin">
+                                        <Link
+                                            :href="route('admin.dashboard')"
+                                            @click="isUserMenuOpen = false"
+                                            class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-indigo-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1 block"
+                                        >
+                                            <!-- Ilustrasi (Ditempatkan di sudut kanan) -->
+                                            <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
+                                                <div class="w-full h-full flex items-center justify-end pr-4 text-[#0A2540] opacity-10 group-hover:opacity-20 transition-opacity">
+                                                    <i class="fa-solid fa-shield-halved text-5xl"></i>
+                                                </div>
+                                            </div>
+
+                                            <!-- Konten Teks -->
+                                            <div class="relative z-10 w-3/4 pr-2">
+                                                <h3 class="text-sm font-bold text-[#0A2540] group-hover:text-indigo-600 transition-colors">
+                                                    Dashboard Admin
+                                                </h3>
+                                                <p class="text-[11px] text-gray-500 leading-snug mt-1 font-normal">
+                                                    Kelola sistem, pengguna, dan validasi seluruh aset penyewaan.
+                                                </p>
+                                            </div>
+                                        </Link>
+                                        <div class="h-px bg-gray-100 my-2"></div>
+                                    </template>
+
+                                    <!-- 2. Mulai Sewakan Aset Card Banner (Only if NOT owner and not pending and not admin) -->
+                                    <template v-if="!isVerifiedOwner && !isPendingOwner && !isAdmin">
                                         <Link
                                             :href="route('owner.register')"
                                             @click="isUserMenuOpen = false"

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import AdminSidebar from '@/Components/AdminSidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 /* ================= STATE DASAR ================= */
 const searchQuery = ref('');
@@ -221,45 +221,31 @@ function removeItem(item) {
 <template>
     <Head title="Kategori & Fasilitas - Admin Panel" />
 
-    <div class="h-screen bg-[#F8FAFC] text-slate-700 font-sans flex antialiased overflow-hidden">
-        <div class="h-full flex-shrink-0">
-            <AdminSidebar />
-        </div>
-
-        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
-            <header class="h-16 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-3 w-1/3 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-                    <input
-                        type="text"
-                        v-model="searchQuery"
-                        :placeholder="`Cari ${levelLabel.toLowerCase()}...`"
-                        class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400 text-slate-700"
-                    />
-                </div>
-                <button
-                    @click="openAddForm"
-                    :disabled="!canAddJenis"
-                    :class="[
-                        'rounded-2xl px-4 py-2.5 text-xs font-bold transition',
-                        canAddJenis ? 'bg-[#0A2540] text-white hover:bg-slate-900' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                    ]"
-                >
-                    {{ addButtonLabel }}
-                </button>
-            </header>
+    <DashboardLayout role="Admin" title="Kategori & Fasilitas" description="Kelola master data kategori & jenis aset, serta kategori & jenis fasilitas.">
+        <template #header-actions>
+            <div class="flex items-center gap-3 w-64 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                <input
+                    type="text"
+                    v-model="searchQuery"
+                    :placeholder="`Cari ${levelLabel.toLowerCase()}...`"
+                    class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400 text-slate-700"
+                />
+            </div>
+            <button
+                @click="openAddForm"
+                :disabled="!canAddJenis"
+                :class="[
+                    'rounded-2xl px-4 py-2.5 text-xs font-bold transition',
+                    canAddJenis ? 'bg-[#0A2540] text-white hover:bg-slate-900' : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                ]"
+            >
+                {{ addButtonLabel }}
+            </button>
+        </template>
 
             <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-11 h-11 rounded-2xl bg-slate-900 text-[#FFC000] flex items-center justify-center text-lg shadow-sm">
-                            <i class="fa-solid fa-layer-group"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-base font-bold text-slate-900 tracking-tight">Kategori & Fasilitas</h1>
-                            <p class="text-xs text-slate-400">Kelola master data kategori & jenis aset, serta kategori & jenis fasilitas.</p>
-                        </div>
-                    </div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
 
                     <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                         <!-- Pilih grup: Aset / Fasilitas -->
@@ -363,7 +349,7 @@ function removeItem(item) {
                     </div>
                 </section>
             </div>
-        </main>
+
 
         <!-- Modal Tambah / Edit -->
         <Teleport to="body">
@@ -542,5 +528,5 @@ function removeItem(item) {
                 </div>
             </div>
         </Teleport>
-    </div>
+    </DashboardLayout>
 </template>

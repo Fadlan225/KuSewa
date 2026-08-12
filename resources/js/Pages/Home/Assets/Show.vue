@@ -663,7 +663,6 @@ const formattedDateRange = computed(() => {
                 <AssetUnitList
                     :units="asset.units"
                     :rentalUnitLabel="rentalUnitLabel(activeScheduleMode)"
-                    :priceMultiplier="priceMultiplier"
                     :durationCount="durationCount"
                     :startDate="startDate ? startDate.toISOString() : null"
                     :endDate="endDate ? endDate.toISOString() : null"

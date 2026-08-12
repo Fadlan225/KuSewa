@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
-import AdminSidebar from '@/Components/AdminSidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const props = defineProps({
     assets: { type: Array, default: () => [] },
@@ -29,8 +29,8 @@ const totals = computed(() => ({
     totalAssets: props.assets.length,
 }));
 
-const refresh = () => router.get(route('admin.asset-validation'), { search: searchQuery.value }, { preserveState: true, replace: true });
-const updateStatus = (id, action) => router.patch(route(`admin.asset-validation.${action}`, id), {}, { preserveScroll: true });
+const refresh = () => router.get(route('admin.validasi-aset'), { search: searchQuery.value }, { preserveState: true, replace: true });
+const updateStatus = (id, action) => router.patch(route(`admin.validasi-aset.${action}`, id), {}, { preserveScroll: true });
 const reviewAsset = (asset) => { selectedAsset.value = asset; };
 const formatRupiah = (value) => value ? `Rp ${Number(value).toLocaleString('id-ID')}` : '-';
 const assetImages = (asset) => asset?.images?.length ? asset.images : ['https://placehold.co/800x500?text=Belum+Ada+Foto'];
@@ -40,45 +40,28 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
 <template>
     <Head title="Validasi Aset - Admin Panel" />
 
-    <div class="h-screen bg-slate-50 text-slate-700 font-sans flex antialiased overflow-hidden">
-        <!-- Sidebar Container -->
-        <div class="h-full flex-shrink-0 border-r border-slate-200 bg-white">
-            <AdminSidebar />
-        </div>
-
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
-            <!-- Header -->
-            <header class="h-16 bg-white border-b border-slate-200 px-6 sm:px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
-                <!-- Search Bar -->
-                <div class="flex items-center gap-2.5 w-full max-w-md bg-slate-100/80 px-4 py-2 rounded-lg border border-slate-200 focus-within:border-[#0A2540] focus-within:ring-1 focus-within:ring-[#0A2540] transition-all">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
-                    <input
-                        type="text"
-                        v-model="searchQuery"
-                        placeholder="Cari nama aset, pemilik, atau lokasi..."
-                        class="w-full text-sm bg-transparent border-none focus:ring-0 p-0 placeholder-slate-400 text-slate-700"
-                    />
-                </div>
-
-                <button @click="refresh" class="ml-4 rounded-lg bg-[#0A2540] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition flex items-center gap-2 shadow-sm">
-                    <i class="fa-solid fa-rotate-right text-xs"></i>
-                    <span>Refresh</span>
-                </button>
-            </header>
+    <DashboardLayout role="Admin" title="Validasi Aset Properti" description="Pantau dan verifikasi aset properti yang didaftarkan oleh para owner.">
+        <template #header-actions>
+            <div class="flex items-center gap-2.5 w-64 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 focus-within:border-[#0A2540] focus-within:ring-1 focus-within:ring-[#0A2540] transition-all">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+                <input
+                    type="text"
+                    v-model="searchQuery"
+                    placeholder="Cari nama aset, pemilik..."
+                    class="w-full text-sm bg-transparent border-none focus:ring-0 p-0 placeholder-slate-400 text-slate-700"
+                />
+            </div>
+            <button @click="refresh" class="rounded-lg bg-[#0A2540] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition flex items-center gap-2 shadow-sm">
+                <i class="fa-solid fa-rotate-right text-xs"></i>
+                <span>Refresh</span>
+            </button>
+        </template>
 
             <!-- Page Content -->
             <div class="p-6 sm:p-8 space-y-6 max-w-[1200px] w-full mx-auto">
                 
                 <!-- Title & Filter Row -->
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 class="text-xl font-bold text-slate-900 flex items-center gap-2">
-                            <i class="fa-solid fa-clipboard-check text-[#FFC000]"></i> 
-                            Validasi Aset Properti
-                        </h1>
-                        <p class="text-sm text-slate-500 mt-1">Pantau dan verifikasi aset properti yang didaftarkan oleh para owner.</p>
-                    </div>
+                <div class="flex flex-col md:flex-row md:items-center justify-end gap-4">
 
                     <!-- Compact Filter -->
                     <div class="flex items-center p-1 bg-slate-200/50 rounded-lg">
@@ -172,7 +155,7 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                 </div>
 
             </div>
-        </main>
+
 
         <div v-if="selectedAsset" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4" @click.self="selectedAsset = null">
             <section class="bg-[#F8FAFC] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[94vh] overflow-y-auto">
@@ -242,5 +225,5 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                 </div>
             </section>
         </div>
-    </div>
+    </DashboardLayout>
 </template>

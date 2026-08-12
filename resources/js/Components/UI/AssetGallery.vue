@@ -7,8 +7,49 @@ const props = defineProps({
     }
 });
 
+const sortedImageObjects = computed(() => {
+    if (!props.images || !props.images.length) return [];
+    
+    // Sort images intelligently (Traveloka style)
+    // 1. Thumbnail first
+    // 2. Distribute by category so the grid shows diverse aspects of the property
+    
+    const thumbnails = props.images.filter(img => img.is_thumbnail);
+    const nonThumbnails = props.images.filter(img => !img.is_thumbnail);
+    
+    // Group non-thumbnails by category name
+    const byCategory = {};
+    nonThumbnails.forEach(img => {
+        const cat = img.gallery_category?.name || 'Lainnya';
+        if (!byCategory[cat]) byCategory[cat] = [];
+        byCategory[cat].push(img);
+    });
+    
+    const diverseImages = [];
+    const remainingImages = [];
+    
+    // Pick 1 from each category in a round-robin fashion for the first few images
+    let hasMore = true;
+    while(hasMore) {
+        hasMore = false;
+        for (const cat in byCategory) {
+            if (byCategory[cat].length > 0) {
+                // If it's the first round, add to diverse, otherwise just add to remaining
+                if (diverseImages.length < 4) {
+                    diverseImages.push(byCategory[cat].shift());
+                } else {
+                    remainingImages.push(byCategory[cat].shift());
+                }
+                hasMore = true;
+            }
+        }
+    }
+    
+    return [...thumbnails, ...diverseImages, ...remainingImages];
+});
+
 const allImages = computed(() => {
-    return props.images?.map(img => img.image_url)?.filter(Boolean) ?? [];
+    return sortedImageObjects.value.map(img => img.image_url).filter(Boolean);
 });
 
 const hasImages = computed(() => allImages.value.length > 0);

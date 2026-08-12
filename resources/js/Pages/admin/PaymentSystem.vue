@@ -1,10 +1,15 @@
 <script setup>
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
-import AdminSidebar from '@/Components/AdminSidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const props = defineProps({
-    year: Number, availableYears: Array, monthlyRevenue: Array, summary: Object, transactions: Array, methods: Array,
+    year: { type: Number, default: new Date().getFullYear() },
+    availableYears: { type: Array, default: () => [new Date().getFullYear()] },
+    monthlyRevenue: { type: Array, default: () => [] },
+    summary: { type: Object, default: () => ({ paidTransactions: 0, revenue: 0 }) },
+    transactions: { type: Object, default: () => ({ data: [], links: [] }) },
+    methods: { type: Array, default: () => [] },
 });
 const methods = computed(() => props.methods || []);
 const methodModal = ref(null);
@@ -31,24 +36,10 @@ const prioritizeMethods = () => { const ids = methods.value.map(method => method
 <template>
     <Head title="Sistem Pembayaran - Admin Panel" />
 
-    <div class="h-screen bg-[#F8FAFC] text-slate-700 font-sans flex antialiased overflow-hidden">
-        <div class="h-full flex-shrink-0">
-            <AdminSidebar />
-        </div>
-
-        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
-            <header class="h-16 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-3.5">
-                    <div class="w-11 h-11 rounded-2xl bg-slate-900 text-[#FFC000] flex items-center justify-center text-lg shadow-sm">
-                        <i class="fa-solid fa-credit-card"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-base font-bold text-slate-900 tracking-tight">Sistem Pembayaran</h1>
-                        <p class="text-xs text-slate-400">Kontrol metode pembayaran dan tinjau transaksi terakhir.</p>
-                    </div>
-                </div>
-                <button @click="openMethodModal()" class="rounded-2xl bg-[#0A2540] px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-900 transition">Tambah Metode</button>
-            </header>
+    <DashboardLayout role="Admin" title="Sistem Pembayaran" description="Kontrol metode pembayaran dan tinjau transaksi terakhir.">
+        <template #header-actions>
+            <button @click="openMethodModal()" class="rounded-2xl bg-[#0A2540] px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-900 transition">Tambah Metode</button>
+        </template>
 
             <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -186,8 +177,7 @@ const prioritizeMethods = () => { const ids = methods.value.map(method => method
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+    </DashboardLayout>
     <div v-if="methodModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" @click.self="closeMethodModal">
         <form class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" @submit.prevent="saveMethod">
             <div class="flex items-start justify-between"><div><h3 class="text-lg font-extrabold text-slate-900">{{ methodModal === 'edit' ? 'Edit Metode Pembayaran' : 'Tambah Metode Pembayaran' }}</h3><p class="mt-1 text-xs text-slate-400">Lengkapi informasi metode pembayaran.</p></div><button type="button" @click="closeMethodModal" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button></div>

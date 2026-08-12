@@ -57,10 +57,9 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <aside class="w-64 bg-white border-r border-slate-200/80 flex flex-col justify-between p-4 shrink-0">
-        <div class="space-y-6">
-            <!-- Brand Logo -->
-            <div class="flex items-center justify-between px-2 py-1">
+    <aside class="w-64 h-full max-h-screen bg-white border-r border-slate-200/80 flex flex-col p-4 shrink-0 overflow-hidden">
+        <!-- Brand Logo -->
+        <div class="flex items-center justify-between px-2 py-1 mb-6 shrink-0">
                 <Link :href="route('Home') || '/'" class="flex items-center gap-2 transition-transform hover:scale-[1.02] duration-200">
                     <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-6 w-auto object-contain" />
                     <span class="font-black text-xl tracking-tight text-[#0A2540] mt-0.5">
@@ -70,7 +69,7 @@ const handleLogout = () => {
             </div>
 
             <!-- Profile Switcher -->
-            <div class="relative" ref="profileMenuRef">
+            <div class="relative mb-6 shrink-0" ref="profileMenuRef">
                 <button @click="toggleProfileMenu" type="button" class="w-full flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 transition focus:outline-none">
                     <div class="flex items-center gap-2.5 min-w-0">
                         <!-- Cek foto profil atau avatar (sesuai struktur standar Laravel/SaaS) -->
@@ -121,8 +120,10 @@ const handleLogout = () => {
                 </Transition>
             </div>
 
-            <!-- Navigation Links -->
-            <nav class="space-y-1 text-xs">
+            <!-- Navigation Links Wrapper with Fade Effect -->
+            <div class="relative flex-1 min-h-0 -mx-2">
+                <div class="h-full overflow-y-auto no-scrollbar px-2 pb-6">
+                    <nav class="space-y-1 text-xs">
                 <template v-for="(item, idx) in menu" :key="idx">
                     <!-- Jika ada item divider -->
                     <div v-if="item.divider" class="pt-2 pb-1">
@@ -175,11 +176,14 @@ const handleLogout = () => {
                         </div>
                     </template>
                 </template>
-            </nav>
-        </div>
+                </nav>
+                </div>
+                <!-- Fade Shadow Bottom -->
+                <div class="pointer-events-none absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-white to-transparent"></div>
+            </div>
 
         <!-- Bottom Navigation Links -->
-        <div v-if="bottomMenu && bottomMenu.length">
+        <div v-if="bottomMenu && bottomMenu.length" class="shrink-0 pt-4 mt-auto">
             <hr class="border-slate-100 mb-4" />
             <nav class="space-y-1 text-xs">
                 <template v-for="(item, idx) in bottomMenu" :key="idx">
@@ -207,3 +211,13 @@ const handleLogout = () => {
         </div>
     </aside>
 </template>
+
+<style scoped>
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+</style>

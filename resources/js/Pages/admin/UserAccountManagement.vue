@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import AdminSidebar from '@/Components/AdminSidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const activeFilter = ref('Semua');
 const searchQuery = ref('');
@@ -43,52 +43,21 @@ const closeUserDetail = () => {
 <template>
     <Head title="Akun Penyewa & Pemilik - Admin Panel" />
 
-    <div class="h-screen bg-[#F8FAFC] text-slate-700 font-sans flex antialiased overflow-hidden">
-        <div class="h-full flex-shrink-0">
-            <AdminSidebar />
-        </div>
-
-        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
-            <header class="h-16 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-3 w-1/3 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-                    <input
-                        type="text"
-                        v-model="searchQuery"
-                        placeholder="Cari nama, email, atau peran..."
-                        class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400 text-slate-700"
-                    />
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <button class="relative p-2 text-slate-400 hover:text-slate-600 transition">
-                        <i class="fa-regular fa-bell text-sm"></i>
-                        <span class="w-2 h-2 bg-rose-500 rounded-full absolute top-2 right-2 ring-2 ring-white"></span>
-                    </button>
-                    <div class="h-6 w-[1px] bg-slate-200"></div>
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-slate-900 text-[#FFC000] flex items-center justify-center font-bold text-xs shadow-sm">
-                            <i class="fa-solid fa-user-group"></i>
-                        </div>
-                        <div class="text-left leading-tight hidden sm:block">
-                            <p class="text-xs font-bold text-slate-800">Pengelola Akun</p>
-                            <p class="text-[10px] text-emerald-600 font-semibold">● Online</p>
-                        </div>
-                    </div>
-                </div>
-            </header>
+    <DashboardLayout role="Admin" title="Akun Penyewa & Pemilik" description="Kelola data pengguna, verifikasi akun, dan pantau status aktif.">
+        <template #header-actions>
+            <div class="flex items-center gap-3 w-64 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                <input
+                    type="text"
+                    v-model="searchQuery"
+                    placeholder="Cari nama, email..."
+                    class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400 text-slate-700"
+                />
+            </div>
+        </template>
 
             <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div class="flex items-center gap-3.5">
-                        <div class="w-11 h-11 rounded-2xl bg-slate-900 text-[#FFC000] flex items-center justify-center text-lg shadow-sm">
-                            <i class="fa-solid fa-users"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-base font-bold text-slate-900 tracking-tight">Akun Penyewa & Pemilik</h1>
-                            <p class="text-xs text-slate-400">Kelola data pengguna, verifikasi akun, dan pantau status aktif.</p>
-                        </div>
-                    </div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
 
                     <div class="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200/80 text-xs shadow-xs">
                         <button
@@ -177,7 +146,7 @@ const closeUserDetail = () => {
                     </div>
                 </div>
             </div>
-        </main>
+
 
         <div v-if="selectedUser" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
             <div class="w-full max-w-xl rounded-3xl bg-white border border-slate-100 shadow-2xl overflow-hidden">
@@ -222,5 +191,5 @@ const closeUserDetail = () => {
                 </div>
             </div>
         </div>
-    </div>
+    </DashboardLayout>
 </template>

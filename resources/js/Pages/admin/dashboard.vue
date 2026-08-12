@@ -1,6 +1,6 @@
-﻿<script setup>
+<script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import AdminSidebar from '@/Components/AdminSidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const props = defineProps({
     admin: {
@@ -26,7 +26,7 @@ const props = defineProps({
 
 const tabs = [
     { label: 'Overview', route: 'admin.dashboard' },
-    { label: 'Verifikasi Aset', route: 'admin.asset-validation' },
+    { label: 'Verifikasi Aset', route: 'admin.validasi-aset' },
     { label: 'Pengguna', route: 'admin.pengajuan-akun' },
     { label: 'Laporan Keuangan', route: 'admin.payment-system' },
 ];
@@ -37,59 +37,16 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
 <template>
     <Head title="Admin Dashboard - kusewa.id" />
 
-    <!-- Layout Utama Admin -->
-    <div class="h-screen bg-[#F3F5F8] text-slate-700 font-sans flex antialiased selection:bg-[#FFC000]/30 overflow-hidden">
+    <DashboardLayout role="Admin" title="Panel Kontrol Administrator" description="Pantau seluruh aktivitas platform, verifikasi aset, dan pengguna kusewa.id">
+        <template #header-actions>
+            <button class="bg-[#0A2540] hover:bg-slate-800 active:scale-95 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
+                <i class="fa-solid fa-download text-xs text-[#FFC000]"></i>
+                <span>Export Laporan</span>
+            </button>
+        </template>
 
-        <!-- ==================== SIDEBAR COMPONENT ==================== -->
-        <div class="h-full flex-shrink-0">
-            <AdminSidebar />
-        </div>
-
-        <!-- ==================== MAIN CONTENT ==================== -->
-        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
-
-            <!-- TOPBAR HEADER -->
-            <header class="h-16 bg-white border-b border-slate-200/80 px-6 flex items-center justify-between sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-3 w-1/3">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
-                    <input type="text" placeholder="Cari data user, properti, atau sistem..." class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400" />
-                </div>
-
-                <div class="flex items-center gap-4">
-                    <button class="relative p-2 text-slate-400 hover:text-slate-600">
-                        <i class="fa-solid fa-bell text-sm"></i>
-                        <span class="w-1.5 h-1.5 bg-rose-500 rounded-full absolute top-2 right-2"></span>
-                    </button>
-
-                    <div class="h-6 w-[1px] bg-slate-200"></div>
-
-                    <!-- Admin Profile Info -->
-                    <div class="flex items-center gap-2.5">
-                        <div class="w-8 h-8 rounded-xl bg-[#0A2540] text-[#FFC000] flex items-center justify-center font-black text-xs shadow-xs">
-                            <i class="fa-solid fa-shield-halved"></i>
-                        </div>
-                        <div class="text-left leading-tight hidden sm:block">
-                            <p class="text-xs font-bold text-slate-800">{{ admin.name }}</p>
-                            <p class="text-[10px] text-amber-600 font-semibold">● Full Access</p>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- BODY CONTENT AREA -->
             <div class="p-6 space-y-5 max-w-[1400px] w-full mx-auto">
-
-                <!-- TITLE ROW & QUICK ACTION -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-2xl bg-[#0A2540] text-[#FFC000] flex items-center justify-center font-black text-base shadow-sm">
-                            <i class="fa-solid fa-gauge-high"></i>
-                        </div>
-                        <div>
-                            <h1 class="text-base font-bold text-slate-900 tracking-tight">Panel Kontrol Administrator</h1>
-                            <p class="text-[11px] text-slate-400">Pantau seluruh aktivitas platform, verifikasi aset, dan pengguna kusewa.id</p>
-                        </div>
-                    </div>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-3">
 
                     <div class="flex items-center gap-3 text-xs">
                         <button class="bg-[#0A2540] hover:bg-slate-800 active:scale-95 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
@@ -318,7 +275,5 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                 </div>
 
             </div>
-        </main>
-
-    </div>
+    </DashboardLayout>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import AdminSidebar from '@/Components/AdminSidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const backups = ref([
     { id: 1, name: 'Backup 04 Agu 2026', size: '520 MB', created: '04 Agu 2026 08:30', status: 'Berhasil' },
@@ -126,22 +126,8 @@ function closeAll() {
 <template>
     <Head title="Backup & Restore Data - Admin Panel" />
 
-    <div class="h-screen bg-[#F8FAFC] text-slate-700 font-sans flex antialiased overflow-hidden">
-        <div class="h-full flex-shrink-0">
-            <AdminSidebar />
-        </div>
-
-        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
-            <header class="h-16 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-3.5">
-                    <div class="w-11 h-11 rounded-2xl bg-slate-900 text-[#FFC000] flex items-center justify-center text-lg shadow-sm">
-                        <i class="fa-solid fa-database"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-base font-bold text-slate-900 tracking-tight">Backup & Restore Data</h1>
-                        <p class="text-xs text-slate-400">Kelola cadangan database dan restore sistem saat dibutuhkan.</p>
-                    </div>
-                </div>
+    <DashboardLayout role="Admin" title="Backup & Restore Data" description="Kelola cadangan database dan restore sistem saat dibutuhkan.">
+        <template #header-actions>
                 <div class="flex items-center gap-3">
                     <button
                         type="button"
@@ -160,7 +146,7 @@ function closeAll() {
                         Restore
                     </button>
                 </div>
-            </header>
+        </template>
 
             <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto">
                 <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
@@ -246,7 +232,7 @@ function closeAll() {
                     </div>
                 </div>
             </div>
-        </main>
+
 
         <!-- Modal Restore -->
         <Teleport to="body">
@@ -441,5 +427,5 @@ function closeAll() {
                 </div>
             </div>
         </Teleport>
-    </div>
+    </DashboardLayout>
 </template>

@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import AdminSidebar from '@/Components/AdminSidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 // Pencarian
 const searchQuery = ref('');
@@ -34,38 +34,19 @@ const totals = computed(() => ({
 <template>
     <Head title="Manajemen Akun Owner - Admin Panel" />
 
-    <div class="h-screen bg-[#F8FAFC] text-slate-700 font-sans flex antialiased overflow-hidden selection:bg-[#0A2540] selection:text-white">
-        <!-- Sidebar Container -->
-        <div class="h-full flex-shrink-0 border-r border-slate-200/70 bg-white shadow-[1px_0_10px_rgba(0,0,0,0.02)] z-40 relative">
-            <AdminSidebar />
-        </div>
-
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto relative">
-            
-            <!-- Premium Glassmorphism Header -->
-            <header class="h-[72px] bg-white/70 backdrop-blur-md border-b border-slate-200/70 px-8 flex items-center justify-between sticky top-0 z-30 shrink-0 transition-all">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0A2540] to-slate-800 text-[#FFC000] flex items-center justify-center text-lg shadow-md">
-                        <i class="fa-solid fa-users text-[16px]"></i>
-                    </div>
-                    <div>
-                        <h1 class="text-[16px] font-extrabold text-slate-900 tracking-tight leading-tight">Daftar Akun Owner</h1>
-                        <p class="text-[12px] font-medium text-slate-500">Kelola status dan sanksi pemilik aset.</p>
-                    </div>
-                </div>
-
-                <!-- Search Bar di Header -->
-                <div class="flex items-center gap-3 w-full max-w-sm bg-slate-100/50 hover:bg-slate-100 px-4 py-2.5 rounded-xl border border-transparent focus-within:bg-white focus-within:border-slate-300 focus-within:shadow-sm transition-all duration-300">
-                    <i class="fa-solid fa-magnifying-glass text-slate-400 text-[13px]"></i>
-                    <input
-                        type="text"
-                        v-model="searchQuery"
-                        placeholder="Cari nama atau email..."
-                        class="w-full text-[13px] bg-transparent border-none focus:ring-0 p-0 placeholder-slate-400 text-slate-700 font-medium"
-                    />
-                </div>
-            </header>
+    <DashboardLayout role="Admin" title="Daftar Akun Owner" description="Kelola status dan sanksi pemilik aset.">
+        <template #header-actions>
+            <!-- Search Bar di Header -->
+            <div class="flex items-center gap-3 w-64 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 rounded-xl border border-transparent focus-within:bg-white focus-within:border-slate-300 focus-within:shadow-sm transition-all duration-300">
+                <i class="fa-solid fa-magnifying-glass text-slate-400 text-[13px]"></i>
+                <input
+                    type="text"
+                    v-model="searchQuery"
+                    placeholder="Cari nama atau email..."
+                    class="w-full text-[13px] bg-transparent border-none focus:ring-0 p-0 placeholder-slate-400 text-slate-700 font-medium"
+                />
+            </div>
+        </template>
 
             <!-- Page Content -->
             <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto pb-24">
@@ -177,6 +158,5 @@ const totals = computed(() => ({
                 </section>
 
             </div>
-        </main>
-    </div>
+    </DashboardLayout>
 </template>

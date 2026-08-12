@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import AdminSidebar from '@/Components/AdminSidebar.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const promos = ref([
     { id: 1, code: 'RENT10', type: 'Diskon', value: '10%', validUntil: '31 Agu 2026', active: true },
@@ -47,24 +47,10 @@ function closeStats() {
 <template>
     <Head title="Promo & Diskon - Admin Panel" />
 
-    <div class="h-screen bg-[#F8FAFC] text-slate-700 font-sans flex antialiased overflow-hidden">
-        <div class="h-full flex-shrink-0">
-            <AdminSidebar />
-        </div>
-
-        <main class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
-            <header class="h-16 bg-white border-b border-slate-100 px-8 flex items-center justify-between sticky top-0 z-30 shrink-0">
-                <div class="flex items-center gap-3.5">
-                    <div class="w-11 h-11 rounded-2xl bg-slate-900 text-[#FFC000] flex items-center justify-center text-lg shadow-sm">
-                        <i class="fa-solid fa-ticket" />
-                    </div>
-                    <div>
-                        <h1 class="text-base font-bold text-slate-900 tracking-tight">Promo & Diskon</h1>
-                        <p class="text-xs text-slate-400">Pantau kupon, promo musiman, dan ketersediaan diskon.</p>
-                    </div>
-                </div>
-                <button class="rounded-2xl bg-[#0A2540] px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-900 transition">Buat Promo Baru</button>
-            </header>
+    <DashboardLayout role="Admin" title="Promo & Diskon" description="Pantau kupon, promo musiman, dan ketersediaan diskon.">
+        <template #header-actions>
+            <button class="rounded-2xl bg-[#0A2540] px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-900 transition">Buat Promo Baru</button>
+        </template>
 
             <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -134,7 +120,7 @@ function closeStats() {
                     </div>
                 </div>
             </div>
-        </main>
+
 
         <!-- Modal Statistik -->
         <Teleport to="body">
@@ -224,5 +210,5 @@ function closeStats() {
                 </div>
             </div>
         </Teleport>
-    </div>
+    </DashboardLayout>
 </template>

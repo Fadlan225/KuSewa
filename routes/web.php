@@ -18,6 +18,9 @@ use App\Http\Controllers\OwnerRegistrationController;
 use App\Http\Controllers\Owner\DashboardController;
 use App\Http\Controllers\Owner\BookingController as OwnerBookingController;
 use App\Http\Controllers\Owner\MonthlyPaymentController;
+use App\Http\Controllers\LocationController;
+use App\Http\Controllers\Api\AssetTypeController;
+use App\Http\Controllers\Owner\AssetController as OwnerAssetController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -29,14 +32,14 @@ Route::get('/search/suggest', [HomeController::class, 'suggest'])->name('search.
 Route::get('/api/home/nearby-assets', [HomeAssetController::class, 'nearby'])->name('api.home.nearby-assets');
 
 // API for Locations
-Route::get('/api/provinces', [\App\Http\Controllers\LocationController::class, 'getProvinces'])->name('api.provinces.index');
-Route::get('/api/cities', [\App\Http\Controllers\LocationController::class, 'getCities'])->name('api.cities.index');
-Route::get('/api/districts', [\App\Http\Controllers\LocationController::class, 'getDistricts'])->name('api.districts.index');
-Route::get('/api/villages', [\App\Http\Controllers\LocationController::class, 'getVillages'])->name('api.villages.index');
+Route::get('/api/provinces', [LocationController::class, 'getProvinces'])->name('api.provinces.index');
+Route::get('/api/cities', [LocationController::class, 'getCities'])->name('api.cities.index');
+Route::get('/api/districts', [LocationController::class, 'getDistricts'])->name('api.districts.index');
+Route::get('/api/villages', [LocationController::class, 'getVillages'])->name('api.villages.index');
 
 // API for Asset Create Form
-Route::get('/api/asset-types', [\App\Http\Controllers\Api\AssetTypeController::class, 'byCategory'])->name('api.asset-types.by-category');
-Route::get('/api/asset-type/{id}/details', [\App\Http\Controllers\Api\AssetTypeController::class, 'details'])->name('api.asset-type.details');
+Route::get('/api/asset-types', [AssetTypeController::class, 'byCategory'])->name('api.asset-types.by-category');
+Route::get('/api/asset-type/{id}/details', [AssetTypeController::class, 'details'])->name('api.asset-type.details');
 
 Route::resource('assets', AssetController::class)->only(['show']);
 
@@ -60,24 +63,24 @@ Route::middleware('auth')->prefix('owner')->group(function () {
 Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-    Route::resource('asset', \App\Http\Controllers\Owner\AssetController::class)->names('asset');
-    Route::post('asset/{asset}/facilities', [\App\Http\Controllers\Owner\AssetController::class, 'storeFacility'])->name('asset.facilities.store');
-    Route::delete('asset/{asset}/facilities/{facility}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyFacility'])->name('asset.facilities.destroy');
+    Route::resource('asset', OwnerAssetController::class)->names('asset');
+    Route::post('asset/{asset}/facilities', [OwnerAssetController::class, 'storeFacility'])->name('asset.facilities.store');
+    Route::delete('asset/{asset}/facilities/{facility}', [OwnerAssetController::class, 'destroyFacility'])->name('asset.facilities.destroy');
 
-    Route::post('asset/{asset}/units', [\App\Http\Controllers\Owner\AssetController::class, 'storeUnit'])->name('asset.units.store');
-    Route::put('asset/{asset}/units/{unit}', [\App\Http\Controllers\Owner\AssetController::class, 'updateUnit'])->name('asset.units.update');
+    Route::post('asset/{asset}/units', [OwnerAssetController::class, 'storeUnit'])->name('asset.units.store');
+    Route::put('asset/{asset}/units/{unit}', [OwnerAssetController::class, 'updateUnit'])->name('asset.units.update');
 
-    Route::post('asset/{asset}/images', [\App\Http\Controllers\Owner\AssetController::class, 'storeImage'])->name('asset.images.store');
-    Route::delete('asset/{asset}/images/{image}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyImage'])->name('asset.images.destroy');
+    Route::post('asset/{asset}/images', [OwnerAssetController::class, 'storeImage'])->name('asset.images.store');
+    Route::delete('asset/{asset}/images/{image}', [OwnerAssetController::class, 'destroyImage'])->name('asset.images.destroy');
 
     // FAQ & Kebijakan
-    Route::post('asset/{asset}/faqs', [\App\Http\Controllers\Owner\AssetController::class, 'storeFaq'])->name('asset.faqs.store');
-    Route::put('asset/{asset}/faqs/{faq}', [\App\Http\Controllers\Owner\AssetController::class, 'updateFaq'])->name('asset.faqs.update');
-    Route::delete('asset/{asset}/faqs/{faq}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyFaq'])->name('asset.faqs.destroy');
+    Route::post('asset/{asset}/faqs', [OwnerAssetController::class, 'storeFaq'])->name('asset.faqs.store');
+    Route::put('asset/{asset}/faqs/{faq}', [OwnerAssetController::class, 'updateFaq'])->name('asset.faqs.update');
+    Route::delete('asset/{asset}/faqs/{faq}', [OwnerAssetController::class, 'destroyFaq'])->name('asset.faqs.destroy');
 
-    Route::post('asset/{asset}/policies', [\App\Http\Controllers\Owner\AssetController::class, 'storePolicy'])->name('asset.policies.store');
-    Route::put('asset/{asset}/policies/{policy}', [\App\Http\Controllers\Owner\AssetController::class, 'updatePolicy'])->name('asset.policies.update');
-    Route::delete('asset/{asset}/policies/{policy}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyPolicy'])->name('asset.policies.destroy');
+    Route::post('asset/{asset}/policies', [OwnerAssetController::class, 'storePolicy'])->name('asset.policies.store');
+    Route::put('asset/{asset}/policies/{policy}', [OwnerAssetController::class, 'updatePolicy'])->name('asset.policies.update');
+    Route::delete('asset/{asset}/policies/{policy}', [OwnerAssetController::class, 'destroyPolicy'])->name('asset.policies.destroy');
 
     Route::get('/bookings', [OwnerBookingController::class, 'index'])->name('bookings');
     Route::get('/bookings/{id}', [OwnerBookingController::class, 'show'])->name('bookings.show');
@@ -108,9 +111,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/api/chats/{room}/messages/{message}', [ChatController::class, 'updateMessage'])->name('api.chats.update');
     Route::delete('/api/chats/{room}/messages/{message}', [ChatController::class, 'deleteMessage'])->name('api.chats.delete');
     Route::put('/api/chats/{room}/messages/read', [ChatController::class, 'markAsRead'])->name('api.chats.read');
-});
 
-Route::middleware('auth')->group(function () {
     Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas.index');
     Route::get('/ulasan/{id}', [ReviewController::class, 'create'])->name('ulasan.index');
     Route::post('/ulasan/{id}', [ReviewController::class, 'store'])->name('ulasan.store');
@@ -142,6 +143,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', fn() => Inertia::render('admin/dashboard'))->name('dashboard');
+    Route::get('/activity-log', fn() => Inertia::render('admin/ActivityLog'))->name('activity-log');
+    Route::get('/account-management', fn() => Inertia::render('admin/AdministratorAccountManagement'))->name('account-management');
+    Route::get('/aset-properti', fn() => Inertia::render('admin/AsetProperti'))->name('aset-properti');
+    Route::get('/backup-restore', fn() => Inertia::render('admin/BackupRestore'))->name('backup-restore');
+    Route::get('/cms-manager', fn() => Inertia::render('admin/CMSManager'))->name('cms-manager');
+    Route::get('/kategori-fasilitas', fn() => Inertia::render('admin/KategoriFasilitas'))->name('kategori-fasilitas');
+    Route::get('/pengajuan-akun', fn() => Inertia::render('admin/KelolaPengajuanAkun'))->name('pengajuan-akun');
+    Route::get('/payment-system', fn() => Inertia::render('admin/PaymentSystem'))->name('payment-system');
+    Route::get('/promo-diskon', fn() => Inertia::render('admin/PromoDiskon'))->name('promo-diskon');
+    Route::get('/service-fee', fn() => Inertia::render('admin/ServiceFeeSanksi'))->name('service-fee');
+    Route::get('/system-notifications', fn() => Inertia::render('admin/SystemNotifications'))->name('system-notifications');
+    Route::get('/user-management', fn() => Inertia::render('admin/UserAccountManagement'))->name('user-management');
+    Route::get('/user-reports', fn() => Inertia::render('admin/UserReports'))->name('user-reports');
+    Route::get('/validasi-aset', fn() => Inertia::render('admin/ValidasiAsetPengajuan'))->name('validasi-aset');
+    Route::patch('/validasi-aset/{id}/approve', fn() => back())->name('validasi-aset.approve');
+    Route::patch('/validasi-aset/{id}/reject', fn() => back())->name('validasi-aset.reject');
 });
 
 require __DIR__ . '/auth.php';
