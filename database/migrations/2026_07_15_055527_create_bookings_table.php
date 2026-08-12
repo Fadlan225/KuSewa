@@ -25,6 +25,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
             $table->dateTime('start_date');
             $table->dateTime('end_date');
+            $table->integer('rental_duration');
+            $table->enum('rental_unit', ['hour','night','day','week','month']);
             $table->decimal('subtotal',15,2);
             $table->decimal('service_fee',15,2);
             $table->decimal('total',15,2);

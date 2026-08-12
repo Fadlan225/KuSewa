@@ -20,6 +20,8 @@ class booking extends Model
         'user_id',
         'start_date',
         'end_date',
+        'rental_duration',
+        'rental_unit',
         'subtotal',
         'service_fee',
         'total',

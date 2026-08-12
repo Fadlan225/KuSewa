@@ -60,18 +60,12 @@ const form = useForm({
   payment_method: props.bankAccounts?.length ? props.bankAccounts[0].id : null
 })
 
-// BUG 4 FIX: Pakai selectedPricing sebagai harga utama, fallback ke defaultPricing
+// Option A: harga adalah harga paket (tidak dikalikan durasi)
 const effectivePrice = computed(() => {
     return props.selectedPricing?.price || props.asset?.default_pricing?.price || 0
 })
 
-const priceMultiplier = computed(() => {
-    return (props.asset?.type?.rental_unit === 'night' && props.requestParams?.rental_mode === 'month') ? 30 : 1;
-})
-
-const subtotalPrice = computed(() => {
-    return effectivePrice.value * priceMultiplier.value * form.duration
-})
+const subtotalPrice = computed(() => effectivePrice.value)
 
 const calculatedServiceFee = computed(() => {
     if (props.serviceFee?.type === 'fixed') {
@@ -83,6 +77,31 @@ const calculatedServiceFee = computed(() => {
 
 const totalPrice = computed(() => {
     return subtotalPrice.value + calculatedServiceFee.value;
+})
+
+// Label paket pricing yang dipilih
+const pricingPackageLabel = computed(() => {
+    const p = props.selectedPricing;
+    if (!p) return '';
+    const units = { hour: 'Jam', day: 'Hari', night: 'Malam', week: 'Minggu', month: 'Bulan' };
+    return `${p.duration} ${units[p.rental_unit] || p.rental_unit}`;
+})
+
+// Hitung estimasi end date dari start date dan pricing yang dipilih
+const estimatedEndDate = computed(() => {
+    if (!form.startDate || !props.selectedPricing) return null;
+    const start = new Date(form.startDate);
+    const { duration, rental_unit } = props.selectedPricing;
+    if (rental_unit === 'hour') start.setHours(start.getHours() + duration);
+    else if (rental_unit === 'day' || rental_unit === 'night') start.setDate(start.getDate() + duration);
+    else if (rental_unit === 'week') start.setDate(start.getDate() + duration * 7);
+    else if (rental_unit === 'month') start.setMonth(start.getMonth() + duration);
+    return start;
+})
+
+const estimatedEndDateLabel = computed(() => {
+    if (!estimatedEndDate.value) return '—';
+    return estimatedEndDate.value.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 })
 
 const flatpickrConfig = computed(() => {
@@ -118,64 +137,11 @@ if (rentalMode === 'hour') {
     }
 }
 
-watch([hourDate, hourStartTime, hourEndTime], ([d, st, et]) => {
-    if (rentalMode === 'hour') {
-        if (d && st) form.startDate = `${d} ${st}:00`;
-        if (d && et) form.endDate = `${d} ${et}:00`;
-        
-        if (d && st && et) {
-            const start = new Date(`${d}T${st}:00`);
-            const end = new Date(`${d}T${et}:00`);
-            let diff = (end - start) / (1000 * 60 * 60);
-            if (diff <= 0) diff = 1;
-            form.duration = Math.ceil(diff);
-        }
-    }
-});
-
-watch(() => form.startDate, (newStart) => {
-    if (newStart && rentalMode === 'month') {
-        const start = new Date(newStart);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + form.duration);
-        form.endDate = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-    } else if (newStart && rentalMode !== 'hour') {
-        const start = new Date(newStart);
-        if (form.endDate) {
-            const end = new Date(form.endDate);
-            if (end <= start) {
-                const newEnd = new Date(start);
-                newEnd.setDate(newEnd.getDate() + 1);
-                form.endDate = new Date(newEnd.getTime() - newEnd.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-            }
-        }
-    }
-});
-
-watch(() => form.endDate, (newEnd) => {
-    if (newEnd && form.startDate && rentalMode !== 'month' && rentalMode !== 'hour') {
-        const start = new Date(form.startDate);
-        const end = new Date(newEnd);
-        if (end > start) {
-            const diffTime = Math.abs(end - start);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            form.duration = diffDays === 0 ? 1 : diffDays;
-        }
-    }
-});
-
-// BUG 6 FIX: Jika mode month dan durasi berubah, update endDate
-watch(() => form.duration, (newDuration) => {
-    if (rentalMode === 'month' && form.startDate && newDuration > 0) {
-        const start = new Date(form.startDate);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + newDuration);
-        form.endDate = new Date(end.getTime() - end.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-    }
-});
+// Option A: endDate dihitung otomatis di backend dari pricing package
+// Tidak perlu watcher durasi/endDate manual
 
 const displayRentalUnit = computed(() => {
-    const labels = { hour: 'jam', day: 'hari', night: 'malam', month: 'bulan', year: 'tahun' };
+    const labels = { hour: 'jam', day: 'hari', night: 'malam', week: 'minggu', month: 'bulan' };
     return labels[form.rental_mode] || 'opsi';
 })
 
@@ -232,7 +198,7 @@ watch(() => form.namaPemesan, (val) => {
             :showSections="false"
             :showShare="false"
             :showFavorite="false"
-            :backUrl="asset?.id ? `/assets/${asset.id}` : '/'"
+            :backUrl="asset?.slug ? `/assets/${asset.slug}` : '/'"
         />
         <div class="min-h-screen bg-slate-50/60 text-slate-800 font-sans antialiased pb-28 lg:pb-16">
             <main class="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
@@ -276,9 +242,9 @@ watch(() => form.namaPemesan, (val) => {
                     <div>
                         <h2 class="text-lg font-bold text-slate-900">{{ asset?.title }}</h2>
                         <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ asset?.description }}</p>
-                        <div class="mt-2 text-sm font-semibold text-slate-800">
-                            <span class="text-[#0A2540] font-black">Rp {{ Number((props.selectedPricing?.price || asset?.default_pricing?.price || 0) * priceMultiplier).toLocaleString('id-ID') }}</span>
-                            <span class="text-xs font-medium text-slate-400 font-normal"> /{{ displayRentalUnit }}</span>
+                        <div class="mt-2 flex items-center gap-2 flex-wrap">
+                            <span class="text-[#0A2540] font-black text-sm">Rp {{ Number(effectivePrice).toLocaleString('id-ID') }}</span>
+                            <span class="text-xs font-bold bg-[#0A2540]/10 text-[#0A2540] px-2 py-0.5 rounded-full">Paket {{ pricingPackageLabel }}</span>
                         </div>
                     </div>
                 </div>
@@ -406,76 +372,35 @@ watch(() => form.namaPemesan, (val) => {
 
                 <!-- Order Summary Card -->
                 <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-xl shadow-slate-200/50 space-y-5">
-                    <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <!-- Mode JAM: tampilkan read-only, tidak bisa diubah di halaman ini -->
-                        <!-- Mode JAM -->
-                        <template v-if="form.rental_mode === 'hour'">
-                            <div class="border-b border-slate-200 p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Tanggal Sewa</label>
-                                <flat-pickr v-model="hourDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
-                            </div>
-                            <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="p-3.5 hover:bg-slate-50 transition-colors">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Mulai</label>
-                                    <input type="time" v-model="hourStartTime" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none">
-                                </div>
-                                <div class="p-3.5 hover:bg-slate-50 transition-colors">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Selesai</label>
-                                    <input type="time" v-model="hourEndTime" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none">
-                                </div>
-                            </div>
-                        </template>
-                        <!-- Mode Bulan -->
-                        <template v-else-if="form.rental_mode === 'month'">
-                            <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Mulai Sewa</label>
-                                    <flat-pickr v-model="form.startDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
-                                </div>
-                                <div class="p-3.5 bg-slate-50">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Selesai Sewa</label>
-                                    <div class="w-full text-sm font-bold text-slate-800 pt-0.5">{{ form.endDate ? new Date(form.endDate).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '—' }}</div>
-                                </div>
-                            </div>
-                        </template>
-                        <!-- Mode Hari / Malam / Tahun -->
-                        <template v-else>
-                            <div class="grid grid-cols-2 divide-x divide-slate-200 border-b border-slate-200">
-                                <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Mulai Sewa</label>
-                                    <flat-pickr v-model="form.startDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
-                                </div>
-                                <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Selesai Sewa</label>
-                                    <flat-pickr v-model="form.endDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal"></flat-pickr>
-                                </div>
-                            </div>
-                        </template>
-                        <!-- BUG 6 FIX: Input durasi khusus mode bulan -->
-                <template v-if="form.rental_mode === 'month'">
-                    <div class="p-3.5 flex justify-between items-center bg-slate-50">
-                        <span class="text-xs font-medium text-slate-500">Durasi Sewa</span>
-                        <div class="flex items-center gap-2">
-                            <button
-                                type="button"
-                                @click="form.duration = Math.max(1, form.duration - 1)"
-                                class="w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-[#0A2540] font-black transition"
-                            >−</button>
-                            <span class="text-sm font-bold text-slate-900 min-w-[70px] text-center">{{ form.duration }} {{ displayRentalUnit }}</span>
-                            <button
-                                type="button"
-                                @click="form.duration = form.duration + 1"
-                                class="w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 flex items-center justify-center text-[#0A2540] font-black transition"
-                            >+</button>
+                    <!-- Paket Pricing yang Dipilih -->
+                    <div class="bg-[#0A2540]/5 border border-[#0A2540]/15 rounded-xl p-4 flex items-center justify-between mb-1">
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-0.5">Paket Sewa Dipilih</p>
+                            <p class="text-sm font-black text-[#0A2540]">{{ pricingPackageLabel }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-base font-black text-[#F97316]">Rp {{ Number(effectivePrice).toLocaleString('id-ID') }}</p>
+                            <p class="text-[10px] text-slate-400">Harga paket</p>
                         </div>
                     </div>
-                </template>
-                <template v-else>
-                    <div class="p-3.5 flex justify-between items-center bg-slate-50">
-                        <span class="text-xs font-medium text-slate-500">Durasi Sewa</span>
-                        <span class="text-sm font-bold text-slate-900">{{ form.duration }} {{ displayRentalUnit }}</span>
-                    </div>
-                </template>
+
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <!-- Tanggal Mulai -->
+                        <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors border-b border-slate-200">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Tanggal Mulai Sewa</label>
+                            <flat-pickr v-model="form.startDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal Mulai"></flat-pickr>
+                        </div>
+                        <!-- Estimasi End Date (Read-only, auto dari pricing) -->
+                        <div class="p-3.5 bg-slate-50/80 border-b border-slate-200">
+                            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Estimasi Selesai</label>
+                            <div class="text-sm font-bold" :class="estimatedEndDate ? 'text-slate-800' : 'text-slate-400'">{{ estimatedEndDateLabel }}</div>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Dihitung otomatis dari paket</p>
+                        </div>
+                        <!-- Durasi (Read-only, dari pricing) -->
+                        <div class="p-3.5 flex justify-between items-center bg-slate-50">
+                            <span class="text-xs font-medium text-slate-500">Durasi Sewa</span>
+                            <span class="text-sm font-bold text-[#0A2540]">{{ pricingPackageLabel }}</span>
+                        </div>
                     </div>
 
                     <!-- BUG 7 FIX: Tampilkan pesan jika tidak ada pricing -->
@@ -519,8 +444,8 @@ watch(() => form.namaPemesan, (val) => {
 
             <DetailBottomBar
                 :price="totalPrice"
-                :durationCount="form.duration"
-                :durationLabel="displayRentalUnit"
+                :durationCount="selectedPricing?.duration || 1"
+                :durationLabel="pricingPackageLabel"
                 :disabled="form.processing || !form.payment_method || !effectivePrice"
                 buttonText="Pesan Sekarang"
                 @submit="submitBooking"

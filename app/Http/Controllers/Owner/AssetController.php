@@ -33,18 +33,11 @@ class AssetController extends Controller
 
         // Hitung statistik (Total aset/unit, tersedia, tersewa, pending verifikasi)
         $statsQuery = asset::where('owner_profile_id', $ownerProfile->id)
+            ->withSum('units as total_units_quantity', 'quantity')
             ->withCount([
-                'units as total_units_count',
-                'units as occupied_units_count' => function ($q) {
-                    $q->whereHas('bookings', function ($q2) {
-                        $q2->where('end_date', '>=', now()->format('Y-m-d'))
-                           ->whereNotIn('booking_status', ['cancelled', 'rejected']);
-                    });
-                },
                 'bookings as active_bookings_count' => function ($q) {
                     $q->where('end_date', '>=', now()->format('Y-m-d'))
-                      ->whereNotIn('booking_status', ['cancelled', 'rejected'])
-                      ->whereNull('asset_unit_id');
+                      ->whereNotIn('booking_status', ['cancelled', 'rejected']);
                 }
             ])
             ->get();
@@ -59,8 +52,10 @@ class AssetController extends Controller
                 $totalPendingVerification++;
             }
 
-            $tUnits = $assetStat->total_units_count > 0 ? $assetStat->total_units_count : 1;
-            $oUnits = $assetStat->total_units_count > 0 ? $assetStat->occupied_units_count : $assetStat->active_bookings_count;
+            $tUnits = $assetStat->total_units_quantity > 0 ? $assetStat->total_units_quantity : 1;
+            $oUnits = $assetStat->active_bookings_count;
+
+            if ($oUnits > $tUnits) $oUnits = $tUnits;
 
             $totalAsset += $tUnits;
             $totalOccupied += $oUnits;
@@ -173,26 +168,26 @@ class AssetController extends Controller
             $occupiedUnits = 0;
 
             if ($hasUnits) {
-                $totalUnits = $asset->units->count();
-                foreach ($asset->units as $unit) {
-                    if ($unit->bookings->isNotEmpty()) {
-                        $occupiedUnits++;
-                    }
-                }
+                $totalUnits = $asset->units->sum('quantity') ?: 1;
+                // H2 Fix: count occupied via units.bookings (asset_unit_id != null, already filtered in eager load)
+                $occupiedUnits = $asset->units->sum(fn($unit) => $unit->bookings->count());
             } else {
                 if ($asset->bookings->isNotEmpty()) {
                     $occupiedUnits = 1;
                 }
             }
 
+            if ($occupiedUnits > $totalUnits) $occupiedUnits = $totalUnits;
+
             $availableUnits = $totalUnits - $occupiedUnits;
             $status = $availableUnits > 0 ? 'Tersedia' : 'Tersewa';
 
             $vStatus = $asset->status;
 
+            // H4 Fix: Ambil harga termurah dari semua pricings (bukan baris pertama)
             $price = 0;
             if ($asset->pricings->isNotEmpty()) {
-                $price = $asset->pricings->first()->price;
+                $price = $asset->pricings->min('price');
             }
 
             $thumbnail = null;
@@ -323,12 +318,26 @@ class AssetController extends Controller
             }
 
             // --- 3. Harga Aset (jika tanpa unit) ---
-            if (!$allowUnits) {
-                asset_pricing::create([
-                    'asset_id'      => $assetRecord->id,
-                    'asset_unit_id' => null,
-                    'price'         => $request->price,
-                ]);
+            if (!$allowUnits && $request->pricings) {
+                // H5: Cek duplikat paket harga sebelum insert
+                $seen = [];
+                foreach ($request->pricings as $pricing) {
+                    $key = $pricing['duration'] . '-' . $pricing['rental_unit'];
+                    if (in_array($key, $seen)) {
+                        throw new \Exception('Terdapat paket harga duplikat: ' . $pricing['duration'] . ' ' . $pricing['rental_unit']);
+                    }
+                    $seen[] = $key;
+                }
+
+                foreach ($request->pricings as $pricing) {
+                    asset_pricing::create([
+                        'asset_id'      => $assetRecord->id,
+                        'asset_unit_id' => null,
+                        'duration'      => $pricing['duration'],
+                        'rental_unit'   => $pricing['rental_unit'],
+                        'price'         => $pricing['price'],
+                    ]);
+                }
             }
 
             // --- 4. Unit Aset (jika allow_units = true) ---
@@ -343,15 +352,34 @@ class AssetController extends Controller
                     ]);
 
                     // Harga per unit — simpan asset_id juga agar query per asset masih bisa menemukan pricing ini
-                    asset_pricing::create([
-                        'asset_id'      => $assetRecord->id,
-                        'asset_unit_id' => $unit->id,
-                        'price'         => $unitData['price'],
-                    ]);
+                    if (isset($unitData['pricings'])) {
+                        // H5: Cek duplikat paket harga unit sebelum insert
+                        $seenUnit = [];
+                        foreach ($unitData['pricings'] as $pricing) {
+                            $key = $pricing['duration'] . '-' . $pricing['rental_unit'];
+                            if (in_array($key, $seenUnit)) {
+                                throw new \Exception('Terdapat paket harga duplikat pada unit ' . $unitData['name'] . ': ' . $pricing['duration'] . ' ' . $pricing['rental_unit']);
+                            }
+                            $seenUnit[] = $key;
+                        }
+
+                        foreach ($unitData['pricings'] as $pricing) {
+                            asset_pricing::create([
+                                'asset_id'      => $assetRecord->id,
+                                'asset_unit_id' => $unit->id,
+                                'duration'      => $pricing['duration'],
+                                'rental_unit'   => $pricing['rental_unit'],
+                                'price'         => $pricing['price'],
+                            ]);
+                        }
+                    }
 
                     // Fasilitas unit
-                    if (!empty($unitData['facility_ids'])) {
-                        $unit->facilities()->sync($unitData['facility_ids']);
+                    $facilityIds = $unitData['facility_ids'] ?? [];
+                    if (!empty($facilityIds)) {
+                        $unit->facilities()->sync($facilityIds);
+                    } else {
+                        $unit->facilities()->sync([]);
                     }
 
                     // Foto unit
@@ -666,7 +694,10 @@ class AssetController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
+            'pricings' => 'required|array|min:1',
+            'pricings.*.duration' => 'required|integer|min:1',
+            'pricings.*.rental_unit' => 'required|string|in:hour,day,night,week,month',
+            'pricings.*.price' => 'required|numeric|min:0',
             'detail' => 'nullable|array',
             'facilities' => 'nullable|array',
             'facilities.*' => 'exists:facilities,id',
@@ -683,10 +714,26 @@ class AssetController extends Controller
             'status' => 'active',
         ]);
 
-        $unit->pricings()->create([
-            'asset_id' => $asset->id,
-            'price' => $validated['price'],
-        ]);
+        // H5: Cek duplikat paket harga unit sebelum insert
+        $seenPricings = [];
+        foreach ($validated['pricings'] as $pricing) {
+            $key = $pricing['duration'] . '-' . $pricing['rental_unit'];
+            if (in_array($key, $seenPricings)) {
+                return redirect()->back()->withErrors([
+                    'pricings' => 'Terdapat paket harga duplikat: ' . $pricing['duration'] . ' ' . $pricing['rental_unit'] . '. Setiap kombinasi durasi dan satuan waktu harus unik.',
+                ]);
+            }
+            $seenPricings[] = $key;
+        }
+
+        foreach ($validated['pricings'] as $pricing) {
+            $unit->pricings()->create([
+                'asset_id' => $asset->id,
+                'duration' => $pricing['duration'],
+                'rental_unit' => $pricing['rental_unit'],
+                'price' => $pricing['price'],
+            ]);
+        }
 
         if (!empty($validated['facilities'])) {
             $unit->facilities()->sync($validated['facilities']);
@@ -718,6 +765,55 @@ class AssetController extends Controller
     /**
      * Memperbarui data unit
      */
+    /**
+     * Memperbarui daftar harga untuk aset tunggal (tanpa unit)
+     */
+    public function updatePricings(Request $request, string $id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah aset ini.');
+        }
+
+        if ($asset->type->allow_units) {
+            abort(400, 'Aset ini menggunakan unit, silakan atur harga per unit.');
+        }
+
+        $validated = $request->validate([
+            'pricings' => 'required|array|min:1',
+            'pricings.*.duration' => 'required|integer|min:1',
+            'pricings.*.rental_unit' => 'required|string|in:hour,day,night,week,month',
+            'pricings.*.price' => 'required|numeric|min:0',
+        ]);
+
+        // Cek duplikat
+        $seen = [];
+        foreach ($validated['pricings'] as $pricing) {
+            $key = $pricing['duration'] . '-' . $pricing['rental_unit'];
+            if (in_array($key, $seen)) {
+                return redirect()->back()->withErrors(['pricings' => 'Terdapat paket harga dengan durasi dan satuan waktu yang sama.']);
+            }
+            $seen[] = $key;
+        }
+
+        // Hapus semua harga lama (yang tidak terkait ke unit)
+        $asset->pricings()->whereNull('asset_unit_id')->delete();
+
+        // Simpan harga baru
+        foreach ($validated['pricings'] as $pricing) {
+            $asset->pricings()->create([
+                'asset_unit_id' => null,
+                'duration' => $pricing['duration'],
+                'rental_unit' => $pricing['rental_unit'],
+                'price' => $pricing['price'],
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Paket harga berhasil diperbarui.');
+    }
+
     public function updateUnit(Request $request, string $id, string $unit_id)
     {
         $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
@@ -732,7 +828,10 @@ class AssetController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:1',
-            'price' => 'required|numeric|min:0',
+            'pricings' => 'required|array|min:1',
+            'pricings.*.duration' => 'required|integer|min:1',
+            'pricings.*.rental_unit' => 'required|string|in:hour,day,night,week,month',
+            'pricings.*.price' => 'required|numeric|min:0',
             'detail' => 'nullable|array',
             'facilities' => 'nullable|array',
             'facilities.*' => 'exists:facilities,id',
@@ -750,13 +849,14 @@ class AssetController extends Controller
             'detail' => $validated['detail'] ?? [],
         ]);
 
-        $pricing = $unit->pricings()->first();
-        if ($pricing) {
-            $pricing->update(['price' => $validated['price']]);
-        } else {
+        // Ganti semua pricing dengan yang baru (hapus lalu buat lagi lebih mudah untuk handle unique)
+        $unit->pricings()->delete();
+        foreach ($validated['pricings'] as $pricing) {
             $unit->pricings()->create([
                 'asset_id' => $asset->id,
-                'price' => $validated['price'],
+                'duration' => $pricing['duration'],
+                'rental_unit' => $pricing['rental_unit'],
+                'price' => $pricing['price'],
             ]);
         }
 

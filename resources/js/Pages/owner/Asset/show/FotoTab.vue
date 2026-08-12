@@ -28,6 +28,9 @@ const groupedImages = computed(() => {
 
     if (props.asset.images && props.asset.images.length > 0) {
         props.asset.images.forEach(img => {
+            // Abaikan thumbnail agar tidak masuk ke kategori galeri biasa
+            if (img.is_thumbnail) return;
+
             const catName = img.gallery_category?.name || 'Umum';
             const catId = img.gallery_category_id || null;
             if (!groups[catName]) {
@@ -37,10 +40,9 @@ const groupedImages = computed(() => {
         });
     }
 
-    // Jika kosong sama sekali, beri default 'Umum'
-    if (Object.keys(groups).length === 0) {
-        groups['Umum'] = { id: null, name: 'Umum', images: [] };
-    }
+    // Jika kosong sama sekali (tidak ada foto selain thumbnail)
+    // Jangan buat default 'Umum' secara paksa, biarkan kosong agar UI menampilkan "Belum Ada Foto"
+
 
     return groups;
 });

@@ -486,7 +486,8 @@ class HomeController extends Controller
 
         // Filter harga
         if ($minPrice > 0 || $maxPrice < 10000000) {
-            $query->whereHas('defaultPricing', fn($q) => $q->whereBetween('price', [$minPrice, $maxPrice]));
+            // H4 Fix: filter berdasarkan ada/tidaknya pricing yang masuk rentang, bukan default pricing
+            $query->whereHas('pricings', fn($q) => $q->whereBetween('price', [$minPrice, $maxPrice]));
         }
 
         // Filter fasilitas (sistem baru: pivot asset_facilities)
@@ -544,6 +545,7 @@ class HomeController extends Controller
             $query->orderBy(
                 asset_pricing::select('price')
                     ->whereColumn('asset_id', 'assets.id')
+                    ->orderBy('price', 'asc')  // H4 Fix: ambil harga termurah
                     ->limit(1),
                 'asc'
             );
@@ -551,6 +553,7 @@ class HomeController extends Controller
             $query->orderBy(
                 asset_pricing::select('price')
                     ->whereColumn('asset_id', 'assets.id')
+                    ->orderBy('price', 'asc')  // H4 Fix: bandingkan berdasarkan harga termurah
                     ->limit(1),
                 'desc'
             );

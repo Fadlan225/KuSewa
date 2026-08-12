@@ -188,7 +188,7 @@ const assetSubMenu = computed(() => [
     { key: 'lokasi',      label: 'Lokasi',           icon: 'fa-solid fa-location-dot',  active: activeTab.value === 'lokasi',       onClick: () => activeTab.value = 'lokasi' },
     { key: 'fasilitas',   label: 'Fasilitas',        icon: 'fa-solid fa-star',          active: activeTab.value === 'fasilitas',    onClick: () => activeTab.value = 'fasilitas' },
     ...(props.asset.type?.allow_units ? [{ key: 'unit', label: 'Unit', icon: 'fa-solid fa-door-open', active: activeTab.value === 'unit', onClick: () => activeTab.value = 'unit' }] : []),
-    { key: 'harga',       label: 'Harga & Aturan',  icon: 'fa-solid fa-tag',           active: activeTab.value === 'harga',        onClick: () => activeTab.value = 'harga' },
+    ...(!props.asset.type?.allow_units ? [{ key: 'harga', label: 'Harga & Aturan', icon: 'fa-solid fa-tag', active: activeTab.value === 'harga', onClick: () => activeTab.value = 'harga' }] : []),
     { key: 'ketersediaan',label: 'Ketersediaan',     icon: 'fa-solid fa-calendar-check',active: activeTab.value === 'ketersediaan', onClick: () => activeTab.value = 'ketersediaan' },
     { key: 'foto',        label: 'Foto & Dokumen',   icon: 'fa-solid fa-images',        active: activeTab.value === 'foto',         onClick: () => activeTab.value = 'foto' },
     { key: 'kebijakan',   label: 'Kebijakan & FAQ',  icon: 'fa-solid fa-shield-halved', active: activeTab.value === 'kebijakan',    onClick: () => activeTab.value = 'kebijakan' },
@@ -279,7 +279,7 @@ const assetSubMenu = computed(() => [
                             <span class="text-[10px] text-slate-400 font-medium mb-0.5">Mulai dari</span>
                             <div class="text-base font-black text-[#F97316]">
                                 {{ lowestPrice ? formatRupiah(lowestPrice.price) : '-' }}
-                                <span v-if="lowestPrice" class="text-[11px] text-slate-400 font-medium">/ {{ rentalUnitLabel(asset.type?.rental_unit) }}</span>
+                                <span v-if="lowestPrice" class="text-[11px] text-slate-400 font-medium">/ {{ lowestPrice.duration }} {{ rentalUnitLabel(lowestPrice.rental_unit) }}</span>
                             </div>
                         </div>
                     </div>
@@ -292,7 +292,7 @@ const assetSubMenu = computed(() => [
                 <button @click="activeTab = 'lokasi'" :class="activeTab === 'lokasi' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Lokasi</button>
                 <button @click="activeTab = 'fasilitas'" :class="activeTab === 'fasilitas' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Fasilitas Aset</button>
                 <button v-if="asset.type?.allow_units" @click="activeTab = 'unit'" :class="activeTab === 'unit' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Unit <span class="ml-1 bg-slate-100 text-slate-500 py-0.5 px-1.5 rounded-full text-[10px]">{{ asset.units?.length || 0 }}</span></button>
-                <button @click="activeTab = 'harga'" :class="activeTab === 'harga' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Harga & Aturan</button>
+                <button v-if="!asset.type?.allow_units" @click="activeTab = 'harga'" :class="activeTab === 'harga' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Harga & Aturan</button>
                 <button @click="activeTab = 'ketersediaan'" :class="activeTab === 'ketersediaan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Ketersediaan</button>
                 <button @click="activeTab = 'foto'" :class="activeTab === 'foto' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Foto & Dokumen</button>
                 <button @click="activeTab = 'kebijakan'" :class="activeTab === 'kebijakan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Kebijakan & FAQ</button>

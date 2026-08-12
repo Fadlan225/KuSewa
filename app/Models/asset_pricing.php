@@ -9,6 +9,8 @@ class asset_pricing extends Model
     protected $fillable = [
         'asset_id',
         'asset_unit_id',
+        'duration',
+        'rental_unit',
         'price',
     ];
 

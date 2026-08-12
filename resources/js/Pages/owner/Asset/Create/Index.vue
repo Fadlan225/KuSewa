@@ -58,7 +58,7 @@ const makeEmptyUnit = () => ({
     _id: Date.now() + Math.random(),
     name: '',
     quantity: 1,
-    price: '',
+    pricings: [{ _id: Date.now(), duration: 1, rental_unit: 'month', price: '' }],
     detail: {},
     facility_ids: [],
     thumbnail: null,
@@ -87,7 +87,7 @@ const form = useForm({
     longitude: '',
 
     // Step 3: Harga & Foto
-    price: '',       // digunakan jika allow_units = false
+    pricings: [{ _id: Date.now(), duration: 1, rental_unit: 'month', price: '' }], // digunakan jika allow_units = false
     thumbnail: null,
     thumbnail_preview: null,
     photos: [        // array grup foto
@@ -337,13 +337,25 @@ const validateStep2 = () => {
 const validateStep3 = () => {
     const errors = {};
     if (!allowUnits.value) {
-        if (!form.price || Number(form.price) <= 0)
-            errors.price = 'Harga sewa wajib diisi.';
+        if (!form.pricings || form.pricings.length === 0) {
+            errors.pricings = 'Paket harga sewa wajib diisi.';
+        } else {
+            form.pricings.forEach((p, i) => {
+                if (!p.price || Number(p.price) <= 0) errors[`pricings.${i}.price`] = 'Harga sewa wajib diisi.';
+            });
+        }
     } else {
         form.units.forEach((unit, i) => {
             if (!unit.name.trim()) errors[`units.${i}.name`] = 'Nama unit wajib diisi.';
             if (!unit.quantity || Number(unit.quantity) < 1) errors[`units.${i}.quantity`] = 'Jumlah unit wajib diisi.';
-            if (!unit.price || Number(unit.price) <= 0) errors[`units.${i}.price`] = 'Harga unit wajib diisi.';
+            
+            if (!unit.pricings || unit.pricings.length === 0) {
+                errors[`units.${i}.pricings`] = 'Paket harga unit wajib diisi.';
+            } else {
+                unit.pricings.forEach((p, pIdx) => {
+                    if (!p.price || Number(p.price) <= 0) errors[`units.${i}.pricings.${pIdx}.price`] = 'Harga unit wajib diisi.';
+                });
+            }
         });
     }
     return errors;

@@ -50,7 +50,7 @@ const form = ref({
     id: null,
     name: '',
     quantity: 1,
-    price: 0,
+    pricings: [{ _id: Date.now(), duration: 1, rental_unit: 'month', price: 0 }],
     detail: {},
     facilities: [],
     new_images: [],
@@ -67,7 +67,7 @@ const openCreateModal = () => {
         id: null,
         name: '',
         quantity: 1,
-        price: 0,
+        pricings: [{ _id: Date.now(), duration: 1, rental_unit: 'month', price: 0 }],
         detail: {},
         facilities: [],
         new_images: [],
@@ -88,7 +88,7 @@ const openEditModal = (unit) => {
         id: unit.id,
         name: unit.name,
         quantity: unit.quantity || 1,
-        price: (unit.pricings && unit.pricings.length > 0) ? unit.pricings[0].price : 0,
+        pricings: (unit.pricings && unit.pricings.length > 0) ? unit.pricings.map(p => ({...p, _id: p.id || Date.now() + Math.random()})) : [{ _id: Date.now(), duration: 1, rental_unit: 'month', price: 0 }],
         detail: unit.detail || {},
         facilities: (unit.facilities || []).map(f => f.id),
         new_images: [],
@@ -192,7 +192,11 @@ const submit = () => {
     const fd = new FormData();
     fd.append('name', form.value.name);
     fd.append('quantity', form.value.quantity);
-    fd.append('price', form.value.price);
+    form.value.pricings.forEach((p, i) => {
+        fd.append(`pricings[${i}][duration]`, p.duration);
+        fd.append(`pricings[${i}][rental_unit]`, p.rental_unit);
+        fd.append(`pricings[${i}][price]`, p.price);
+    });
     fd.append('detail', JSON.stringify(form.value.detail || {}));
     (form.value.facilities || []).forEach(id => fd.append('facilities[]', id));
     (form.value.deleted_images || []).forEach(id => fd.append('deleted_images[]', id));
@@ -320,17 +324,46 @@ const submit = () => {
                             <div v-if="formErrors.name" class="text-xs text-rose-500 mt-1">{{ formErrors.name }}</div>
                         </div>
 
-                        <!-- KUANTITAS & HARGA -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="text-xs font-bold text-slate-500 block mb-1">Kuantitas (Jumlah)</label>
-                                <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" required />
-                                <div v-if="formErrors.quantity" class="text-xs text-rose-500 mt-1">{{ formErrors.quantity }}</div>
+                        <!-- KUANTITAS -->
+                        <div>
+                            <label class="text-xs font-bold text-slate-500 block mb-1">Kuantitas (Jumlah) <span class="text-rose-500">*</span></label>
+                            <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" required />
+                            <div v-if="formErrors.quantity" class="text-xs text-rose-500 mt-1">{{ formErrors.quantity }}</div>
+                        </div>
+
+                        <!-- DAFTAR HARGA -->
+                        <div class="border border-slate-200 rounded-xl overflow-hidden">
+                            <div class="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200">
+                                <label class="text-xs font-bold text-slate-700">Daftar Harga Sewa <span class="text-rose-500">*</span></label>
+                                <button type="button" @click="form.pricings.push({ _id: Date.now(), duration: 1, rental_unit: 'month', price: '' })" class="text-[10px] font-bold bg-white border border-slate-200 text-[#0A2540] hover:text-[#FFC000] px-2.5 py-1.5 rounded-lg transition shadow-sm">
+                                    + Tambah Harga
+                                </button>
                             </div>
-                            <div>
-                                <label class="text-xs font-bold text-slate-500 block mb-1">Harga Sewa (Rp)</label>
-                                <input v-model="form.price" type="number" min="0" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" required />
-                                <div v-if="formErrors.price" class="text-xs text-rose-500 mt-1">{{ formErrors.price }}</div>
+                            <div class="p-4 space-y-3 bg-white">
+                                <div v-for="(pricing, pIdx) in form.pricings" :key="pricing._id || pIdx" class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-lg p-3">
+                                    <div class="w-1/4">
+                                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Durasi</label>
+                                        <input v-model="pricing.duration" type="number" min="1" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#0A2540] focus:ring-0" required />
+                                    </div>
+                                    <div class="w-1/4">
+                                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Satuan</label>
+                                        <select v-model="pricing.rental_unit" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#0A2540] focus:ring-0" required>
+                                            <option value="hour">Jam</option>
+                                            <option value="day">Hari</option>
+                                            <option value="night">Malam</option>
+                                            <option value="week">Minggu</option>
+                                            <option value="month">Bulan</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex-1">
+                                        <label class="block text-[10px] font-bold text-slate-500 mb-1">Harga (Rp)</label>
+                                        <input v-model="pricing.price" type="number" min="0" placeholder="100000" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#0A2540] focus:ring-0" required />
+                                    </div>
+                                    <button v-if="form.pricings.length > 1" type="button" @click="form.pricings.splice(pIdx, 1)" class="w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center shrink-0 mt-4" title="Hapus">
+                                        <i class="fa-solid fa-trash text-xs"></i>
+                                    </button>
+                                </div>
+                                <div v-if="formErrors.pricings" class="text-xs text-rose-500">{{ formErrors.pricings }}</div>
                             </div>
                         </div>
 

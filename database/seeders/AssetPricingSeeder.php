@@ -18,7 +18,7 @@ class AssetPricingSeeder extends Seeder
 
         $assets = DB::table('assets')
             ->join('asset_types', 'assets.asset_type_id', '=', 'asset_types.id')
-            ->select('assets.id', 'assets.asset_type_id', 'asset_types.name as type_name', 'asset_types.allow_units')
+            ->select('assets.id', 'assets.asset_type_id', 'asset_types.name as type_name', 'asset_types.allow_units', 'asset_types.rental_unit')
             ->get();
 
         $unitsByAsset = DB::table('asset_units')
@@ -30,36 +30,40 @@ class AssetPricingSeeder extends Seeder
         $totalPricings = 0;
 
         foreach ($assets as $asset) {
-            $type = $asset->type_name;
+            $tiers = $this->getPricingTiers($asset->type_name, $asset->rental_unit, $faker);
 
             if ($asset->allow_units) {
-                // Pricing for units
                 $units = $unitsByAsset->get($asset->id, collect());
                 foreach ($units as $unit) {
-                    $price = $this->generatePrice($type, $faker);
+                    foreach ($tiers as $tier) {
+                        $batch[] = [
+                            'asset_id'      => $asset->id,
+                            'asset_unit_id' => $unit->id,
+                            'duration'      => $tier['duration'],
+                            'rental_unit'   => $tier['rental_unit'],
+                            'price'         => (int) round($tier['price']),
+                            'created_at'    => now(),
+                            'updated_at'    => now(),
+                        ];
+                        $totalPricings++;
+                    }
+                }
+            } else {
+                foreach ($tiers as $tier) {
                     $batch[] = [
-                        'asset_id' => $asset->id,
-                        'asset_unit_id' => $unit->id,
-                        'price' => $price,
-                        'created_at' => now(),
-                        'updated_at' => now(),
+                        'asset_id'      => $asset->id,
+                        'asset_unit_id' => null,
+                        'duration'      => $tier['duration'],
+                        'rental_unit'   => $tier['rental_unit'],
+                        'price'         => (int) round($tier['price']),
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
                     ];
                     $totalPricings++;
                 }
-            } else {
-                // Pricing for asset
-                $price = $this->generatePrice($type, $faker);
-                $batch[] = [
-                    'asset_id' => $asset->id,
-                    'asset_unit_id' => null,
-                    'price' => $price,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-                $totalPricings++;
             }
 
-            if (count($batch) >= 1000) {
+            if (count($batch) >= 500) {
                 DB::table('asset_pricings')->insert($batch);
                 $batch = [];
             }
@@ -72,26 +76,64 @@ class AssetPricingSeeder extends Seeder
         $this->command->info("✓ {$totalPricings} Asset Pricings berhasil dibuat!");
     }
 
-    private function generatePrice($typeName, $faker)
+    private function getPricingTiers($typeName, $rentalUnit, $faker): array
     {
-        if ($typeName == 'Rumah') {
-            return $faker->randomElement([500000, 800000, 1000000, 1500000, 2000000, 2500000]);
-        } elseif ($typeName == 'Villa') {
+        $base = $this->getBasePrice($typeName, $faker);
+
+        if ($rentalUnit === 'hour') {
+            return [
+                ['duration' => 1, 'rental_unit' => 'hour', 'price' => $base],
+                ['duration' => 3, 'rental_unit' => 'hour', 'price' => $base * 2.7],
+                ['duration' => 8, 'rental_unit' => 'hour', 'price' => $base * 6.5],
+            ];
+        } elseif ($rentalUnit === 'night') {
+            return [
+                ['duration' => 1, 'rental_unit' => 'night', 'price' => $base],
+                ['duration' => 3, 'rental_unit' => 'night', 'price' => $base * 2.7],
+                ['duration' => 7, 'rental_unit' => 'night', 'price' => $base * 6],
+            ];
+        } elseif ($rentalUnit === 'day') {
+            return [
+                ['duration' => 1, 'rental_unit' => 'day', 'price' => $base],
+                ['duration' => 3, 'rental_unit' => 'day', 'price' => $base * 2.7],
+                ['duration' => 7, 'rental_unit' => 'day', 'price' => $base * 6],
+            ];
+        } elseif ($rentalUnit === 'month') {
+            return [
+                ['duration' => 1,  'rental_unit' => 'month', 'price' => $base],
+                ['duration' => 3,  'rental_unit' => 'month', 'price' => $base * 2.7],
+                ['duration' => 6,  'rental_unit' => 'month', 'price' => $base * 5],
+                ['duration' => 12, 'rental_unit' => 'month', 'price' => $base * 9],
+            ];
+        }
+
+        return [
+            ['duration' => 1, 'rental_unit' => $rentalUnit, 'price' => $base],
+        ];
+    }
+
+    private function getBasePrice($typeName, $faker): int
+    {
+        if ($typeName === 'Rumah') {
+            return $faker->randomElement([500000, 800000, 1000000, 1500000, 2000000]);
+        } elseif ($typeName === 'Villa') {
             return $faker->randomElement([800000, 1200000, 2000000, 3500000, 5000000]);
-        } elseif ($typeName == 'Hotel' || $typeName == 'Resort') {
+        } elseif (in_array($typeName, ['Hotel', 'Resort'])) {
             return $faker->randomElement([300000, 500000, 800000, 1200000, 2000000]);
-        } elseif ($typeName == 'Kos') {
-            return $faker->randomElement([700000, 1000000, 1500000, 2500000, 3500000]);
-        } elseif ($typeName == 'Gudang') {
-            return $faker->randomElement([5000000, 10000000, 15000000, 20000000, 25000000]);
-        } elseif ($typeName == 'Studio') {
-            return $faker->randomElement([100000, 150000, 250000, 350000, 500000]);
-        } elseif (strpos($typeName, 'Baliho') !== false) {
-            return $faker->randomElement([8000000, 15000000, 25000000, 35000000, 50000000]);
-        } elseif ($typeName == 'Apartemen') {
-            return $faker->randomElement([400000, 600000, 900000, 1500000, 2500000]);
+        } elseif ($typeName === 'Kos') {
+            return $faker->randomElement([700000, 1000000, 1500000, 2500000]);
+        } elseif ($typeName === 'Gudang') {
+            return $faker->randomElement([5000000, 10000000, 15000000]);
+        } elseif ($typeName === 'Studio') {
+            return $faker->randomElement([100000, 150000, 250000, 350000]);
+        } elseif (str_contains($typeName, 'Baliho')) {
+            return $faker->randomElement([3000000, 5000000, 8000000, 10000000]);
+        } elseif ($typeName === 'Apartemen') {
+            return $faker->randomElement([400000, 600000, 900000, 1500000]);
         } elseif (in_array($typeName, ['Homestay', 'Guest House'])) {
-            return $faker->randomElement([150000, 250000, 350000, 500000, 750000]);
+            return $faker->randomElement([150000, 250000, 350000, 500000]);
+        } elseif (in_array($typeName, ['Ruang Meeting', 'Aula', 'Gedung'])) {
+            return $faker->randomElement([200000, 500000, 1000000, 2000000]);
         } else {
             return $faker->randomElement([1000000, 2000000, 3000000, 5000000]);
         }

@@ -106,7 +106,7 @@ const periodLabel = {
     day: 'hari',
     week: 'minggu',
     month: 'bulan',
-    year: 'tahun'
+    // 'year' tidak ada di enum database, dihapus (M7)
 };
 
 const formatDate = (dateString) => {
@@ -164,9 +164,16 @@ const facilitiesGrouped = computed(() => {
 const selectedUnitId = ref(null);
 
 // Form Booking (persiapan)
+// K5: Untuk single asset, inisialisasi pricing_id ke harga termurah agar ada default terpilih
+const getDefaultPricingId = () => {
+    if (props.asset.units && props.asset.units.length > 0) return null;
+    if (!props.asset.pricings || props.asset.pricings.length === 0) return null;
+    return [...props.asset.pricings].sort((a, b) => a.price - b.price)[0]?.id ?? null;
+};
+
 const form = useForm({
     asset_id: props.asset.id,
-    pricing_id: null,
+    pricing_id: getDefaultPricingId(),
     asset_unit_id: null,
 });
 
@@ -463,10 +470,8 @@ const durationCount = computed(() => {
     return nightsCount.value;
 });
 
-const priceMultiplier = computed(() => {
-    return (props.asset.type?.rental_unit === 'night' && activeScheduleMode.value === 'month') ? 30 : 1;
-});
-
+// K3: Hapus priceMultiplier — kalkulasi ×30 (malam→bulan) sudah usang sejak model paket harga.
+// Harga paket adalah harga flat, tidak dikalikan durasi.
 const activePrice = computed(() => {
     if (form.pricing_id) {
         let found = null;
@@ -483,10 +488,10 @@ const activePrice = computed(() => {
     return lowestPrice.value;
 });
 
+// K2: subtotal = harga paket flat (tidak dikali durasi), konsisten dengan Booking.vue
 const subtotal = computed(() => {
     if (!activePrice.value) return 0;
-    const count = durationCount.value || 1;
-    return activePrice.value.price * priceMultiplier.value * count;
+    return activePrice.value.price;
 });
 
 const feeAmount = computed(() => {
@@ -726,6 +731,30 @@ const formattedDateRange = computed(() => {
                             Pemilik belum menetapkan harga sewa. Hubungi pemilik untuk informasi.
                         </div>
 
+                        <!-- K5: Pemilih Paket Harga (hanya untuk single asset tanpa unit) -->
+                        <div v-if="!asset.units?.length && asset.pricings?.length > 0" class="mb-5">
+                            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pilih Paket Sewa</p>
+                            <div class="space-y-2">
+                                <button
+                                    v-for="p in asset.pricings"
+                                    :key="p.id"
+                                    type="button"
+                                    @click="form.pricing_id = p.id"
+                                    class="w-full flex justify-between items-center px-4 py-3 rounded-xl border-2 text-sm transition-all"
+                                    :class="form.pricing_id === p.id
+                                        ? 'border-[#0A2540] bg-[#0A2540]/5 shadow-sm'
+                                        : 'border-gray-200 hover:border-gray-300 bg-white'"
+                                >
+                                    <span class="font-semibold" :class="form.pricing_id === p.id ? 'text-[#0A2540]' : 'text-gray-700'">
+                                        {{ p.duration }} {{ rentalUnitLabel(p.rental_unit) }}
+                                    </span>
+                                    <span class="font-black" :class="form.pricing_id === p.id ? 'text-[#F97316]' : 'text-[#0A2540]'">
+                                        {{ formatRupiah(p.price) }}
+                                    </span>
+                                </button>
+                            </div>
+                        </div>
+
                         <button
                             v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
                             @click="() => document.getElementById('pilihan-unit')?.scrollIntoView({ behavior: 'smooth' })"
@@ -741,6 +770,7 @@ const formattedDateRange = computed(() => {
                         </button>
 
                         <p v-if="asset.status !== 'approved'" class="text-center text-red-500 text-xs font-bold mb-4">Aset ini sedang tidak tersedia.</p>
+
 
                         <!-- Breakdown -->
                         <div class="space-y-3 text-sm">

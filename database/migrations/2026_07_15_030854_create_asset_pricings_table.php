@@ -15,7 +15,10 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asset_id')->nullable()->constrained()->onDelete('restrict');
             $table->foreignId('asset_unit_id')->nullable()->constrained()->onDelete('restrict');
+            $table->integer('duration');
+            $table->enum('rental_unit',['hour', 'night', 'day','week','month']);
             $table->decimal('price',15,2);
+            $table->unique(['asset_id', 'asset_unit_id', 'duration', 'rental_unit'], 'asset_pricings_unique');
             $table->timestamps();
         });
     }

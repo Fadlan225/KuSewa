@@ -63,10 +63,10 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::resource('asset', \App\Http\Controllers\Owner\AssetController::class)->names('asset');
     Route::post('asset/{asset}/facilities', [\App\Http\Controllers\Owner\AssetController::class, 'storeFacility'])->name('asset.facilities.store');
     Route::delete('asset/{asset}/facilities/{facility}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyFacility'])->name('asset.facilities.destroy');
-    
+
     Route::post('asset/{asset}/units', [\App\Http\Controllers\Owner\AssetController::class, 'storeUnit'])->name('asset.units.store');
     Route::put('asset/{asset}/units/{unit}', [\App\Http\Controllers\Owner\AssetController::class, 'updateUnit'])->name('asset.units.update');
-    
+
     Route::post('asset/{asset}/images', [\App\Http\Controllers\Owner\AssetController::class, 'storeImage'])->name('asset.images.store');
     Route::delete('asset/{asset}/images/{image}', [\App\Http\Controllers\Owner\AssetController::class, 'destroyImage'])->name('asset.images.destroy');
 

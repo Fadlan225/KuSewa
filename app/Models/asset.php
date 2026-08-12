@@ -88,7 +88,7 @@ class asset extends Model
 
     public function defaultPricing()
     {
-        return $this->hasOne(asset_pricing::class)->orderBy('id');
+        return $this->hasOne(asset_pricing::class)->orderBy('price', 'asc');
     }
 
     public function bookings(){

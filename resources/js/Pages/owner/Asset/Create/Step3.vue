@@ -44,21 +44,52 @@ const rentalUnitLabel = computed(() => {
     <!-- HARGA — Tanpa Unit (satu harga untuk aset) -->
     <!-- ============================================ -->
     <div v-if="!allowUnits">
-        <label class="block text-xs font-bold text-slate-700 mb-1">
-            Harga Sewa (Rp{{ rentalUnitLabel }}) <span class="text-rose-500">*</span>
-        </label>
-        <div class="relative">
-            <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
-            <input
-                v-model="form.price"
-                type="number"
-                min="0"
-                placeholder="1500000"
-                class="w-full text-xs pl-10 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition"
-                required
-            />
+        <div class="flex items-center justify-between mb-2">
+            <label class="block text-xs font-bold text-slate-700">
+                Daftar Harga Sewa <span class="text-rose-500">*</span>
+            </label>
+            <button
+                type="button"
+                @click="form.pricings.push({ _id: Date.now(), duration: 1, rental_unit: assetTypeDetails?.rental_unit || 'month', price: '' })"
+                class="text-[11px] font-bold text-[#0A2540] hover:text-[#FFC000] bg-slate-100 px-3 py-1.5 rounded-lg transition cursor-pointer"
+            >
+                + Tambah Harga
+            </button>
         </div>
-        <p class="text-[10px] text-slate-400 mt-1">Harga sewa per {{ rentalUnitLabel.replace('/', '') || 'periode' }}.</p>
+        <div class="space-y-3">
+            <div v-for="(pricing, pIdx) in form.pricings" :key="pricing._id || pIdx" class="flex gap-3 items-center bg-slate-50 p-3 rounded-xl border border-slate-100 relative">
+                <div class="w-1/4">
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Durasi</label>
+                    <input v-model="pricing.duration" type="number" min="1" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0A2540]" required />
+                </div>
+                <div class="w-1/4">
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Satuan</label>
+                    <select v-model="pricing.rental_unit" class="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0A2540]" required>
+                        <option value="hour">Jam</option>
+                        <option value="day">Hari</option>
+                        <option value="night">Malam</option>
+                        <option value="week">Minggu</option>
+                        <option value="month">Bulan</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-[10px] font-bold text-slate-500 mb-1">Harga</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                        <input v-model="pricing.price" type="number" min="0" placeholder="1500000" class="w-full text-xs pl-8 pr-3 py-2 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0A2540]" required />
+                    </div>
+                </div>
+                <button
+                    v-if="form.pricings.length > 1"
+                    type="button"
+                    @click="form.pricings.splice(pIdx, 1)"
+                    class="w-8 h-8 rounded-lg bg-rose-100 text-rose-500 flex items-center justify-center shrink-0 mt-5 hover:bg-rose-500 hover:text-white transition"
+                    title="Hapus Harga"
+                >
+                    <i class="fa-solid fa-trash text-xs"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- ============================================ -->
@@ -86,12 +117,17 @@ const rentalUnitLabel = computed(() => {
                         <p class="text-[10px] text-slate-400">{{ unit.quantity }} unit tersedia</p>
                     </div>
                 </div>
-                <div class="text-right">
-                    <p class="text-xs font-black text-[#0A2540]">
-                        Rp {{ unit.price ? Number(unit.price).toLocaleString('id-ID') : '—' }}
-                        <span class="text-[10px] font-normal text-slate-400">{{ rentalUnitLabel }}</span>
-                    </p>
-                    <p v-if="!unit.price || Number(unit.price) <= 0" class="text-[10px] text-rose-500 font-bold mt-0.5">
+                <div class="text-right flex flex-col items-end gap-1">
+                    <template v-if="unit.pricings && unit.pricings.length > 0">
+                        <p v-for="p in unit.pricings" :key="p._id" class="text-xs font-black text-[#0A2540]">
+                            Rp {{ p.price ? Number(p.price).toLocaleString('id-ID') : '—' }}
+                            <span class="text-[10px] font-normal text-slate-400">/ {{ p.duration }} {{ p.rental_unit }}</span>
+                        </p>
+                        <p v-if="unit.pricings.some(p => !p.price || Number(p.price) <= 0)" class="text-[10px] text-rose-500 font-bold mt-0.5">
+                            ⚠ Ada harga belum diisi
+                        </p>
+                    </template>
+                    <p v-else class="text-[10px] text-rose-500 font-bold mt-0.5">
                         ⚠ Harga belum diisi
                     </p>
                 </div>
@@ -99,11 +135,11 @@ const rentalUnitLabel = computed(() => {
         </div>
 
         <!-- Warning jika ada unit tanpa harga -->
-        <div v-if="form.units.some(u => !u.price || Number(u.price) <= 0)"
+        <div v-if="form.units.some(u => !u.pricings || u.pricings.length === 0 || u.pricings.some(p => !p.price || Number(p.price) <= 0))"
              class="mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2">
             <i class="fa-solid fa-triangle-exclamation text-rose-500 text-sm mt-0.5"></i>
             <p class="text-[11px] text-rose-600 font-semibold">
-                Ada unit yang belum memiliki harga sewa. Kembali ke <strong>Step 1</strong> untuk mengisi harga setiap unit.
+                Ada unit yang harga sewanya belum lengkap. Kembali ke <strong>Step 1</strong> untuk mengisi harga setiap unit.
             </p>
         </div>
     </div>

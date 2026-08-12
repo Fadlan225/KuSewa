@@ -45,6 +45,11 @@ class BookingController extends Controller
             // FIX: Load relasi assetUnit agar nama unit tersedia di frontend
             $selectedPricing = asset_pricing::with('assetUnit')->find($pricingId);
             $unitId = $selectedPricing?->asset_unit_id;
+
+            // M2: Pastikan pricing_id milik aset yang diminta (cegah kebocoran info harga)
+            if ($selectedPricing && $selectedPricing->asset_id !== $asset->id) {
+                abort(403, 'Paket harga tidak valid untuk aset ini.');
+            }
         }
 
         $serviceFeeRecord = DB::table('service_fees')->first();
@@ -138,13 +143,7 @@ class BookingController extends Controller
         $validated = $request->validate([
             'asset_id'       => 'required|exists:assets,id',
             'pricing_id'     => 'required|exists:asset_pricings,id',
-            'startDate'      => 'required|date',
-            // BUG 3 FIX: Untuk mode jam, endDate boleh sama dengan startDate (beda jam)
-            //             Untuk mode lain, endDate harus >= startDate
-            'endDate'        => 'required|date|' . ($request->rental_mode === 'hour' ? 'after_or_equal:startDate' : 'after_or_equal:startDate'),
-            'duration'       => 'required|integer|min:1',
-            // BUG 8 FIX: Validasi rental_mode dengan enum yang ketat
-            'rental_mode'    => 'nullable|string|in:hour,day,night,month,year',
+            'startDate'      => 'required|date|after_or_equal:today',  // M1: Tidak boleh tanggal lampau
             'payment_method' => 'required',
             'booker_name'    => 'required|string|max:255',
             'booker_phone'   => 'required|string|max:20',
@@ -152,33 +151,46 @@ class BookingController extends Controller
             'guest_name'     => 'required|string|max:255',
         ]);
 
-        // BUG 3 FIX (tambahan): Untuk mode jam, validasi waktu end > start secara manual
-        if (($validated['rental_mode'] ?? 'day') === 'hour') {
-            $start = \Carbon\Carbon::parse($validated['startDate']);
-            $end   = \Carbon\Carbon::parse($validated['endDate']);
-            if ($end->lte($start)) {
-                return back()->withErrors(['endDate' => 'Waktu selesai harus setelah waktu mulai.'])->withInput();
-            }
-        }
+
 
         try {
             $payment = DB::transaction(function () use ($validated) {
 
                 // Kunci baris aset ini selama transaksi untuk mencegah Race Condition (Booking berbarengan)
                 $asset = asset::with('type')->lockForUpdate()->findOrFail($validated['asset_id']);
+
+                // H1: Guard — hanya aset yang sudah disetujui yang bisa dipesan
+                if ($asset->status !== 'approved') {
+                    throw new \Exception('Aset ini belum tersedia untuk dipesan (status: ' . $asset->status . ').');
+                }
+
                 $pricing = asset_pricing::findOrFail($validated['pricing_id']);
+
+                // M2 / K6: Pastikan pricing_id milik aset yang sama (cegah manipulasi harga lintas aset)
+                if ($pricing->asset_id !== (int) $validated['asset_id']) {
+                    throw new \Exception('Paket harga tidak valid untuk aset ini.');
+                }
 
                 // Tentukan scope overlap: per unit (Studio/Hotel) atau per asset (Villa/Rumah)
                 $unitId = $pricing->asset_unit_id;
                 
                 $parsedStartDate = Carbon::parse($validated['startDate']);
-                $parsedEndDate = Carbon::parse($validated['endDate']);
-                
-                // Jika mode 'day' atau 'month', booking mencakup keseluruhan hari (hingga 23:59:59)
-                // Ini penting agar overlap terdeteksi saat orang lain memesan di hari terakhir (checkout day).
-                // Untuk 'night' tidak perlu karena check-in bisa dilakukan di hari checkout orang lain.
-                // Untuk 'hour' waktu spesifik sudah ada.
-                if (in_array($validated['rental_mode'] ?? 'day', ['day', 'month'])) {
+                $parsedEndDate = Carbon::parse($validated['startDate']);
+
+                $duration = $pricing->duration;
+                $rentalUnit = $pricing->rental_unit;
+
+                if ($rentalUnit === 'hour') {
+                    $parsedEndDate->addHours($duration);
+                } elseif ($rentalUnit === 'night' || $rentalUnit === 'day') {
+                    $parsedEndDate->addDays($duration);
+                } elseif ($rentalUnit === 'week') {
+                    $parsedEndDate->addWeeks($duration);
+                } elseif ($rentalUnit === 'month') {
+                    $parsedEndDate->addMonths($duration);
+                }
+
+                if (in_array($rentalUnit, ['day', 'month', 'week'])) {
                     $parsedEndDate->endOfDay();
                 }
 
@@ -217,8 +229,7 @@ class BookingController extends Controller
                     throw new \Exception('OVERLAP');
                 }
 
-                $priceMultiplier = ($asset->type->rental_unit === 'night' && ($validated['rental_mode'] ?? '') === 'month') ? 30 : 1;
-                $subtotal = ($pricing->price * $priceMultiplier) * $validated['duration'];
+                $subtotal = $pricing->price;
 
                 $serviceFeeRecord = DB::table('service_fees')->orderByDesc('id')->first();
                 $serviceFeeType = $serviceFeeRecord ? $serviceFeeRecord->fee_type : 'percentage';
@@ -251,6 +262,8 @@ class BookingController extends Controller
                     'user_id' => auth()->id(),
                     'start_date' => $parsedStartDate,
                     'end_date' => $parsedEndDate,
+                    'rental_duration' => $duration,
+                    'rental_unit' => $rentalUnit,
                     'subtotal' => $subtotal,
                     'service_fee' => $serviceFee,
                     'total' => $total,

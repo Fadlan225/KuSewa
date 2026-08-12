@@ -269,7 +269,7 @@ const toggleUnitFasilitasDropdown = (index) => {
                 <p class="text-[11px] font-bold text-slate-500 mb-3">Tipe Unit {{ unitIndex + 1 }}</p>
 
                 <!-- Nama Unit, Jumlah & Harga -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
                     <div>
                         <label class="block text-[11px] font-bold text-slate-600 mb-1">Nama Tipe Unit <span class="text-rose-500">*</span></label>
                         <input
@@ -291,21 +291,56 @@ const toggleUnitFasilitasDropdown = (index) => {
                             required
                         />
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-slate-600 mb-1">
-                            Harga Sewa <span class="text-[10px] text-slate-400 font-normal">({{ rentalUnitLabel }})</span>
-                            <span class="text-rose-500">*</span>
+                </div>
+
+                <!-- Daftar Harga Sewa -->
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <label class="block text-[11px] font-bold text-slate-600">
+                            <i class="fa-solid fa-tags text-[#0A2540] mr-1 text-[10px]"></i>
+                            Daftar Harga Sewa <span class="text-rose-500">*</span>
                         </label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-[11px] font-bold text-slate-400">Rp</span>
-                            <input
-                                v-model="unit.price"
-                                type="number"
-                                min="0"
-                                placeholder="150000"
-                                class="w-full text-xs pl-8 pr-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition"
-                                required
-                            />
+                        <button
+                            type="button"
+                            @click="unit.pricings.push({ _id: Date.now(), duration: 1, rental_unit: assetTypeDetails?.rental_unit || 'month', price: '' })"
+                            class="text-[10px] font-bold text-[#0A2540] hover:text-[#FFC000] bg-slate-100 px-2.5 py-1 rounded-lg transition cursor-pointer"
+                        >
+                            + Tambah Harga
+                        </button>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <div v-for="(pricing, pIdx) in unit.pricings" :key="pricing._id || pIdx" class="flex gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100 relative">
+                            <div class="w-1/4">
+                                <label class="block text-[9px] font-bold text-slate-500 mb-0.5">Durasi</label>
+                                <input v-model="pricing.duration" type="number" min="1" class="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0A2540]" required />
+                            </div>
+                            <div class="w-1/4">
+                                <label class="block text-[9px] font-bold text-slate-500 mb-0.5">Satuan</label>
+                                <select v-model="pricing.rental_unit" class="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0A2540]" required>
+                                    <option value="hour">Jam</option>
+                                    <option value="day">Hari</option>
+                                    <option value="night">Malam</option>
+                                    <option value="week">Minggu</option>
+                                    <option value="month">Bulan</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="block text-[9px] font-bold text-slate-500 mb-0.5">Harga</label>
+                                <div class="relative">
+                                    <span class="absolute left-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">Rp</span>
+                                    <input v-model="pricing.price" type="number" min="0" placeholder="100000" class="w-full text-xs pl-7 pr-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#0A2540]" required />
+                                </div>
+                            </div>
+                            <button
+                                v-if="unit.pricings.length > 1"
+                                type="button"
+                                @click="unit.pricings.splice(pIdx, 1)"
+                                class="w-6 h-6 rounded-md bg-rose-100 text-rose-500 flex items-center justify-center shrink-0 mt-3 hover:bg-rose-500 hover:text-white transition"
+                                title="Hapus Harga"
+                            >
+                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                            </button>
                         </div>
                     </div>
                 </div>

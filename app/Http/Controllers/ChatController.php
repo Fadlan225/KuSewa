@@ -154,7 +154,7 @@ class ChatController extends Controller
         $priceLabel = '';
         if ($room->asset && $room->asset->pricings && $room->asset->pricings->count() > 0) {
             $lowestPrice = $room->asset->pricings->sortBy('price')->first();
-            $priceLabel = 'Rp ' . number_format($lowestPrice->price, 0, ',', '.') . ' / ' . ($periodLabel[$lowestPrice->period] ?? 'opsi');
+            $priceLabel = 'Rp ' . number_format($lowestPrice->price, 0, ',', '.') . ' / ' . $lowestPrice->duration . ' ' . ($periodLabel[$lowestPrice->rental_unit] ?? 'opsi');
         }
 
         return response()->json([
