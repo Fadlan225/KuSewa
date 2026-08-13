@@ -671,15 +671,25 @@ const formattedDateRange = computed(() => {
                 />
             </div>
 
-            <!-- Lokasi Map Placeholder -->
+            <!-- Lokasi Map -->
             <div id="lokasi" class="py-6 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
                 <h3 class="text-lg font-bold mb-4">Lokasi</h3>
                 <p class="text-gray-600 mb-4">{{ [asset.address, asset.village?.name, asset.district?.name, asset.city?.name, asset.province?.name, 'Indonesia'].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
-                <div class="w-full h-64 bg-gray-200 rounded-xl overflow-hidden relative flex items-center justify-center">
-                    <div class="absolute inset-0 bg-cover bg-center opacity-40" style="background-image: url('https://map.viamichelin.com/map/carte?map=viamichelin&z=10&lat=-0.502&lon=117.153&width=800&height=400&format=png&version=latest&layer=background')"></div>
-                    <div class="z-10 flex flex-col items-center bg-white/90 p-4 rounded-xl shadow-lg">
+                <div class="w-full h-72 bg-gray-200 rounded-xl overflow-hidden relative">
+                    <iframe 
+                        v-if="asset.latitude && asset.longitude"
+                        width="100%" 
+                        height="100%" 
+                        frameborder="0" 
+                        scrolling="no" 
+                        marginheight="0" 
+                        marginwidth="0" 
+                        :src="`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(asset.longitude)-0.02}%2C${parseFloat(asset.latitude)-0.01}%2C${parseFloat(asset.longitude)+0.02}%2C${parseFloat(asset.latitude)+0.01}&amp;layer=mapnik&amp;marker=${asset.latitude}%2C${asset.longitude}`" 
+                        style="border: 0;"
+                    ></iframe>
+                    <div v-else class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 p-4 shadow-lg">
                         <i class="fa-solid fa-location-dot text-red-500 text-3xl mb-2"></i>
-                        <span class="font-bold">Peta belum diintegrasikan</span>
+                        <span class="font-bold">Koordinat lokasi tidak tersedia</span>
                     </div>
                 </div>
             </div>
