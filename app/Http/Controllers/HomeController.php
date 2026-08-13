@@ -369,7 +369,7 @@ class HomeController extends Controller
 
         // 6. Kategori-kategori (List yang lama di bagian paling bawah)
         $categories = asset_category::select(['id', 'name', 'icon'])
-            ->with(['types:id,category_id,name,allow_units,rental_unit'])
+            ->with(['types:id,category_id,name,allow_units'])
             ->whereHas('types.assets', fn($q) => $q->where('status', 'approved'))
             ->get();
 
@@ -408,7 +408,7 @@ class HomeController extends Controller
         return inertia('Home/index', [
             'sections'            => $sections,
             'allCategories'       => asset_category::select(['id', 'name', 'icon'])
-                                        ->with(['types:id,category_id,name,allow_units,rental_unit'])
+                                        ->with(['types:id,category_id,name,allow_units'])
                                         ->get(),
             'searchHistory'       => $meta['searchHistory'],
             'trending'            => $meta['trending'],
@@ -441,7 +441,7 @@ class HomeController extends Controller
             ->with([
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                 'defaultPricing:id,asset_id,price',
-                'type:id,name,allow_units,rental_unit,category_id',
+                'type:id,name,allow_units,category_id',
                 'type.category:id,name,icon',
                 'city:code,name',
                 'district:code,name',
@@ -618,12 +618,12 @@ class HomeController extends Controller
                 'sort'       => $sort,
             ],
             'categories'          => asset_category::select(['id', 'name', 'icon'])
-                ->with(['types:id,category_id,name,allow_units,rental_unit'])
+                ->with(['types:id,category_id,name,allow_units'])
                 ->get(),
             'allCategories'       => asset_category::select(['id', 'name', 'icon'])
-                ->with(['types:id,category_id,name,allow_units,rental_unit'])
+                ->with(['types:id,category_id,name,allow_units'])
                 ->get(),
-            'allTypes'            => asset_type::select(['id', 'category_id', 'name', 'allow_units', 'rental_unit'])->get(),
+            'allTypes'            => asset_type::select(['id', 'category_id', 'name', 'allow_units'])->get(),
             'facilitiesByType'    => $facilitiesByType, // fasilitas terstruktur per tipe
             'searchHistory'       => $meta['searchHistory'],
             'trending'            => $meta['trending'],

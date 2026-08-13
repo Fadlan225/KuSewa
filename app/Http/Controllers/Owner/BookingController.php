@@ -59,7 +59,7 @@ class BookingController extends Controller
         // === Query utama: booking dengan eager loading penuh ===
         $query = booking::with([
             'asset:id,title,asset_type_id,owner_profile_id',
-            'asset.type:id,name,category_id,rental_unit',
+            'asset.type:id,name,category_id',
             'asset.type.category:id,name',
             'asset.firstImage:id,asset_id,image',
             'user:id,name,email,phone',
@@ -164,7 +164,7 @@ class BookingController extends Controller
     {
         $booking = booking::with([
             'asset:id,title,owner_profile_id,asset_type_id',
-            'asset.type:id,name,category_id,rental_unit',
+            'asset.type:id,name,category_id',
             'asset.type.category:id,name',
             'asset.firstImage:id,asset_id,image',
             'asset.ownerProfile:id,user_id',

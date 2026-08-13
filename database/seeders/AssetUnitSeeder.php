@@ -61,6 +61,7 @@ class AssetUnitSeeder extends Seeder
                 $units[] = [
                     'asset_id' => $asset->id,
                     'name' => $unitName,
+                    'description' => $faker->paragraph(2),
                     'detail' => json_encode($this->generateUnitDetail($type, $faker)),
                     'quantity' => $faker->numberBetween(1, 5),
                     'status' => 'active',

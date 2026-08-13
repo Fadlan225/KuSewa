@@ -72,7 +72,7 @@ class AssetController extends Controller
 
         // Query Utama untuk Tabel
         $query = asset::with([
-                'type:id,name,category_id,allow_units,rental_unit',
+                'type:id,name,category_id,allow_units',
                 'type.category:id,name',
                 'city:code,name',
                 'images',
@@ -227,7 +227,7 @@ class AssetController extends Controller
                 'image' => $thumbnail,
                 'tenant' => $tenant,
                 'price' => $price,
-                'rent_period' => $asset->type->rental_unit ?? 'Bulan',
+                'rent_period' => $asset->pricings->first()->rental_unit ?? 'month',
                 'has_units' => $hasUnits,
                 'total_units' => $totalUnits,
                 'available_units' => $availableUnits,
@@ -264,7 +264,7 @@ class AssetController extends Controller
         }
 
         // Kategori aset beserta jenis-jenis di dalamnya
-        $categories = asset_category::with(['types:id,category_id,name,rental_unit,allow_units'])
+        $categories = asset_category::with(['types:id,category_id,name,allow_units'])
             ->get(['id', 'name']);
 
         return inertia('owner/Asset/Create/Index', [
@@ -500,7 +500,7 @@ class AssetController extends Controller
     public function show(Request $request, string $id)
     {
         $asset = asset::with([
-            'type:id,name,allow_units,rental_unit,category_id',
+            'type:id,name,allow_units,category_id',
             'type.category:id,name,icon',
             'images.gallery_category',
             'thumbnailImages',

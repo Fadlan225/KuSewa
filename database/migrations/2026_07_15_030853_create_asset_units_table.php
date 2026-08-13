@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('asset_id')->constrained('assets')->onDelete('cascade');
             $table->string('name');
+            $table->text('description');
             $table->json('detail');
             $table->integer('quantity');
             $table->enum('status', ['active','inactive'])->default('active');

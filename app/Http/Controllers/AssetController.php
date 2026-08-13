@@ -40,7 +40,7 @@ class AssetController extends Controller
     public function show(asset $asset)
     {
         $asset->load([
-            'type:id,name,allow_units,rental_unit,category_id',
+            'type:id,name,allow_units,category_id',
             'type.category:id,name,icon',
             'images',
             'thumbnailImages',
@@ -182,7 +182,7 @@ class AssetController extends Controller
             'assetView'   => $assetView,
             'nearbyPlaces'=> $nearbyPlaces,
             'allCategories' => \App\Models\asset_category::select(['id', 'name', 'icon'])
-                                ->with(['types:id,category_id,name,allow_units,rental_unit'])
+                                ->with(['types:id,category_id,name,allow_units'])
                                 ->get(),
         ]);
     }

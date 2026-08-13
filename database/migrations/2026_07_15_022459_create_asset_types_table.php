@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('category_id')->constrained('asset_categories')->onDelete('restrict');
             $table->string('name');
             $table->boolean('allow_units')->default(false);
-            $table->enum('rental_unit', ['hour', 'night', 'day', 'week', 'month'])->default('day');
             $table->timestamps();
         });
     }

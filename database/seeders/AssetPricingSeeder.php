@@ -18,7 +18,7 @@ class AssetPricingSeeder extends Seeder
 
         $assets = DB::table('assets')
             ->join('asset_types', 'assets.asset_type_id', '=', 'asset_types.id')
-            ->select('assets.id', 'assets.asset_type_id', 'asset_types.name as type_name', 'asset_types.allow_units', 'asset_types.rental_unit')
+            ->select('assets.id', 'assets.asset_type_id', 'asset_types.name as type_name', 'asset_types.allow_units')
             ->get();
 
         $unitsByAsset = DB::table('asset_units')
@@ -30,7 +30,7 @@ class AssetPricingSeeder extends Seeder
         $totalPricings = 0;
 
         foreach ($assets as $asset) {
-            $tiers = $this->getPricingTiers($asset->type_name, $asset->rental_unit, $faker);
+            $tiers = $this->getPricingTiers($asset->type_name, $faker);
 
             if ($asset->allow_units) {
                 $units = $unitsByAsset->get($asset->id, collect());
@@ -76,9 +76,18 @@ class AssetPricingSeeder extends Seeder
         $this->command->info("✓ {$totalPricings} Asset Pricings berhasil dibuat!");
     }
 
-    private function getPricingTiers($typeName, $rentalUnit, $faker): array
+    private function getPricingTiers($typeName, $faker): array
     {
         $base = $this->getBasePrice($typeName, $faker);
+        
+        $rentalUnit = 'month'; // default
+        if (in_array($typeName, ['Hotel', 'Villa', 'Apartemen', 'Homestay', 'Guest House', 'Resort'])) {
+            $rentalUnit = 'night';
+        } elseif (in_array($typeName, ['Gedung', 'Aula'])) {
+            $rentalUnit = 'day';
+        } elseif (in_array($typeName, ['Ruang Meeting', 'Studio'])) {
+            $rentalUnit = 'hour';
+        }
 
         if ($rentalUnit === 'hour') {
             return [

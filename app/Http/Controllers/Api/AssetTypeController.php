@@ -20,7 +20,7 @@ class AssetTypeController extends Controller
         ]);
 
         $types = asset_type::where('category_id', $request->category_id)
-            ->select('id', 'name', 'rental_unit', 'allow_units')
+            ->select('id', 'name', 'allow_units')
             ->orderBy('name')
             ->get();
 
@@ -29,7 +29,7 @@ class AssetTypeController extends Controller
 
     /**
      * Mengembalikan detail lengkap sebuah asset type:
-     * - allow_units, rental_unit
+     * - allow_units
      * - fasilitas yang diizinkan (scope: asset)
      * - fasilitas unit yang diizinkan (scope: unit)
      * - kategori galeri foto (GLOBAL — tidak terikat ke asset_type tertentu)
@@ -52,7 +52,6 @@ class AssetTypeController extends Controller
         return response()->json([
             'id'                 => $assetType->id,
             'name'               => $assetType->name,
-            'rental_unit'        => $assetType->rental_unit,
             'allow_units'        => (bool) $assetType->allow_units,
             'facilities'         => $assetType->allowedFacilities,
             'unit_facilities'    => $assetType->allowedUnitFacilities,
