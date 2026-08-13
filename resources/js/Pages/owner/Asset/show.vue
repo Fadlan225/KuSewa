@@ -103,11 +103,19 @@ const confirmDelete = () => {
     showDeactivateModal.value = true;
 };
 
-const proceedDeactivate = () => {
-    if (hasActiveBookings.value) return;
-    router.delete(route('owner.asset.destroy', props.asset.slug || props.asset.id), {
+const isTogglingStatus = ref(false);
+
+const proceedToggleStatus = (actionType = null) => {
+    if (actionType === 'deactivate' && hasActiveBookings.value) return;
+    
+    router.patch(route('owner.asset.toggle-status', props.asset.slug || props.asset.id), {}, {
+        preserveScroll: true,
+        onStart: () => { isTogglingStatus.value = true; },
         onSuccess: () => {
             showDeactivateModal.value = false;
+        },
+        onFinish: () => {
+            isTogglingStatus.value = false;
         }
     });
 };
@@ -255,8 +263,14 @@ const assetSubMenu = computed(() => [
 
                         <!-- Right actions -->
                         <div class="shrink-0 flex items-center gap-2">
-                            <button class="bg-white border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 px-3 py-2 rounded-lg text-xs transition shadow-sm" @click="confirmDelete" title="Opsi Lanjutan">
-                                <i class="fa-solid fa-ellipsis-vertical px-1"></i>
+                            <button v-if="asset.status === 'inactive'" @click="proceedToggleStatus('activate')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm flex items-center gap-2" :disabled="isTogglingStatus">
+                                <i v-if="isTogglingStatus" class="fa-solid fa-spinner fa-spin"></i>
+                                <i v-else class="fa-solid fa-play"></i>
+                                Aktifkan
+                            </button>
+                            <button v-else @click="confirmDelete" class="bg-white border border-rose-200 text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm flex items-center gap-2" :disabled="isTogglingStatus">
+                                <i class="fa-solid fa-pause"></i>
+                                Nonaktifkan
                             </button>
                         </div>
                     </div>
@@ -332,7 +346,7 @@ const assetSubMenu = computed(() => [
                 </div>
                 <div v-else class="mb-6">
                     <p class="text-sm text-slate-500">
-                        Aset ini tidak akan lagi terlihat oleh publik. Anda bisa mengaktifkannya kembali di kemudian hari dengan menghubungi CS.
+                        Aset ini tidak akan lagi terlihat oleh publik. Anda bisa mengaktifkannya kembali kapan saja melalui halaman ini.
                     </p>
                 </div>
 
@@ -340,8 +354,9 @@ const assetSubMenu = computed(() => [
                     <button @click="showDeactivateModal = false" class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
                         {{ hasActiveBookings ? 'Tutup' : 'Batal' }}
                     </button>
-                    <button v-if="!hasActiveBookings" @click="proceedDeactivate" class="flex-1 px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2">
-                        Ya, Nonaktifkan
+                    <button v-if="!hasActiveBookings" @click="proceedToggleStatus('deactivate')" class="flex-1 px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2" :disabled="isTogglingStatus">
+                        <i v-if="isTogglingStatus" class="fa-solid fa-spinner fa-spin"></i>
+                        <span v-else>Ya, Nonaktifkan</span>
                     </button>
                 </div>
             </div>

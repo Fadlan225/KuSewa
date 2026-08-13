@@ -36,8 +36,29 @@ const props = defineProps({
     bookedDates: {
         type: Array,
         default: () => []
+    },
+    nearbyPlaces: {
+        type: Object,
+        default: () => ({})
     }
 });
+
+const categoryLabels = {
+    health: 'Fasilitas Kesehatan',
+    public_transport: 'Transportasi Publik',
+    shopping: 'Pusat Perbelanjaan',
+    recreation: 'Tempat Rekreasi',
+    food: 'Kuliner',
+    religious: 'Tempat Ibadah',
+    education: 'Pendidikan',
+};
+
+const formatDistance = (km) => {
+    if (km < 1) {
+        return `${Math.round(km * 1000)} m`;
+    }
+    return `${km.toFixed(2)} km`;
+};
 
 const page = usePage();
 
@@ -617,10 +638,10 @@ const formattedDateRange = computed(() => {
         </div>
 
         <!-- CONTENT LAYOUT (Kiri: Detail, Kanan: Booking Card) -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
 
             <!-- KIRI (Detail) -->
-            <div class="lg:col-span-2 space-y-10">
+            <div class="lg:col-span-3 space-y-10 min-w-0 overflow-hidden">
 
                 <AssetSpecifications :detail="asset.detail" />
 
@@ -658,8 +679,8 @@ const formattedDateRange = computed(() => {
                 <FasilitasModal :show="showFasilitasModal" :facilitiesGrouped="facilitiesGrouped" @close="showFasilitasModal = false" />
 
             <!-- SEKSI PEMILIHAN UNIT (Jika ada units) -->
-            <div v-if="asset.units && asset.units.length > 0" id="pilihan-unit" class="py-10 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
-                <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Unit</h2>
+            <div v-if="asset.units && asset.units.length > 0" id="pilihan-unit" class="py-2 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
+                <h3 class="text-lg font-bold mb-2">Unit</h3>
                 <AssetUnitList
                     :units="asset.units"
                     :rentalUnitLabel="rentalUnitLabel(activeScheduleMode)"
@@ -675,7 +696,7 @@ const formattedDateRange = computed(() => {
             <div id="lokasi" class="py-6 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
                 <h3 class="text-lg font-bold mb-4">Lokasi</h3>
                 <p class="text-gray-600 mb-4">{{ [asset.address, asset.village?.name, asset.district?.name, asset.city?.name, asset.province?.name, 'Indonesia'].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
-                <div class="w-full h-72 bg-gray-200 rounded-xl overflow-hidden relative">
+                <div class="w-full h-72 bg-gray-200 rounded-xl overflow-hidden relative mb-6">
                     <iframe 
                         v-if="asset.latitude && asset.longitude"
                         width="100%" 
@@ -692,6 +713,25 @@ const formattedDateRange = computed(() => {
                         <span class="font-bold">Koordinat lokasi tidak tersedia</span>
                     </div>
                 </div>
+
+                <!-- Info Lokasi Sekitar -->
+                <div v-if="Object.keys(nearbyPlaces).length > 0" class="mt-8">
+                    <h4 class="text-[17px] font-bold text-gray-900 mb-4">Info Lokasi di Sekitar</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
+                        <div v-for="(places, category) in nearbyPlaces" :key="category" class="flex flex-col gap-2.5 min-w-0">
+                            <h5 class="text-[15px] font-semibold text-gray-800">{{ categoryLabels[category] || category }}</h5>
+                            <ul class="flex flex-col gap-2 pl-3">
+                                <li v-for="place in places" :key="place.name" class="flex items-start gap-2.5">
+                                    <div class="w-1.5 h-1.5 rounded-full bg-gray-400 shrink-0 mt-[7px]"></div>
+                                    <div class="flex-1 min-w-0 flex justify-between items-start gap-2">
+                                        <span class="text-[13px] text-gray-600 leading-tight flex-1 min-w-0 break-words pr-2">{{ place.name }}</span>
+                                        <span class="text-[13px] font-medium text-gray-900 whitespace-nowrap shrink-0">{{ formatDistance(place.distance) }}</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <AssetHostProfile :assetId="asset.id" :ownerProfile="asset.owner_profile" />
@@ -704,57 +744,57 @@ const formattedDateRange = computed(() => {
             </div>
             <!-- KANAN (Booking & Contact Cards) -->
             <div class="lg:col-span-1 lg:row-span-2 order-2 lg:order-2">
-                <div class="sticky top-24 flex flex-col gap-6">
+                <div class="sticky top-24 flex flex-col gap-3">
                     <!-- Booking Card -->
-                    <div class="bg-white shadow-2xl shadow-gray-200/50 rounded-2xl p-6 border border-gray-200">
+                    <div class="bg-white shadow-lg shadow-gray-200/50 rounded-xl p-4 border border-gray-100">
 
                         <!-- Date & Duration Box -->
-                        <div class="border border-gray-200 rounded-xl overflow-hidden mb-6">
+                        <div class="border border-gray-200 rounded-lg overflow-hidden mb-3">
                             <div class="flex border-b border-gray-200">
                                 <!-- Mulai -->
-                                <div class="flex-1 p-3 border-r border-gray-200">
-                                    <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Mulai Sewa</p>
-                                    <p class="text-sm font-bold text-[#0A2540]">{{ startDate ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih Tanggal' }}</p>
-                                    <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ startTime }}</p>
+                                <div class="flex-1 px-2.5 py-2 border-r border-gray-200 bg-white">
+                                    <p class="text-[9px] uppercase font-bold text-gray-400 mb-0.5">Mulai Sewa</p>
+                                    <p class="text-[12px] font-bold text-[#0A2540]">{{ startDate ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih Tanggal' }}</p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ startTime }}</p>
                                 </div>
                                 <!-- Selesai -->
-                                <div class="flex-1 p-3">
-                                    <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Selesai Sewa</p>
-                                    <p class="text-sm font-bold text-[#0A2540]">{{ (activeScheduleMode === 'hour' && startDate) ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (endDate ? endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-') }}</p>
-                                    <p class="text-xs text-gray-500 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ endTime }}</p>
+                                <div class="flex-1 px-2.5 py-2 bg-white">
+                                    <p class="text-[9px] uppercase font-bold text-gray-400 mb-0.5">Selesai Sewa</p>
+                                    <p class="text-[12px] font-bold text-[#0A2540]">{{ (activeScheduleMode === 'hour' && startDate) ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (endDate ? endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-') }}</p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ endTime }}</p>
                                 </div>
                             </div>
-                            <div class="p-3 bg-gray-50 flex justify-between items-center border-b border-gray-200">
-                                <span class="text-xs font-semibold text-gray-600">Durasi Sewa</span>
-                                <span class="text-sm font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(activeScheduleMode) }}</span>
+                            <div class="px-2.5 py-2 bg-gray-50 flex justify-between items-center border-b border-gray-200">
+                                <span class="text-[11px] font-semibold text-gray-500">Durasi Sewa</span>
+                                <span class="text-[12px] font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(activeScheduleMode) }}</span>
                             </div>
-                            <div v-if="selectedUnitName" class="p-3 bg-[#FFC000]/10 flex justify-between items-center">
-                                <span class="text-xs font-semibold text-[#0A2540]">Unit Terpilih</span>
-                                <span class="text-sm font-extrabold text-[#0A2540] truncate max-w-[150px]">{{ selectedUnitName }}</span>
+                            <div v-if="selectedUnitName" class="px-2.5 py-1.5 bg-[#FFC000]/10 flex justify-between items-center">
+                                <span class="text-[11px] font-semibold text-[#0A2540]">Unit Terpilih</span>
+                                <span class="text-[12px] font-extrabold text-[#0A2540] truncate max-w-[130px]">{{ selectedUnitName }}</span>
                             </div>
                         </div>
 
                         <!-- BUG 8 FIX: Pesan jika tidak ada pricing -->
-                        <div v-if="!lowestPrice && (!asset.units || asset.units.length === 0)" class="text-center text-amber-600 text-xs font-bold mb-4 bg-amber-50 rounded-xl px-4 py-3 border border-amber-200">
+                        <div v-if="!lowestPrice && (!asset.units || asset.units.length === 0)" class="text-center text-amber-600 text-[10px] font-bold mb-3 bg-amber-50 rounded-lg px-2.5 py-2 border border-amber-200">
                             <i class="fa-solid fa-triangle-exclamation mr-1"></i>
-                            Pemilik belum menetapkan harga sewa. Hubungi pemilik untuk informasi.
+                            Pemilik belum menetapkan harga.
                         </div>
 
                         <!-- K5: Pemilih Paket Harga (hanya untuk single asset tanpa unit) -->
-                        <div v-if="!asset.units?.length && asset.pricings?.length > 0" class="mb-5">
-                            <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pilih Paket Sewa</p>
-                            <div class="space-y-2">
+                        <div v-if="!asset.units?.length && asset.pricings?.length > 0" class="mb-3">
+                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Pilih Paket Sewa</p>
+                            <div class="space-y-1">
                                 <button
                                     v-for="p in asset.pricings"
                                     :key="p.id"
                                     type="button"
                                     @click="form.pricing_id = p.id"
-                                    class="w-full flex justify-between items-center px-4 py-3 rounded-xl border-2 text-sm transition-all"
+                                    class="w-full flex justify-between items-center px-2.5 py-2 rounded-lg border-2 text-[12px] transition-all"
                                     :class="form.pricing_id === p.id
                                         ? 'border-[#0A2540] bg-[#0A2540]/5 shadow-sm'
-                                        : 'border-gray-200 hover:border-gray-300 bg-white'"
+                                        : 'border-gray-100 hover:border-gray-200 bg-white'"
                                 >
-                                    <span class="font-semibold" :class="form.pricing_id === p.id ? 'text-[#0A2540]' : 'text-gray-700'">
+                                    <span class="font-semibold" :class="form.pricing_id === p.id ? 'text-[#0A2540]' : 'text-gray-600'">
                                         {{ p.duration }} {{ rentalUnitLabel(p.rental_unit) }}
                                     </span>
                                     <span class="font-black" :class="form.pricing_id === p.id ? 'text-[#F97316]' : 'text-[#0A2540]'">
@@ -767,33 +807,33 @@ const formattedDateRange = computed(() => {
                         <button
                             v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
                             @click="() => document.getElementById('pilihan-unit')?.scrollIntoView({ behavior: 'smooth' })"
-                            class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg mb-4">
+                            class="w-full py-2.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[13px] mb-3">
                             Pilih Unit
                         </button>
                         <button
                             v-else
                             @click="submitBooking"
                             :disabled="asset.status !== 'approved' || !lowestPrice || !startDate || durationCount === 0"
-                            class="w-full py-4 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-xl transition-all shadow-lg shadow-[#FFC000]/20 flex justify-center items-center gap-2 text-lg disabled:opacity-50 disabled:cursor-not-allowed mb-4">
+                            class="w-full py-2.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed mb-3">
                             Booking Sekarang
                         </button>
 
-                        <p v-if="asset.status !== 'approved'" class="text-center text-red-500 text-xs font-bold mb-4">Aset ini sedang tidak tersedia.</p>
+                        <p v-if="asset.status !== 'approved'" class="text-center text-red-500 text-[10px] font-bold mb-2 mt-[-5px]">Aset ini sedang tidak tersedia.</p>
 
 
                         <!-- Breakdown -->
-                        <div class="space-y-3 text-sm">
-                            <div class="flex justify-between text-gray-600">
+                        <div class="space-y-1.5 text-[12px]">
+                            <div class="flex justify-between text-gray-500">
                                 <span>Subtotal</span>
-                                <span class="font-semibold text-[#0A2540]">{{ formatRupiah(subtotal) }}</span>
+                                <span class="font-semibold text-gray-700">{{ formatRupiah(subtotal) }}</span>
                             </div>
-                            <div class="flex justify-between text-gray-600">
+                            <div class="flex justify-between text-gray-500">
                                 <span v-if="serviceFee?.type === 'fixed'">Biaya Layanan</span>
-                                <span v-else>Biaya Layanan ({{ serviceFee?.value ?? (typeof serviceFee === 'number' ? serviceFee : 5) }}%)</span>
-                                <span class="font-semibold text-[#0A2540]">{{ formatRupiah(feeAmount) }}</span>
+                                <span v-else>Layanan ({{ serviceFee?.value ?? (typeof serviceFee === 'number' ? serviceFee : 5) }}%)</span>
+                                <span class="font-semibold text-gray-700">{{ formatRupiah(feeAmount) }}</span>
                             </div>
-                            <hr class="border-gray-200">
-                            <div class="flex justify-between font-extrabold text-base text-[#0A2540]">
+                            <hr class="border-gray-100 my-1">
+                            <div class="flex justify-between font-extrabold text-[14px] text-[#0A2540]">
                                 <span>Total</span>
                                 <span>{{ formatRupiah(totalAmount) }}</span>
                             </div>
@@ -801,13 +841,13 @@ const formattedDateRange = computed(() => {
                     </div>
 
                     <!-- Hubungi Pemilik Card (DESKTOP ONLY) -->
-                    <div v-if="asset.owner_profile" class="hidden lg:block bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        <h3 class="text-xl font-bold text-[#0A2540] mb-4">Hubungi Pemilik</h3>
-                        <div class="flex items-center gap-3 border-b-2 border-gray-800 pb-2 focus-within:border-[#FFC000] transition-colors">
-                            <i class="fa-regular fa-comment-dots text-2xl text-[#FFC000]"></i>
-                            <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu ke pemilik..." class="w-full bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
-                            <button @click="startChat" class="text-[#FFC000] font-bold text-sm hover:text-[#e6ad00] transition-colors whitespace-nowrap">
-                                kirim
+                    <div v-if="asset.owner_profile" class="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                        <h3 class="text-[13px] font-bold text-[#0A2540] mb-2">Hubungi Pemilik</h3>
+                        <div class="flex items-center gap-2 border-b border-gray-400 pb-1.5 focus-within:border-[#FFC000] transition-colors">
+                            <i class="fa-regular fa-comment-dots text-lg text-[#FFC000]"></i>
+                            <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu..." class="w-full bg-transparent border-none outline-none text-[12px] text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
+                            <button @click="startChat" class="text-[#FFC000] font-bold text-[12px] hover:text-[#e6ad00] transition-colors whitespace-nowrap">
+                                Kirim
                             </button>
                         </div>
                     </div>

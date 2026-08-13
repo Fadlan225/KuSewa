@@ -258,28 +258,28 @@ const handleSelect = (unit, pricing) => {
             </div>
 
             <!-- DESKTOP: 1 Image (Left) -->
-            <div class="hidden sm:block w-[220px] lg:w-[280px] h-[180px] lg:h-[220px] flex-shrink-0 relative bg-slate-100 overflow-hidden cursor-pointer" @click="openDetail(unit)">
+            <div class="hidden sm:block w-[180px] lg:w-[240px] h-[150px] lg:h-[180px] flex-shrink-0 relative bg-slate-100 overflow-hidden cursor-pointer" @click="openDetail(unit)">
                 <img v-if="getUnitImage(unit)" :src="getUnitImage(unit)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div v-else class="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-300">
                     <i class="fa-solid fa-image text-3xl mb-1"></i>
                 </div>
                 <!-- Overlay detail text -->
                 <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent pt-6 pb-2 text-center pointer-events-none">
-                    <span class="text-white text-xs font-bold shadow-sm">Lihat Detail</span>
+                    <span class="text-white text-[11px] font-bold shadow-sm">Lihat Detail</span>
                 </div>
             </div>
 
             <!-- DESKTOP: Info & Price (Right) -->
-            <div class="hidden sm:flex flex-row flex-grow p-4 gap-3 bg-white min-w-0">
+            <div class="hidden sm:flex flex-row flex-grow p-3 lg:p-4 gap-3 bg-white min-w-0">
                 <!-- Info (Name, Specs, Capacity) -->
                 <div class="flex flex-col flex-grow justify-between min-w-0 cursor-pointer" @click="openDetail(unit)">
                     <div>
-                        <h3 class="font-bold text-lg leading-tight text-[#0A2540] truncate mb-1.5 group-hover:text-[#FFC000] transition-colors">
+                        <h3 class="font-bold text-[16px] leading-tight text-[#0A2540] truncate mb-1 group-hover:text-[#FFC000] transition-colors">
                             {{ unit.name }}
                         </h3>
 
-                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500 font-medium">
-                            <div v-if="unit.detail?.luas" class="flex items-center gap-1.5">
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 font-medium">
+                            <div v-if="unit.detail?.luas" class="flex items-center gap-1">
                                 <i class="fa-solid fa-ruler-combined text-[#FFC000]"></i>
                                 <span>{{ unit.detail.luas }}</span>
                             </div>
@@ -325,7 +325,7 @@ const handleSelect = (unit, pricing) => {
                         </div>
                         <!-- Action Button -->
                         <button @click="handleSelect(unit, getLowestPricing(unit))"
-                                :class="['mt-4 w-full font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform active:scale-95', selectedUnitId === unit.id ? 'bg-[#0A2540] text-white' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540]']">
+                                :class="['mt-4 w-full font-extrabold py-2 px-8 rounded text-xs shadow-sm transition-transform active:scale-95', selectedUnitId === unit.id ? 'bg-[#0A2540] text-white' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540]']">
                             {{ selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar' }}
                         </button>
                     </div>

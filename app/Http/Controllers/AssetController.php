@@ -172,11 +172,15 @@ class AssetController extends Controller
                 });
         }
 
+        // Fetch nearby places
+        $nearbyPlaces = \App\Services\OpenStreetMapService::getNearbyPlaces($asset->latitude, $asset->longitude, $asset->id);
+
         return inertia('Home/Assets/Show', [
             'asset'       => $asset,
             'serviceFee'  => $serviceFee,
             'bookedDates' => $bookedDates,
             'assetView'   => $assetView,
+            'nearbyPlaces'=> $nearbyPlaces,
             'allCategories' => \App\Models\asset_category::select(['id', 'name', 'icon'])
                                 ->with(['types:id,category_id,name,allow_units,rental_unit'])
                                 ->get(),

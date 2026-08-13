@@ -642,6 +642,35 @@ class AssetController extends Controller
     }
 
     /**
+     * Mengubah status aset (Aktif/Nonaktif)
+     */
+    public function toggleStatus(Request $request, string $id)
+    {
+        $asset = asset::where('slug', $id)->orWhere('id', $id)->firstOrFail();
+
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
+            abort(403, 'Anda tidak berhak mengubah status aset ini.');
+        }
+
+        if ($asset->status === 'inactive') {
+            $asset->update(['status' => 'approved']);
+            return redirect()->back()->with('success', 'Aset berhasil diaktifkan.');
+        } else {
+            $hasActiveBookings = \App\Models\booking::where('asset_id', $asset->id)
+                ->whereIn('booking_status', ['pending', 'confirmed', 'active'])
+                ->exists();
+
+            if ($hasActiveBookings) {
+                return redirect()->back()->with('error', 'Tidak dapat menonaktifkan aset karena terdapat penyewaan yang sedang aktif atau menunggu konfirmasi.');
+            }
+
+            $asset->update(['status' => 'inactive']);
+            return redirect()->back()->with('success', 'Aset berhasil dinonaktifkan.');
+        }
+    }
+
+    /**
      * Menambahkan fasilitas ke aset
      */
     public function storeFacility(Request $request, string $id)

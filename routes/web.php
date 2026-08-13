@@ -64,6 +64,7 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('asset', OwnerAssetController::class)->names('asset');
+    Route::patch('asset/{asset}/toggle-status', [OwnerAssetController::class, 'toggleStatus'])->name('asset.toggle-status');
     Route::post('asset/{asset}/facilities', [OwnerAssetController::class, 'storeFacility'])->name('asset.facilities.store');
     Route::delete('asset/{asset}/facilities/{facility}', [OwnerAssetController::class, 'destroyFacility'])->name('asset.facilities.destroy');
 
