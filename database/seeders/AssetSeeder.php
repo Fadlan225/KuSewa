@@ -15,6 +15,8 @@ class AssetSeeder extends Seeder
     {
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         DB::table('assets')->truncate();
+        DB::table('asset_faqs')->truncate();
+        DB::table('asset_policies')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         $faker = Faker::create('id_ID');
@@ -26,44 +28,108 @@ class AssetSeeder extends Seeder
             return;
         }
 
-        $cities = ['Samarinda', 'Balikpapan', 'Bontang', 'Berau', 'Tenggarong', 'Sangatta', 'Sendawar', 'Penajam', 'Tanah Grogot', 'Ujoh Bilang'];
+        $dbCities = DB::table('cities')->where('province_code', '64')->inRandomOrder()->limit(4)->get();
+        if ($dbCities->isEmpty()) {
+            $this->command->error('Data kota di Kaltim tidak ditemukan. Pastikan WilayahSeeder sudah dijalankan.');
+            return;
+        }
+        
+        $cityData = [];
+        foreach ($dbCities as $dbCity) {
+            $district = DB::table('districts')->where('city_code', $dbCity->code)->inRandomOrder()->first();
+            $village = $district ? DB::table('villages')->where('district_code', $district->code)->inRandomOrder()->first() : null;
+            $cityData[] = [
+                'code' => $dbCity->code,
+                'name' => $dbCity->name,
+                'district_code' => $district ? $district->code : '647204',
+                'village_code' => $village ? $village->code : '6472041002',
+            ];
+        }
 
         $assets = [];
         $ownerCount = $owners->count();
         $assetIndex = 0;
 
         foreach ($assetTypes as $type) {
-            // Minimal 2 asset per tipe
-            for ($i = 1; $i <= 2; $i++) {
-                $owner = $owners[$assetIndex % $ownerCount];
-                $city = $faker->randomElement($cities);
-                $title = $this->generateTitle($type->name, $city, $i, $faker);
-                
-                $assets[] = [
-                    'owner_profile_id' => $owner->id,
-                    'asset_type_id' => $type->id,
-                    'title' => $title,
-                    'slug' => Str::slug($title . '-' . uniqid()),
-                    'description' => "Ini adalah deskripsi untuk $title. Menawarkan fasilitas terbaik di $city dengan harga terjangkau dan pelayanan memuaskan.",
-                    'detail' => json_encode($this->generateDetail($type->name, $faker)),
-                    'province_code' => '64',
-                    'city_code' => '6472',
-                    'district_code' => '647204',
-                    'village_code' => '6472041002',
-                    'postal_code' => $faker->postcode,
-                    'address' => $faker->address,
-                    'latitude' => (string)($city === 'Balikpapan' ? $faker->latitude(-1.28, -1.20) : ($city === 'Samarinda' ? $faker->latitude(-0.55, -0.45) : $faker->latitude(-1.26, 1.15))),
-                    'longitude' => (string)($city === 'Balikpapan' ? $faker->longitude(116.80, 116.90) : ($city === 'Samarinda' ? $faker->longitude(117.10, 117.20) : $faker->longitude(116.0, 118.0))),
-                    'status' => $faker->boolean(90) ? 'approved' : 'inactive',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
-                $assetIndex++;
+            foreach ($cityData as $city) {
+                // Minimal 5 asset per tipe per kota
+                for ($i = 1; $i <= 5; $i++) {
+                    $owner = $owners[$assetIndex % $ownerCount];
+                    $title = $this->generateTitle($type->name, $city['name'], $i, $faker);
+                    
+                    $assets[] = [
+                        'owner_profile_id' => $owner->id,
+                        'asset_type_id' => $type->id,
+                        'title' => $title,
+                        'slug' => Str::slug($title . '-' . uniqid()),
+                        'description' => "Ini adalah deskripsi untuk $title. Menawarkan fasilitas terbaik di {$city['name']} dengan harga terjangkau dan pelayanan memuaskan.",
+                        'detail' => json_encode($this->generateDetail($type->name, $faker)),
+                        'province_code' => '64',
+                        'city_code' => $city['code'],
+                        'district_code' => $city['district_code'],
+                        'village_code' => $city['village_code'],
+                        'postal_code' => $faker->postcode,
+                        'address' => $faker->address,
+                        'latitude' => (string)(strpos($city['name'], 'Balikpapan') !== false ? $faker->latitude(-1.28, -1.20) : (strpos($city['name'], 'Samarinda') !== false ? $faker->latitude(-0.55, -0.45) : $faker->latitude(-1.26, 1.15))),
+                        'longitude' => (string)(strpos($city['name'], 'Balikpapan') !== false ? $faker->longitude(116.80, 116.90) : (strpos($city['name'], 'Samarinda') !== false ? $faker->longitude(117.10, 117.20) : $faker->longitude(116.0, 118.0))),
+                        'status' => $faker->boolean(90) ? 'approved' : 'inactive',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ];
+                    $assetIndex++;
+                }
             }
         }
 
-        DB::table('assets')->insert($assets);
+        // Insert in chunks to avoid memory issues
+        $chunks = array_chunk($assets, 500);
+        foreach ($chunks as $chunk) {
+            DB::table('assets')->insert($chunk);
+        }
+
         $this->command->info("✓ " . count($assets) . " Assets berhasil dibuat!");
+
+        // Generate FAQs & Policies
+        $insertedAssets = DB::table('assets')->select('id')->get();
+        $faqs = [];
+        $policies = [];
+
+        foreach ($insertedAssets as $asset) {
+            // 5 FAQs per asset
+            for ($j = 1; $j <= 5; $j++) {
+                $faqs[] = [
+                    'asset_id' => $asset->id,
+                    'question' => "Pertanyaan umum ke-$j terkait aset ini?",
+                    'answer' => "Ini adalah jawaban standar untuk pertanyaan ke-$j yang menjelaskan detail dan ketentuan layanan.",
+                    'sort_order' => $j,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            // 10 Kebijakan per asset
+            for ($k = 1; $k <= 10; $k++) {
+                $policies[] = [
+                    'asset_id' => $asset->id,
+                    'title' => "Kebijakan Sewa #$k",
+                    'description' => "Penjelasan aturan dan kebijakan nomor $k yang harus dipatuhi oleh penyewa.",
+                    'sort_order' => $k,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+        }
+
+        $faqChunks = array_chunk($faqs, 500);
+        foreach ($faqChunks as $chunk) {
+            DB::table('asset_faqs')->insert($chunk);
+        }
+        $this->command->info("✓ " . count($faqs) . " FAQs berhasil dibuat!");
+
+        $policyChunks = array_chunk($policies, 500);
+        foreach ($policyChunks as $chunk) {
+            DB::table('asset_policies')->insert($chunk);
+        }
+        $this->command->info("✓ " . count($policies) . " Policies berhasil dibuat!");
     }
 
     private function generateTitle($typeName, $city, $index, $faker)

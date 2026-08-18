@@ -221,7 +221,7 @@ const unitChartSlices = computed(() => {
     transition: fill 0.2s ease, opacity 0.2s ease;
 }
 .unovis-chart-container rect:hover {
-    fill: #0A2540 !important; /* Biru gelap saat hover */
+    fill: #FFC000 !important; /* Kuning KuSewa saat hover */
     opacity: 1 !important;
 }
 </style>
@@ -235,92 +235,69 @@ const unitChartSlices = computed(() => {
         role="Owner"
     >
 
-        <!-- STATS OVERVIEW -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+        <!-- STATS OVERVIEW - Clean Panel Design -->
+        <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
+            <div class="grid grid-cols-2 xl:grid-cols-4 border-slate-100">
+                <!-- Total Unit -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
+                    <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                        <i class="fa-solid fa-door-open text-slate-400 mt-0.5"></i> <span>Total Unit</span>
+                    </p>
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.totalUnit ?? 0 }}</p>
+                </div>
 
-            <Card class="hover:border-[#FFC000]/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
-                <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
-                    <div class="flex items-start justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Total Unit Aktif</p>
-                            <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ props.stats?.totalUnit ?? 0 }}</p>
-                        </div>
-                        <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-slate-50 flex shrink-0 items-center justify-center text-slate-400 group-hover:bg-[#FFC000]/10 group-hover:text-[#FFC000] transition-colors">
-                            <i class="fa-solid fa-door-open text-xs lg:text-sm"></i>
-                        </div>
+                <!-- Keterisian -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
+                    <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                        <i class="fa-solid fa-percent text-slate-400 mt-0.5"></i> <span>Keterisian</span>
+                    </p>
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.tingkatKeterisian ?? 0 }}%</p>
+                </div>
+
+                <!-- Booking Bln Ini -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
+                    <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                        <i class="fa-solid fa-calendar-check text-slate-400 mt-0.5"></i> <span>Booking Bulan Ini</span>
+                    </p>
+                    <div class="flex items-end gap-3">
+                        <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.bookingBulanIni ?? 0 }}</p>
+                        <span v-if="(props.stats?.bookingBaruHariIni ?? 0) > 0" class="text-xs font-semibold text-emerald-600 mb-1.5">
+                            +{{ props.stats?.bookingBaruHariIni }} hari ini
+                        </span>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
 
-            <Card class="hover:border-emerald-500/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
-                <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
-                    <div class="flex items-start justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Keterisian</p>
-                            <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ props.stats?.tingkatKeterisian ?? 0 }}%</p>
-                        </div>
-                        <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 flex shrink-0 items-center justify-center text-emerald-500 group-hover:bg-emerald-100 transition-colors">
-                            <i class="fa-solid fa-percent text-xs lg:text-sm"></i>
-                        </div>
+                <!-- Income Bln Ini -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
+                    <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                        <i class="fa-solid fa-wallet text-slate-400 mt-0.5"></i> <span>Pendapatan Bulan Ini</span>
+                    </p>
+                    <div class="flex items-end gap-3">
+                        <p class="text-2xl lg:text-3xl font-black text-[#0A2540] truncate" :title="formatCurrency(props.stats?.pendapatanBulanIni)">
+                            Rp {{ formatCompactCurrency(props.stats?.pendapatanBulanIni) }}
+                        </p>
                     </div>
-                </CardContent>
-            </Card>
-
-            <Card class="hover:border-rose-500/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
-                <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
-                    <div class="flex items-start justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Booking Bln Ini</p>
-                            <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ props.stats?.bookingBulanIni ?? 0 }}</p>
-                        </div>
-                        <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-rose-50 flex shrink-0 items-center justify-center text-rose-500 group-hover:bg-rose-100 transition-colors">
-                            <i class="fa-solid fa-bell text-xs lg:text-sm"></i>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-1.5 text-[10px] lg:text-xs font-semibold"
-                         :class="(props.stats?.bookingBaruHariIni ?? 0) > 0 ? 'text-rose-500' : 'text-slate-400'">
-                        <span class="truncate">+{{ props.stats?.bookingBaruHariIni ?? 0 }} hari ini</span>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card class="hover:border-[#0A2540]/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
-                <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
-                    <div class="flex items-start justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Income Bln Ini</p>
-                            <p class="text-base sm:text-lg lg:text-xl font-black text-[#0A2540] mt-0.5 lg:mt-1 truncate" :title="formatCurrency(props.stats?.pendapatanBulanIni)">
-                                Rp {{ formatCompactCurrency(props.stats?.pendapatanBulanIni) }}
-                            </p>
-                        </div>
-                        <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-[#0A2540]/5 flex shrink-0 items-center justify-center text-[#0A2540] group-hover:bg-[#0A2540]/10 transition-colors">
-                            <i class="fa-solid fa-wallet text-xs lg:text-sm"></i>
-                        </div>
-                    </div>
-
-                    <div class="flex items-center gap-1 lg:gap-1.5 text-[10px] lg:text-xs font-semibold"
+                    <div class="flex items-center gap-1.5 text-xs font-medium mt-1"
                          :class="{
-                            'text-emerald-500': pendapatanPersentase > 0,
-                            'text-rose-500': pendapatanPersentase < 0,
+                            'text-emerald-600': pendapatanPersentase > 0,
+                            'text-rose-600': pendapatanPersentase < 0,
                             'text-slate-400': pendapatanPersentase === 0
                          }">
-                        <i class="fa-solid shrink-0" :class="{
+                        <i class="fa-solid shrink-0 text-[10px]" :class="{
                             'fa-arrow-up': pendapatanPersentase > 0,
                             'fa-arrow-down': pendapatanPersentase < 0,
                             'fa-minus': pendapatanPersentase === 0
                         }"></i>
-                        <span class="truncate">{{ pendapatanPersentase > 0 ? '+' : '' }}{{ Math.round(pendapatanPersentase) }}% <span class="text-slate-400 font-normal hidden sm:inline">dari bulan lalu</span></span>
+                        <span>{{ pendapatanPersentase > 0 ? '+' : '' }}{{ Math.round(pendapatanPersentase) }}% dari bulan lalu</span>
                     </div>
-                </CardContent>
-            </Card>
-
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
 
             <!-- PENDAPATAN CHART -->
-            <Card class="lg:col-span-2 border-slate-200/50 shadow-sm rounded-2xl overflow-hidden flex flex-col p-2">
+            <Card class="lg:col-span-2 bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-2">
                 <CardHeader class="relative z-50 flex flex-col items-stretch p-4 sm:flex-row pb-6">
                     <div class="flex flex-1 flex-col justify-center gap-1 text-left">
                         <div class="flex items-center justify-between">
@@ -331,7 +308,7 @@ const unitChartSlices = computed(() => {
                                 </p>
                             </div>
                             <Select v-model="selectedTime">
-                                <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm focus:ring-slate-200 focus:border-slate-200 focus:ring-offset-0">
+                                <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors">
                                     <SelectValue placeholder="Periode" />
                                 </SelectTrigger>
                                 <SelectContent class="text-xs rounded-xl border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">
@@ -350,8 +327,8 @@ const unitChartSlices = computed(() => {
                 <CardContent class="p-4 pt-0 flex-1 min-h-[320px] relative z-0">
                     <div v-if="chartData.length > 0 && chartTotalSum > 0" class="w-full h-full relative text-xs unovis-chart-container z-0">
                         <VisXYContainer :data="chartData" :height="300" :duration="800">
-                            <!-- Bar Tipis Kotak -->
-                            <VisStackedBar :x="x" :y="y" color="#FFC000" :roundedCorners="0" :barPadding="0.3" />
+                            <!-- Bar Tipis Kotak, Warna Navy sebagai warna data utama -->
+                            <VisStackedBar :x="x" :y="y" color="#0A2540" :roundedCorners="2" :barPadding="0.4" />
 
                             <!-- Hanya tampilkan grid Horizontal -->
                             <VisAxis type="x" :tickFormat="tickFormatXIncome" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400" />
@@ -370,7 +347,7 @@ const unitChartSlices = computed(() => {
                         </div>
                         <p class="text-sm font-semibold text-slate-500 mb-1">Belum ada data pendapatan.</p>
                         <p class="text-xs text-slate-400 mb-4">Tunggu hingga ada penyewa yang menyelesaikan pemesanan.</p>
-                        <Link :href="route('owner.asset.index')" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold transition-colors">
+                        <Link :href="route('owner.asset.index')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded-xl text-xs font-bold transition-all">
                             Lihat Properti
                         </Link>
                     </div>
@@ -378,7 +355,7 @@ const unitChartSlices = computed(() => {
             </Card>
 
             <!-- PERSEBARAN ASSET -->
-            <Card class="border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col">
+            <Card class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4">
                     <CardTitle class="text-sm font-bold text-slate-800">Persebaran Asset</CardTitle>
                     <p class="text-xs text-slate-500 mt-1">Menampilkan persebaran aset berdasarkan kota.</p>
@@ -389,12 +366,12 @@ const unitChartSlices = computed(() => {
                             <!-- Bar Chart with Inside Label -->
                             <div class="flex-1 h-8 bg-slate-50 rounded-lg relative border border-slate-100/50">
                                 <!-- Animated Bar Fill -->
-                                <div class="absolute left-0 top-0 h-full bg-[#FFC000] rounded-lg transition-all duration-1000 ease-out"
+                                <div class="absolute left-0 top-0 h-full bg-[#0A2540] rounded-lg transition-all duration-1000 ease-out"
                                      :style="{ width: Math.max((kota.count / maxKotaCount) * 100, 2) + '%' }">
                                 </div>
                                 <!-- Label Inside Left -->
                                 <div class="absolute inset-y-0 left-3 flex items-center z-10 pointer-events-none pr-3">
-                                    <span class="text-xs font-bold text-[#0A2540] truncate" :title="kota.name">
+                                    <span class="text-xs font-medium text-white truncate" :title="kota.name">
                                         {{ kota.name }}
                                     </span>
                                 </div>
@@ -423,7 +400,7 @@ const unitChartSlices = computed(() => {
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             <!-- BOOKING TREND CHART -->
-            <Card class="lg:col-span-2 border-gray-200 shadow-sm rounded-2xl overflow-hidden flex flex-col p-0 sm:p-0">
+            <Card class="lg:col-span-2 bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-0 sm:p-0">
                 <CardHeader class="flex flex-col items-stretch border-b border-gray-200 p-0 sm:flex-row">
                     <div class="flex flex-1 flex-col justify-center gap-1 px-6 py-5 text-left">
                         <CardTitle class="text-base font-black text-slate-800 tracking-tight">Tren Pemesanan</CardTitle>
@@ -434,7 +411,7 @@ const unitChartSlices = computed(() => {
                     <div class="flex flex-col sm:flex-row items-center border-t sm:border-t-0 sm:border-l border-slate-100">
                         <div class="px-6 py-4 w-full sm:w-auto flex items-center justify-center">
                             <Select v-model="selectedBookingTime">
-                                <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm focus:ring-slate-200 focus:border-slate-200 focus:ring-offset-0">
+                                <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors">
                                     <SelectValue placeholder="Periode" />
                                 </SelectTrigger>
                                 <SelectContent class="text-xs rounded-xl border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">
@@ -447,8 +424,8 @@ const unitChartSlices = computed(() => {
                                 </SelectContent>
                             </Select>
                         </div>
-                        <button class="w-full flex flex-1 flex-col justify-center gap-1 px-6 py-4 text-left sm:border-l border-gray-200 sm:px-8 sm:py-6 bg-slate-50/50 transition hover:bg-slate-50">
-                            <span class="text-xs text-slate-500 font-medium">Total Booking</span>
+                        <button class="group w-full flex flex-1 flex-col justify-center gap-1 px-6 py-4 text-left sm:border-l border-gray-200 sm:px-8 sm:py-6 bg-slate-50/50 transition-colors hover:bg-[#FFC000]/10">
+                            <span class="text-xs text-slate-500 font-medium group-hover:text-[#0A2540]">Total Booking</span>
                             <span class="text-lg leading-none font-bold sm:text-3xl text-slate-800">{{ totalBookingSelectedPeriod }}</span>
                         </button>
                     </div>
@@ -456,7 +433,7 @@ const unitChartSlices = computed(() => {
                 <CardContent class="p-4 sm:p-6 pb-2">
                     <div class="w-full h-[250px]" v-if="bookingChartData.length">
                         <VisXYContainer :data="bookingChartData" :duration="1000" height="250" :padding="{ top: 10, right: 10, left: 0, bottom: 0 }">
-                            <VisLine :x="x" :y="bookingY" color="#FFC000" :lineWidth="2" />
+                            <VisLine :x="x" :y="bookingY" color="#0A2540" :lineWidth="3" />
                             <VisAxis type="x" :tickFormat="tickFormatXBooking" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400" />
                             <VisAxis type="y" :tickFormat="tickFormatYBooking" :gridLine="true" :tickLine="false" :domainLine="false" class="text-slate-400" />
                             <VisTooltip />
@@ -474,7 +451,7 @@ const unitChartSlices = computed(() => {
             </Card>
 
             <!-- STATUS UNIT CHART -->
-            <Card class="border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col">
+            <Card class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4">
                     <CardTitle class="text-sm font-bold text-slate-800">Status Unit</CardTitle>
                     <p class="text-xs text-slate-500 mt-1">Status ketersediaan properti saat ini.</p>

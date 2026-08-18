@@ -172,8 +172,8 @@ class AssetController extends Controller
                 });
         }
 
-        // Fetch nearby places
-        $nearbyPlaces = \App\Services\OpenStreetMapService::getNearbyPlaces($asset->latitude, $asset->longitude, $asset->id);
+        // Fetch nearby places (do not sync from OSM on page load to prevent blocking)
+        $nearbyPlaces = \App\Services\OpenStreetMapService::getNearbyPlaces($asset->latitude, $asset->longitude, $asset->id, 3000, false);
 
         return inertia('Home/Assets/Show', [
             'asset'       => $asset,

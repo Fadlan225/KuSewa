@@ -24,7 +24,7 @@ class StoreAssetRequest extends FormRequest
         $rules = [
             // --- Step 1: Informasi Aset ---
             'title'              => ['required', 'string', 'max:255'],
-            'description'        => ['required', 'string', 'min:20'],
+            'description'        => ['required', 'string', 'min:100'],
             'category_id'        => ['required', 'integer', 'exists:asset_categories,id'],
             'asset_type_id'      => ['required', 'integer', 'exists:asset_types,id'],
             'detail'             => ['nullable', 'array'],
@@ -87,7 +87,7 @@ class StoreAssetRequest extends FormRequest
         return [
             'title.required'           => 'Nama aset wajib diisi.',
             'description.required'     => 'Deskripsi wajib diisi.',
-            'description.min'          => 'Deskripsi minimal 20 karakter.',
+            'description.min'          => 'Deskripsi minimal 100 karakter.',
             'category_id.required'     => 'Kategori aset wajib dipilih.',
             'category_id.exists'       => 'Kategori aset tidak valid.',
             'asset_type_id.required'   => 'Jenis aset wajib dipilih.',

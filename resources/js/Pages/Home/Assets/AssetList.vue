@@ -1,10 +1,15 @@
 <script setup>
 import { computed, ref, onMounted } from 'vue';
+import { Link } from '@inertiajs/vue3';
 import axios from 'axios';
 import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
 import LazyAssetCard from '@/Components/UI/LazyAssetCard.vue';
 
 const props = defineProps({
+    categories: {
+        type: Array,
+        default: () => []
+    },
     sections: {
         type: Array,
         default: () => []
@@ -86,6 +91,51 @@ const visibleSections = computed(() =>
 // Skeleton sections
 const skeletonSections = 3;
 const skeletonCards = 6;
+
+// Pagination state for dynamic sections
+const currentPage = ref(1);
+const hasMoreSections = ref(true);
+const isLoadingMore = ref(false);
+
+const loadMoreSections = async () => {
+    if (isLoadingMore.value || !hasMoreSections.value) return;
+
+    isLoadingMore.value = true;
+    try {
+        const response = await axios.get('/api/home/sections', {
+            params: {
+                page: currentPage.value + 1
+            }
+        });
+
+        const newSections = response.data;
+
+        if (newSections && newSections.length > 0) {
+            localSections.value.push(...newSections);
+            currentPage.value++;
+            if (newSections.length < 5) {
+                hasMoreSections.value = false;
+            }
+        } else {
+            hasMoreSections.value = false;
+        }
+    } catch (error) {
+        console.error("Gagal memuat section lainnya", error);
+    } finally {
+        isLoadingMore.value = false;
+    }
+};
+
+const getCategoryImage = (categoryName) => {
+    const images = {
+        'Hunian': 'https://images.unsplash.com/photo-1518780664697-55e3ad937233?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'Komersial': 'https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'Lahan': 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'Event': 'https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+        'Media Iklan': 'https://images.unsplash.com/photo-1557088194-e8180e0c8b66?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
+    };
+    return images[categoryName] || 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+};
 </script>
 
 <template>
@@ -113,6 +163,45 @@ const skeletonCards = 6;
 
         <!-- ========== DATA NYATA ========== -->
         <template v-else>
+            <!-- Grup Kategori Traveloka Style -->
+            <!-- <section v-if="props.categories && props.categories.length > 0" class="px-4 sm:px-6 lg:px-8 mb-12 max-w-5xl mx-auto w-full">
+                <div class="flex items-center gap-1.5 sm:gap-2 mb-4">
+                    <i class="fa-solid fa-layer-group text-[#FFC000] text-sm sm:text-base shrink-0"></i>
+                    <h2 class="text-[15px] sm:text-xl md:text-2xl font-extrabold tracking-tight text-[#0A2540]">Temukan berdasarkan kategori</h2>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+                    <Link
+                        v-for="cat in props.categories.slice(0, 5)"
+                        :key="cat.id"
+                        :href="route('assets.search', { category: cat.name })"
+                        class="relative rounded-xl overflow-hidden group cursor-pointer aspect-video shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+
+                        <img :src="cat.random_image || getCategoryImage(cat.name)" :alt="cat.name" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-300"></div>
+
+                        <div class="absolute inset-0 p-3 sm:p-4 flex flex-col items-center justify-center text-white text-center">
+                            <h3 class="font-bold text-sm sm:text-base lg:text-lg drop-shadow-md mb-1">{{ cat.name }}</h3>
+                            <p class="text-[10px] sm:text-[11px] font-medium text-gray-200 drop-shadow-md">{{ cat.assets_count || 0 }} aset tersedia</p>
+                        </div>
+                    </Link>
+
+
+                    <Link
+                        :href="route('assets.search')"
+                        class="relative rounded-xl overflow-hidden group cursor-pointer aspect-video shadow-sm hover:shadow-lg transition-all duration-300"
+                    >
+                        <img src="https://images.unsplash.com/photo-1506059612708-99d6c258160e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Semua Kategori" class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-colors duration-300"></div>
+                        <div class="absolute inset-0 p-3 sm:p-4 flex flex-col items-center justify-center text-white text-center">
+                            <h3 class="font-bold text-sm sm:text-base lg:text-lg drop-shadow-md mb-1">Semua Kategori</h3>
+                            <p class="text-[10px] sm:text-[11px] font-medium text-gray-200 drop-shadow-md">{{ props.categories.reduce((a, b) => a + (b.assets_count || 0), 0) }} aset tersedia</p>
+                        </div>
+                    </Link>
+                </div>
+            </section> -->
+
             <template v-if="visibleSections.length > 0">
                 <template v-for="section in visibleSections" :key="section.id">
                     <section
@@ -120,16 +209,11 @@ const skeletonCards = 6;
                         style="content-visibility: auto; contain-intrinsic-size: 0 320px;"
                     >
                         <!-- Section Header -->
-                        <div class="flex justify-between items-end mb-4 pr-4 sm:pr-6 lg:pr-8 gap-4">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <i v-if="section.icon" :class="[section.icon, 'text-[#FFC000] text-base shrink-0']"></i>
-                                <h2 class="text-lg sm:text-xl md:text-2xl font-extrabold tracking-tight truncate" :title="section.title">{{ section.title }}</h2>
+                        <div class="flex justify-between items-center mb-4 pr-4 sm:pr-6 lg:pr-8 gap-2 sm:gap-4">
+                            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                                <i v-if="section.icon" :class="[section.icon, 'text-[#FFC000] text-sm sm:text-base shrink-0']"></i>
+                                <h2 class="text-[15px] sm:text-xl md:text-2xl font-extrabold tracking-tight truncate" :title="section.title">{{ section.title }}</h2>
                             </div>
-                            <a href="#" class="text-xs sm:text-sm font-bold text-[#FFC000] hover:text-[#e6ad00] transition-colors flex items-center gap-1 shrink-0 pb-0.5">
-                                <span class="hidden sm:inline">Lihat Semua</span>
-                                <span class="sm:hidden">Semua</span>
-                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
-                            </a>
                         </div>
 
                         <!-- Jika section nearby sedang meload lokasi -->
@@ -152,6 +236,37 @@ const skeletonCards = 6;
                         </div>
                     </section>
                 </template>
+
+                <!-- Skeleton Loading More -->
+                <template v-if="isLoadingMore">
+                    <section
+                        v-for="s in skeletonSections"
+                        :key="'load-more-sk-' + s"
+                        class="pl-4 sm:pl-6 lg:pl-8 animate-pulse"
+                    >
+                        <div class="flex justify-between items-center mb-4 pr-4 sm:pr-6 lg:pr-8">
+                            <div class="flex items-center gap-2">
+                                <div class="w-4 h-4 rounded bg-gray-200"></div>
+                                <div class="h-6 w-32 rounded-lg bg-gray-200"></div>
+                            </div>
+                            <div class="h-4 w-16 rounded bg-gray-100"></div>
+                        </div>
+                        <div class="flex gap-3 sm:gap-4 pb-6 pt-2 overflow-hidden pr-4 sm:pr-6 lg:pr-8">
+                            <AssetCardSkeleton v-for="c in skeletonCards" :key="c" />
+                        </div>
+                    </section>
+                </template>
+
+                <!-- Load More Button -->
+                <div v-if="hasMoreSections && !isLoadingMore" class="flex justify-center pt-4 pb-12">
+                    <button
+                        @click="loadMoreSections"
+                        class="group px-8 py-3 rounded border-2 border-[#FFC000] bg-transparent text-[#FFC000] text-sm font-bold hover:bg-[#FFC000] hover:text-[#0A2540] hover:shadow-md transition-all flex items-center gap-3"
+                    >
+                        <span>Muat Lebih Banyak</span>
+                        <i class="fa-solid fa-arrow-down transition-transform duration-300 group-hover:translate-y-1"></i>
+                    </button>
+                </div>
             </template>
 
             <!-- ========== EMPTY STATE ========== -->

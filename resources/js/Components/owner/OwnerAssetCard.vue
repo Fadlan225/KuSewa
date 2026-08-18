@@ -40,7 +40,11 @@ onUnmounted(() => {
 });
 
 const navigateToAsset = () => {
-    router.visit(route('owner.asset.show', props.asset.slug || props.asset.id));
+    if (props.asset.verification_status === 'draft') {
+        router.visit(route('owner.asset.edit-draft', props.asset.id));
+    } else {
+        router.visit(route('owner.asset.show', props.asset.slug || props.asset.id));
+    }
 };
 
 const formatRupiah = (value) => {
@@ -54,12 +58,37 @@ const formatRupiah = (value) => {
 <template>
     <div
         ref="elRef"
-        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 overflow-hidden"
+        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col bg-white rounded-md shadow-sm border border-slate-200/60 hover:border-[#FFC000] hover:shadow-md transition-all duration-300"
     >
         <AssetCardSkeleton v-if="!isIntersecting" />
 
-        <div v-else class="w-full h-full flex flex-col group cursor-pointer" @click="navigateToAsset">
-            <div class="aspect-[3/2] w-full relative bg-gray-100 overflow-hidden">
+        <div v-else class="w-full h-full flex flex-col group cursor-pointer relative" @click="navigateToAsset">
+            <!-- RIBBON BADGE (Placed outside overflow-hidden to allow overhang) -->
+            <div class="absolute top-3 -left-1.5 z-20 pointer-events-none flex flex-col gap-1 items-start">
+                <!-- Status Verification Badge -->
+                <div v-if="asset.verification_status === 'draft'" class="relative bg-slate-200 text-slate-700 text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
+                    <i class="fa-solid fa-file-pen mr-1"></i>Draft
+                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-slate-400 border-l-[6px] border-l-transparent"></div>
+                </div>
+                <div v-else-if="asset.verification_status === 'pending'" class="relative bg-[#FFC000] text-[#0A2540] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
+                    <i class="fa-solid fa-clock mr-1"></i>Menunggu
+                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-[#B38600] border-l-[6px] border-l-transparent"></div>
+                </div>
+                <div v-else-if="asset.verification_status === 'rejected'" class="relative bg-rose-600 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
+                    <i class="fa-solid fa-xmark-circle mr-1"></i>Ditolak
+                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-rose-800 border-l-[6px] border-l-transparent"></div>
+                </div>
+                <div v-else-if="asset.verification_status === 'approved'" class="relative bg-[#FFC000] text-[#0A2540] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
+                    <i class="fa-solid fa-check-circle mr-1"></i>Terverifikasi
+                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-[#B38600] border-l-[6px] border-l-transparent"></div>
+                </div>
+                <div v-else-if="asset.verification_status === 'inactive'" class="relative bg-slate-500 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
+                    <i class="fa-solid fa-power-off mr-1"></i>Nonaktif
+                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-slate-700 border-l-[6px] border-l-transparent"></div>
+                </div>
+            </div>
+
+            <div class="aspect-[3/2] w-full relative bg-gray-100 overflow-hidden rounded-t-md">
                 <div v-if="asset.first_image?.image && !imageLoaded && !asset.imageError" class="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-100 to-gray-200 animate-pulse z-10">
                     <div class="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/60 to-transparent"></div>
                 </div>
@@ -74,51 +103,45 @@ const formatRupiah = (value) => {
 
                 <div class="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10"></div>
 
-                <div class="absolute top-2 left-2 z-20 pointer-events-none flex flex-col gap-1 items-start">
-                    <span v-if="asset.verification_status === 'pending'" class="bg-amber-500/90 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md shadow-sm backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-clock"></i> Menunggu
-                    </span>
-                    <span v-else-if="asset.verification_status === 'approved'" class="bg-emerald-500/90 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md shadow-sm backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-check-circle"></i> Terverifikasi
-                    </span>
-                    <span v-else-if="asset.verification_status === 'rejected'" class="bg-rose-500/90 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md shadow-sm backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-circle-xmark"></i> Ditolak
-                    </span>
-                    <span v-else-if="asset.verification_status === 'inactive'" class="bg-slate-500/90 text-white text-[9px] sm:text-[10px] font-bold px-2 py-1 rounded-md shadow-sm backdrop-blur-sm flex items-center gap-1">
-                        <i class="fa-solid fa-eye-slash"></i> Nonaktif
-                    </span>
-                </div>
-
-                <div v-if="asset.reviews_avg_rating" class="absolute bottom-2 right-2 z-20 bg-[#FFC000] size-7 sm:size-8 rounded-full text-[10px] sm:text-[11px] font-bold text-white flex items-center justify-center shadow-md pointer-events-none">
+                <div v-if="asset.reviews_avg_rating" class="absolute bottom-2 right-2 z-20 bg-[#FFC000] size-7 sm:size-8 rounded-full text-[10px] sm:text-[11px] font-bold text-[#0A2540] flex items-center justify-center shadow-md pointer-events-none">
                     {{ Number(asset.reviews_avg_rating).toFixed(1) }}
                 </div>
             </div>
 
-            <div class="flex flex-col flex-grow p-2.5 sm:p-3 gap-1 bg-white">
-                <h3 class="font-semibold text-sm sm:text-[15px] leading-tight text-[#0A2540] group-hover:text-blue-600 transition-colors line-clamp-1">
+            <div class="flex flex-col flex-grow p-2.5 sm:p-3 bg-white rounded-b-md">
+                <!-- Location & Type (Top Context) -->
+                <div class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider truncate mb-0.5">
+                    {{ asset.type || categoryName }} &bull; {{ (asset.city?.name || asset.city) || 'Lokasi tidak diketahui' }}
+                </div>
+
+                <!-- Title (Primary Anchor) -->
+                <h3 class="font-bold text-sm sm:text-[15px] leading-tight text-[#0A2540] line-clamp-1 mb-1">
                     {{ asset.title }}
                 </h3>
                 
-                <div class="flex items-center gap-1.5 text-[10px] sm:text-[11px] text-gray-500 font-medium truncate mt-0.5">
-                    <span class="truncate">{{ asset.type || categoryName }} &bull; {{ (asset.city?.name || asset.city) || 'Lokasi tidak diketahui' }}</span>
+                <!-- Unit Stats (Secondary Context - Subdued) -->
+                <div class="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-500 mb-1">
+                    <span><span class="font-bold text-slate-700">{{ asset.total_units || 1 }}</span> Unit</span>
+                    <span class="w-1 h-1 rounded-full bg-slate-200"></span>
+                    <span><span class="font-bold text-slate-700">{{ asset.occupied_units || 0 }}</span> Terisi</span>
+                    <span class="w-1 h-1 rounded-full bg-slate-200"></span>
+                    <span><span class="font-bold text-slate-700">{{ asset.available_units || 0 }}</span> Sisa</span>
                 </div>
 
-                <div class="flex items-center gap-2 text-[10px] mt-1 font-semibold text-slate-500">
-                    <span class="font-bold text-slate-700">{{ asset.total_units || 1 }} Unit</span>
-                    <span class="text-emerald-500"><i class="fa-solid fa-circle text-[6px] align-middle"></i> {{ asset.occupied_units || 0 }} Terisi</span>
-                    <span class="text-slate-300"><i class="fa-solid fa-circle text-[6px] align-middle"></i> {{ asset.available_units || 0 }} Tersedia</span>
-                </div>
-
-                <div class="flex items-end justify-between mt-auto pt-2 border-t border-slate-50">
-                    <div class="font-bold text-sm text-[#F97316]">
-                        <template v-if="asset.default_pricing || asset.price">
-                            {{ formatRupiah(asset.default_pricing?.price || asset.price) }}<span class="text-[9px] font-normal text-gray-400">/{{ rentalUnitLabel(asset.type?.rental_unit || asset.rent_period) }}</span>
-                        </template>
-                        <span v-else class="text-[11px] font-medium text-gray-400">Hubungi</span>
+                <!-- Price (Bottom Anchor) -->
+                <div class="flex items-end justify-between mt-auto pt-3 border-t border-slate-100">
+                    <div>
+                        <span class="block text-[8px] sm:text-[9px] text-slate-400 font-medium mb-0.5">Mulai dari</span>
+                        <div class="font-black text-[13px] sm:text-[15px] text-[#0A2540] leading-none">
+                            <template v-if="asset.default_pricing || asset.price">
+                                {{ formatRupiah(asset.default_pricing?.price || asset.price) }}<span class="text-[10px] sm:text-[11px] font-bold text-slate-500 ml-0.5">/{{ rentalUnitLabel(asset.default_pricing?.rental_unit || asset.type?.rental_unit || asset.rent_period) }}</span>
+                            </template>
+                            <span v-else class="text-[11px] font-medium text-slate-400">Hubungi</span>
+                        </div>
                     </div>
                     
-                    <div class="text-[10px] font-bold text-blue-600 group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                        Kelola <i class="fa-solid fa-arrow-right text-[9px]"></i>
+                    <div class="text-slate-300 group-hover:text-[#FFC000] transition-colors flex items-center justify-center pb-0.5 pr-0.5">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
                     </div>
                 </div>
             </div>

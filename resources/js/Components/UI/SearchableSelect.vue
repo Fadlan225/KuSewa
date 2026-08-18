@@ -34,12 +34,12 @@
         <li
           v-for="option in filteredOptions"
           :key="option.code"
-          @click="selectOption(option)"
+          @click.stop="selectOption(option)"
           class="px-4 py-2.5 text-sm cursor-pointer hover:bg-gray-50 transition-colors flex items-center justify-between"
-          :class="{'bg-[#FFF9E6] text-[#FFC000] font-medium': modelValue == option.code, 'text-[#0A2540]': modelValue != option.code}"
+          :class="{'bg-[#FFF9E6] text-[#FFC000] font-medium': isSelected(option), 'text-[#0A2540]': !isSelected(option)}"
         >
           {{ option.name }}
-          <i v-if="modelValue == option.code" class="fa-solid fa-check text-[#FFC000] text-xs"></i>
+          <i v-if="isSelected(option)" class="fa-solid fa-check text-[#FFC000] text-xs"></i>
         </li>
       </ul>
     </div>
@@ -51,7 +51,7 @@ import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
   modelValue: {
-    type: String,
+    type: [String, Number, Array],
     default: null
   },
   options: {
@@ -63,6 +63,10 @@ const props = defineProps({
     default: 'Pilih'
   },
   disabled: {
+    type: Boolean,
+    default: false
+  },
+  multiple: {
     type: Boolean,
     default: false
   }
@@ -97,6 +101,19 @@ const displayValue = computed(() => {
     return searchQuery.value; // Saat dropdown terbuka, tampilkan teks pencarian
   }
   
+  if (props.multiple) {
+      if (Array.isArray(props.modelValue) && props.modelValue.length > 0) {
+          // Hanya hitung item yang ada dalam options dropdown ini
+          const selectedInThisDropdown = props.modelValue.filter(val => 
+              props.options.some(opt => opt.code === val)
+          );
+          if (selectedInThisDropdown.length > 0) {
+              return `${selectedInThisDropdown.length} Dipilih`;
+          }
+      }
+      return '';
+  }
+
   if (props.modelValue && props.options.length > 0) {
     const selected = props.options.find(opt => opt.code == props.modelValue);
     return selected ? selected.name : '';
@@ -104,6 +121,13 @@ const displayValue = computed(() => {
   
   return '';
 });
+
+const isSelected = (option) => {
+    if (props.multiple) {
+        return Array.isArray(props.modelValue) && props.modelValue.includes(option.code);
+    }
+    return props.modelValue == option.code;
+};
 
 // Interaksi Dropdown
 const openDropdown = () => {
@@ -123,9 +147,22 @@ const onSearch = (e) => {
 };
 
 const selectOption = (option) => {
-  emit('update:modelValue', option.code);
-  emit('change', option);
-  closeDropdown();
+  if (props.multiple) {
+      let val = Array.isArray(props.modelValue) ? [...props.modelValue] : [];
+      const idx = val.indexOf(option.code);
+      if (idx > -1) {
+          val.splice(idx, 1);
+      } else {
+          val.push(option.code);
+      }
+      emit('update:modelValue', val);
+      emit('change', option);
+      // biarkan dropdown tetap terbuka saat multiple select
+  } else {
+      emit('update:modelValue', option.code);
+      emit('change', option);
+      closeDropdown();
+  }
 };
 
 </script>

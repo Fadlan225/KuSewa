@@ -1,93 +1,181 @@
 <script setup>
-import { ref } from 'vue';
+import { computed } from 'vue';
+import CustomSelect from '@/Components/UI/CustomSelect.vue';
+import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
+import TagInput from '@/Components/UI/TagInput.vue';
 
 const props = defineProps({
     form: Object,
+    assetTypeDetails: Object, // { unit_facilities, unit_detail_fields }
 });
 
-const emit = defineEmits(['addFaq', 'removeFaq', 'addPolicy', 'removePolicy']);
+const emit = defineEmits([
+    'tambahUnit',
+    'hapusUnit',
+    'toggleUnitFasilitas',
+]);
+
+const unitDetailFields = computed(() => props.assetTypeDetails?.unit_detail_fields ?? []);
+const unitFacilitiesFromDB = computed(() => props.assetTypeDetails?.unit_facilities ?? []);
+
+// Flat array for TagInput
+const allUnitFacilitiesOptions = computed(() => {
+    return unitFacilitiesFromDB.value.map(fac => ({
+        code: fac.id,
+        name: `${fac.name} (${fac.category?.name || 'Fasilitas Lainnya'})`
+    }));
+});
 </script>
 
 <template>
-    <div class="space-y-8">
-        <!-- Header -->
-        <div>
-            <h2 class="text-xl font-black text-[#0A2540] mb-1">Kebijakan & FAQ</h2>
-            <p class="text-sm text-slate-500">Langkah ini opsional — Anda bisa melewatinya dan mengisinya nanti di dashboard.</p>
-        </div>
+<div class="space-y-6">
+    <!-- STEP 4: MANAJEMEN UNIT -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-4">
+        <h2 class="text-lg font-bold text-slate-800">
+            Manajemen Tipe Unit
+        </h2>
+        <button
+            type="button"
+            @click="emit('tambahUnit')"
+            class="text-sm font-semibold text-white bg-[#0A2540] hover:bg-[#123e6b] px-4 py-2 rounded-md transition cursor-pointer shrink-0 shadow-sm"
+        >
+            + Tambah Tipe Unit Baru
+        </button>
+    </div>
 
-        <!-- ========== FAQ ========== -->
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-base font-bold text-[#0A2540]">FAQ (Pertanyaan Umum)</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Jawab pertanyaan yang sering ditanyakan calon penyewa</p>
+    <p class="text-sm text-slate-500 mb-4">
+        Aset Anda memiliki beberapa tipe ruangan/unit (misal: Kamar Standar, Kamar VIP). Tambahkan dan atur spesifikasinya di sini. (Harga sewa akan diatur pada langkah selanjutnya).
+    </p>
+
+    <div class="space-y-6">
+        <div
+            v-for="(unit, unitIndex) in form.units"
+            :key="unit._id"
+            class="border border-slate-300 rounded-lg p-6 relative bg-white shadow-sm"
+        >
+            <!-- Tombol Hapus Unit -->
+            <button
+                v-if="form.units.length > 1"
+                type="button"
+                @click="emit('hapusUnit', unitIndex)"
+                class="absolute top-4 right-4 w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center text-sm cursor-pointer shadow-sm"
+                title="Hapus Unit"
+            >
+                <i class="fa-solid fa-trash"></i>
+            </button>
+
+            <div class="flex items-center gap-3 mb-5">
+                <div class="w-8 h-8 rounded-md bg-[#FFC000] text-[#0A2540] font-bold flex items-center justify-center text-sm">
+                    {{ unitIndex + 1 }}
                 </div>
-                <button type="button" @click="emit('addFaq')"
-                    class="text-xs font-bold text-[#0A2540] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus"></i> Tambah FAQ
-                </button>
+                <p class="text-sm font-semibold text-slate-700">Tipe Unit ke-{{ unitIndex + 1 }}</p>
             </div>
 
-            <div v-if="form.faqs.length === 0" class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center">
-                <i class="fa-solid fa-circle-question text-3xl text-slate-300 mb-2"></i>
-                <p class="text-sm text-slate-400">Belum ada FAQ. Klik "Tambah FAQ" untuk mulai.</p>
+            <!-- Nama Unit & Jumlah -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Tipe Unit <span class="text-rose-500">*</span></label>
+                    <input
+                        v-model="unit.name"
+                        type="text"
+                        placeholder="cth: Kamar Standard"
+                        class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition"
+                        required
+                    />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Jumlah Unit <span class="text-rose-500">*</span></label>
+                    <div class="relative">
+                        <input
+                            v-model="unit.quantity"
+                            type="number"
+                            min="1"
+                            placeholder="1"
+                            class="w-full text-sm pl-4 pr-20 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition"
+                            required
+                        />
+                        <span class="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-semibold">Unit</span>
+                    </div>
+                </div>
             </div>
 
-            <div v-for="(faq, idx) in form.faqs" :key="idx" class="border border-slate-200 rounded-xl p-4 space-y-3 relative">
-                <button type="button" @click="emit('removeFaq', idx)"
-                    class="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full bg-rose-100 text-rose-500 hover:bg-rose-200 transition text-xs">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 block mb-1">Pertanyaan <span class="text-rose-500">*</span></label>
-                    <input v-model="faq.question" type="text" maxlength="300" placeholder="Contoh: Apakah tersedia parkir?"
-                        class="w-full text-sm border border-slate-300 focus:border-indigo-500 focus:ring-0 rounded-lg px-3 py-2 transition" />
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 block mb-1">Jawaban <span class="text-rose-500">*</span></label>
-                    <textarea v-model="faq.answer" rows="2" maxlength="2000" placeholder="Tulis jawaban yang jelas..."
-                        class="w-full text-sm border border-slate-300 focus:border-indigo-500 focus:ring-0 rounded-lg px-3 py-2 transition resize-none"></textarea>
+            <!-- Deskripsi Unit -->
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Deskripsi Unit <span class="text-rose-500">*</span></label>
+                <textarea
+                    v-model="unit.description"
+                    rows="3"
+                    minlength="100"
+                    required
+                    placeholder="Deskripsikan keunggulan spesifik unit ini (misal: Pemandangan kota, dekat tangga)..."
+                    class="w-full text-sm px-4 py-2.5 rounded-md border focus:outline-none focus:ring-2 transition resize-none"
+                    :class="(unit.description || '').length > 0 && (unit.description || '').length < 100 ? 'border-rose-300 focus:ring-rose-500 focus:border-transparent' : 'border-slate-300 focus:ring-[#0A2540] focus:border-transparent'"
+                ></textarea>
+                <div class="mt-1.5 flex justify-between items-center text-[11px]">
+                    <span :class="(unit.description || '').length > 0 && (unit.description || '').length < 100 ? 'text-rose-500' : 'text-slate-500'">
+                        {{ (unit.description || '').length < 100 ? `Minimal 100 karakter (${(unit.description || '').length}/100)` : 'Panjang deskripsi sudah sesuai' }}
+                    </span>
+                    <span class="text-slate-400 font-medium">{{ (unit.description || '').length }} karakter</span>
                 </div>
             </div>
-        </div>
 
-        <hr class="border-slate-100" />
+            <!-- Detail Fields Unit (dinamis dari DB) -->
+            <div v-if="unitDetailFields.length > 0" class="mb-6 border-t border-slate-200 pt-5">
+                <h3 class="text-sm font-semibold text-slate-700 mb-4">
+                    Spesifikasi Khusus Unit
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div v-for="field in unitDetailFields" :key="field.key">
+                        <label class="block text-sm font-semibold text-slate-600 mb-1.5">
+                            {{ field.label }}
+                            <span v-if="field.required" class="text-rose-500">*</span>
+                        </label>
 
-        <!-- ========== KEBIJAKAN ========== -->
-        <div class="space-y-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h3 class="text-base font-bold text-[#0A2540]">Kebijakan</h3>
-                    <p class="text-xs text-slate-400 mt-0.5">Aturan yang harus dipatuhi penyewa</p>
+                        <CustomSelect
+                            v-if="field.type === 'select'"
+                            v-model="unit.detail[field.key]"
+                            :options="field.options.map(o => ({ label: o, value: o }))"
+                            placeholder="Pilih..."
+                            class="w-full"
+                        />
+
+                        <input
+                            v-else
+                            :type="field.type"
+                            :step="field.type === 'number' ? 'any' : undefined"
+                            :min="field.key === 'room_size' ? 1 : undefined"
+                            v-model="unit.detail[field.key]"
+                            :placeholder="field.label"
+                            :required="field.required"
+                            @input="e => {
+                                if (field.key === 'room_size' && e.target.value !== '') {
+                                    let val = parseFloat(e.target.value);
+                                    if (val < 1) {
+                                        e.target.value = 1;
+                                        unit.detail[field.key] = 1;
+                                    }
+                                }
+                            }"
+                            class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition"
+                        />
+                    </div>
                 </div>
-                <button type="button" @click="emit('addPolicy')"
-                    class="text-xs font-bold text-[#0A2540] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-plus"></i> Tambah Kebijakan
-                </button>
             </div>
 
-            <div v-if="form.policies.length === 0" class="border-2 border-dashed border-slate-200 rounded-xl p-6 text-center">
-                <i class="fa-solid fa-file-contract text-3xl text-slate-300 mb-2"></i>
-                <p class="text-sm text-slate-400">Belum ada kebijakan. Klik "Tambah Kebijakan" untuk mulai.</p>
-            </div>
+            <!-- Fasilitas Unit (dari DB, scope = unit) -->
+            <div v-if="allUnitFacilitiesOptions.length > 0" class="border-t border-slate-200 pt-5">
+                <h3 class="text-sm font-semibold text-slate-700 mb-2">
+                    Fasilitas Khusus Unit
+                </h3>
+                <p class="text-xs text-slate-500 mb-4">Ketik atau pilih fasilitas yang HANYA terdapat di dalam tipe unit ini.</p>
 
-            <div v-for="(policy, idx) in form.policies" :key="idx" class="border border-slate-200 rounded-xl p-4 space-y-3 relative">
-                <button type="button" @click="emit('removePolicy', idx)"
-                    class="absolute top-3 right-3 w-6 h-6 flex items-center justify-center rounded-full bg-rose-100 text-rose-500 hover:bg-rose-200 transition text-xs">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 block mb-1">Judul Kebijakan <span class="text-rose-500">*</span></label>
-                    <input v-model="policy.title" type="text" maxlength="200" placeholder="Contoh: Tidak Merokok"
-                        class="w-full text-sm border border-slate-300 focus:border-amber-500 focus:ring-0 rounded-lg px-3 py-2 transition" />
-                </div>
-                <div>
-                    <label class="text-xs font-bold text-slate-500 block mb-1">Deskripsi (Opsional)</label>
-                    <textarea v-model="policy.description" rows="2" maxlength="2000" placeholder="Penjelasan lebih lanjut..."
-                        class="w-full text-sm border border-slate-300 focus:border-amber-500 focus:ring-0 rounded-lg px-3 py-2 transition resize-none"></textarea>
-                </div>
+                <TagInput
+                    v-model="unit.facility_ids"
+                    :options="allUnitFacilitiesOptions"
+                    placeholder="Cari fasilitas unit..."
+                />
             </div>
         </div>
     </div>
+</div>
 </template>

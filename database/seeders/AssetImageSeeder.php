@@ -58,6 +58,7 @@ class AssetImageSeeder extends Seeder
                     'asset_unit_id'       => null,
                     'gallery_category_id' => $catId,
                     'image'               => $imageStr,
+                    'is_thumbnail'        => ($i === 0), // First image is thumbnail
                     'created_at'          => now(),
                     'updated_at'          => now(),
                 ];
@@ -82,6 +83,7 @@ class AssetImageSeeder extends Seeder
                             'asset_unit_id'       => $unit->id,
                             'gallery_category_id' => $catId,
                             'image'               => $imageStr,
+                            'is_thumbnail'        => false,
                             'created_at'          => now(),
                             'updated_at'          => now(),
                         ];

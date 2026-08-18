@@ -160,45 +160,39 @@ const filterTime = ref('daily');
         <div class="space-y-6">
             <!-- ==================== BOOKINGS ==================== -->
             <section v-if="type === 'bookings'" class="space-y-4">
-                    <!-- METRIC SUMMARY STATS -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-2">
-                        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-base font-bold shrink-0">
-                                <i class="fa-solid fa-receipt"></i>
+                    <!-- METRIC SUMMARY STATS - Clean Panel Design -->
+                    <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
+                        <div class="grid grid-cols-2 xl:grid-cols-4 border-slate-100">
+                            <!-- Total Pesanan -->
+                            <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
+                                <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                                    <i class="fa-solid fa-receipt text-blue-500 mt-0.5"></i> <span>Total Pesanan</span>
+                                </p>
+                                <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.all || 0 }}</p>
                             </div>
-                            <div>
-                                <span class="text-[11px] font-medium text-slate-400 block">Total Pesanan</span>
-                                <span class="text-xl font-black text-slate-900">{{ bookingCounts.all || 0 }}</span>
-                            </div>
-                        </div>
 
-                        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-xl bg-amber-50 text-amber-500 flex items-center justify-center text-base font-bold shrink-0">
-                                <i class="fa-solid fa-clock"></i>
+                            <!-- Menunggu Konfirmasi -->
+                            <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
+                                <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                                    <i class="fa-solid fa-clock text-amber-500 mt-0.5"></i> <span>Menunggu Konfirmasi</span>
+                                </p>
+                                <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.pending || 0 }}</p>
                             </div>
-                            <div>
-                                <span class="text-[11px] font-medium text-slate-400 block">Menunggu Konfirmasi</span>
-                                <span class="text-xl font-black text-amber-600">{{ bookingCounts.pending || 0 }}</span>
-                            </div>
-                        </div>
 
-                        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-500 flex items-center justify-center text-base font-bold shrink-0">
-                                <i class="fa-solid fa-wallet"></i>
+                            <!-- Menunggu Pembayaran -->
+                            <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
+                                <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                                    <i class="fa-solid fa-wallet text-rose-500 mt-0.5"></i> <span>Menunggu Pembayaran</span>
+                                </p>
+                                <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.confirmed || 0 }}</p>
                             </div>
-                            <div>
-                                <span class="text-[11px] font-medium text-slate-400 block">Menunggu Pembayaran</span>
-                                <span class="text-xl font-black text-rose-600">{{ bookingCounts.confirmed || 0 }}</span>
-                            </div>
-                        </div>
 
-                        <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-base font-bold shrink-0">
-                                <i class="fa-solid fa-file-invoice-dollar"></i>
-                            </div>
-                            <div>
-                                <span class="text-[11px] font-medium text-slate-400 block">Verifikasi Pembayaran</span>
-                                <span class="text-xl font-black text-emerald-600">{{ bookingCounts.active || 0 }}</span>
+                            <!-- Verifikasi Pembayaran -->
+                            <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
+                                <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                                    <i class="fa-solid fa-file-invoice-dollar text-emerald-500 mt-0.5"></i> <span>Verifikasi Pembayaran</span>
+                                </p>
+                                <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.active || 0 }}</p>
                             </div>
                         </div>
                     </div>

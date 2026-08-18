@@ -24,10 +24,12 @@ class asset extends Model
         'latitude',
         'longitude',
         'status',
+        'draft_payload',
     ];
 
     protected $casts = [
         'detail' => 'array',
+        'draft_payload' => 'array',
     ];
 
     public function ownerProfile(){
@@ -126,7 +128,7 @@ class asset extends Model
     {
         return $query->with([
             'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
-            'defaultPricing:id,asset_id,price',
+            'defaultPricing:id,asset_id,price,rental_unit',
             'type:id,name,allow_units,category_id',
             'city:code,name',
             'district:code,name',

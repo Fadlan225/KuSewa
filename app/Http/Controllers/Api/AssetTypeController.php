@@ -40,8 +40,10 @@ class AssetTypeController extends Controller
     public function details($id)
     {
         $assetType = asset_type::with([
-            'allowedFacilities:id,name,slug',
-            'allowedUnitFacilities:id,name,slug',
+            'allowedFacilities:id,name,slug,facility_category_id',
+            'allowedFacilities.category:id,name',
+            'allowedUnitFacilities:id,name,slug,facility_category_id',
+            'allowedUnitFacilities.category:id,name',
         ])->findOrFail($id);
 
         // Kategori galeri bersifat global — ambil semua, diurutkan alfabetis
@@ -174,10 +176,9 @@ class AssetTypeController extends Controller
 
         if (in_array($typeName, ['kos-kosan', 'hotel', 'apartemen', 'rusun / condominium', 'guest house'])) {
             return [
-                ['key' => 'room_size', 'label' => 'Ukuran Kamar (m²)', 'type' => 'number', 'required' => false],
+                ['key' => 'room_size', 'label' => 'Ukuran Unit (m²)', 'type' => 'number', 'required' => true],
                 ['key' => 'bed_type',  'label' => 'Tipe Kasur',         'type' => 'select', 'required' => false, 'options' => ['Single','Double','Queen','King','Twin']],
                 ['key' => 'bathroom',  'label' => 'Kamar Mandi',        'type' => 'select', 'required' => false, 'options' => ['Dalam','Luar','Bersama']],
-                ['key' => 'floor',     'label' => 'Lantai',             'type' => 'number', 'required' => false],
             ];
         }
 

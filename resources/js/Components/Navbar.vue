@@ -4,6 +4,7 @@ import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
+import StickySubNavSearch from '@/Components/UI/StickySubNavSearch.vue';
 
 const isHome = computed(() => route().current('Home'));
 const isBantuan = computed(() => route().current('Bantuan.*'));
@@ -159,7 +160,7 @@ const initials = computed(() => {
                 : 'bg-white shadow-sm border-b border-[#6C757D]/10'
         ]"
     >
-        <div class="w-full mx-auto px-6 lg:px-8 transition-all duration-300">
+        <div class="w-full max-w-7xl mx-auto px-6 lg:px-8 transition-all duration-300">
             <div class="flex justify-between items-center h-16">
 
                 <!-- ==================== AREA MOBILE: LOGO VS SEARCH BAR ==================== -->
@@ -264,122 +265,39 @@ const initials = computed(() => {
 
 
                 <!-- ==================== AREA DESKTOP (TIDAK BERUBAH) ==================== -->
-                <!-- Logo Desktop (Selalu Tampil di Layar Besar) -->
-                <Link :href="route('Home')" class="hidden md:flex items-center gap-2">
-                    <img
-                        src="/kusewa-logo.png"
-                        alt="logo"
-                        :class="[
-                            'h-8 w-auto object-contain transition-all duration-300',
-                            isCurrentlyTransparent ? 'brightness-0 invert' : 'brightness-100 invert-0'
-                        ]"
-                    />
-                    <span
-                        :class="[
-                            'font-bold text-lg transition-colors duration-300',
-                            isCurrentlyTransparent ? 'text-white' : 'text-[#0A2540]'
-                        ]"
-                    >
-                        kusewa<span class="text-[#FFC000]">.id</span>
-                    </span>
-                </Link>
-
-                <!-- Desktop Menu Links -->
-                <div class="hidden md:flex items-center space-x-7">
-
-                    <Link
-                        :href="route('Home')"
-                        class="relative text-sm font-semibold transition-colors duration-300"
-                        :class="isHome
-                            ? 'text-[#FFC000]'
-                            : isCurrentlyTransparent
-                                ? 'text-white hover:text-[#FFC000]'
-                                : 'text-[#0A2540] hover:text-[#FFC000]'"
-                    >
-                        Beranda
-
+                <!-- Bagian Kiri: Logo & Search Bar -->
+                <div class="hidden md:flex items-center gap-8">
+                    <!-- Logo Desktop -->
+                    <Link :href="route('Home')" class="flex items-center gap-2">
+                        <img
+                            src="/kusewa-logo.png"
+                            alt="logo"
+                            :class="[
+                                'h-8 w-auto object-contain transition-all duration-300',
+                                isCurrentlyTransparent ? 'brightness-0 invert' : 'brightness-100 invert-0'
+                            ]"
+                        />
                         <span
-                            v-if="isHome"
-                            class="absolute -bottom-2 left-0 w-full h-[2.5px] bg-[#FFC000] rounded-full"
-                        ></span>
-                    </Link>
-
-                    <!-- Bantuan -->
-                    <Link
-                        v-if="!page.props.auth.user"
-                        href="#"
-                        :class="[
-                            'relative text-sm font-semibold transition-colors duration-300',
-                            isBantuan
-                                ? 'text-[#FFC000]'
-                                : isCurrentlyTransparent
-                                    ? 'text-white hover:text-[#FFC000]'
-                                    : 'text-[#0A2540] hover:text-[#FFC000]'
-                        ]"
-                    >
-                        <span
-                            v-if="isBantuan"
-                            class="absolute -bottom-2 left-0 w-full h-[2.5px] bg-[#FFC000] rounded-full"
-                        ></span>
-                        Bantuan
-                    </Link>
-
-                    <!-- Aktivitas -->
-                    <Link
-                        v-if="page.props.auth.user"
-                        :href="route('aktivitas.index')"
-                        :class="[
-                            'relative text-sm font-semibold transition-colors duration-300',
-                            isActivity
-                                ? 'text-[#FFC000]'
-                                : isCurrentlyTransparent
-                                    ? 'text-white hover:text-[#FFC000]'
-                                    : 'text-[#0A2540] hover:text-[#FFC000]'
-                        ]"
-                    >
-                        <span
-                            v-if="isActivity"
-                            class="absolute -bottom-2 left-0 w-full h-[2.5px] bg-[#FFC000] rounded-full"
-                        ></span>
-                        Aktivitas
-                    </Link>
-
-                    <!-- Kotak Masuk -->
-                    <Link
-                        v-if="page.props.auth.user"
-                        href="/chat"
-                        :class="[
-                            'relative text-sm font-semibold transition-colors duration-300 flex items-center gap-1.5',
-                            isInbox
-                                ? 'text-[#FFC000]'
-                                : isCurrentlyTransparent
-                                    ? 'text-white hover:text-[#FFC000]'
-                                    : 'text-[#0A2540] hover:text-[#FFC000]'
-                        ]"
-                    >
-                        <span
-                            v-if="isInbox"
-                            class="absolute -bottom-2 left-0 w-full h-[2.5px] bg-[#FFC000] rounded-full"
-                        ></span>
-                        Kotak Masuk
-
-                        <!-- Notification Badge -->
-                        <span v-if="page.props.auth.unreadCount > 0" class="flex items-center justify-center bg-red-500 text-white text-[10px] font-bold px-1.5 min-w-[18px] h-[18px] rounded-full">
-                            {{ page.props.auth.unreadCount > 99 ? '99+' : page.props.auth.unreadCount }}
+                            :class="[
+                                'font-bold text-lg transition-colors duration-300',
+                                isCurrentlyTransparent ? 'text-white' : 'text-[#0A2540]'
+                            ]"
+                        >
+                            kusewa<span class="text-[#FFC000]">.id</span>
                         </span>
                     </Link>
-                </div>
 
-                <!-- Desktop Right Actions -->
-                <div class="hidden md:flex items-center gap-4">
                     <!-- Desktop Mini Search Bar -->
-                    <div class="relative flex items-center w-[220px] lg:w-[280px]">
+                    <div
+                        class="relative flex items-center w-[280px] lg:w-[380px] transition-opacity duration-300"
+                        :class="isScrolled && isHome ? 'opacity-0 pointer-events-none' : 'opacity-100'"
+                    >
                         <!-- Wrapper luar yang bentuknya persis seperti input -->
                         <div v-if="desktopNavActiveMenu" @click="desktopNavActiveMenu = null" class="fixed inset-0 z-40"></div>
 
                         <!-- Search Bar -->
                         <div
-                            class="relative w-full z-50 rounded-full transition-all border overflow-hidden"
+                            class="relative w-full z-50 rounded-l-lg rounded-r-none transition-all border border-r-0 overflow-hidden"
                             :class="[
                                 isCurrentlyTransparent
                                     ? 'bg-white/10 border-white/30'
@@ -388,13 +306,11 @@ const initials = computed(() => {
                                 desktopNavActiveMenu === 'keyword' && isCurrentlyTransparent ? 'bg-white' : ''
                             ]"
                         >
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs transition-colors duration-300 z-[60]" :class="isCurrentlyTransparent && desktopNavActiveMenu !== 'keyword' ? 'text-white' : 'text-[#6C757D]'"></i>
-
-                            <AnimatedPlaceholder
+                            <AnimatedPlaceholder    
                                 :placeholders="page.props.dynamicPlaceholders"
                                 :isFocused="desktopNavActiveMenu === 'keyword'"
                                 :hasValue="!!keywordQuery"
-                                offsetClass="left-9 text-xs"
+                                offsetClass="left-4 text-xs"
                                 :class="isCurrentlyTransparent ? 'text-white' : 'text-[#6C757D]'"
                             />
 
@@ -404,7 +320,7 @@ const initials = computed(() => {
                                 @click="desktopNavActiveMenu = 'keyword'"
                                 @keyup.enter="handleNavSearch"
                                 :class="[
-                                    'w-full text-xs font-medium rounded-full pl-9 pr-10 py-2 border-none focus:outline-none focus:ring-0 transition-all shadow-inner relative z-50 bg-transparent placeholder-transparent',
+                                    'w-full text-xs font-medium rounded-l-lg rounded-r-none pl-4 pr-8 py-2.5 border-none focus:outline-none focus:ring-0 transition-all shadow-inner relative z-50 bg-transparent placeholder-transparent',
                                     isCurrentlyTransparent && desktopNavActiveMenu !== 'keyword'
                                         ? 'text-white'
                                         : 'text-[#0A2540]'
@@ -415,17 +331,19 @@ const initials = computed(() => {
                             <button
                                 v-if="keywordQuery"
                                 @click.stop="keywordQuery = ''; desktopNavActiveMenu = null;"
-                                class="absolute right-9 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-[#6C757D] hover:text-[#0A2540] transition-colors z-[60]"
+                                class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-[#6C757D] hover:text-[#0A2540] transition-colors z-[60]"
                             >
                                 <i class="fa-solid fa-xmark text-[10px]"></i>
                             </button>
-                            <button
-                                @click="desktopNavActiveMenu = desktopNavActiveMenu === 'filter' ? null : 'filter'"
-                                class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm z-50"
-                            >
-                                <i class="fa-solid fa-sliders text-[9px] font-bold"></i>
-                            </button>
                         </div>
+
+                        <!-- Tombol Search Terpisah -->
+                        <button
+                            @click="handleNavSearch"
+                            class="flex-shrink-0 w-[38px] h-[38px] bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-r-lg rounded-l-none flex items-center justify-center active:scale-90 transition-transform shadow-sm z-50 border border-[#FFC000]"
+                        >
+                            <i class="fa-solid fa-magnifying-glass text-xs font-bold"></i>
+                        </button>
 
                         <!-- Dropdown Modal -->
                         <Transition
@@ -691,6 +609,85 @@ const initials = computed(() => {
                         </Transition>
                     </div>
 
+                </div>
+
+                <!-- Bagian Kanan: Menu Links & Actions -->
+                <div class="hidden md:flex items-center gap-4">
+                    <!-- Desktop Menu Links -->
+                    <div class="flex items-center space-x-7">
+
+                    <Link
+                        :href="route('Home')"
+                        :class="[
+                            'relative text-sm transition-colors duration-300',
+                            isHome ? 'font-bold' : 'font-semibold',
+                            isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
+                        ]"
+                    >
+                        Beranda
+
+                        <span
+                            v-if="isHome"
+                            class="absolute -bottom-2 left-0 w-full h-[3px] bg-[#FFC000] rounded-full"
+                        ></span>
+                    </Link>
+
+                    <!-- Bantuan -->
+                    <Link
+                        v-if="!page.props.auth.user"
+                        href="#"
+                        :class="[
+                            'relative text-sm transition-colors duration-300',
+                            isBantuan ? 'font-bold' : 'font-semibold',
+                            isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
+                        ]"
+                    >
+                        <span
+                            v-if="isBantuan"
+                            class="absolute -bottom-2 left-0 w-full h-[3px] bg-[#FFC000] rounded-full"
+                        ></span>
+                        Bantuan
+                    </Link>
+
+                    <!-- Aktivitas -->
+                    <Link
+                        v-if="page.props.auth.user"
+                        :href="route('aktivitas.index')"
+                        :class="[
+                            'relative text-sm transition-colors duration-300',
+                            isActivity ? 'font-bold' : 'font-semibold',
+                            isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
+                        ]"
+                    >
+                        <span
+                            v-if="isActivity"
+                            class="absolute -bottom-2 left-0 w-full h-[3px] bg-[#FFC000] rounded-full"
+                        ></span>
+                        Aktivitas
+                    </Link>
+
+                    <!-- Kotak Masuk -->
+                    <Link
+                        v-if="page.props.auth.user"
+                        href="/chat"
+                        :class="[
+                            'relative text-sm transition-colors duration-300 flex items-center gap-1.5',
+                            isInbox ? 'font-bold' : 'font-semibold',
+                            isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
+                        ]"
+                    >
+                        <span
+                            v-if="isInbox"
+                            class="absolute -bottom-2 left-0 w-full h-[3px] bg-[#FFC000] rounded-full"
+                        ></span>
+                        Kotak Masuk
+
+                        <!-- Notification Badge -->
+                        <span v-if="page.props.auth.unreadCount > 0" class="flex items-center justify-center bg-red-500 text-white text-[10px] font-bold px-1.5 min-w-[18px] h-[18px] rounded-full">
+                            {{ page.props.auth.unreadCount > 99 ? '99+' : page.props.auth.unreadCount }}
+                        </span>
+                    </Link>
+                    </div>
                     <!-- Language Selector Desktop -->
                     <div
                         class="flex items-center gap-2 cursor-pointer transition-all duration-300 px-3 py-1.5 rounded-lg border border-transparent"
@@ -911,8 +908,21 @@ const initials = computed(() => {
                         </template>
                     </div>
                 </div>
-
             </div>
+
+            <!-- Sub Navbar Filter (Sticky) -->
+            <Transition
+                enter-active-class="transition-opacity duration-300 ease-out"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-200 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div v-if="isScrolled && isHome" class="hidden md:block w-full relative z-40 bg-white">
+                    <StickySubNavSearch />
+                </div>
+            </Transition>
         </div>
     </nav>
 </template>

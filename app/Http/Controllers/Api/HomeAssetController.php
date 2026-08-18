@@ -38,7 +38,7 @@ class HomeAssetController extends Controller
             ->limit(10)
             ->with([
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
-                'defaultPricing:id,asset_id,price',
+                'defaultPricing:id,asset_id,price,rental_unit',
                 'type:id,name,allow_units,category_id',
                 'city:code,name',
                 'district:code,name',

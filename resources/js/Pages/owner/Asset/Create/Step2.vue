@@ -79,6 +79,9 @@ const isSearchingAlamat = ref(false);
 const isLocatingGPS = ref(false);
 let mapInstance = null;
 let markerInstance = null;
+const searchSuggestions = ref([]);
+const showSuggestions = ref(false);
+let searchTimeout = null;
 
 // Titik default (sekitar Kalimantan Timur) jika owner belum memilih titik lokasi
 const DEFAULT_LAT = -0.5021;
@@ -136,29 +139,71 @@ const pasangMarker = (lat, lng) => {
     mapInstance.panTo([lat, lng]);
 };
 
-// Cari alamat lewat Nominatim (geocoding gratis dari OpenStreetMap, tanpa API key)
-const cariLokasiDiPeta = async () => {
+const fetchSuggestions = async () => {
     const query = cariAlamatInput.value.trim();
-    if (!query) return;
-
+    if (!query || query.length < 3) {
+        searchSuggestions.value = [];
+        showSuggestions.value = false;
+        return;
+    }
+    
     isSearchingAlamat.value = true;
     try {
         const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=id&q=${encodeURIComponent(query)}`
+            `https://nominatim.openstreetmap.org/search?format=json&limit=5&countrycodes=id&q=${encodeURIComponent(query)}`
         );
         const data = await res.json();
-        if (data.length > 0) {
-            const { lat, lon } = data[0];
-            mapInstance.setView([lat, lon], 17);
-            pasangMarker(parseFloat(lat), parseFloat(lon));
+        searchSuggestions.value = data || [];
+        showSuggestions.value = searchSuggestions.value.length > 0;
+    } catch (err) {
+        console.error('Gagal mengambil saran lokasi:', err);
+    } finally {
+        isSearchingAlamat.value = false;
+    }
+};
+
+const onSearchInput = () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        fetchSuggestions();
+    }, 500);
+};
+
+const onSearchFocus = () => {
+    if (cariAlamatInput.value.length >= 3 && searchSuggestions.value.length > 0) {
+        showSuggestions.value = true;
+    }
+};
+
+const selectSuggestion = (suggestion) => {
+    cariAlamatInput.value = suggestion.display_name;
+    showSuggestions.value = false;
+    
+    const lat = parseFloat(suggestion.lat);
+    const lon = parseFloat(suggestion.lon);
+    
+    mapInstance.setView([lat, lon], 17);
+    pasangMarker(lat, lon);
+};
+
+// Fallback jika user tetap menekan tombol Cari atau Enter
+const cariLokasiDiPeta = async () => {
+    if (searchSuggestions.value.length > 0) {
+        selectSuggestion(searchSuggestions.value[0]);
+    } else {
+        await fetchSuggestions();
+        if (searchSuggestions.value.length > 0) {
+            selectSuggestion(searchSuggestions.value[0]);
         } else {
             alert('Lokasi tidak ditemukan, coba kata kunci lain atau langsung klik di peta.');
         }
-    } catch (err) {
-        console.error('Gagal mencari lokasi:', err);
-        alert('Gagal mencari lokasi. Periksa koneksi internet Anda.');
-    } finally {
-        isSearchingAlamat.value = false;
+    }
+};
+
+// Tutup suggestions saat klik di luar
+const closeSuggestions = (e) => {
+    if (!e.target.closest('.search-container')) {
+        showSuggestions.value = false;
     }
 };
 
@@ -195,112 +240,148 @@ watch(() => props.currentStep, async (step) => {
 
 onMounted(() => {
     fetchProvinces();
+    document.addEventListener('click', closeSuggestions);
 });
 
 onBeforeUnmount(() => {
     if (mapInstance) mapInstance.remove();
+    document.removeEventListener('click', closeSuggestions);
 });
 
 
 </script>
 
 <template>
-<div class="space-y-4">
+<div class="space-y-6">
 <!-- STEP 2: LOKASI -->
-    <h2 class="text-sm font-bold text-slate-800 border-b border-slate-100 pb-3 flex items-center gap-2">
-        <i class="fa-solid fa-map-location-dot text-[#0A2540]"></i>
-        <span>Detail Lokasi</span>
+    <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-4">
+        Detail Lokasi
     </h2>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Provinsi <span class="text-rose-500">*</span></label>
-            <SearchableSelect 
-                v-model="form.province_code" 
-                :options="provinces" 
-                placeholder="Cari atau pilih provinsi" 
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Provinsi <span class="text-rose-500">*</span></label>
+            <SearchableSelect
+                v-model="form.province_code"
+                :options="provinces"
+                placeholder="Cari atau pilih provinsi"
             />
         </div>
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kota<span class="text-rose-500">*</span></label>
-            <SearchableSelect 
-                v-model="form.city_code" 
-                :options="cities" 
-                placeholder="Cari atau pilih kota" 
-                :disabled="!cities.length" 
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kota<span class="text-rose-500">*</span></label>
+            <SearchableSelect
+                v-model="form.city_code"
+                :options="cities"
+                placeholder="Cari atau pilih kota"
+                :disabled="!cities.length"
             />
         </div>
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kecamatan <span class="text-rose-500">*</span></label>
-            <SearchableSelect 
-                v-model="form.district_code" 
-                :options="districts" 
-                placeholder="Cari atau pilih kecamatan" 
-                :disabled="!districts.length" 
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kecamatan <span class="text-rose-500">*</span></label>
+            <SearchableSelect
+                v-model="form.district_code"
+                :options="districts"
+                placeholder="Cari atau pilih kecamatan"
+                :disabled="!districts.length"
             />
         </div>
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kelurahan / Desa <span class="text-rose-500">*</span></label>
-            <SearchableSelect 
-                v-model="form.village_code" 
-                :options="villages" 
-                placeholder="Cari atau pilih kelurahan/desa" 
-                :disabled="!villages.length" 
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kelurahan / Desa <span class="text-rose-500">*</span></label>
+            <SearchableSelect
+                v-model="form.village_code"
+                :options="villages"
+                placeholder="Cari atau pilih kelurahan/desa"
+                :disabled="!villages.length"
             />
         </div>
     </div>
     <div class="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-4">
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Alamat Lengkap <span class="text-rose-500">*</span></label>
-            <input v-model="form.address" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540] transition" required />
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Alamat Lengkap <span class="text-rose-500">*</span></label>
+            <input v-model="form.address" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition" required />
         </div>
         <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kode Pos</label>
-            <input v-model="form.postal_code" type="text" placeholder="50123" class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 transition" />
+            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kode Pos</label>
+            <input 
+                :value="form.postal_code" 
+                @input="e => { form.postal_code = e.target.value.replace(/\D/g, '').slice(0, 5); e.target.value = form.postal_code; }"
+                type="text" 
+                placeholder="50123" 
+                minlength="5"
+                maxlength="5"
+                class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition" 
+            />
         </div>
     </div>
 
     <!-- PILIH TITIK KOORDINAT DI PETA -->
     <div>
-        <label class="block text-xs font-bold text-slate-700 mb-1">
+        <label class="block text-sm font-semibold text-slate-700 mb-1.5">
             Titik Lokasi di Peta <span class="text-rose-500">*</span>
         </label>
-        <p class="text-[10px] text-slate-400 mb-2">
+        <p class="text-xs text-slate-500 mb-2.5">
             Cari alamat di kolom bawah, gunakan lokasi GPS Anda, atau klik/geser pin langsung di peta untuk menandai titik properti secara presisi.
         </p>
 
         <!-- Search bar + tombol GPS -->
-        <div class="flex gap-2 mb-2">
+        <div class="flex gap-2 mb-3 search-container relative z-20">
             <div class="flex-1 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-[11px]"></i>
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm"></i>
                 <input
                     v-model="cariAlamatInput"
+                    @input="onSearchInput"
+                    @focus="onSearchFocus"
                     @keyup.enter.prevent="cariLokasiDiPeta"
                     type="text"
                     placeholder="Cari nama jalan / area di peta..."
-                    class="w-full text-xs pl-8 pr-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:border-[#0A2540]"
+                    class="w-full text-sm pl-9 pr-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent"
                 />
+                
+                <!-- Suggestions Dropdown -->
+                <transition
+                    enter-active-class="transition duration-100 ease-out"
+                    enter-from-class="transform scale-95 opacity-0"
+                    enter-to-class="transform scale-100 opacity-100"
+                    leave-active-class="transition duration-75 ease-in"
+                    leave-from-class="transform scale-100 opacity-100"
+                    leave-to-class="transform scale-95 opacity-0"
+                >
+                    <div
+                        v-if="showSuggestions"
+                        class="absolute left-0 right-0 mt-1 bg-white border border-slate-200 shadow-lg rounded-md max-h-60 overflow-y-auto z-50 hide-scrollbar"
+                    >
+                        <div
+                            v-for="(suggestion, idx) in searchSuggestions"
+                            :key="idx"
+                            @click="selectSuggestion(suggestion)"
+                            class="px-4 py-2.5 text-xs text-slate-700 cursor-pointer hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"
+                        >
+                            <p class="font-semibold text-slate-800 line-clamp-1">{{ suggestion.name || (suggestion.display_name ? suggestion.display_name.split(',')[0] : '') }}</p>
+                            <p class="text-slate-500 line-clamp-1 mt-0.5">{{ suggestion.display_name }}</p>
+                        </div>
+                    </div>
+                </transition>
             </div>
             <button
                 type="button" @click.prevent="cariLokasiDiPeta" :disabled="isSearchingAlamat"
-                class="bg-[#0A2540] text-white text-xs font-bold px-4 rounded-xl hover:bg-[#123e6b] transition cursor-pointer shrink-0 disabled:opacity-50"
+                class="bg-primary text-secondary text-sm font-semibold px-4 rounded-md hover:bg-primary/90 transition cursor-pointer shrink-0 disabled:opacity-50"
             >
                 {{ isSearchingAlamat ? 'Mencari...' : 'Cari' }}
             </button>
             <button
                 type="button" @click.prevent="gunakanLokasiSaatIni" :disabled="isLocatingGPS"
                 title="Gunakan Lokasi Saya Saat Ini"
-                class="bg-slate-100 text-[#0A2540] text-xs font-bold px-3 rounded-xl hover:bg-slate-200 transition cursor-pointer shrink-0 disabled:opacity-50"
+                class="bg-slate-100 text-[#0A2540] text-sm font-semibold px-3.5 rounded-md hover:bg-slate-200 transition cursor-pointer shrink-0 disabled:opacity-50"
             >
                 <i class="fa-solid fa-location-crosshairs"></i>
             </button>
         </div>
 
         <!-- Container Peta -->
-        <div ref="mapContainer" class="w-full h-72 rounded-xl border border-slate-200 relative z-0"></div>
+        <div ref="mapContainer" class="w-full h-80 rounded-md border border-slate-300 relative z-0"></div>
 
         <!-- Info koordinat terpilih -->
-        <div class="flex items-center gap-2 mt-2 text-[11px]" :class="form.latitude ? 'text-emerald-600' : 'text-slate-400'">
+        <div class="flex items-center gap-2 mt-3 text-xs" :class="form.latitude ? 'text-emerald-600' : 'text-slate-500'">
             <i :class="['fa-solid', form.latitude ? 'fa-circle-check' : 'fa-circle-exclamation']"></i>
             <span v-if="form.latitude">
                 Titik lokasi terpilih: {{ form.latitude }}, {{ form.longitude }}

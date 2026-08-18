@@ -21,6 +21,7 @@ use App\Http\Controllers\Owner\MonthlyPaymentController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\Api\AssetTypeController;
 use App\Http\Controllers\Owner\AssetController as OwnerAssetController;
+use App\Http\Controllers\Owner\IncomeController;
 
 Route::get('/', [HomeController::class, 'index'])->name('Home');
 
@@ -30,6 +31,7 @@ Route::get('/search/suggest', [HomeController::class, 'suggest'])->name('search.
 
 // API for Home
 Route::get('/api/home/nearby-assets', [HomeAssetController::class, 'nearby'])->name('api.home.nearby-assets');
+Route::get('/api/home/sections', [HomeController::class, 'apiGetSections'])->name('api.home.sections');
 
 // API for Locations
 Route::get('/api/provinces', [LocationController::class, 'getProvinces'])->name('api.provinces.index');
@@ -63,6 +65,9 @@ Route::middleware('auth')->prefix('owner')->group(function () {
 Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::post('asset/upload-temp', [OwnerAssetController::class, 'uploadTemp'])->name('asset.upload-temp');
+    Route::post('asset/auto-save', [OwnerAssetController::class, 'autoSaveDraft'])->name('asset.auto-save');
+    Route::get('asset/draft/{id}', [OwnerAssetController::class, 'editDraft'])->name('asset.edit-draft');
     Route::resource('asset', OwnerAssetController::class)->names('asset');
     Route::patch('asset/{asset}/toggle-status', [OwnerAssetController::class, 'toggleStatus'])->name('asset.toggle-status');
     Route::post('asset/{asset}/facilities', [OwnerAssetController::class, 'storeFacility'])->name('asset.facilities.store');
@@ -91,10 +96,7 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::patch('/bookings/{id}/complete', [OwnerBookingController::class, 'complete'])->name('bookings.complete');
     Route::get('/monthly-payment', [MonthlyPaymentController::class, 'index'])->name('monthly-payment');
     Route::post('/monthly-payment/submit', [MonthlyPaymentController::class, 'store'])->name('monthly-payment.store');
-    Route::get('/finance', function(){ return Inertia::render('owner/finance'); })->name('finance');
-    Route::get('/income', function(){ return Inertia::render('owner/Income'); })->name('income');
-    Route::get('/settings', function(){ return Inertia::render('owner/settings'); })->name('settings');
-    Route::get('/help', function(){ return Inertia::render('owner/help'); })->name('help');
+    Route::get('/income', [IncomeController::class, 'index'])->name('income');
 });
 
 Route::middleware('auth')->group(function () {

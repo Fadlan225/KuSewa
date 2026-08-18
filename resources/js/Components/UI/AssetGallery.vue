@@ -101,17 +101,30 @@ const handleGalleryTouchEnd = (e) => {
     if (touchGalleryEndX.value > touchGalleryStartX.value + 50) prevImage();
 };
 
-// Gallery Modal Categories Logic (Dummy logic for now)
+// Gallery Modal Categories Logic
 const activeCategory = ref('Semua');
 
 const galleryCategories = computed(() => {
-    const total = allImages.value.length;
-    return [
-        { name: 'Semua', count: total },
-        { name: 'Tampak Luar', count: Math.ceil(total / 3) },
-        { name: 'Interior', count: Math.floor(total / 3) },
-        { name: 'Fasilitas', count: total - Math.ceil(total / 3) - Math.floor(total / 3) }
-    ];
+    const validImages = props.images.filter(img => img.image_url);
+    const total = validImages.length;
+    
+    const counts = { 'Semua': total };
+    validImages.forEach(img => {
+        const catName = img.gallery_category?.name || 'Lainnya';
+        if (!counts[catName]) counts[catName] = 0;
+        counts[catName]++;
+    });
+
+    const result = [{ name: 'Semua', count: total }];
+    for (const [name, count] of Object.entries(counts)) {
+        if (name !== 'Semua') {
+            result.push({ name, count });
+        }
+    }
+    
+    // Sort descending by count for categories other than 'Semua'
+    const rest = result.slice(1).sort((a, b) => b.count - a.count);
+    return [result[0], ...rest];
 });
 
 const chunkedImagesByCategory = computed(() => {
@@ -123,15 +136,10 @@ const chunkedImagesByCategory = computed(() => {
     }
 
     return cats.map(cat => {
-        let imgs = allImages.value;
-        const total = allImages.value.length;
-        if (cat.name === 'Tampak Luar') {
-            imgs = imgs.slice(0, Math.ceil(total / 3));
-        } else if (cat.name === 'Interior') {
-            imgs = imgs.slice(Math.ceil(total / 3), Math.ceil(total / 3) * 2);
-        } else if (cat.name === 'Fasilitas') {
-            imgs = imgs.slice(Math.ceil(total / 3) * 2);
-        }
+        const imgs = props.images.filter(img => {
+            const catName = img.gallery_category?.name || 'Lainnya';
+            return catName === cat.name && img.image_url;
+        }).map(img => img.image_url);
 
         const urls = imgs.map(url => ({ url }));
         const chunks = [];

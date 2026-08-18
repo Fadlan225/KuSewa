@@ -5,6 +5,7 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import OwnerAssetCard from '@/Components/owner/OwnerAssetCard.vue';
 import OwnerHorizontalAssetCard from '@/Components/owner/OwnerHorizontalAssetCard.vue';
 import { Card, CardContent } from '@/Components/UI/card';
+import CustomSelect from '@/Components/UI/CustomSelect.vue';
 
 const page = usePage();
 
@@ -185,116 +186,97 @@ const confirmDelete = () => {
         <template #action>
             <Link
                 href="/owner/asset/create"
-                class="bg-primary hover:bg-primary/80 active:scale-95 text-white font-bold px-5 py-2.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-xs w-fit"
+                class="bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] font-bold px-5 py-2.5 rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-2 text-sm w-fit"
             >
-                <i class="fa-solid fa-plus text-xs"></i>
-                <span>Ajukan Aset Baru</span>
+                <i class="fa-solid fa-plus"></i>
+                <span>Daftarkan Aset</span>
             </Link>
         </template>
 
         <div class="space-y-6 mt-6">
 
-                <!-- METRIC SUMMARY STATS -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
+                <!-- METRIC SUMMARY STATS - Clean Panel Design -->
+                <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
+                    <div class="grid grid-cols-2 xl:grid-cols-4 border-slate-100">
+                        <!-- Total Aset -->
+                        <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
+                            <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                                <i class="fa-solid fa-map-location-dot text-slate-400 mt-0.5"></i> <span>Total Aset</span>
+                            </p>
+                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalAset }}</p>
+                        </div>
 
-                    <Card class="hover:border-[#FFC000]/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
-                        <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
-                            <div class="flex items-start justify-between">
-                                <div class="min-w-0 pr-2">
-                                    <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Total Aset</p>
-                                    <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ totalAset }} Aset</p>
-                                </div>
-                                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-slate-50 flex shrink-0 items-center justify-center text-slate-400 group-hover:bg-[#FFC000]/10 group-hover:text-[#FFC000] transition-colors">
-                                    <i class="fa-solid fa-map-location-dot text-xs lg:text-sm"></i>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        <!-- Total Unit -->
+                        <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
+                            <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                                <i class="fa-solid fa-building text-slate-400 mt-0.5"></i> <span>Total Unit</span>
+                            </p>
+                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalUnit }}</p>
+                        </div>
 
-                    <Card class="hover:border-blue-500/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
-                        <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
-                            <div class="flex items-start justify-between">
-                                <div class="min-w-0 pr-2">
-                                    <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Total Unit</p>
-                                    <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ totalUnit }} Unit</p>
-                                </div>
-                                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 flex shrink-0 items-center justify-center text-blue-500 group-hover:bg-blue-100 transition-colors">
-                                    <i class="fa-solid fa-building text-xs lg:text-sm"></i>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        <!-- Unit Terisi -->
+                        <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
+                            <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                                <i class="fa-solid fa-house-lock text-slate-400 mt-0.5"></i> <span>Unit Terisi</span>
+                            </p>
+                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalTersewa }}</p>
+                        </div>
 
-                    <Card class="hover:border-emerald-500/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
-                        <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
-                            <div class="flex items-start justify-between">
-                                <div class="min-w-0 pr-2">
-                                    <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Unit Terisi</p>
-                                    <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ totalTersewa }} Unit</p>
-                                </div>
-                                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-emerald-50 flex shrink-0 items-center justify-center text-emerald-500 group-hover:bg-emerald-100 transition-colors">
-                                    <i class="fa-solid fa-house-lock text-xs lg:text-sm"></i>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card class="hover:border-amber-500/50 transition-colors group border-slate-200/80 shadow-md rounded-xl overflow-hidden flex flex-col justify-center">
-                        <CardContent class="p-3 lg:p-4 flex flex-col justify-center h-full gap-2 lg:gap-3">
-                            <div class="flex items-start justify-between">
-                                <div class="min-w-0 pr-2">
-                                    <p class="text-[9px] lg:text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Unit Tersedia</p>
-                                    <p class="text-base sm:text-lg lg:text-xl font-black text-slate-800 mt-0.5 lg:mt-1 truncate">{{ totalTersedia }} Unit</p>
-                                </div>
-                                <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-amber-50 flex shrink-0 items-center justify-center text-amber-500 group-hover:bg-amber-100 transition-colors">
-                                    <i class="fa-solid fa-door-open text-xs lg:text-sm"></i>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                        <!-- Tersedia -->
+                        <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
+                            <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
+                                <i class="fa-solid fa-door-open text-slate-400 mt-0.5"></i> <span>Tersedia</span>
+                            </p>
+                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalTersedia }}</p>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- FILTER BAR & SEARCH -->
-                <div class="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-xs space-y-3">
-                    <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+                <div class="bg-white border border-slate-200/60 shadow-sm rounded-xl p-4 md:p-5 space-y-4 relative z-50">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
 
                         <!-- Search Box -->
-                        <div class="relative w-full md:w-80">
-                            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <div class="relative w-full lg:max-w-sm flex-1">
+                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
                             <input
                                 v-model="searchQuery"
                                 type="text"
-                                placeholder="Cari nama aset, alamat, kota..."
-                                class="w-full bg-slate-50 text-xs pl-9 pr-3.5 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:bg-white focus:border-[#0A2540] transition"
+                                placeholder="Cari aset berdasarkan nama atau lokasi..."
+                                class="w-full bg-slate-50 border border-slate-200 text-sm pl-10 pr-4 py-2.5 rounded-lg focus:outline-none focus:bg-white hover:border-[#FFC000] focus:border-[#FFC000] focus:ring-4 focus:ring-[#FFC000]/20 transition-all text-slate-700 placeholder:text-slate-400"
                             />
                         </div>
 
                         <!-- Dropdowns & Toggles -->
-                        <div class="flex items-center gap-2.5 w-full md:w-auto justify-between md:justify-end flex-wrap">
-                            <select v-model="selectedJenis" class="bg-slate-50 text-xs border border-slate-200 rounded-xl px-3 py-2.5 font-semibold focus:outline-none focus:border-[#0A2540]">
-                                <option value="Semua">Semua Jenis</option>
-                                <option v-for="jenis in availableJenisFilter" :key="jenis" :value="jenis">{{ jenis }}</option>
-                            </select>
+                        <div class="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end flex-wrap sm:flex-nowrap">
+                            <CustomSelect
+                                v-model="selectedJenis"
+                                :options="[{ label: 'Semua Jenis', value: 'Semua' }, ...availableJenisFilter]"
+                            />
 
-                            <select v-model="selectedStatus" class="bg-slate-50 text-xs border border-slate-200 rounded-xl px-3 py-2.5 font-semibold focus:outline-none focus:border-[#0A2540]">
-                                <option value="Semua">Semua Status</option>
-                                <option value="pending">Menunggu Verifikasi</option>
-                                <option value="approved">Terverifikasi</option>
-                                <option value="rejected">Ditolak</option>
-                                <option value="inactive">Nonaktif</option>
-                            </select>
+                            <CustomSelect
+                                v-model="selectedStatus"
+                                :options="[
+                                    { label: 'Semua Status', value: 'Semua' },
+                                    { label: 'Draft', value: 'draft' },
+                                    { label: 'Menunggu Verifikasi', value: 'pending' },
+                                    { label: 'Terverifikasi', value: 'approved' },
+                                    { label: 'Ditolak', value: 'rejected' },
+                                    { label: 'Nonaktif', value: 'inactive' }
+                                ]"
+                            />
 
-                            <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200/60">
+                            <div class="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200/50">
                                 <button
                                     @click="viewMode = 'grid'"
-                                    :class="['p-1.5 rounded-lg text-xs transition', viewMode === 'grid' ? 'bg-white text-[#0A2540] shadow-xs font-bold' : 'text-slate-400']"
+                                    :class="['p-2 rounded-md text-xs transition-all duration-200 flex items-center justify-center', viewMode === 'grid' ? 'bg-[#FFC000] text-[#0A2540] shadow-sm font-bold' : 'text-slate-400 hover:text-slate-600']"
                                     title="Tampilan Grid"
                                 >
                                     <i class="fa-solid fa-border-all"></i>
                                 </button>
                                 <button
                                     @click="viewMode = 'table'"
-                                    :class="['p-1.5 rounded-lg text-xs transition', viewMode === 'table' ? 'bg-white text-[#0A2540] shadow-xs font-bold' : 'text-slate-400']"
+                                    :class="['p-2 rounded-md text-xs transition-all duration-200 flex items-center justify-center', viewMode === 'table' ? 'bg-[#FFC000] text-[#0A2540] shadow-sm font-bold' : 'text-slate-400 hover:text-slate-600']"
                                     title="Tampilan Tabel"
                                 >
                                     <i class="fa-solid fa-list"></i>
@@ -304,17 +286,17 @@ const confirmDelete = () => {
 
                     </div>
 
-                    <!-- Category Pills (Kategori Utama, disamakan dengan create.vue) -->
-                    <div class="flex items-center gap-2 overflow-x-auto pb-1 text-xs pt-2 border-t border-slate-100">
+                    <!-- Category Pills -->
+                    <div class="flex items-center gap-2 overflow-x-auto pb-1 text-sm scrollbar-hide border-t border-slate-100 pt-3">
                         <button
                             v-for="cat in categories"
                             :key="cat"
                             @click="selectedCategory = cat"
                             :class="[
-                                'px-3.5 py-1.5 rounded-xl font-semibold transition whitespace-nowrap',
+                                'px-4 py-2 rounded-lg font-semibold transition-all whitespace-nowrap border',
                                 selectedCategory === cat
-                                    ? 'bg-primary text-white shadow-xs'
-                                    : 'bg-slate-50 text-slate-500 hover:bg-slate-100'
+                                    ? 'bg-[#FFC000] text-[#0A2540] border-[#FFC000] shadow-sm'
+                                    : 'bg-white text-slate-600 border-slate-200 hover:border-[#FFC000] hover:text-[#0A2540]'
                             ]"
                         >
                             {{ cat }}
@@ -352,7 +334,7 @@ const confirmDelete = () => {
 
                     <Link
                         href="/owner/asset/create"
-                        class="bg-[#FFC000] hover:bg-[#e5ac00] active:scale-95 text-[#0A2540] font-black px-8 py-3.5 rounded-full text-sm uppercase tracking-wider transition-all shadow-sm inline-block"
+                        class="bg-[#FFC000] hover:bg-[#e5ac00] active:scale-95 text-[#0A2540] font-black px-8 py-3.5 rounded-lg text-sm uppercase tracking-wider transition-all shadow-sm inline-block"
                     >
                         Tambahkan Aset Baru
                     </Link>
@@ -408,3 +390,20 @@ const confirmDelete = () => {
         </Teleport>
     </DashboardLayout>
 </template>
+
+<style scoped>
+/* Marketplace specific minor overrides if needed, otherwise clean */
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+select {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+}
+</style>

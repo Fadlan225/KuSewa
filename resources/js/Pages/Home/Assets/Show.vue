@@ -281,6 +281,10 @@ const handleBottomBarSubmit = () => {
     }
 };
 
+const scrollToUnit = () => {
+    document.getElementById('pilihan-unit')?.scrollIntoView({ behavior: 'smooth' });
+};
+
 
 
 // ==========================================
@@ -512,7 +516,7 @@ const activePrice = computed(() => {
 // K2: subtotal = harga paket flat (tidak dikali durasi), konsisten dengan Booking.vue
 const subtotal = computed(() => {
     if (!activePrice.value) return 0;
-    return activePrice.value.price;
+    return Number(activePrice.value.price);
 });
 
 const feeAmount = computed(() => {
@@ -648,7 +652,7 @@ const formattedDateRange = computed(() => {
                 <!-- Deskripsi -->
                 <div class="py-6 border-b border-gray-200">
                     <h3 class="text-lg font-bold mb-4">Tentang Aset Ini</h3>
-                    <div class="text-gray-600 leading-relaxed whitespace-pre-line text-justify relative">
+                    <div class="text-gray-600 leading-relaxed whitespace-pre-line text-left relative">
                         <div :class="{ 'line-clamp-4': !showFullDescription, 'overflow-hidden': !showFullDescription }">
                             {{ asset.description }}
                         </div>
@@ -744,7 +748,7 @@ const formattedDateRange = computed(() => {
             </div>
             <!-- KANAN (Booking & Contact Cards) -->
             <div class="lg:col-span-1 lg:row-span-2 order-2 lg:order-2">
-                <div class="sticky top-24 flex flex-col gap-3">
+                <div class="sticky top-32 md:top-40 flex flex-col gap-3">
                     <!-- Booking Card -->
                     <div class="bg-white shadow-lg shadow-gray-200/50 rounded-xl p-4 border border-gray-100">
 
@@ -806,7 +810,7 @@ const formattedDateRange = computed(() => {
 
                         <button
                             v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
-                            @click="() => document.getElementById('pilihan-unit')?.scrollIntoView({ behavior: 'smooth' })"
+                            @click="scrollToUnit"
                             class="w-full py-2.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[13px] mb-3">
                             Pilih Unit
                         </button>

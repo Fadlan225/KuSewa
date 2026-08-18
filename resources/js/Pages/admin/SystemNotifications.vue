@@ -37,7 +37,7 @@ function resetForm() {
     form.type = notificationTypes[0];
     form.created = '';
     form.status = 'Dijadwalkan';
-    formError = '';
+    formError.value = '';
 }
 
 function openCreateForm() {

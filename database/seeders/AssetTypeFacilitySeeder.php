@@ -98,22 +98,6 @@ class AssetTypeFacilitySeeder extends Seeder
             ['type' => 'Villa', 'facility' => 'Pet Friendly',       'scope' => 'asset'],
 
             // ─────────────────────────────────────────────────────────────────
-            // RUMAH (allow_units = false)
-            // ─────────────────────────────────────────────────────────────────
-            ['type' => 'Rumah', 'facility' => 'WiFi',               'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'AC',                 'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'TV',                 'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'Kulkas',             'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'Kompor',             'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'Mesin Cuci',         'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'Parkir Mobil',       'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'Parkir Motor',       'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'CCTV',               'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'Taman',              'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'Water Heater',       'scope' => 'asset'],
-            ['type' => 'Rumah', 'facility' => 'Dapur Bersama',      'scope' => 'asset'],
-
-            // ─────────────────────────────────────────────────────────────────
             // APARTEMEN (allow_units = true)
             // ─────────────────────────────────────────────────────────────────
             ['type' => 'Apartemen', 'facility' => 'WiFi',           'scope' => 'asset'],
@@ -205,17 +189,6 @@ class AssetTypeFacilitySeeder extends Seeder
             ['type' => 'Ruko', 'facility' => 'CCTV',                'scope' => 'asset'],
             ['type' => 'Ruko', 'facility' => 'Lift',                'scope' => 'asset'],
 
-            ['type' => 'Toko', 'facility' => 'AC',                  'scope' => 'asset'],
-            ['type' => 'Toko', 'facility' => 'Parkir Motor',        'scope' => 'asset'],
-            ['type' => 'Toko', 'facility' => 'CCTV',                'scope' => 'asset'],
-
-            // ─────────────────────────────────────────────────────────────────
-            // KIOS (allow_units = true)
-            // ─────────────────────────────────────────────────────────────────
-            ['type' => 'Kios', 'facility' => 'Parkir Motor',        'scope' => 'asset'],
-            ['type' => 'Kios', 'facility' => 'CCTV',                'scope' => 'asset'],
-            ['type' => 'Kios', 'facility' => 'AC',                  'scope' => 'unit'],
-
             // ─────────────────────────────────────────────────────────────────
             // GEDUNG & AULA (allow_units = false)
             // ─────────────────────────────────────────────────────────────────
@@ -273,11 +246,9 @@ class AssetTypeFacilitySeeder extends Seeder
             // ─────────────────────────────────────────────────────────────────
             // LAHAN (allow_units = false)
             // ─────────────────────────────────────────────────────────────────
-            ['type' => 'Lahan Kosong', 'facility' => 'Pagar',       'scope' => 'asset'],
-            ['type' => 'Lahan Kosong', 'facility' => 'CCTV',        'scope' => 'asset'],
-            ['type' => 'Lahan Parkir', 'facility' => 'CCTV',        'scope' => 'asset'],
-            ['type' => 'Lahan Parkir', 'facility' => 'Satpam 24 Jam','scope' => 'asset'],
-            ['type' => 'Lahan Parkir', 'facility' => 'Pagar',       'scope' => 'asset'],
+            ['type' => 'Lahan', 'facility' => 'Pagar',       'scope' => 'asset'],
+            ['type' => 'Lahan', 'facility' => 'CCTV',        'scope' => 'asset'],
+            ['type' => 'Lahan', 'facility' => 'Satpam 24 Jam','scope' => 'asset'],
         ];
 
         // Filter hanya baris yang type dan facility-nya ada di database

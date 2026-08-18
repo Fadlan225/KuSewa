@@ -1,9 +1,7 @@
 <script setup>
-import { Head} from '@inertiajs/vue3';
 import { ref, provide } from 'vue';
 
 import Navbar from '@/Components/Navbar.vue';
-import Footer from '@/Components/Footer.vue';
 import Bottombar from '@/Components/Bottombar.vue';
 import GlobalLoading from "@/Components/GlobalLoading.vue";
 import FloatingChat from '@/Components/UI/FloatingChat.vue';
@@ -73,14 +71,14 @@ onMounted(() => {
         const pEmail = params.get('email');
         const pPurpose = params.get('purpose');
         const pProof = params.get('proof');
-        
+
         if (pEmail && pPurpose && pProof) {
             initialAuthData.value = {
                 email: pEmail,
                 purpose: pPurpose,
                 proof: pProof
             };
-            
+
             if (pPurpose === 'register') {
                 authModalStore.open('register_password', initialAuthData.value);
             } else if (pPurpose === 'forgot_password' || pPurpose === 'create_password') {
@@ -88,7 +86,7 @@ onMounted(() => {
             } else {
                 authModalStore.open(null, initialAuthData.value);
             }
-            
+
             // Hapus parameter URL agar tidak terus memicu modal jika di-refresh
             window.history.replaceState({}, '', window.location.pathname);
         }
@@ -113,7 +111,5 @@ onMounted(() => {
 
         <AuthModal v-model="isAuthModalOpen" @update:modelValue="(val) => !val && authModalStore.close()" />
         <AuthFeedbackModal />
-
-        <!-- <Footer /> -->
     </div>
 </template>

@@ -3,131 +3,99 @@ import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <footer class="w-full font-sans overflow-hidden">
+    <footer class="w-full bg-white border-t border-gray-200 py-12 font-sans">
+        <div class="max-w-7xl mx-auto px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
+                <!-- Bagian Paling Kiri: Logo & Tagline -->
+                <div class="lg:col-span-2 pr-0 lg:pr-8">
+                    <Link :href="route('Home')" class="flex items-center gap-2 mb-4">
+                        <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-8 w-auto object-contain" />
+                        <span class="font-bold text-lg text-[#0A2540]">
+                            kusewa<span class="text-[#FFC000]">.id</span>
+                        </span>
+                    </Link>
+                    <p class="text-sm text-gray-500 leading-relaxed max-w-sm">
+                        Platform penyewaan aset terpercaya. Temukan berbagai aset kantor, hunian, dan lahan terbaik sesuai kebutuhan Anda dengan mudah dan aman.
+                    </p>
+                </div>
 
-        <!-- ==================== TOP BANNER SECTION ==================== -->
-        <div
-            class="relative w-full py-8 md:py-12 px-4 sm:px-6 lg:px-16 bg-cover bg-center flex items-center justify-center min-h-[260px] md:min-h-[320px]"
-            style="background-image: url('/public.png');"
-        >
-            <div class="absolute inset-0 bg-black/60"></div>
+                <!-- Kolom 2: KUSEWA.ID -->
+                <div>
+                    <h3 class="font-bold text-[#0A2540] text-sm uppercase tracking-wider mb-5">Kusewa.id</h3>
+                    <ul class="flex flex-col space-y-4">
+                        <li>
+                            <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Tentang Kami</Link>
+                        </li>
+                        <li>
+                            <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Cara Kerja</Link>
+                        </li>
+                    </ul>
+                </div>
 
-            <div class="relative z-10 w-full max-w-4xl mx-auto flex flex-col items-center text-center text-white px-2">
+                <!-- Kolom 3: MENU BANTUAN -->
+                <div>
+                    <h3 class="font-bold text-[#0A2540] text-sm uppercase tracking-wider mb-5">Menu Bantuan</h3>
+                    <ul class="flex flex-col space-y-4">
+                        <li>
+                            <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Pusat Bantuan</Link>
+                        </li>
+                        <li>
+                            <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Hubungi Kami</Link>
+                        </li>
+                    </ul>
+                </div>
 
-                <!-- Penyesuaian ukuran teks base menjadi text-lg dan penambahan whitespace-nowrap -->
-                <h2 class="text-lg sm:text-3xl md:text-4xl font-extrabold leading-tight mb-3">
-                    <span class="block text-white whitespace-nowrap">Apa Pun Kebutuhan Sewamu,</span>
-                    <span class="block text-[#FFC000] whitespace-nowrap">Temukan Semuanya di KuSewa.</span>
-                </h2>
+                <!-- Kolom 4: KEBIJAKAN -->
+                <div>
+                    <h3 class="font-bold text-[#0A2540] text-sm uppercase tracking-wider mb-5">Kebijakan</h3>
+                    <ul class="flex flex-col space-y-4">
+                        <li>
+                            <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Syarat dan Ketentuan</Link>
+                        </li>
+                        <li>
+                            <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Kebijakan Privasi</Link>
+                        </li>
+                    </ul>
+                </div>
 
-                <!-- Penyesuaian ukuran paragraf agar proporsional dengan judul -->
-                <p class="text-xs sm:text-base md:text-lg text-gray-200 max-w-3xl leading-relaxed mt-2">
-                    Temukan berbagai aset seperti kantor, hunian, dan lahan dengan mudah di KuSewa.
+                <!-- Kolom 5: IKUTI KAMI -->
+                <div>
+                    <h3 class="font-bold text-[#0A2540] text-sm uppercase tracking-wider mb-5">Ikuti Kami</h3>
+                    <ul class="flex flex-col space-y-4">
+                        <li>
+                            <a href="#" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
+                                <i class="fa-brands fa-facebook-f w-4 text-center text-lg"></i>
+                                Facebook
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
+                                <i class="fa-brands fa-instagram w-4 text-center text-lg"></i>
+                                Instagram
+                            </a>
+                        </li>
+                        <li>
+                            <a href="mailto:cs@kusewa.id" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
+                                <i class="fa-regular fa-envelope w-4 text-center text-lg"></i>
+                                Email
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
+                                <i class="fa-brands fa-whatsapp w-4 text-center text-lg"></i>
+                                No Whatsapp
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Bottom Copyright -->
+            <div class="mt-12 pt-8 border-t border-gray-200 flex flex-col items-center justify-center gap-4 text-center">
+                <p class="text-sm text-gray-500">
+                    &copy; {{ new Date().getFullYear() }} Kusewa.id. All rights reserved
                 </p>
-
             </div>
         </div>
-
-        <!-- ==================== BOTTOM LINKS SECTION ==================== -->
-        <div class="bg-secondary w-full pt-16 pb-8 px-6 lg:px-16 text-white">
-            <div class="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8">
-
-                <!-- Logo & Social (Col Span 2) -->
-                <div class="lg:col-span-2 space-y-10">
-                    <!-- Logo -->
-                    <div class="text-3xl font-extrabold flex items-center gap-2 text-primary">
-                        <img src="/kusewa-logo.png" alt="Logo" width="40" height="40" class="brightness-0 invert">
-                        <span class="text-white">Kusewa</span>.id
-                    </div>
-
-                    <!-- Media Sosial Vertikal -->
-                    <div>
-                        <h4 class="font-bold text-lg mb-5">Media Sosial</h4>
-                        <div class="flex flex-col gap-4">
-
-                            <!-- Instagram Row -->
-                            <a href="https://www.instagram.com/kusewa.id_smd/" class="flex items-center gap-3 group w-fit">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-all duration-300">
-                                    <i class="fa-brands fa-instagram text-lg"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-300 group-hover:text-[#FFC000] transition-colors">Kusewa.id_smd</span>
-                            </a>
-
-                            <!-- Facebook Row -->
-                            <a href="https://www.facebook.com/kusewa.id/" class="flex items-center gap-3 group w-fit">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-all duration-300">
-                                    <i class="fa-brands fa-facebook-f text-lg"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-300 group-hover:text-[#FFC000] transition-colors">kusewa.id</span>
-                            </a>
-
-                            <a href="https://wa.me/NOMOR_ANDA" target="_blank" class="flex items-center gap-3 group w-fit">
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center text-white group-hover:scale-110 transition-all duration-300">
-                                    <i class="fa-brands fa-whatsapp text-xl"></i>
-                                </div>
-                                <span class="text-sm font-medium text-gray-300 group-hover:text-[#FFC000] transition-colors">085350229494</span>
-                            </a>
-
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Column 1: Jelajahi -->
-                <div>
-                    <h4 class="font-bold text-lg mb-5">Jelajahi</h4>
-                    <ul class="space-y-3 text-sm text-gray-400 font-medium">
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Cari Aset</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Kategori Aset</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Lokasi Populer</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Aset Terbaru</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Promo</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 2: Untuk Pemilik Aset -->
-                <div>
-                    <h4 class="font-bold text-lg mb-5">Pemilik Aset</h4>
-                    <ul class="space-y-3 text-sm text-gray-400 font-medium">
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Daftar Jadi Pemilik</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Cara Menjual/Menyewakan Aset</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Dashboard Pemilik</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Kebijakan Pemilik</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 3: Bantuan & Dukungan -->
-                <div>
-                    <h4 class="font-bold text-lg mb-5">Bantuan & Dukungan</h4>
-                    <ul class="space-y-3 text-sm text-gray-400 font-medium">
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Pusat Bantuan</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">FAQ</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Hubungi Kami</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Cara Booking</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Cara Pembayaran</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Laporkan Masalah</a></li>
-                    </ul>
-                </div>
-
-                <!-- Column 4: Perusahaan -->
-                <div>
-                    <h4 class="font-bold text-lg mb-5">Perusahaan</h4>
-                    <ul class="space-y-3 text-sm text-gray-400 font-medium">
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Tentang Kami</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Karier</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Blog</a></li>
-                        <li><a href="#" class="hover:text-[#FFC000] transition-colors">Kontak</a></li>
-                    </ul>
-                </div>
-
-            </div>
-
-            <!-- Copyright Layer -->
-            <div class="max-w-7xl mx-auto mt-12 md:mt-16 pt-6 md:pt-8 border-t border-gray-700/50 flex flex-col justify-between items-center gap-4 md:gap-0 text-sm text-gray-100 text-center md:text-left">
-
-                <p>&copy; {{ new Date().getFullYear() }} KuSewa. Seluruh hak cipta dilindungi.</p>
-
-            </div>
-        </div>
-
     </footer>
 </template>

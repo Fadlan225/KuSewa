@@ -367,37 +367,10 @@ class HomeController extends Controller
             ];
         }
 
-        // 6. Kategori-kategori (List yang lama di bagian paling bawah)
-        $categories = asset_category::select(['id', 'name', 'icon'])
-            ->with(['types:id,category_id,name,allow_units'])
-            ->whereHas('types.assets', fn($q) => $q->where('status', 'approved'))
-            ->get();
-
-        $categories->each(function ($category) use (&$sections, $mapAsset) {
-            $typeIds = $category->types->pluck('id');
-
-            $categoryAssets = asset::whereIn('asset_type_id', $typeIds)
-                ->where('status', 'approved')
-                ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
-                ->withCommonRelations()
-                ->withCount('reviews')
-            ->withAvg('reviews as reviews_avg_rating', 'rating')
-                ->latest('id')
-                ->limit(10)
-                ->get()
-                ->map($mapAsset);
-
-            if ($categoryAssets->isNotEmpty()) {
-                $sections[] = [
-                    'id'     => 'category_' . $category->id,
-                    'title'  => $category->name,
-                    'icon'   => $category->icon,
-                    'type'   => 'static',
-                    'assets' => $categoryAssets
-                ];
-            }
-        });
-
+        // 6. Rekomendasi per Tipe Aset dan Lokasi (City / Province level)
+        // Load initial page (page 1) of dynamic sections
+        $dynamicSections = $this->buildDynamicSections(1, 5, $mapAsset);
+        $sections = array_merge($sections, $dynamicSections);
 
         $meta = $this->getSearchMeta();
         $locationSuggestions = $this->getLocationSuggestions();
@@ -405,11 +378,27 @@ class HomeController extends Controller
         $priceDistribution = $this->getPriceDistribution(); // Global distribution
         $dynamicPlaceholders = $this->getDynamicPlaceholders();
 
+        $allCategories = asset_category::select(['id', 'name', 'icon'])
+            ->with(['types:id,category_id,name,allow_units'])
+            ->withCount(['assets' => function($q) {
+                $q->where('status', 'approved');
+            }])
+            ->get();
+
+        foreach ($allCategories as $category) {
+            $randomImg = \App\Models\asset_image::whereHas('asset', function($q) use ($category) {
+                $q->where('status', 'approved')
+                  ->whereHas('type', function($q2) use ($category) {
+                      $q2->where('category_id', $category->id);
+                  });
+            })->inRandomOrder()->first();
+
+            $category->random_image = $randomImg ? $randomImg->image_url : null;
+        }
+
         return inertia('Home/index', [
             'sections'            => $sections,
-            'allCategories'       => asset_category::select(['id', 'name', 'icon'])
-                                        ->with(['types:id,category_id,name,allow_units'])
-                                        ->get(),
+            'allCategories'       => $allCategories,
             'searchHistory'       => $meta['searchHistory'],
             'trending'            => $meta['trending'],
             'locationSuggestions' => $locationSuggestions,
@@ -425,6 +414,7 @@ class HomeController extends Controller
     public function search(Request $request)
     {
         $keyword    = $request->input('q', '');
+        $category   = $request->input('category', '');
         $types      = $request->input('type', []);
         $location   = $request->input('location', '');
         $minPrice   = $request->input('min_price', 0);
@@ -440,7 +430,7 @@ class HomeController extends Controller
             ])
             ->with([
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
-                'defaultPricing:id,asset_id,price',
+                'defaultPricing:id,asset_id,price,rental_unit',
                 'type:id,name,allow_units,category_id',
                 'type.category:id,name,icon',
                 'city:code,name',
@@ -463,6 +453,11 @@ class HomeController extends Controller
                   ->orWhereHas('city', function($q2) use ($keyword) { $q2->where('name', 'like', "%{$keyword}%"); })
                   ->orWhere('address', 'like', "%{$keyword}%");
             });
+        }
+
+        // Filter kategori aset
+        if ($category) {
+            $query->whereHas('type.category', fn($q) => $q->where('name', $category));
         }
 
         // Filter tipe aset
@@ -577,13 +572,16 @@ class HomeController extends Controller
             if ($asset->type && $asset->type->allow_units && $asset->units && $asset->units->isNotEmpty()) {
                 $minPrice = PHP_FLOAT_MAX;
                 $cheapestUnitQty = 0;
+                $cheapestUnitRentalUnit = null;
                 
                 foreach($asset->units as $unit) {
                     if ($unit->pricings && $unit->pricings->isNotEmpty()) {
-                        $unitPrice = $unit->pricings->min('price');
+                        $cheapestPricing = $unit->pricings->sortBy('price')->first();
+                        $unitPrice = $cheapestPricing->price;
                         if ($unitPrice < $minPrice) {
                             $minPrice = $unitPrice;
                             $cheapestUnitQty = $unit->quantity;
+                            $cheapestUnitRentalUnit = $cheapestPricing->rental_unit;
                         }
                     }
                 }
@@ -591,6 +589,7 @@ class HomeController extends Controller
                 if ($minPrice !== PHP_FLOAT_MAX) {
                     $asset->cheapest_unit_price = $minPrice;
                     $asset->cheapest_unit_quantity = $cheapestUnitQty;
+                    $asset->cheapest_unit_rental_unit = $cheapestUnitRentalUnit;
                 }
             }
             unset($asset->units);
@@ -604,10 +603,29 @@ class HomeController extends Controller
         $facilitiesByType = $this->getFacilitiesByType();
         $dynamicPlaceholders = $this->getDynamicPlaceholders();
 
+        $allCategories = asset_category::select(['id', 'name', 'icon'])
+            ->with(['types:id,category_id,name,allow_units'])
+            ->withCount(['assets' => function($q) {
+                $q->where('status', 'approved');
+            }])
+            ->get();
+
+        foreach ($allCategories as $category) {
+            $randomImg = \App\Models\asset_image::whereHas('asset', function($q) use ($category) {
+                $q->where('status', 'approved')
+                  ->whereHas('type', function($q2) use ($category) {
+                      $q2->where('category_id', $category->id);
+                  });
+            })->inRandomOrder()->first();
+
+            $category->random_image = $randomImg ? $randomImg->image_url : null;
+        }
+
         return inertia('Home/Assets/Index', [
             'assets'              => $assets,
             'filters'             => [
                 'q'          => $keyword,
+                'category'   => $category,
                 'type'       => $types,
                 'location'   => $location,
                 'min_price'  => (int) $minPrice,
@@ -617,12 +635,8 @@ class HomeController extends Controller
                 'facilities' => request('facilities', []),
                 'sort'       => $sort,
             ],
-            'categories'          => asset_category::select(['id', 'name', 'icon'])
-                ->with(['types:id,category_id,name,allow_units'])
-                ->get(),
-            'allCategories'       => asset_category::select(['id', 'name', 'icon'])
-                ->with(['types:id,category_id,name,allow_units'])
-                ->get(),
+            'categories'          => $allCategories,
+            'allCategories'       => $allCategories,
             'allTypes'            => asset_type::select(['id', 'category_id', 'name', 'allow_units'])->get(),
             'facilitiesByType'    => $facilitiesByType, // fasilitas terstruktur per tipe
             'searchHistory'       => $meta['searchHistory'],
@@ -781,6 +795,161 @@ class HomeController extends Controller
                 ->values()
                 ->toArray();
         });
+    }
+
+    public function apiGetSections(Request $request)
+    {
+        $page = $request->input('page', 2);
+        $perPage = 5;
+
+        // Recreate the mapAsset closure since it's needed for formatting
+        $mapAsset = function ($asset) {
+            $favorite = $asset->favorites->first();
+            $asset->isFavorite = (bool) $favorite;
+            $asset->favorite_id = $favorite?->id;
+            unset($asset->favorites);
+            
+            // Map location names so cards display correctly
+            $asset->city_name = $asset->city->name ?? '';
+            $asset->district_name = $asset->district->name ?? '';
+            $asset->province_name = $asset->province->name ?? '';
+            
+            return $asset;
+        };
+
+        $sections = $this->buildDynamicSections($page, $perPage, $mapAsset);
+        
+        return response()->json($sections);
+    }
+
+    private function buildDynamicSections($page, $perPage, $mapAsset)
+    {
+        $sections = [];
+
+        $combinations = \DB::table('assets')
+            ->where('assets.status', 'approved')
+            ->whereNotNull('assets.city_code')
+            ->whereNotNull('assets.province_code')
+            ->join('asset_types', 'assets.asset_type_id', '=', 'asset_types.id')
+            ->join('asset_categories', 'asset_types.category_id', '=', 'asset_categories.id')
+            ->join('cities', 'assets.city_code', '=', 'cities.code')
+            ->join('provinces', 'assets.province_code', '=', 'provinces.code')
+            ->select(
+                'asset_types.id as type_id', 
+                'asset_types.name as type_name', 
+                'cities.code as city_code', 
+                'cities.name as city_name',
+                'provinces.code as province_code',
+                'provinces.name as province_name',
+                'asset_categories.icon as category_icon',
+                \DB::raw('COUNT(assets.id) as total_assets')
+            )
+            ->groupBy(
+                'asset_types.id', 
+                'asset_types.name', 
+                'cities.code', 
+                'cities.name',
+                'provinces.code',
+                'provinces.name',
+                'asset_categories.icon'
+            )
+            ->orderBy('cities.name')
+            ->orderBy('asset_types.name')
+            ->get();
+
+        $qualifyingCities = $combinations->where('total_assets', '>=', 5);
+        $unqualifyingCities = $combinations->where('total_assets', '<', 5);
+
+        $groups = collect();
+
+        // a) Render kota yang memenuhi syarat (>= 5 aset)
+        foreach ($qualifyingCities as $combo) {
+            $groups->push([
+                'type' => 'city',
+                'combo' => $combo
+            ]);
+        }
+
+        // b) Gabungkan kota yang tidak memenuhi syarat (< 5 aset) ke level Provinsi
+        if ($unqualifyingCities->isNotEmpty()) {
+            $provinceGroups = [];
+            foreach ($unqualifyingCities as $combo) {
+                $key = $combo->type_id . '_' . $combo->province_code;
+                if (!isset($provinceGroups[$key])) {
+                    $provinceGroups[$key] = [
+                        'type_id' => $combo->type_id,
+                        'type_name' => $combo->type_name,
+                        'province_code' => $combo->province_code,
+                        'province_name' => $combo->province_name,
+                        'category_icon' => $combo->category_icon,
+                        'city_codes' => []
+                    ];
+                }
+                $provinceGroups[$key]['city_codes'][] = $combo->city_code;
+            }
+
+            foreach ($provinceGroups as $group) {
+                $groups->push([
+                    'type' => 'province',
+                    'group' => $group
+                ]);
+            }
+        }
+
+        // Apply pagination
+        $pagedGroups = $groups->slice(($page - 1) * $perPage, $perPage);
+
+        foreach ($pagedGroups as $item) {
+            if ($item['type'] === 'city') {
+                $combo = $item['combo'];
+                $categoryAssets = asset::where('asset_type_id', $combo->type_id)
+                    ->where('city_code', $combo->city_code)
+                    ->where('status', 'approved')
+                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
+                    ->withCommonRelations()
+                    ->withCount('reviews')
+                    ->withAvg('reviews as reviews_avg_rating', 'rating')
+                    ->latest('id')
+                    ->limit(10) // Limit to 10 for homepage
+                    ->get()
+                    ->map($mapAsset);
+
+                if ($categoryAssets->isNotEmpty()) {
+                    $sections[] = [
+                        'id'     => 'type_city_' . $combo->type_id . '_' . $combo->city_code,
+                        'title'  => 'Rekomendasi ' . $combo->type_name . ' di ' . $combo->city_name,
+                        'icon'   => $combo->category_icon ?? 'fa-solid fa-map-location-dot',
+                        'type'   => 'static',
+                        'assets' => $categoryAssets
+                    ];
+                }
+            } else {
+                $group = $item['group'];
+                $categoryAssets = asset::where('asset_type_id', $group['type_id'])
+                    ->whereIn('city_code', $group['city_codes'])
+                    ->where('status', 'approved')
+                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
+                    ->withCommonRelations()
+                    ->withCount('reviews')
+                    ->withAvg('reviews as reviews_avg_rating', 'rating')
+                    ->latest('id')
+                    ->limit(10)
+                    ->get()
+                    ->map($mapAsset);
+
+                if ($categoryAssets->isNotEmpty()) {
+                    $sections[] = [
+                        'id'     => 'type_prov_' . $group['type_id'] . '_' . $group['province_code'],
+                        'title'  => 'Rekomendasi ' . $group['type_name'] . ' di ' . $group['province_name'],
+                        'icon'   => $group['category_icon'] ?? 'fa-solid fa-map-location-dot',
+                        'type'   => 'static',
+                        'assets' => $categoryAssets
+                    ];
+                }
+            }
+        }
+
+        return $sections;
     }
 }
 

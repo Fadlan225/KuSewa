@@ -15,6 +15,7 @@ const rentalUnitLabel = (unit) => {
         hour: "jam",
         day: "hari",
         night: "malam",
+        week: "minggu",
         month: "bulan",
     };
 
@@ -246,19 +247,28 @@ const periodLabel = {
     <!-- Container kartu -->
     <div
         ref="elRef"
-        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300 overflow-hidden"
+        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col bg-white rounded-md shadow-sm border border-slate-200/60 hover:border-[#FFC000] hover:shadow-md transition-all duration-300"
     >
         <!-- Skeleton sebelum masuk viewport -->
         <AssetCardSkeleton v-if="!isIntersecting" />
 
         <!-- Konten kartu asli – TANPA <Link> agar tidak konflik di mobile -->
-        <div v-else class="w-full h-full flex flex-col group cursor-pointer">
+        <div v-else class="w-full h-full flex flex-col group cursor-pointer relative">
+
+            <!-- Ribbon Badge -->
+            <!-- Ribbon Badge -->
+            <div class="absolute top-3 -left-1.5 z-20 pointer-events-none">
+                <div class="relative bg-[#FFC000] text-[#0A2540] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm flex items-center gap-1 whitespace-nowrap max-w-[130px] sm:max-w-[160px]">
+                    <span class="truncate">{{ (asset.type && asset.type.name) ? asset.type.name : (asset.type || categoryName) }}</span>
+                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-[#B38600] border-l-[6px] border-l-transparent"></div>
+                </div>
+            </div>
 
             <!-- ═══ AREA GAMBAR ═══
                  Memisahkan touch (mobile) dan click (desktop) agar double-tap stabil
             -->
             <div
-                class="aspect-[3/2] w-full relative bg-gray-100 overflow-hidden"
+                class="aspect-[3/2] w-full relative bg-gray-100 overflow-hidden rounded-t-md"
                 @touchstart.passive="onTouchStart"
                 @touchend="onTouchEnd"
                 @click="onMouseClick"
@@ -303,7 +313,7 @@ const periodLabel = {
                 <!-- Rating -->
                 <div
                     v-if="asset.reviews_avg_rating"
-                    class="absolute bottom-2 right-2 z-20 bg-[#FFC000] size-7 sm:size-8 rounded-full text-[10px] sm:text-[11px] font-bold text-white flex items-center justify-center shadow-md pointer-events-none"
+                    class="absolute bottom-2 right-2 z-20 bg-[#FFC000] size-7 sm:size-8 rounded-full text-[10px] sm:text-[11px] font-bold text-[#0A2540] flex items-center justify-center shadow-md pointer-events-none"
                 >
                     {{ Number(asset.reviews_avg_rating).toFixed(1) }}
                 </div>
@@ -326,29 +336,40 @@ const periodLabel = {
             </div>
 
             <!-- ═══ AREA TEKS – klik navigasi ═══ -->
-            <div
-                class="flex flex-col flex-grow p-2.5 sm:p-3 gap-1 bg-white"
-                @click="navigateToAsset"
-            >
-                <h3 class="font-semibold text-sm sm:text-[15px] leading-tight text-[#0A2540] group-hover:text-[#FFC000] transition-colors line-clamp-1">
+            <div class="flex flex-col flex-grow p-2.5 sm:p-3 bg-white rounded-b-md" @click="navigateToAsset">
+                <!-- Location & Type (Top Context) -->
+                <div class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider truncate mb-0.5">
+                    {{ (asset.type && asset.type.name) ? asset.type.name : (asset.type || categoryName) }} &bull; {{ (asset.city?.name || asset.city) || 'Lokasi tidak diketahui' }}
+                </div>
+
+                <!-- Title (Primary Anchor) -->
+                <h3 class="font-bold text-sm sm:text-[15px] leading-tight text-[#0A2540] group-hover:text-[#FFC000] transition-colors line-clamp-1 mb-1">
                     {{ asset.title }}
                 </h3>
 
-                <div class="text-[11px] sm:text-xs text-gray-500 font-medium flex items-center gap-1.5 truncate mt-0.5">
-                    <i class="fa-solid fa-location-dot text-[12px] sm:text-[13px] text-[#FFC000] flex-shrink-0"></i>
-                    <span class="truncate">
-                        {{ [(asset.city?.name || asset.city), asset.address].filter(Boolean).join(', ') || 'Lokasi tidak diketahui' }}
-                    </span>
+                <!-- Detail (Secondary Context - Subdued) -->
+                <div class="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-500 mb-1 truncate">
+                    <i class="fa-solid fa-location-dot text-slate-400 shrink-0"></i>
+                    <span class="truncate">{{ asset.district?.name || asset.district || asset.address || 'Detail lokasi' }}</span>
+                    <span class="w-1 h-1 rounded-full bg-slate-200 shrink-0"></span>
+                    <span class="truncate text-emerald-600 font-medium">{{ asset.available_at ? `Tersedia ${asset.available_at}` : 'Tersedia Sekarang' }}</span>
                 </div>
 
-                <div class="font-bold text-sm sm:text-base text-[#F97316] mt-auto pt-1">
-                    <template v-if="asset.default_pricing || asset.price">
-                        {{ formatRupiah(asset.default_pricing?.price || asset.price) }}
-                        <span class="text-[10px] font-normal text-gray-400">
-                            /{{ rentalUnitLabel(asset.type?.rental_unit || asset.rent_period) }}
-                        </span>
-                    </template>
-                    <span v-else class="text-[11px] font-medium text-gray-400">Hubungi Pemilik</span>
+                <!-- Price (Bottom Anchor) -->
+                <div class="flex items-end justify-between mt-auto pt-3 border-t border-slate-100">
+                    <div>
+                        <span class="block text-[8px] sm:text-[9px] text-slate-400 font-medium mb-0.5">Mulai dari</span>
+                        <div class="font-black text-[13px] sm:text-[15px] text-[#0A2540] leading-none">
+                            <template v-if="asset.default_pricing || asset.price">
+                                {{ formatRupiah(asset.default_pricing?.price || asset.price) }}<span class="text-[10px] sm:text-[11px] font-bold text-slate-500 ml-0.5">/{{ rentalUnitLabel(asset.default_pricing?.rental_unit || asset.type?.rental_unit || asset.rent_period) }}</span>
+                            </template>
+                            <span v-else class="text-[11px] font-medium text-slate-400">Hubungi</span>
+                        </div>
+                    </div>
+
+                    <div class="text-slate-300 group-hover:text-[#FFC000] transition-colors flex items-center justify-center pb-0.5 pr-0.5">
+                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                    </div>
                 </div>
             </div>
 

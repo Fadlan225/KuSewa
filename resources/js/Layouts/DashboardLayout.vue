@@ -3,7 +3,7 @@ import { ref, watch, computed } from 'vue';
 import Sidebar from '@/Components/sidebar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
-import { getOwnerMenu, getOwnerBottomMenu, getAdminMenu, getAdminBottomMenu } from '@/Config/menus';
+import { getOwnerMenu, getAdminMenu } from '@/Config/menus';
 
 const props = defineProps({
     title: { type: String, required: true },
@@ -22,7 +22,6 @@ const sidebarCounts = computed(() => page.props.sidebarCounts || {});
 
 // Menu yang dipakai bergantung pada role yang diberikan dari props
 const menu = computed(() => props.role === 'Admin' ? getAdminMenu(sidebarCounts.value) : getOwnerMenu(sidebarCounts.value));
-const bottomMenu = computed(() => props.role === 'Admin' ? getAdminBottomMenu() : getOwnerBottomMenu());
 
 // ==========================================
 // MOBILE SIDEBAR BEHAVIOR
@@ -63,7 +62,6 @@ watch(() => page.url, () => {
             class="hidden lg:flex sticky top-0 h-screen"
             :role="role"
             :menu="menu"
-            :bottomMenu="bottomMenu"
             :subMenu="subMenu"
             :subMenuParentRouteName="subMenuParentRouteName"
         />
@@ -84,16 +82,14 @@ watch(() => page.url, () => {
                 class="!flex !border-0 !w-full min-h-full"
                 :role="role"
                 :menu="menu"
-                :bottomMenu="bottomMenu"
             />
         </div>
 
         <!-- ==============================
              MAIN CONTENT
         ============================== -->
-        <main class="flex-1 min-w-0 flex flex-col min-h-[calc(100vh-60px)] lg:min-h-screen overflow-x-hidden">
-
-            <div class="p-4 sm:p-6 md:p-8 w-full max-w-[1400px] mx-auto flex-1 flex flex-col">
+        <main class="flex-1 min-w-0 flex flex-col min-h-[calc(100vh-60px)] lg:min-h-screen">
+            <div class="p-4 md:p-6 lg:p-6 xl:p-8 w-full max-w-[1400px] mx-auto flex-1 flex flex-col">
 
                 <!-- DASHBOARD HEADER -->
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">

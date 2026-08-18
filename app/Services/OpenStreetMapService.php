@@ -63,7 +63,7 @@ class OpenStreetMapService
      * @param int $radius in meters
      * @return array
      */
-    public static function getNearbyPlaces($lat, $lon, $assetId, $radius = 3000)
+    public static function getNearbyPlaces($lat, $lon, $assetId, $radius = 3000, $syncIfNotCached = true)
     {
         if (!$lat || !$lon) {
             return [];
@@ -73,9 +73,11 @@ class OpenStreetMapService
 
         // Check if we need to sync data from OSM
         if (!Cache::has($cacheKey)) {
-            self::syncFromOsm($lat, $lon, $radius);
-            // Cache the sync flag for 7 days
-            Cache::put($cacheKey, true, now()->addDays(7));
+            if ($syncIfNotCached) {
+                self::syncFromOsm($lat, $lon, $radius);
+                // Cache the sync flag for 30 days
+                Cache::put($cacheKey, true, now()->addDays(30));
+            }
         }
 
         $maxDistanceKm = $radius / 1000;

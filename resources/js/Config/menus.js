@@ -21,11 +21,6 @@ export const getOwnerMenu = (sidebarCounts) => [
     { divider: true },
 ];
 
-export const getOwnerBottomMenu = () => [
-    { label: 'Pengaturan Akun', route: route('owner.settings'), routeName: 'owner.settings', icon: 'fa-solid fa-gear' },
-    { label: 'Bantuan kusewa', route: route('owner.help'), routeName: 'owner.help', icon: 'fa-solid fa-headset' }
-];
-
 export const getAdminMenu = (sidebarCounts) => [
     { label: 'Dashboard', route: route('admin.dashboard'), routeName: 'admin.dashboard', icon: 'fa-solid fa-gauge' },
     { label: 'Log Aktivitas', route: route('admin.activity-log'), routeName: 'admin.activity-log', icon: 'fa-solid fa-list-ul' },

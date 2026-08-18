@@ -9,6 +9,7 @@ class asset_units extends Model
     protected $fillable = [
         'asset_id',
         'name',
+        'description',
         'detail',
         'quantity',
         'status',

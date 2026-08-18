@@ -273,8 +273,104 @@ class AssetController extends Controller
     }
 
     /**
+     * Tampilkan halaman Edit Draft
+     */
+    public function editDraft($id)
+    {
+        $ownerProfile = auth()->user()->ownerProfile;
+        if (!$ownerProfile) {
+            return redirect()->route('Home')->with('error', 'Silakan lengkapi profil owner Anda terlebih dahulu.');
+        }
+
+        $asset = asset::where('id', $id)
+            ->where('owner_profile_id', $ownerProfile->id)
+            ->where('status', 'draft')
+            ->firstOrFail();
+
+        $categories = asset_category::with(['types:id,category_id,name,allow_units'])
+            ->get(['id', 'name']);
+
+        return inertia('owner/Asset/Create/Index', [
+            'categories' => $categories,
+            'draftData' => $asset->draft_payload,
+            'draftId' => $asset->id,
+        ]);
+    }
+
+    /**
+     * Simpan gambar sementara untuk mode Draft
+     */
+    public function uploadTemp(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+        ]);
+
+        $path = $request->file('file')->store('uploads/temp', 'public');
+        
+        return response()->json([
+            'path' => $path,
+            'url' => asset('storage/' . $path)
+        ]);
+    }
+
+    /**
+     * Simpan otomatis progress form sebagai draft (Auto-save)
+     */
+    public function autoSaveDraft(Request $request)
+    {
+        $ownerProfile = auth()->user()->ownerProfile;
+        if (!$ownerProfile) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        $payload = $request->all();
+        $assetId = $request->input('draft_id');
+        $title = $request->input('title') ?: 'Draft Aset';
+
+        if ($assetId) {
+            $asset = asset::where('id', $assetId)
+                ->where('owner_profile_id', $ownerProfile->id)
+                ->first();
+            
+            if ($asset) {
+                $asset->update([
+                    'title' => $title,
+                    'draft_payload' => $payload,
+                ]);
+                return response()->json(['message' => 'Draft updated', 'draft_id' => $asset->id]);
+            }
+        }
+
+        $slug = Str::slug($title) . '-' . Str::random(6);
+        while (asset::where('slug', $slug)->exists()) {
+            $slug = Str::slug($title) . '-' . Str::random(6);
+        }
+
+        $asset = asset::create([
+            'owner_profile_id' => $ownerProfile->id,
+            'asset_type_id'    => $request->input('asset_type_id') ?: \App\Models\asset_type::first()->id ?? 1,
+            'title'            => $title,
+            'slug'             => $slug,
+            'status'           => 'draft',
+            'draft_payload'    => $payload,
+            'description'      => '-',
+            'detail'           => [],
+            'province_code'    => '-',
+            'city_code'        => '-',
+            'district_code'    => '-',
+            'village_code'     => '-',
+            'address'          => '-',
+            'latitude'         => '0',
+            'longitude'        => '0',
+        ]);
+
+        return response()->json(['message' => 'Draft created', 'draft_id' => $asset->id]);
+    }
+
+    /**
      * Store a newly created resource in storage.
-     * Menggunakan DB Transaction — jika satu bagian gagal, semua di-rollback.
+     * Menggunakan DB Transaction - jika satu bagian gagal, semua di-rollback.
      */
     public function store(StoreAssetRequest $request)
     {
@@ -287,29 +383,53 @@ class AssetController extends Controller
 
         try {
             // --- 1. Buat Aset ---
-            $slug = Str::slug($request->title) . '-' . Str::random(6);
-            // Pastikan slug unik
-            while (asset::where('slug', $slug)->exists()) {
+            $draftId = $request->input('draft_id');
+            if ($draftId) {
+                $assetRecord = asset::where('id', $draftId)
+                    ->where('owner_profile_id', $ownerProfile->id)
+                    ->firstOrFail();
+                
+                $assetRecord->update([
+                    'asset_type_id'    => $request->asset_type_id,
+                    'title'            => $request->title,
+                    'description'      => $request->description,
+                    'detail'           => $request->detail ?? [],
+                    'province_code'    => $request->province_code,
+                    'city_code'        => $request->city_code,
+                    'district_code'    => $request->district_code,
+                    'village_code'     => $request->village_code,
+                    'postal_code'      => $request->postal_code,
+                    'address'          => $request->address,
+                    'latitude'         => $request->latitude,
+                    'longitude'        => $request->longitude,
+                    'status'           => 'pending',
+                    'draft_payload'    => null, // Hapus draft
+                ]);
+            } else {
                 $slug = Str::slug($request->title) . '-' . Str::random(6);
-            }
+                // Pastikan slug unik
+                while (asset::where('slug', $slug)->exists()) {
+                    $slug = Str::slug($request->title) . '-' . Str::random(6);
+                }
 
-            $assetRecord = asset::create([
-                'owner_profile_id' => $ownerProfile->id,
-                'asset_type_id'    => $request->asset_type_id,
-                'title'            => $request->title,
-                'slug'             => $slug,
-                'description'      => $request->description,
-                'detail'           => $request->detail ?? [],
-                'province_code'    => $request->province_code,
-                'city_code'        => $request->city_code,
-                'district_code'    => $request->district_code,
-                'village_code'     => $request->village_code,
-                'postal_code'      => $request->postal_code,
-                'address'          => $request->address,
-                'latitude'         => $request->latitude,
-                'longitude'        => $request->longitude,
-                'status'           => 'pending',
-            ]);
+                $assetRecord = asset::create([
+                    'owner_profile_id' => $ownerProfile->id,
+                    'asset_type_id'    => $request->asset_type_id,
+                    'title'            => $request->title,
+                    'slug'             => $slug,
+                    'description'      => $request->description,
+                    'detail'           => $request->detail ?? [],
+                    'province_code'    => $request->province_code,
+                    'city_code'        => $request->city_code,
+                    'district_code'    => $request->district_code,
+                    'village_code'     => $request->village_code,
+                    'postal_code'      => $request->postal_code,
+                    'address'          => $request->address,
+                    'latitude'         => $request->latitude,
+                    'longitude'        => $request->longitude,
+                    'status'           => 'pending',
+                ]);
+            }
 
             // --- 2. Fasilitas Aset ---
             // Simpan fasilitas aset tanpa mempedulikan allowUnits, karena hotel pun punya fasilitas gedung (parkir, resepsionis)
@@ -345,10 +465,11 @@ class AssetController extends Controller
                 foreach ($request->units as $index => $unitData) {
                     $unit = asset_units::create([
                         'asset_id' => $assetRecord->id,
-                        'name'     => $unitData['name'],
-                        'detail'   => $unitData['detail'] ?? [],
-                        'quantity' => $unitData['quantity'],
-                        'status'   => 'active',
+                        'name'        => $unitData['name'],
+                        'description' => $unitData['description'] ?? '',
+                        'detail'      => $unitData['detail'] ?? [],
+                        'quantity'    => $unitData['quantity'],
+                        'status'      => 'active',
                     ]);
 
                     // Harga per unit — simpan asset_id juga agar query per asset masih bisa menemukan pricing ini
@@ -384,15 +505,33 @@ class AssetController extends Controller
 
                     // Foto unit
                     $unitPhotosInput = $unitData['photos'] ?? [];
+                    // Jika dari FormData, file mungkin ada di request->file. Jika JSON, file berupa string di $unitPhotosInput
                     $unitPhotosFiles = $request->file("units.{$index}.photos") ?? [];
 
                     foreach ($unitPhotosInput as $photoIdx => $photoGroup) {
                         $galleryCategoryId = $photoGroup['gallery_category_id'] ?? null;
+                        
+                        // Coba ambil dari FormData dulu
                         $files = $unitPhotosFiles[$photoIdx]['files'] ?? [];
+                        
+                        // Jika tidak ada di FormData, coba ambil dari input biasa (kasus URL string dari Temp Upload)
+                        if (empty($files) && isset($photoGroup['files'])) {
+                            $files = $photoGroup['files'];
+                        }
 
                         foreach ($files as $file) {
+                            $path = null;
                             if ($file instanceof \Illuminate\Http\UploadedFile) {
                                 $path = $file->store('uploads/assets', 'public');
+                            } elseif (is_string($file) && str_starts_with($file, 'uploads/temp/')) {
+                                $newPath = str_replace('uploads/temp/', 'uploads/assets/', $file);
+                                if (Storage::disk('public')->exists($file)) {
+                                    Storage::disk('public')->move($file, $newPath);
+                                    $path = $newPath;
+                                }
+                            }
+
+                            if ($path) {
                                 asset_image::create([
                                     'asset_id'           => $assetRecord->id,
                                     'asset_unit_id'      => $unit->id,
@@ -404,14 +543,23 @@ class AssetController extends Controller
                     }
 
                     // Thumbnail unit
+                    $thumbnailPath = null;
                     if ($request->hasFile("units.{$index}.thumbnail")) {
-                        $thumbnailFile = $request->file("units.{$index}.thumbnail");
-                        $path = $thumbnailFile->store('uploads/assets/thumbnails', 'public');
+                        $thumbnailPath = $request->file("units.{$index}.thumbnail")->store('uploads/assets/thumbnails', 'public');
+                    } elseif (isset($unitData['thumbnail']) && is_string($unitData['thumbnail']) && str_starts_with($unitData['thumbnail'], 'uploads/temp/')) {
+                        $newPath = str_replace('uploads/temp/', 'uploads/assets/thumbnails/', $unitData['thumbnail']);
+                        if (Storage::disk('public')->exists($unitData['thumbnail'])) {
+                            Storage::disk('public')->move($unitData['thumbnail'], $newPath);
+                            $thumbnailPath = $newPath;
+                        }
+                    }
+
+                    if ($thumbnailPath) {
                         asset_image::create([
                             'asset_id'           => $assetRecord->id,
                             'asset_unit_id'      => $unit->id,
                             'gallery_category_id' => null, // Thumbnail tidak wajib ada kategori
-                            'image'              => $path,
+                            'image'              => $thumbnailPath,
                             'is_thumbnail'       => true,
                         ]);
                     }
@@ -426,9 +574,23 @@ class AssetController extends Controller
                 $galleryCategoryId = $photoGroup['gallery_category_id'] ?? null;
                 $files = $photosFiles[$index]['files'] ?? [];
 
+                if (empty($files) && isset($photoGroup['files'])) {
+                    $files = $photoGroup['files'];
+                }
+
                 foreach ($files as $file) {
+                    $path = null;
                     if ($file instanceof \Illuminate\Http\UploadedFile) {
                         $path = $file->store('uploads/assets', 'public');
+                    } elseif (is_string($file) && str_starts_with($file, 'uploads/temp/')) {
+                        $newPath = str_replace('uploads/temp/', 'uploads/assets/', $file);
+                        if (Storage::disk('public')->exists($file)) {
+                            Storage::disk('public')->move($file, $newPath);
+                            $path = $newPath;
+                        }
+                    }
+
+                    if ($path) {
                         asset_image::create([
                             'asset_id'           => $assetRecord->id,
                             'asset_unit_id'      => null,
@@ -440,14 +602,24 @@ class AssetController extends Controller
             }
 
             // --- 6. Thumbnail Aset ---
+            $mainThumbnailPath = null;
             if ($request->hasFile('thumbnail')) {
-                $thumbnailFile = $request->file('thumbnail');
-                $path = $thumbnailFile->store('uploads/assets/thumbnails', 'public');
+                $mainThumbnailPath = $request->file('thumbnail')->store('uploads/assets/thumbnails', 'public');
+            } elseif (is_string($request->input('thumbnail')) && str_starts_with($request->input('thumbnail'), 'uploads/temp/')) {
+                $thumbnailString = $request->input('thumbnail');
+                $newPath = str_replace('uploads/temp/', 'uploads/assets/thumbnails/', $thumbnailString);
+                if (Storage::disk('public')->exists($thumbnailString)) {
+                    Storage::disk('public')->move($thumbnailString, $newPath);
+                    $mainThumbnailPath = $newPath;
+                }
+            }
+
+            if ($mainThumbnailPath) {
                 asset_image::create([
                     'asset_id'           => $assetRecord->id,
                     'asset_unit_id'      => null,
                     'gallery_category_id' => null,
-                    'image'              => $path,
+                    'image'              => $mainThumbnailPath,
                     'is_thumbnail'       => true,
                 ]);
             }
@@ -481,6 +653,13 @@ class AssetController extends Controller
             }
 
             DB::commit();
+
+            // Dispatch job to fetch nearby places in the background
+            \App\Jobs\FetchNearbyPlacesJob::dispatch(
+                (float) $assetRecord->latitude,
+                (float) $assetRecord->longitude,
+                $assetRecord->id
+            );
 
             return redirect()->route('owner.asset.index')
                 ->with('success', 'Aset berhasil ditambahkan dan sedang menunggu verifikasi admin.');
@@ -722,6 +901,7 @@ class AssetController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'quantity' => 'required|integer|min:1',
             'pricings' => 'required|array|min:1',
             'pricings.*.duration' => 'required|integer|min:1',
@@ -738,6 +918,7 @@ class AssetController extends Controller
 
         $unit = $asset->units()->create([
             'name' => $validated['name'],
+            'description' => $validated['description'] ?? '',
             'quantity' => $validated['quantity'],
             'detail' => $validated['detail'] ?? [],
             'status' => 'active',
@@ -856,6 +1037,7 @@ class AssetController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'description' => 'nullable|string',
             'quantity' => 'required|integer|min:1',
             'pricings' => 'required|array|min:1',
             'pricings.*.duration' => 'required|integer|min:1',
@@ -874,6 +1056,7 @@ class AssetController extends Controller
 
         $unit->update([
             'name' => $validated['name'],
+            'description' => $validated['description'] ?? '',
             'quantity' => $validated['quantity'],
             'detail' => $validated['detail'] ?? [],
         ]);

@@ -5,6 +5,7 @@ import { ref, watch, defineAsyncComponent } from 'vue';
 
 import HeroSection from './HeroSection.vue';
 import AssetList from './Assets/AssetList.vue';
+import Footer from '@/Components/Footer.vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 
 // ── Lazy load bottom sheets: JS tidak di-parse sampai pertama kali dibuka ──
@@ -27,7 +28,8 @@ watch(isKeywordSheetOpen, (v) => { if (v) keywordSheetMounted.value = true; });
 watch(isLokasiFullScreen, (v) => { if (v) lokasiSheetMounted.value = true; });
 
 const props = defineProps({
-    sections: { type: Array, default: () => [] }
+    sections: { type: Array, default: () => [] },
+    allCategories: { type: Array, default: () => [] }
 });
 </script>
 
@@ -43,9 +45,10 @@ const props = defineProps({
         <Suspense><LokasiSearchSheet  v-if="lokasiSheetMounted" /></Suspense>
 
         <main class="w-full max-w-7xl mx-auto pb-24">
-            <AssetList :sections="props.sections" />
+            <AssetList :sections="props.sections" :categories="props.allCategories" />
         </main>
 
+        <Footer />
     </AppLayout>
 </template>
 

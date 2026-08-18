@@ -1,13 +1,27 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/UI/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from '@/Components/UI/select';
 import { VisXYContainer, VisAxis, VisStackedBar, VisCrosshair, VisTooltip, VisLine } from '@unovis/vue';
 
-const selectedPeriod = ref('bulan_ini');
+const props = defineProps({
+    initialPeriod: String,
+    summaryData: Object,
+    incomeTrendData: Array,
+    assetIncomeData: Array,
+    unitBreakdowns: Object,
+    recentTransactions: Array,
+});
 
+const selectedPeriod = ref(props.initialPeriod || 'bulan_ini');
+
+// Update data from backend on period change
+const updatePeriod = (val) => {
+    selectedPeriod.value = val;
+    router.get(route('owner.income'), { period: val }, { preserveState: true, replace: true });
+};
 const periodLabel = computed(() => {
     switch (selectedPeriod.value) {
         case 'hari_ini': return 'Hari Ini';
@@ -36,27 +50,10 @@ const formatCompactCurrency = (v) => {
     return v.toLocaleString('id-ID');
 };
 
-// MOCK DATA
-const summaryData = {
-    totalPendapatan: 24500000,
-    pendapatanGrowth: 18.4,
-    totalTransaksi: 32,
-    transaksiGrowth: 6,
-    asetTerbaik: 'Hotel Suka Mundur',
-    asetTerbaikIncome: 12495000,
-    asetTerbaikPercent: 51,
-    avgTransaksi: 765625
-};
-
-const incomeTrendData = [
-    { label: 'Mei', income: 14500000 },
-    { label: 'Jun', income: 17200000 },
-    { label: 'Jul', income: 20700000 },
-    { label: 'Ags', income: 24500000 },
-];
+// We already have summaryData, incomeTrendData, assetIncomeData, unitBreakdowns, and recentTransactions from props
 
 const chartData = computed(() => {
-    return incomeTrendData.map((item, i) => ({
+    return props.incomeTrendData.map((item, i) => ({
         ...item,
         _animIncome: isChartMounted.value ? item.income : 0,
         x: i
@@ -70,7 +67,7 @@ const tickFormatY = (d) => formatCompactCurrency(d);
 const tickFormatX = (i) => chartData.value[i]?.label || '';
 const tooltipTemplate = (d) => `
     <div class="flex flex-col gap-1 px-1 py-1 font-sans">
-        <span class="text-xs font-bold text-slate-500">${d.label} 2026</span>
+        <span class="text-xs font-bold text-slate-500">${d.label}</span>
         <div class="flex items-center gap-2">
             <div class="w-2 h-2 rounded-full bg-[#FFC000]"></div>
             <span class="text-sm font-black text-slate-800">${formatCurrency(d.income)}</span>
@@ -78,14 +75,7 @@ const tooltipTemplate = (d) => `
     </div>
 `;
 
-// Assets Donut Chart Data
-const assetIncomeData = [
-    { name: 'Hotel Suka Mundur', income: 12495000, percent: 51, color: '#FFC000' },
-    { name: 'Gedung Serbaguna', income: 7105000, percent: 29, color: '#0A2540' },
-    { name: 'Ruko Suka Maju', income: 4900000, percent: 20, color: '#10b981' },
-];
-
-const donutChartTotal = computed(() => assetIncomeData.reduce((acc, curr) => acc + curr.income, 0));
+const donutChartTotal = computed(() => props.assetIncomeData.reduce((acc, curr) => acc + curr.income, 0));
 
 const activeAssetHover = ref(null);
 
@@ -96,7 +86,7 @@ const donutSlices = computed(() => {
     let currentOffset = 0;
     const circumference = 2 * Math.PI * 40; // r=40
 
-    return assetIncomeData.map(item => {
+    return props.assetIncomeData.map(item => {
         const percentage = item.income / total;
         const length = percentage * circumference;
         const gap = circumference - length;
@@ -113,31 +103,13 @@ const donutSlices = computed(() => {
 });
 
 // Unit Breakdown Data
-const selectedAssetForUnit = ref('Hotel Suka Mundur');
-const unitBreakdowns = {
-    'Hotel Suka Mundur': [
-        { name: 'Kamar Deluxe', income: 7500000, percent: 60 },
-        { name: 'Kamar Standard', income: 3500000, percent: 28 },
-        { name: 'Family Room', income: 1495000, percent: 12 },
-    ],
-    'Gedung Serbaguna': [
-        { name: 'Aula Utama', income: 4760350, percent: 67 },
-        { name: 'Ruang Meeting', income: 2344650, percent: 33 },
-    ],
-    'Ruko Suka Maju': [
-        { name: 'Ruko Lantai 1', income: 4900000, percent: 100 },
-    ]
-};
-const activeUnitBreakdown = computed(() => unitBreakdowns[selectedAssetForUnit.value] || []);
+const defaultSelectedAsset = computed(() => props.assetIncomeData[0]?.name || '-');
+const selectedAssetForUnit = ref(defaultSelectedAsset.value);
 
-// Transactions
-const recentTransactions = [
-    { id: 'KS-20260810-001', asset: 'Hotel Suka Mundur', unit: 'Kamar Deluxe 101', date: '10–12 Agu 2026', total: 1000000, status: 'Dibayar' },
-    { id: 'KS-20260809-003', asset: 'Gedung Serbaguna', unit: 'Aula Utama', date: '20 Agu 2026', total: 2500000, status: 'Dibayar' },
-    { id: 'KS-20260808-012', asset: 'Hotel Suka Mundur', unit: 'Kamar Standard 205', date: '08–09 Agu 2026', total: 450000, status: 'Selesai' },
-    { id: 'KS-20260807-005', asset: 'Ruko Suka Maju', unit: 'Ruko Lantai 1', date: '01 Sep 2026', total: 4900000, status: 'Menunggu Pembayaran' },
-    { id: 'KS-20260805-022', asset: 'Hotel Suka Mundur', unit: 'Family Room 301', date: '05–07 Agu 2026', total: 1495000, status: 'Dibatalkan' },
-];
+const activeUnitBreakdown = computed(() => {
+    const assetKey = selectedAssetForUnit.value;
+    return props.unitBreakdowns[assetKey] || [];
+});
 
 const getStatusClass = (status) => {
     switch (status) {
@@ -161,7 +133,7 @@ const getStatusClass = (status) => {
     >
         <!-- HEADER KANAN (Filter) -->
         <template #actions>
-            <Select v-model="selectedPeriod">
+            <Select :model-value="selectedPeriod" @update:model-value="updatePeriod">
                 <SelectTrigger class="w-[180px] h-10 text-sm font-semibold bg-white border-slate-200 rounded-xl shadow-sm focus:ring-slate-200 focus:border-slate-200 focus:ring-offset-0">
                     <SelectValue placeholder="Pilih Periode" />
                 </SelectTrigger>
@@ -191,9 +163,9 @@ const getStatusClass = (status) => {
                             <p class="text-xl sm:text-2xl lg:text-3xl font-black text-white mt-1 truncate tracking-tight">{{ formatCurrency(summaryData.totalPendapatan) }}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span>{{ summaryData.pendapatanGrowth }}% <span class="text-slate-400 font-normal">dari periode lalu</span></span>
+                    <div class="flex items-center gap-1.5 text-xs font-semibold" :class="props.summaryData.pendapatanGrowth >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+                        <i class="fa-solid" :class="props.summaryData.pendapatanGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                        <span>{{ Math.abs(props.summaryData.pendapatanGrowth) }}% <span class="text-slate-400 font-normal">dari periode lalu</span></span>
                     </div>
                 </CardContent>
             </Card>
@@ -209,9 +181,9 @@ const getStatusClass = (status) => {
                             <i class="fa-solid fa-receipt text-xs"></i>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5 text-[10px] font-semibold text-emerald-500">
-                        <i class="fa-solid fa-arrow-up"></i>
-                        <span>{{ summaryData.transaksiGrowth }} transaksi <span class="text-slate-400 font-normal">dari periode lalu</span></span>
+                    <div class="flex items-center gap-1.5 text-[10px] font-semibold" :class="props.summaryData.transaksiGrowth >= 0 ? 'text-emerald-500' : 'text-rose-500'">
+                        <i class="fa-solid" :class="props.summaryData.transaksiGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                        <span>{{ Math.abs(props.summaryData.transaksiGrowth) }} transaksi <span class="text-slate-400 font-normal">dari periode lalu</span></span>
                     </div>
                 </CardContent>
             </Card>

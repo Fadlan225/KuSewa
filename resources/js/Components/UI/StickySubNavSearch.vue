@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
 import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
@@ -10,7 +10,6 @@ const page = usePage();
 const {
     isMobileSearchOpen,
     isKeywordSheetOpen,
-    desktopActiveMenu,
     selectedAssets,
     keywordQuery,
     searchQuery,
@@ -52,7 +51,7 @@ const {
     priceDistribution,
 } = useHomeSearch();
 
-import { computed } from 'vue';
+const desktopActiveMenu = ref(null);
 
 const maxDistributionCount = computed(() => {
     if (!priceDistribution.value || priceDistribution.value.length === 0) return 1;
@@ -77,6 +76,11 @@ const handleScroll = () => {
     } else {
         lastScrollY = window.scrollY;
     }
+};
+
+const handlePerformSearch = () => {
+    desktopActiveMenu.value = null;
+    performSearch();
 };
 
 onMounted(() => {
@@ -175,7 +179,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Tombol Search -->
-            <button @click="performSearch" class="bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] w-[52px] h-[52px] rounded-lg flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0 ml-1 active:scale-95 cursor-pointer font-bold text-sm">
+            <button @click="handlePerformSearch" class="bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] w-[52px] h-[52px] rounded-lg flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0 ml-1 active:scale-95 cursor-pointer font-bold text-sm">
                 <i class="fa-solid fa-magnifying-glass"></i>
             </button>
 

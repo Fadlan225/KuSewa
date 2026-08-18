@@ -21,6 +21,13 @@ const user = computed(() => page.props.auth.user);
 const showProfileMenu = ref(false);
 const profileMenuRef = ref(null);
 
+const isCollapsed = ref(false);
+
+const toggleCollapse = () => {
+    isCollapsed.value = !isCollapsed.value;
+    localStorage.setItem('sidebar_collapsed', isCollapsed.value);
+};
+
 const toggleProfileMenu = () => {
     showProfileMenu.value = !showProfileMenu.value;
 };
@@ -42,6 +49,11 @@ const handleEscape = (e) => {
 onMounted(() => {
     document.addEventListener('click', closeProfileMenu);
     document.addEventListener('keydown', handleEscape);
+    
+    const stored = localStorage.getItem('sidebar_collapsed');
+    if (stored === 'true') {
+        isCollapsed.value = true;
+    }
 });
 
 onUnmounted(() => {
@@ -57,21 +69,26 @@ const handleLogout = () => {
 </script>
 
 <template>
-    <aside class="w-64 h-full max-h-screen bg-white border-r border-slate-200/80 flex flex-col p-4 shrink-0 overflow-hidden">
+    <aside :class="[isCollapsed ? 'w-20' : 'w-60', 'h-full max-h-screen bg-white border-r border-slate-200/80 flex flex-col p-3 md:p-4 shrink-0 transition-all duration-300 relative z-40']">
+        <!-- Toggle Collapse Button -->
+        <button @click="toggleCollapse" class="absolute -right-3 top-8 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:text-[#0A2540] shadow-sm z-50 hidden lg:flex cursor-pointer transition-transform duration-300 focus:outline-none">
+            <i :class="isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'" class="text-[10px]"></i>
+        </button>
+
         <!-- Brand Logo -->
-        <div class="flex items-center justify-between px-2 py-1 mb-6 shrink-0">
-                <Link :href="route('Home') || '/'" class="flex items-center gap-2 transition-transform hover:scale-[1.02] duration-200">
-                    <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-6 w-auto object-contain" />
-                    <span class="font-black text-xl tracking-tight text-[#0A2540] mt-0.5">
-                        kusewa<span class="text-[#FFC000]">.id</span>
-                    </span>
-                </Link>
-            </div>
+        <div class="flex items-center px-2 py-1 mb-6 shrink-0 transition-all duration-300" :class="isCollapsed ? 'justify-center' : 'justify-start'">
+            <Link :href="route('Home') || '/'" class="flex items-center gap-2 transition-transform hover:scale-[1.02] duration-200 overflow-hidden">
+                <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-6 w-auto object-contain shrink-0" />
+                <span v-if="!isCollapsed" class="font-black text-lg tracking-tight text-[#0A2540] mt-0.5 whitespace-nowrap transition-opacity duration-300">
+                    kusewa<span class="text-[#FFC000]">.id</span>
+                </span>
+            </Link>
+        </div>
 
             <!-- Profile Switcher -->
             <div class="relative mb-6 shrink-0" ref="profileMenuRef">
-                <button @click="toggleProfileMenu" type="button" class="w-full flex items-center justify-between p-2 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 transition focus:outline-none">
-                    <div class="flex items-center gap-2.5 min-w-0">
+                <button @click="toggleProfileMenu" type="button" class="w-full flex items-center p-2 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 transition focus:outline-none" :class="isCollapsed ? 'justify-center' : 'justify-between'">
+                    <div class="flex items-center gap-2.5 min-w-0" :class="isCollapsed ? 'justify-center' : ''">
                         <!-- Cek foto profil atau avatar (sesuai struktur standar Laravel/SaaS) -->
                         <img
                             v-if="user.profile_photo_url || user.avatar"
@@ -83,12 +100,12 @@ const handleLogout = () => {
                         <div v-else class="w-8 h-8 rounded-lg bg-[#0A2540] text-[#FFC000] flex items-center justify-center font-black text-xs uppercase shrink-0">
                             {{ user.name.charAt(0) }}
                         </div>
-                        <div class="min-w-0 text-left flex-1">
+                        <div v-if="!isCollapsed" class="min-w-0 text-left flex-1 whitespace-nowrap">
                             <h4 class="text-xs font-bold text-slate-800 truncate">{{ user.name }}</h4>
                             <p class="text-[10px] text-slate-400 truncate">{{ role }}</p>
                         </div>
                     </div>
-                    <i :class="showProfileMenu ? 'rotate-180' : ''" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 shrink-0"></i>
+                    <i v-if="!isCollapsed" :class="showProfileMenu ? 'rotate-180' : ''" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 shrink-0"></i>
                 </button>
 
                 <!-- Dropdown Animasi Vue Transition -->
@@ -104,10 +121,10 @@ const handleLogout = () => {
                         <Link :href="route('profile.edit')" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
                             <i class="fa-solid fa-user w-4 text-center text-slate-400"></i> Profil Saya
                         </Link>
-                        <Link v-if="role === 'Owner'" :href="route('owner.settings')" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+                        <Link v-if="role === 'Owner'" href="#" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
                             <i class="fa-solid fa-gear w-4 text-center text-slate-400"></i> Pengaturan Akun
                         </Link>
-                        <Link v-if="role === 'Owner'" :href="route('owner.help')" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+                        <Link v-if="role === 'Owner'" href="#" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
                             <i class="fa-solid fa-headset w-4 text-center text-slate-400"></i> Bantuan
                         </Link>
 
@@ -123,7 +140,7 @@ const handleLogout = () => {
             <!-- Navigation Links Wrapper with Fade Effect -->
             <div class="relative flex-1 min-h-0 -mx-2">
                 <div class="h-full overflow-y-auto no-scrollbar px-2 pb-6">
-                    <nav class="space-y-1 text-xs">
+                    <nav class="space-y-2 text-xs">
                 <template v-for="(item, idx) in menu" :key="idx">
                     <!-- Jika ada item divider -->
                     <div v-if="item.divider" class="pt-2 pb-1">
@@ -134,14 +151,15 @@ const handleLogout = () => {
                     <template v-else>
                         <Link
                             :href="item.route"
-                            :class="[route().current(item.routeName) ? 'bg-slate-100 text-[#0A2540] font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium', 'flex items-center justify-between px-3 py-2 rounded-lg transition-colors']"
+                            :title="isCollapsed ? item.label : ''"
+                            :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200', isCollapsed ? 'justify-center' : 'justify-between']"
                         >
                             <div class="flex items-center gap-3">
-                                <i :class="[item.icon, route().current(item.routeName) ? 'text-[#0A2540]' : 'text-slate-400', 'w-4 text-center']"></i>
-                                <span>{{ item.label }}</span>
+                                <i :class="[item.icon, route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']"></i>
+                                <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                             </div>
 
-                            <template v-if="item.badge || item.badgeIcon">
+                            <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">
                                 <i v-if="item.badgeIcon && !item.badge" :class="item.badgeIcon"></i>
                                 <span v-else-if="item.badge" :class="item.badgeClass || 'bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold'">
                                     {{ item.badge }}
@@ -152,24 +170,26 @@ const handleLogout = () => {
                         <!-- Sub-menu kontekstual (tampil jika parent aktif & ada subMenu) -->
                         <div
                             v-if="subMenu.length > 0 && subMenuParentRouteName && item.routeName === subMenuParentRouteName && route().current(item.routeName)"
-                            class="ml-3 pl-3 border-l-2 border-slate-200 space-y-0.5 py-1"
+                            :class="isCollapsed ? 'mt-1 space-y-1' : 'ml-3 pl-3 border-l-2 border-slate-200 space-y-0.5 py-1'"
                         >
                             <button
                                 v-for="sub in subMenu"
                                 :key="sub.key"
                                 @click="sub.onClick && sub.onClick()"
+                                :title="isCollapsed ? sub.label : ''"
                                 :class="[
                                     sub.active
                                         ? 'bg-[#FFC000]/10 text-[#0A2540] font-bold'
                                         : 'text-slate-500 hover:bg-slate-50 font-medium',
-                                    'w-full flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg transition-colors text-left'
+                                    'w-full flex items-center rounded-lg transition-colors',
+                                    isCollapsed ? 'justify-center px-2 py-2' : 'justify-between gap-2 px-2.5 py-1.5 text-left'
                                 ]"
                             >
-                                <div class="flex items-center gap-2">
-                                    <i :class="[sub.icon, sub.active ? 'text-[#0A2540]' : 'text-slate-400', 'w-3.5 text-center text-[11px]']"></i>
-                                    <span class="text-[11px]">{{ sub.label }}</span>
+                                <div class="flex items-center" :class="isCollapsed ? 'justify-center' : 'gap-2'">
+                                    <i :class="[sub.icon, sub.active ? 'text-[#0A2540]' : 'text-slate-400', isCollapsed ? 'w-4 text-sm' : 'w-3.5 text-center text-[11px]']"></i>
+                                    <span v-if="!isCollapsed" class="text-[11px] whitespace-nowrap">{{ sub.label }}</span>
                                 </div>
-                                <span v-if="sub.badge" class="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full shrink-0">
+                                <span v-if="!isCollapsed && sub.badge" class="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full shrink-0">
                                     {{ sub.badge }}
                                 </span>
                             </button>
@@ -185,7 +205,7 @@ const handleLogout = () => {
         <!-- Bottom Navigation Links -->
         <div v-if="bottomMenu && bottomMenu.length" class="shrink-0 pt-4 mt-auto">
             <hr class="border-slate-100 mb-4" />
-            <nav class="space-y-1 text-xs">
+            <nav class="space-y-2 text-xs">
                 <template v-for="(item, idx) in bottomMenu" :key="idx">
                     <div v-if="item.divider" class="pt-2 pb-1">
                         <hr class="border-slate-100 border-dashed" />
@@ -193,13 +213,14 @@ const handleLogout = () => {
                     <Link
                         v-else
                         :href="item.route"
-                        :class="[route().current(item.routeName) ? 'bg-slate-100 text-[#0A2540] font-bold' : 'text-slate-600 hover:bg-slate-50 font-medium', 'flex items-center justify-between px-3 py-2 rounded-lg transition-colors']"
+                        :title="isCollapsed ? item.label : ''"
+                        :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200', isCollapsed ? 'justify-center' : 'justify-between']"
                     >
                         <div class="flex items-center gap-3">
-                            <i :class="[item.icon, route().current(item.routeName) ? 'text-[#0A2540]' : 'text-slate-400', 'w-4 text-center']"></i>
-                            <span>{{ item.label }}</span>
+                            <i :class="[item.icon, route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']"></i>
+                            <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                         </div>
-                        <template v-if="item.badge || item.badgeIcon">
+                        <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">
                             <i v-if="item.badgeIcon && !item.badge" :class="item.badgeIcon"></i>
                             <span v-else-if="item.badge" :class="item.badgeClass || 'bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold'">
                                 {{ item.badge }}

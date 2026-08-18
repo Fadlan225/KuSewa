@@ -62,7 +62,7 @@ const form = useForm({
 
 // Option A: harga adalah harga paket (tidak dikalikan durasi)
 const effectivePrice = computed(() => {
-    return props.selectedPricing?.price || props.asset?.default_pricing?.price || 0
+    return Number(props.selectedPricing?.price || props.asset?.default_pricing?.price || 0)
 })
 
 const subtotalPrice = computed(() => effectivePrice.value)
@@ -77,6 +77,12 @@ const calculatedServiceFee = computed(() => {
 
 const totalPrice = computed(() => {
     return subtotalPrice.value + calculatedServiceFee.value;
+})
+
+const truncatedDescription = computed(() => {
+    if (!props.asset?.description) return '';
+    const stripped = props.asset.description.replace(/(<([^>]+)>)/gi, "");
+    return stripped.length > 80 ? stripped.substring(0, 80) + '...' : stripped;
 })
 
 // Label paket pricing yang dipilih
@@ -190,6 +196,12 @@ watch(() => form.namaPemesan, (val) => {
     }
 })
 
+const showAllBanks = ref(false);
+const displayedBanks = computed(() => {
+    if (showAllBanks.value) return props.bankAccounts;
+    return props.bankAccounts.slice(0, 3);
+});
+
 </script>
 
 <template>
@@ -241,7 +253,7 @@ watch(() => form.namaPemesan, (val) => {
                     </div>
                     <div>
                         <h2 class="text-lg font-bold text-slate-900">{{ asset?.title }}</h2>
-                        <p class="text-xs text-slate-500 mt-1 line-clamp-2">{{ asset?.description }}</p>
+                        <p class="text-xs text-slate-500 mt-1 line-clamp-2" :title="asset?.description">{{ truncatedDescription }}</p>
                         <div class="mt-2 flex items-center gap-2 flex-wrap">
                             <span class="text-[#0A2540] font-black text-sm">Rp {{ Number(effectivePrice).toLocaleString('id-ID') }}</span>
                             <span class="text-xs font-bold bg-[#0A2540]/10 text-[#0A2540] px-2 py-0.5 rounded-full">Paket {{ pricingPackageLabel }}</span>
@@ -340,7 +352,7 @@ watch(() => form.namaPemesan, (val) => {
 
                             <!-- Sub-items Bank -->
                             <div class="px-4 pb-4 pt-1 space-y-2 bg-slate-50/50">
-                                <div v-for="bank in bankAccounts" :key="bank.id"
+                                <div v-for="bank in displayedBanks" :key="bank.id"
                                      @click="form.payment_method = bank.id"
                                      :class="form.payment_method === bank.id ? 'bg-white ring-2 ring-[#ffc000] shadow-xs' : 'bg-white/60 hover:bg-white border border-black/5'"
                                      class="p-3 rounded-xl flex items-center justify-between cursor-pointer transition-all">
@@ -356,6 +368,13 @@ watch(() => form.namaPemesan, (val) => {
                                     </div>
                                     <span class="text-[11px] font-bold text-slate-400 font-mono">{{ bank.account_number }}</span>
                                 </div>
+                                
+                                <!-- Tombol Lihat Lebih Banyak -->
+                                <button v-if="bankAccounts.length > 3" @click="showAllBanks = !showAllBanks" type="button" class="w-full mt-2 py-2 text-xs font-semibold text-[#0A2540] hover:bg-[#0A2540]/5 rounded-xl transition-colors border border-transparent hover:border-[#0A2540]/10 flex items-center justify-center gap-1">
+                                    {{ showAllBanks ? 'Tampilkan Lebih Sedikit' : 'Lihat ' + (bankAccounts.length - 3) + ' Rekening Lainnya' }}
+                                    <i class="fa-solid" :class="showAllBanks ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                </button>
+                                
                                 <!-- Empty State -->
                                 <div v-if="bankAccounts.length === 0" class="text-center text-xs text-slate-500 py-4">
                                     Belum ada metode pembayaran yang tersedia.
