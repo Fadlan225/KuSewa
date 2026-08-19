@@ -1,4 +1,5 @@
 <script setup>
+import { Facebook, Instagram, Mail, MessageCircle } from 'lucide-vue-next';
 import { Link } from '@inertiajs/vue3';
 </script>
 
@@ -64,25 +65,25 @@ import { Link } from '@inertiajs/vue3';
                     <ul class="flex flex-col space-y-4">
                         <li>
                             <a href="#" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <i class="fa-brands fa-facebook-f w-4 text-center text-lg"></i>
+                                <Facebook class="w-4 text-center text-lg" />
                                 Facebook
                             </a>
                         </li>
                         <li>
                             <a href="#" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <i class="fa-brands fa-instagram w-4 text-center text-lg"></i>
+                                <Instagram class="w-4 text-center text-lg" />
                                 Instagram
                             </a>
                         </li>
                         <li>
                             <a href="mailto:cs@kusewa.id" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <i class="fa-regular fa-envelope w-4 text-center text-lg"></i>
+                                <Mail class="w-4 text-center text-lg" />
                                 Email
                             </a>
                         </li>
                         <li>
                             <a href="#" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <i class="fa-brands fa-whatsapp w-4 text-center text-lg"></i>
+                                <MessageCircle class="w-4 text-center text-lg" />
                                 No Whatsapp
                             </a>
                         </li>

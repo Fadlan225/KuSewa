@@ -1,4 +1,5 @@
 <script setup>
+import { Image, Circle, Check, Ruler, Bed, Users, X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { ref, computed, reactive } from 'vue';
 
 const listImageIndices = reactive({});
@@ -193,7 +194,7 @@ const handleSelect = (unit, pricing) => {
                     <Transition name="fade">
                         <img v-if="unit.images?.length > 0" :key="getListImageIndex(unit.id)" :src="unit.images[getListImageIndex(unit.id)].image_url" class="w-full h-full object-cover absolute inset-0 cursor-pointer" @click="openDetail(unit)" />
                         <div v-else class="w-full h-full flex items-center justify-center bg-slate-100 absolute inset-0 cursor-pointer" @click="openDetail(unit)">
-                            <i class="fa-solid fa-image text-3xl text-gray-300"></i>
+                            <Image class="text-3xl text-gray-300" />
                         </div>
                     </Transition>
 
@@ -213,14 +214,14 @@ const handleSelect = (unit, pricing) => {
                     <!-- Specs Row (Dynamic Details) -->
                     <div class="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-[#0A2540] mb-2">
                         <span v-for="(val, key) in (unit.detail || {})" :key="key" class="flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle text-[4px] text-gray-400"></i> {{ val }} {{ key }}
+                            <Circle class="text-[4px] text-gray-400" /> {{ val }} {{ key }}
                         </span>
                     </div>
 
                     <!-- Facility Row (Highlights) -->
                     <div v-if="unit.facilities && unit.facilities.length" class="flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-bold text-[#FFC000]">
                         <span v-for="fac in unit.facilities.slice(0, 3)" :key="fac.id" class="flex items-center gap-1.5 text-[#0A2540]">
-                            <i class="fa-solid fa-check text-[#FFC000]"></i> {{ fac.name }}
+                            <Check class="text-[#FFC000]" /> {{ fac.name }}
                         </span>
                     </div>
 
@@ -235,7 +236,7 @@ const handleSelect = (unit, pricing) => {
                         <!-- Main Info in Card -->
                         <div class="space-y-2 mb-4 text-[12px] font-bold text-[#0A2540]">
                             <div v-for="(val, key) in Object.entries(unit.detail || {}).slice(0, 2)" :key="key" class="flex items-center gap-3">
-                                <i class="fa-solid fa-circle text-[4px] text-gray-400 w-4 text-center"></i> {{ val[1] }} {{ val[0] }}
+                                <Circle class="text-[4px] text-gray-400 w-4 text-center" /> {{ val[1] }} {{ val[0] }}
                             </div>
                         </div>
 
@@ -247,11 +248,15 @@ const handleSelect = (unit, pricing) => {
                         </div>
 
                         <!-- Action Button -->
-                        <div class="flex justify-end mt-4">
-                            <button @click="handleSelect(unit, getLowestPricing(unit))"
-                                    :class="['font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform active:scale-95', selectedUnitId === unit.id ? 'bg-[#0A2540] text-white' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540]']">
-                                {{ selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar' }}
+                        <div class="flex flex-col items-end mt-4 gap-1">
+                            <button @click="getAvailableQuantity(unit) !== 0 ? handleSelect(unit, getLowestPricing(unit)) : null"
+                                    :disabled="getAvailableQuantity(unit) === 0"
+                                    :class="['font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform', 
+                                    getAvailableQuantity(unit) === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' :
+                                    (selectedUnitId === unit.id ? 'bg-[#0A2540] text-white active:scale-95' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] active:scale-95')]">
+                                {{ getAvailableQuantity(unit) === 0 ? 'Kamar Penuh' : (selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar') }}
                             </button>
+                            <span v-if="getAvailableQuantity(unit) === 0" class="text-[9px] text-red-500 font-medium text-right leading-tight max-w-[120px]">Ubah jadwal atau pilih unit lain</span>
                         </div>
                     </div>
                 </div>
@@ -261,7 +266,7 @@ const handleSelect = (unit, pricing) => {
             <div class="hidden sm:block w-[180px] lg:w-[240px] h-[150px] lg:h-[180px] flex-shrink-0 relative bg-slate-100 overflow-hidden cursor-pointer" @click="openDetail(unit)">
                 <img v-if="getUnitImage(unit)" :src="getUnitImage(unit)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 <div v-else class="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-300">
-                    <i class="fa-solid fa-image text-3xl mb-1"></i>
+                    <Image class="text-3xl mb-1" />
                 </div>
                 <!-- Overlay detail text -->
                 <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent pt-6 pb-2 text-center pointer-events-none">
@@ -280,15 +285,15 @@ const handleSelect = (unit, pricing) => {
 
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-gray-500 font-medium">
                             <div v-if="unit.detail?.luas" class="flex items-center gap-1">
-                                <i class="fa-solid fa-ruler-combined text-[#FFC000]"></i>
+                                <Ruler class="text-[#FFC000]" />
                                 <span>{{ unit.detail.luas }}</span>
                             </div>
                             <div v-if="unit.detail?.bed" class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-bed text-[#FFC000]"></i>
+                                <Bed class="text-[#FFC000]" />
                                 <span>{{ unit.detail.bed }}</span>
                             </div>
                             <div v-if="unit.detail?.kapasitas" class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-user-group text-[#FFC000]"></i>
+                                <Users class="text-[#FFC000]" />
                                 <span>{{ unit.detail.kapasitas }}</span>
                             </div>
                         </div>
@@ -324,10 +329,16 @@ const handleSelect = (unit, pricing) => {
                             </span>
                         </div>
                         <!-- Action Button -->
-                        <button @click="handleSelect(unit, getLowestPricing(unit))"
-                                :class="['mt-4 w-full font-extrabold py-2 px-8 rounded text-xs shadow-sm transition-transform active:scale-95', selectedUnitId === unit.id ? 'bg-[#0A2540] text-white' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540]']">
-                            {{ selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar' }}
-                        </button>
+                        <div class="mt-4 flex flex-col items-center gap-1.5 w-full">
+                            <button @click="getAvailableQuantity(unit) !== 0 ? handleSelect(unit, getLowestPricing(unit)) : null"
+                                    :disabled="getAvailableQuantity(unit) === 0"
+                                    :class="['w-full font-extrabold py-2 px-8 rounded text-xs shadow-sm transition-transform', 
+                                    getAvailableQuantity(unit) === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 
+                                    (selectedUnitId === unit.id ? 'bg-[#0A2540] text-white active:scale-95' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] active:scale-95')]">
+                                {{ getAvailableQuantity(unit) === 0 ? 'Kamar Penuh' : (selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar') }}
+                            </button>
+                            <span v-if="getAvailableQuantity(unit) === 0" class="text-[10px] text-red-500 font-medium text-center leading-tight">Ubah jadwal atau pilih unit lain</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -351,7 +362,7 @@ const handleSelect = (unit, pricing) => {
                     <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white shrink-0">
                         <h2 class="text-xl font-extrabold text-[#0A2540]">{{ selectedDetailUnit.name }}</h2>
                         <button @click="closeDetail" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition">
-                            <i class="fa-solid fa-xmark"></i>
+                            <X class="" />
                         </button>
                     </div>
 
@@ -363,16 +374,16 @@ const handleSelect = (unit, pricing) => {
                             <div class="relative w-full h-[240px] md:h-[300px] rounded-xl overflow-hidden bg-gray-100 group shrink-0">
                                 <img v-if="selectedDetailUnit.images?.length > 0" :src="selectedDetailUnit.images[activeDetailImageIndex].image_url" class="w-full h-full object-cover" />
                                 <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                                    <i class="fa-solid fa-image text-4xl mb-2"></i>
+                                    <Image class="text-4xl mb-2" />
                                     <span class="text-xs">No image</span>
                                 </div>
 
                                 <template v-if="selectedDetailUnit.images?.length > 1">
                                     <button @click.prevent="prevDetailImage" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <i class="fa-solid fa-chevron-left text-xs"></i>
+                                        <ChevronLeft class="text-xs" />
                                     </button>
                                     <button @click.prevent="nextDetailImage" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                                        <ChevronRight class="text-xs" />
                                     </button>
                                     <!-- Badges -->
                                     <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1 rounded text-[10px] text-white font-bold tracking-wider">
@@ -399,7 +410,7 @@ const handleSelect = (unit, pricing) => {
                                 <h4 class="text-sm font-bold text-[#6C757D] uppercase tracking-wider mb-3">Info Kamar</h4>
                                 <div class="space-y-3 text-sm text-[#0A2540]">
                                     <div v-for="(val, key) in (selectedDetailUnit?.detail || {})" :key="key" class="flex items-center gap-3">
-                                        <i class="fa-solid fa-circle text-[6px] w-5 text-center text-gray-400"></i>
+                                        <Circle class="text-[6px] w-5 text-center text-gray-400" />
                                         <div class="flex flex-col">
                                             <span class="text-xs text-gray-500">{{ key }}</span>
                                             <span class="font-medium">{{ val }}</span>
@@ -457,16 +468,16 @@ const handleSelect = (unit, pricing) => {
                         <Transition name="fade">
                             <img v-if="selectedDetailUnit.images?.length > 0" :key="activeDetailImageIndex" :src="selectedDetailUnit.images[activeDetailImageIndex].image_url" class="w-full h-full object-cover absolute inset-0" />
                             <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400 absolute inset-0">
-                                <i class="fa-solid fa-image text-4xl mb-2"></i>
+                                <Image class="text-4xl mb-2" />
                             </div>
                         </Transition>
 
                         <template v-if="selectedDetailUnit.images?.length > 1">
                             <button @click.prevent="prevDetailImage" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center active:bg-black/70 z-10">
-                                <i class="fa-solid fa-chevron-left text-xs"></i>
+                                <ChevronLeft class="text-xs" />
                             </button>
                             <button @click.prevent="nextDetailImage" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-black/40 text-white rounded-full flex items-center justify-center active:bg-black/70 z-10">
-                                <i class="fa-solid fa-chevron-right text-xs"></i>
+                                <ChevronRight class="text-xs" />
                             </button>
                             <div class="absolute bottom-3 right-3 bg-black/60 px-2 py-1 rounded text-[10px] text-white font-bold tracking-wider z-10">
                                 {{ activeDetailImageIndex + 1 }} / {{ selectedDetailUnit.images.length }}
@@ -483,7 +494,7 @@ const handleSelect = (unit, pricing) => {
                             <h4 class="text-[11px] font-bold text-[#6C757D] uppercase tracking-wider mb-3">Info Kamar</h4>
                             <div class="space-y-3 text-sm text-[#0A2540]">
                                 <div v-for="(val, key) in (selectedDetailUnit?.detail || {})" :key="key" class="flex items-center gap-3">
-                                    <i class="fa-solid fa-circle text-[6px] w-5 text-center text-gray-400"></i>
+                                    <Circle class="text-[6px] w-5 text-center text-gray-400" />
                                     <div class="flex flex-col">
                                         <span class="text-xs text-gray-500">{{ key }}</span>
                                         <span class="font-medium">{{ val }}</span>
@@ -499,7 +510,7 @@ const handleSelect = (unit, pricing) => {
                             <h4 class="text-[11px] font-bold text-[#6C757D] uppercase tracking-wider mb-3">Fasilitas Kamar</h4>
                             <div class="grid grid-cols-1 gap-3">
                                 <div v-for="fac in selectedDetailUnit?.facilities" :key="fac.id" class="flex items-center gap-3">
-                                    <i class="fa-solid fa-check text-[#FFC000] text-sm"></i>
+                                    <Check class="text-[#FFC000] text-sm" />
                                     <span class="text-sm text-gray-700">{{ fac.name }}</span>
                                 </div>
                                 <div v-if="!selectedDetailUnit?.facilities?.length" class="text-sm text-gray-500 italic">Belum ada fasilitas.</div>

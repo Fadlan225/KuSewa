@@ -1,4 +1,5 @@
 <script setup>
+import { Trash2, X, AlertTriangle, Search } from 'lucide-vue-next';
 import { ref, computed, reactive } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -237,7 +238,7 @@ function closeAll() {
                                                 class="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
                                                 aria-label="Hapus"
                                             >
-                                                <i class="fa-solid fa-trash text-[11px]"></i>
+                                                <Trash2 class="text-[11px]" />
                                             </button>
                                         </div>
                                     </td>
@@ -273,7 +274,7 @@ function closeAll() {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 
@@ -348,7 +349,7 @@ function closeAll() {
             >
                 <div class="w-full max-w-sm rounded-3xl bg-white shadow-xl border border-slate-100 p-6">
                     <div class="w-11 h-11 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center text-lg mb-4">
-                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <AlertTriangle class="" />
                     </div>
                     <h3 class="text-sm font-bold text-slate-900">Hapus notifikasi ini?</h3>
                     <p class="text-xs text-slate-500 mt-1.5">
@@ -393,13 +394,13 @@ function closeAll() {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 
                     <div class="px-6 pt-4 shrink-0 flex flex-col sm:flex-row gap-2">
                         <div class="flex items-center gap-3 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60 flex-1">
-                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            <Search class="text-slate-400 text-xs" />
                             <input
                                 type="text"
                                 v-model="allSearch"

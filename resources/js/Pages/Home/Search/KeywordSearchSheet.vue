@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Search, XCircle, Loader2, History, X, Flame, TrendingUp } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
@@ -92,7 +94,7 @@ const clearAllHistory = () => {
     <BottomSheet v-model="isKeywordSheetOpen" heightClass="h-[95vh]">
         <template #header-content>
             <div class="flex-1 mr-3 relative flex items-center overflow-hidden">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C757D] text-xs z-10"></i>
+                <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6C757D] text-xs z-10" />
                 
                 <AnimatedPlaceholder 
                     :placeholders="page.props.dynamicPlaceholders" 
@@ -117,7 +119,7 @@ const clearAllHistory = () => {
                     @click="keywordQuery = ''; inputRef?.focus()"
                     class="absolute right-2 top-1/2 -translate-y-1/2 text-[#6C757D] hover:text-[#0A2540] transition z-10 w-6 h-6 flex items-center justify-center rounded-full"
                 >
-                    <i class="fa-solid fa-circle-xmark text-sm"></i>
+                    <XCircle class="text-sm" />
                 </button>
             </div>
         </template>
@@ -141,7 +143,7 @@ const clearAllHistory = () => {
                     class="absolute inset-x-0 top-0 z-30 bg-[#F8F9FA] border-b border-[#6C757D]/10 px-5 py-2 overflow-y-auto max-h-full"
                 >
                     <div v-if="isLoadingSuggestions && suggestions.length === 0" class="flex items-center gap-2 py-3 text-[#6C757D]">
-                        <i class="fa-solid fa-spinner fa-spin text-xs"></i>
+                        <Loader2 class="text-xs animate-spin" />
                         <span class="text-sm">Mencari...</span>
                     </div>
                     <div v-else class="space-y-0.5">
@@ -151,7 +153,7 @@ const clearAllHistory = () => {
                             class="flex items-center gap-3 px-2 py-3 rounded-xl hover:bg-white active:bg-white cursor-pointer transition"
                         >
                             <div class="w-8 h-8 rounded-full bg-white border border-[#6C757D]/10 text-[#6C757D] flex items-center justify-center flex-shrink-0 shadow-sm">
-                                <i :class="s.icon + ' text-xs'"></i>
+                                <AppIcon :iconClass="s.icon + ' text-xs'" />
                             </div>
                             <span class="text-sm font-medium text-[#0A2540] flex-1 truncate">{{ s.text }}</span>
                             <span class="text-[10px] text-[#6C757D] bg-gray-100 px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
@@ -176,11 +178,11 @@ const clearAllHistory = () => {
                             class="bg-white border border-[#6C757D]/20 rounded-full pl-3 pr-1 py-1 flex items-center gap-2 shadow-sm transition group hover:bg-gray-50"
                         >
                             <div @click="applySearch(item)" class="flex items-center gap-2 cursor-pointer active:scale-95 transition">
-                                <i class="fa-solid fa-clock-rotate-left text-[#6C757D] text-[10px]"></i>
+                                <History class="text-[#6C757D] text-[10px]" />
                                 <span class="text-xs font-medium text-[#0A2540]">{{ item }}</span>
                             </div>
                             <button @click.stop="deleteHistoryItem(item)" class="w-6 h-6 flex items-center justify-center rounded-full text-[#6C757D] hover:bg-red-50 hover:text-red-500 transition ml-1 active:scale-95">
-                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                                <X class="text-[10px]" />
                             </button>
                         </div>
                     </div>
@@ -194,7 +196,7 @@ const clearAllHistory = () => {
                 <!-- Populer Minggu Ini -->
                 <div v-if="trending.length > 0">
                     <h3 class="text-sm font-bold text-[#0A2540] mb-3 flex items-center gap-2">
-                        <i class="fa-solid fa-fire text-orange-500"></i> Populer Minggu Ini
+                        <Flame class="text-orange-500" /> Populer Minggu Ini
                     </h3>
                     <div class="flex flex-wrap gap-2">
                         <div
@@ -202,7 +204,7 @@ const clearAllHistory = () => {
                             @click="applySearch(item)"
                             class="bg-white border border-orange-200 rounded-full px-3 py-1.5 flex items-center gap-2 shadow-sm cursor-pointer hover:bg-orange-50 transition active:scale-95"
                         >
-                            <i class="fa-solid fa-arrow-trend-up text-orange-500 text-[10px]"></i>
+                            <TrendingUp class="text-orange-500 text-[10px]" />
                             <span class="text-xs font-medium text-orange-700">{{ item }}</span>
                         </div>
                     </div>
@@ -214,7 +216,7 @@ const clearAllHistory = () => {
                     class="flex flex-col items-center py-12 text-center"
                 >
                     <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm">
-                        <i class="fa-solid fa-magnifying-glass text-2xl text-[#6C757D]/40"></i>
+                        <Search class="text-2xl text-[#6C757D]/40" />
                     </div>
                     <p class="text-sm text-[#6C757D]">Ketik sesuatu untuk mulai mencari</p>
                 </div>
@@ -225,7 +227,7 @@ const clearAllHistory = () => {
         <template #footer>
             <div class="absolute bottom-0 w-full bg-[#F8F9FA] border-t border-[#6C757D]/10 p-4 z-20">
                 <button @click="handleSearch" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold w-full py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-[15px]">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <Search class="" />
                     Cari
                 </button>
             </div>

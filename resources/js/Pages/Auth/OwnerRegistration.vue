@@ -205,7 +205,7 @@ const currentErrors = () => {
     <Head title="Pendaftaran Owner - kusewa.id" />
 
     <AppLayout hideNavbar hideBottombar>
-        <DetailNavbar :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />
+        <DetailNavbar :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />
 
         <!-- Container Utama -->
         <div class="min-h-screen bg-background font-sans text-text pb-32">

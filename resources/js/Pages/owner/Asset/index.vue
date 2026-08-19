@@ -1,4 +1,5 @@
 <script setup>
+import { Plus, Map, Building, Lock, DoorOpen, Search, Grid3X3, List, AlertTriangle, Loader2 } from 'lucide-vue-next';
 import { ref, computed, watch } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -6,6 +7,7 @@ import OwnerAssetCard from '@/Components/owner/OwnerAssetCard.vue';
 import OwnerHorizontalAssetCard from '@/Components/owner/OwnerHorizontalAssetCard.vue';
 import { Card, CardContent } from '@/Components/UI/card';
 import CustomSelect from '@/Components/UI/CustomSelect.vue';
+import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
 
 const page = usePage();
 
@@ -188,7 +190,7 @@ const confirmDelete = () => {
                 href="/owner/asset/create"
                 class="bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] font-bold px-5 py-2.5 rounded-lg shadow-sm hover:shadow transition flex items-center justify-center gap-2 text-sm w-fit"
             >
-                <i class="fa-solid fa-plus"></i>
+                <Plus class="" />
                 <span>Daftarkan Aset</span>
             </Link>
         </template>
@@ -201,7 +203,7 @@ const confirmDelete = () => {
                         <!-- Total Aset -->
                         <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
                             <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                <i class="fa-solid fa-map-location-dot text-slate-400 mt-0.5"></i> <span>Total Aset</span>
+                                <Map class="text-slate-400 mt-0.5" /> <span>Total Aset</span>
                             </p>
                             <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalAset }}</p>
                         </div>
@@ -209,7 +211,7 @@ const confirmDelete = () => {
                         <!-- Total Unit -->
                         <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
                             <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                <i class="fa-solid fa-building text-slate-400 mt-0.5"></i> <span>Total Unit</span>
+                                <Building class="text-slate-400 mt-0.5" /> <span>Total Unit</span>
                             </p>
                             <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalUnit }}</p>
                         </div>
@@ -217,7 +219,7 @@ const confirmDelete = () => {
                         <!-- Unit Terisi -->
                         <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
                             <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                <i class="fa-solid fa-house-lock text-slate-400 mt-0.5"></i> <span>Unit Terisi</span>
+                                <Lock class="text-slate-400 mt-0.5" /> <span>Unit Terisi</span>
                             </p>
                             <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalTersewa }}</p>
                         </div>
@@ -225,7 +227,7 @@ const confirmDelete = () => {
                         <!-- Tersedia -->
                         <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
                             <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                <i class="fa-solid fa-door-open text-slate-400 mt-0.5"></i> <span>Tersedia</span>
+                                <DoorOpen class="text-slate-400 mt-0.5" /> <span>Tersedia</span>
                             </p>
                             <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalTersedia }}</p>
                         </div>
@@ -238,7 +240,7 @@ const confirmDelete = () => {
 
                         <!-- Search Box -->
                         <div class="relative w-full lg:max-w-sm flex-1">
-                            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
                             <input
                                 v-model="searchQuery"
                                 type="text"
@@ -272,14 +274,14 @@ const confirmDelete = () => {
                                     :class="['p-2 rounded-md text-xs transition-all duration-200 flex items-center justify-center', viewMode === 'grid' ? 'bg-[#FFC000] text-[#0A2540] shadow-sm font-bold' : 'text-slate-400 hover:text-slate-600']"
                                     title="Tampilan Grid"
                                 >
-                                    <i class="fa-solid fa-border-all"></i>
+                                    <Grid3X3 class="" />
                                 </button>
                                 <button
                                     @click="viewMode = 'table'"
                                     :class="['p-2 rounded-md text-xs transition-all duration-200 flex items-center justify-center', viewMode === 'table' ? 'bg-[#FFC000] text-[#0A2540] shadow-sm font-bold' : 'text-slate-400 hover:text-slate-600']"
                                     title="Tampilan Tabel"
                                 >
-                                    <i class="fa-solid fa-list"></i>
+                                    <List class="" />
                                 </button>
                             </div>
                         </div>
@@ -326,7 +328,7 @@ const confirmDelete = () => {
 
                 <!-- EMPTY STATE -->
                 <div v-if="filteredProperties.length === 0" class="flex flex-col items-center justify-center py-16 px-4 text-center">
-                    <img src="/empty.svg" alt="Belum ada data" class="w-40 sm:w-48 h-auto mb-5 mx-auto opacity-90 drop-shadow-sm" />
+                    <EmptyStateIcon class="w-40 sm:w-48 h-auto mb-5 mx-auto opacity-90 drop-shadow-sm" />
                     <h3 class="text-2xl font-black text-[#0A2540] mb-3 tracking-tight">Belum Ada Aset Terdaftar</h3>
                     <p class="text-sm text-slate-500 max-w-md mx-auto mb-8 leading-relaxed">
                         Anda belum menambahkan aset apa pun untuk disewakan. Mulai langkah pertama Anda untuk mengelola bisnis sewa bersama kami!
@@ -363,7 +365,7 @@ const confirmDelete = () => {
                 <div class="relative bg-white rounded-2xl p-6 w-full max-w-md shadow-xl mx-4 space-y-4">
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center shrink-0">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <AlertTriangle class="" />
                         </div>
                         <div>
                             <h3 class="text-sm font-bold text-slate-800">Hapus Properti?</h3>
@@ -381,7 +383,7 @@ const confirmDelete = () => {
                             Batal
                         </button>
                         <button @click="confirmDelete" :disabled="deleting" class="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50">
-                            <i v-if="deleting" class="fa-solid fa-spinner animate-spin"></i>
+                            <Loader2 v-if="deleting" class="animate-spin" />
                             {{ deleting ? 'Menghapus...' : 'Ya, Hapus' }}
                         </button>
                     </div>

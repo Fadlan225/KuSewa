@@ -1,4 +1,5 @@
 <script setup>
+import { Search, FolderOpen, X } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -46,7 +47,7 @@ const closeUserDetail = () => {
     <DashboardLayout role="Admin" title="Akun Penyewa & Pemilik" description="Kelola data pengguna, verifikasi akun, dan pantau status aktif.">
         <template #header-actions>
             <div class="flex items-center gap-3 w-64 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                <Search class="text-slate-400 text-xs" />
                 <input
                     type="text"
                     v-model="searchQuery"
@@ -137,7 +138,7 @@ const closeUserDetail = () => {
                                 </tr>
                                 <tr v-if="filteredUsers.length === 0">
                                     <td colspan="6" class="py-12 text-center text-slate-400">
-                                        <i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i>
+                                        <FolderOpen class="text-2xl mb-2 block text-slate-300" />
                                         Tidak ada akun yang cocok dengan filter atau pencarian.
                                     </td>
                                 </tr>
@@ -156,7 +157,7 @@ const closeUserDetail = () => {
                         <p class="text-xs text-slate-500">Informasi lengkap akun penyewa / pemilik</p>
                     </div>
                     <button @click="closeUserDetail" class="w-9 h-9 rounded-2xl bg-slate-100 text-slate-500 hover:text-slate-700 transition flex items-center justify-center">
-                        <i class="fa-solid fa-xmark"></i>
+                        <X class="" />
                     </button>
                 </div>
                 <div class="p-6 space-y-5">

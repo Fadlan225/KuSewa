@@ -1,4 +1,5 @@
 <script setup>
+import { FileSignature, Trash2, MessageCircle } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 const props = defineProps({
@@ -34,14 +35,14 @@ const emit = defineEmits(['addFaq', 'removeFaq', 'addPolicy', 'removePolicy']);
             </div>
 
             <div v-if="form.policies.length === 0" class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50">
-                <i class="fa-solid fa-file-contract text-3xl text-slate-300 mb-3 block"></i>
+                <FileSignature class="text-3xl text-slate-300 mb-3 block" />
                 <p class="text-sm text-slate-500">Belum ada kebijakan. Klik "Tambah Kebijakan" untuk mulai.</p>
             </div>
 
             <div v-for="(policy, idx) in form.policies" :key="idx" class="border border-slate-300 rounded-lg p-5 space-y-4 relative bg-white shadow-sm">
                 <button type="button" @click="emit('removePolicy', idx)"
                     class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition text-sm cursor-pointer">
-                    <i class="fa-solid fa-trash"></i>
+                    <Trash2 class="" />
                 </button>
                 <div class="pr-10">
                     <label class="text-sm font-semibold text-slate-700 block mb-1.5">Judul Kebijakan <span class="text-rose-500">*</span></label>
@@ -72,14 +73,14 @@ const emit = defineEmits(['addFaq', 'removeFaq', 'addPolicy', 'removePolicy']);
             </div>
 
             <div v-if="form.faqs.length === 0" class="border-2 border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50">
-                <i class="fa-solid fa-comments text-3xl text-slate-300 mb-3 block"></i>
+                <MessageCircle class="text-3xl text-slate-300 mb-3 block" />
                 <p class="text-sm text-slate-500">Belum ada FAQ. Klik "Tambah FAQ" untuk mulai.</p>
             </div>
 
             <div v-for="(faq, idx) in form.faqs" :key="idx" class="border border-slate-300 rounded-lg p-5 space-y-4 relative bg-white shadow-sm">
                 <button type="button" @click="emit('removeFaq', idx)"
                     class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition text-sm cursor-pointer">
-                    <i class="fa-solid fa-trash"></i>
+                    <Trash2 class="" />
                 </button>
                 <div class="pr-10">
                     <label class="text-sm font-semibold text-slate-700 block mb-1.5">Pertanyaan <span class="text-rose-500">*</span></label>

@@ -1,10 +1,13 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { ChevronDown, Search, X, Sliders, Bell, Loader2, History, Flame, ChevronRight, ChevronLeft, Check, HelpCircle, Headset, User, Shield, PieChart, LogOut } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed, watch, inject } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
 import StickySubNavSearch from '@/Components/UI/StickySubNavSearch.vue';
+import NoImageIcon from '@/Components/UI/Icons/NoImageIcon.vue';
 
 const isHome = computed(() => route().current('Home'));
 const isBantuan = computed(() => route().current('Bantuan.*'));
@@ -157,7 +160,7 @@ const initials = computed(() => {
             'fixed top-0 left-0 w-full z-[100] transition-all duration-300',
             isCurrentlyTransparent
                 ? 'bg-transparent shadow-none border-transparent'
-                : 'bg-white shadow-sm border-b border-[#6C757D]/10'
+                : (isHome ? 'bg-white shadow-sm lg:shadow-none border-b border-[#6C757D]/10 lg:border-b-0' : 'bg-white shadow-sm border-b border-[#6C757D]/10')
         ]"
     >
         <div class="w-full max-w-7xl mx-auto px-6 lg:px-8 transition-all duration-300">
@@ -210,7 +213,7 @@ const initials = computed(() => {
                                     class="w-4 h-4 rounded-full object-cover border border-white/20"
                                 />
                                 <span class="font-semibold text-xs">ID</span>
-                                <i class="fa-solid fa-chevron-down text-[8px] ml-0.5"></i>
+                                <ChevronDown class="text-[8px] ml-0.5" />
                             </div>
                         </div>
 
@@ -218,7 +221,7 @@ const initials = computed(() => {
                         <div v-else key="mobile-search" class="w-full py-1 flex items-center gap-2">
                             <div class="relative w-full flex items-center">
                                 <!-- Ikon Kaca Pembesar -->
-                                <i class="fa-solid fa-magnifying-glass absolute left-4 text-[#6C757D] text-xs"></i>
+                                <Search class="absolute left-4 text-[#6C757D] text-xs" />
 
                                 <!-- Fake Input Search -->
                                 <div
@@ -243,7 +246,7 @@ const initials = computed(() => {
                                     @click.stop="keywordQuery = ''"
                                     class="absolute right-9 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-[#6C757D] hover:text-[#0A2540] transition-colors z-10"
                                 >
-                                    <i class="fa-solid fa-xmark text-xs"></i>
+                                    <X class="text-xs" />
                                 </button>
 
                                 <!-- Tombol Filter Mini (Kanan) -->
@@ -251,13 +254,13 @@ const initials = computed(() => {
                                     @click="isMobileSearchOpen = true"
                                     class="absolute right-1 w-7 h-7 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-full flex items-center justify-center active:scale-90 transition-transform shadow-sm"
                                 >
-                                    <i class="fa-solid fa-sliders text-[10px] font-bold"></i>
+                                    <Sliders class="text-[10px] font-bold" />
                                 </button>
                             </div>
 
                             <!-- Notification Button -->
                             <button class="w-9 h-9 flex-shrink-0 bg-white border border-gray-200/80 rounded-full flex items-center justify-center text-[#0A2540] active:scale-95 transition-transform shadow-sm">
-                                <i class="fa-regular fa-bell text-sm"></i>
+                                <Bell class="text-sm" />
                             </button>
                         </div>
                     </Transition>
@@ -333,7 +336,7 @@ const initials = computed(() => {
                                 @click.stop="keywordQuery = ''; desktopNavActiveMenu = null;"
                                 class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center text-[#6C757D] hover:text-[#0A2540] transition-colors z-[60]"
                             >
-                                <i class="fa-solid fa-xmark text-[10px]"></i>
+                                <X class="text-[10px]" />
                             </button>
                         </div>
 
@@ -342,7 +345,7 @@ const initials = computed(() => {
                             @click="handleNavSearch"
                             class="flex-shrink-0 w-[38px] h-[38px] bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-r-lg rounded-l-none flex items-center justify-center active:scale-90 transition-transform shadow-sm z-50 border border-[#FFC000]"
                         >
-                            <i class="fa-solid fa-magnifying-glass text-xs font-bold"></i>
+                            <Search class="text-xs font-bold" />
                         </button>
 
                         <!-- Dropdown Modal -->
@@ -354,7 +357,7 @@ const initials = computed(() => {
                             leave-from-class="transform scale-100 opacity-100 translate-y-0"
                             leave-to-class="transform scale-95 opacity-0 -translate-y-4"
                         >
-                            <div v-if="desktopNavActiveMenu" class="absolute top-[120%] right-0 w-[340px] bg-white rounded-2xl shadow-xl border border-[#6C757D]/10 p-5 z-50 origin-top flex flex-col max-h-[75vh] overflow-y-auto hide-scrollbar transition-all duration-300 overscroll-contain">
+                            <div v-if="desktopNavActiveMenu" class="absolute top-[120%] left-0 w-[340px] bg-white rounded-2xl shadow-xl border border-[#6C757D]/10 p-5 z-50 origin-top-left flex flex-col max-h-[75vh] overflow-y-auto hide-scrollbar transition-all duration-300 overscroll-contain">
 
                                 <!-- Keyword Search Modal -->
                                 <div v-if="desktopNavActiveMenu === 'keyword'">
@@ -363,12 +366,12 @@ const initials = computed(() => {
                                     <template v-if="keywordQuery.length >= 2">
                                         <div class="flex items-center justify-between mb-3">
                                             <h2 class="text-sm font-extrabold text-[#0A2540]">Saran Pencarian</h2>
-                                            <i v-if="isLoadingSuggestions" class="fa-solid fa-spinner fa-spin text-[#6C757D] text-xs"></i>
+                                            <Loader2 v-if="isLoadingSuggestions" class="text-[#6C757D] text-xs animate-spin" />
                                         </div>
                                         <div v-if="suggestions.length > 0" class="flex flex-col gap-0.5 mb-4">
                                             <div v-for="s in suggestions" :key="s.text" @click="applySuggestion(s.text)" class="flex items-center gap-3 cursor-pointer hover:bg-[#F8F9FA] p-2 -mx-2 rounded-xl transition">
                                                 <div class="w-6 h-6 rounded-full bg-gray-100 text-[#6C757D] flex items-center justify-center flex-shrink-0">
-                                                    <i :class="s.icon + ' text-[10px]'"></i>
+                                                    <AppIcon :iconClass="s.icon + ' text-[10px]'" />
                                                 </div>
                                                 <span class="text-xs font-medium text-[#0A2540]">{{ s.text }}</span>
                                                 <span class="ml-auto text-[9px] text-[#6C757D] capitalize">{{ s.type === 'history' ? 'riwayat' : s.type === 'category' ? 'kategori' : s.type === 'location' ? 'lokasi' : s.type === 'popular' ? 'populer' : 'aset' }}</span>
@@ -386,7 +389,7 @@ const initials = computed(() => {
                                             </div>
                                             <div class="flex flex-wrap gap-2 mb-5">
                                                 <div v-for="item in searchHistory" :key="item" @click="applySuggestion(item)" class="flex items-center gap-1.5 px-3 py-1.5 bg-[#F8F9FA] text-[#0A2540] border border-[#6C757D]/20 rounded-full text-xs font-medium cursor-pointer hover:bg-gray-100 transition">
-                                                    <i class="fa-solid fa-clock-rotate-left text-[9px] text-[#6C757D]"></i>
+                                                    <History class="text-[9px] text-[#6C757D]" />
                                                     {{ item }}
                                                 </div>
                                             </div>
@@ -398,7 +401,7 @@ const initials = computed(() => {
                                             <div class="flex flex-col gap-1">
                                                 <div v-for="item in trending" :key="item" @click="applySuggestion(item)" class="flex items-center gap-3 cursor-pointer group hover:bg-[#F8F9FA] p-2 -mx-2 rounded-xl transition">
                                                     <div class="w-7 h-7 rounded-full bg-[#FFC000]/10 text-[#FFC000] flex items-center justify-center flex-shrink-0">
-                                                        <i class="fa-solid fa-fire text-[10px]"></i>
+                                                        <Flame class="text-[10px]" />
                                                     </div>
                                                     <span class="text-xs font-medium text-[#0A2540]">{{ item }}</span>
                                                 </div>
@@ -422,32 +425,32 @@ const initials = computed(() => {
                                                 <span class="text-xs font-bold text-[#0A2540]">Jenis Aset</span>
                                                 <span class="text-[11px] text-[#6C757D] truncate">{{ selectedAssets.length > 0 ? selectedAssets.join(', ') : 'Semua Jenis' }}</span>
                                             </div>
-                                            <i class="fa-solid fa-chevron-right text-[#6C757D] text-[10px]"></i>
+                                            <ChevronRight class="text-[#6C757D] text-[10px]" />
                                         </div>
                                         <div @click="desktopNavActiveMenu = 'lokasi'" class="p-3 border border-[#6C757D]/20 rounded-xl hover:bg-[#F8F9FA] cursor-pointer transition flex items-center justify-between">
                                             <div class="flex flex-col flex-1 truncate pr-2">
                                                 <span class="text-xs font-bold text-[#0A2540]">Lokasi</span>
                                                 <span class="text-[11px] text-[#6C757D] truncate">{{ searchQuery || 'Semua Lokasi' }}</span>
                                             </div>
-                                            <i class="fa-solid fa-chevron-right text-[#6C757D] text-[10px]"></i>
+                                            <ChevronRight class="text-[#6C757D] text-[10px]" />
                                         </div>
                                         <div @click="desktopNavActiveMenu = 'jadwal'" class="p-3 border border-[#6C757D]/20 rounded-xl hover:bg-[#F8F9FA] cursor-pointer transition flex items-center justify-between">
                                             <div class="flex flex-col flex-1 truncate pr-2">
                                                 <span class="text-xs font-bold text-[#0A2540]">Jadwal</span>
                                                 <span class="text-[11px] text-[#6C757D] truncate">{{ formattedSchedule || 'Pilih Tanggal' }}</span>
                                             </div>
-                                            <i class="fa-solid fa-chevron-right text-[#6C757D] text-[10px]"></i>
+                                            <ChevronRight class="text-[#6C757D] text-[10px]" />
                                         </div>
                                         <div @click="desktopNavActiveMenu = 'harga'" class="p-3 border border-[#6C757D]/20 rounded-xl hover:bg-[#F8F9FA] cursor-pointer transition flex items-center justify-between">
                                             <div class="flex flex-col flex-1 truncate pr-2">
                                                 <span class="text-xs font-bold text-[#0A2540]">Harga</span>
                                                 <span class="text-[11px] text-[#6C757D] truncate">{{ (parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Budget Anda' }}</span>
                                             </div>
-                                            <i class="fa-solid fa-chevron-right text-[#6C757D] text-[10px]"></i>
+                                            <ChevronRight class="text-[#6C757D] text-[10px]" />
                                         </div>
                                     </div>
                                     <button @click="handleNavSearch" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold py-2.5 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-[13px]">
-                                        <i class="fa-solid fa-magnifying-glass"></i>
+                                        <Search class="" />
                                         Terapkan Filter
                                     </button>
                                 </div>
@@ -456,7 +459,7 @@ const initials = computed(() => {
                                 <div v-if="['aset', 'lokasi', 'jadwal', 'harga'].includes(desktopNavActiveMenu)">
                                     <div class="flex items-center gap-2 mb-4">
                                         <button @click="desktopNavActiveMenu = 'filter'" class="w-6 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
-                                            <i class="fa-solid fa-chevron-left text-xs text-[#6C757D]"></i>
+                                            <ChevronLeft class="text-xs text-[#6C757D]" />
                                         </button>
                                         <h2 class="text-sm font-extrabold text-[#0A2540] capitalize">{{ desktopNavActiveMenu === 'aset' ? 'Jenis Aset' : desktopNavActiveMenu }}</h2>
                                     </div>
@@ -464,14 +467,14 @@ const initials = computed(() => {
                                     <!-- JENIS ASET -->
                                     <div v-if="desktopNavActiveMenu === 'aset'" class="w-full">
                                         <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#0A2540] focus-within:ring-2 focus-within:ring-[#0A2540]/20 transition">
-                                            <i class="fa-solid fa-magnifying-glass text-[#0A2540] pl-1 text-sm"></i>
+                                            <Search class="text-[#0A2540] pl-1 text-sm" />
                                             <input v-model="assetSearchQuery" type="text" placeholder="Cari jenis aset..." class="w-full outline-none text-[#0A2540] font-medium text-sm bg-transparent">
                                         </div>
                                         <div class="space-y-4 max-h-[250px] overflow-y-auto pr-2 overscroll-contain">
                                             <div v-if="!assetSearchQuery" class="space-y-2">
                                                 <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
                                                     <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.length === 0}">
-                                                        <i v-if="selectedAssets.length === 0" class="fa-solid fa-check text-white text-[10px]"></i>
+                                                        <Check v-if="selectedAssets.length === 0" class="text-white text-[10px]" />
                                                     </div>
                                                     <span class="text-sm font-bold text-[#0A2540]">Semua</span>
                                                     <input type="checkbox" :checked="selectedAssets.length === 0" @change="selectedAssets = []" class="hidden">
@@ -482,7 +485,7 @@ const initials = computed(() => {
                                                 <div class="space-y-2">
                                                     <label v-for="item in cat.items" :key="item" class="flex items-center gap-3 cursor-pointer group p-1">
                                                         <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(item)}">
-                                                            <i v-if="selectedAssets.includes(item)" class="fa-solid fa-check text-white text-[10px]"></i>
+                                                            <Check v-if="selectedAssets.includes(item)" class="text-white text-[10px]" />
                                                         </div>
                                                         <span class="text-sm font-medium text-[#0A2540]">{{ item }}</span>
                                                         <input type="checkbox" :value="item" class="hidden" @change="toggleAsset(item)">
@@ -496,7 +499,7 @@ const initials = computed(() => {
                                     <!-- LOKASI -->
                                     <div v-else-if="desktopNavActiveMenu === 'lokasi'" class="w-full">
                                         <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#0A2540] focus-within:ring-2 focus-within:ring-[#0A2540]/20 transition">
-                                            <i class="fa-solid fa-magnifying-glass text-[#0A2540] pl-1 text-sm"></i>
+                                            <Search class="text-[#0A2540] pl-1 text-sm" />
                                             <input v-model="searchQuery" type="text" placeholder="Cari destinasi..." class="w-full outline-none text-[#0A2540] font-medium text-sm bg-transparent">
                                         </div>
 
@@ -504,7 +507,7 @@ const initials = computed(() => {
                                         <div class="space-y-2 max-h-[250px] overflow-y-auto pr-2 overscroll-contain">
                                             <div v-for="item in filteredLocations" :key="item.id" @click="searchQuery = item.title; desktopNavActiveMenu = 'filter'" class="flex gap-3 items-center cursor-pointer group hover:bg-gray-50 p-2 -mx-2 rounded-xl transition">
                                                 <div :class="`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${item.bg}`">
-                                                    <i :class="`${item.icon} ${item.iconColor} text-xs`"></i>
+                                                    <AppIcon :iconClass="`${item.icon} ${item.iconColor} text-xs`" />
                                                 </div>
                                                 <div class="border-b border-[#6C757D]/10 pb-2 pt-1 w-full group-last:border-0">
                                                     <h4 class="font-bold text-[12px] text-[#0A2540]">{{ item.title }}</h4>
@@ -518,11 +521,11 @@ const initials = computed(() => {
                                     <div v-else-if="desktopNavActiveMenu === 'jadwal'" class="w-full flex flex-col">
                                         <div class="flex justify-between items-center mb-4 px-2">
                                             <button @click="prevDesktopMonth" class="w-6 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center transition" :class="desktopCalendarPage === 0 ? 'opacity-30 cursor-not-allowed' : ''">
-                                                <i class="fa-solid fa-chevron-left text-[#0A2540] text-xs"></i>
+                                                <ChevronLeft class="text-[#0A2540] text-xs" />
                                             </button>
                                             <h3 class="text-sm font-bold text-[#0A2540]">{{ monthsData[desktopCalendarPage]?.title }}</h3>
                                             <button @click="nextDesktopMonth" class="w-6 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
-                                                <i class="fa-solid fa-chevron-right text-[#0A2540] text-xs"></i>
+                                                <ChevronRight class="text-[#0A2540] text-xs" />
                                             </button>
                                         </div>
 
@@ -704,7 +707,7 @@ const initials = computed(() => {
                             class="w-5 h-5 rounded-full object-cover border border-white/20"
                         />
                         <span class="font-semibold text-xs">ID</span>
-                        <i class="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
+                        <ChevronDown class="text-[10px] ml-0.5" />
                     </div>
 
                     <!-- Desktop User Actions -->
@@ -757,21 +760,21 @@ const initials = computed(() => {
                                 >
                                     <!-- 1. Pusat Bantuan -->
                                     <Link :href="route('bantuan')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
-                                        <i class="fa-regular fa-circle-question text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
+                                        <HelpCircle class="text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                                         <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pusat Bantuan</span>
                                     </Link>
 
                                     <div class="h-px bg-gray-100 my-2"></div>
 
                                     <Link :href="route('hubungi-kami')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
-                                        <i class="fa-solid fa-headset text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
+                                        <Headset class="text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                                         <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pelayanan Pelanggan</span>
                                     </Link>
 
                                     <div class="h-px bg-gray-100 my-2"></div>
 
                                     <Link :href="route('profile.edit')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
-                                        <i class="fa-regular fa-user text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
+                                        <User class="text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                                         <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Profile</span>
                                     </Link>
 
@@ -787,7 +790,7 @@ const initials = computed(() => {
                                             <!-- Ilustrasi (Ditempatkan di sudut kanan) -->
                                             <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
                                                 <div class="w-full h-full flex items-center justify-end pr-4 text-[#0A2540] opacity-10 group-hover:opacity-20 transition-opacity">
-                                                    <i class="fa-solid fa-shield-halved text-5xl"></i>
+                                                    <Shield class="text-5xl" />
                                                 </div>
                                             </div>
 
@@ -813,7 +816,7 @@ const initials = computed(() => {
                                         >
                                             <!-- Ilustrasi SVG (Ditempatkan di sudut kanan) -->
                                             <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
-                                                <img src="/no-image.svg" alt="Ilustrasi Rumah" class="w-full object-contain object-bottom drop-shadow-sm group-hover:scale-105 transition-transform" />
+                                                <NoImageIcon class="w-full object-contain object-bottom drop-shadow-sm group-hover:scale-105 transition-transform" />
                                             </div>
 
                                             <!-- Konten Teks -->
@@ -837,7 +840,7 @@ const initials = computed(() => {
                                             class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1 block"
                                         >
                                             <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
-                                                <img src="/no-image.svg" alt="Ilustrasi Rumah" class="w-full object-contain object-bottom drop-shadow-sm group-hover:scale-105 transition-transform" />
+                                                <NoImageIcon class="w-full object-contain object-bottom drop-shadow-sm group-hover:scale-105 transition-transform" />
                                             </div>
 
                                             <div class="relative z-10 w-2/3 pr-2">
@@ -863,7 +866,7 @@ const initials = computed(() => {
                                             <!-- Ilustrasi (Ditempatkan di sudut kanan) -->
                                             <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
                                                 <div class="w-full h-full flex items-center justify-end pr-4 text-[#0A2540] opacity-10 group-hover:opacity-20 transition-opacity">
-                                                    <i class="fa-solid fa-chart-pie text-5xl"></i>
+                                                    <PieChart class="text-5xl" />
                                                 </div>
                                             </div>
 
@@ -889,7 +892,7 @@ const initials = computed(() => {
                                             @click="isUserMenuOpen = false"
                                             class="w-full text-left text-sm font-bold text-red-600 hover:text-red-700 py-1.5 transition flex items-center gap-2.5"
                                         >
-                                            <i class="fa-solid fa-right-from-bracket text-xs"></i>
+                                            <LogOut class="text-xs" />
                                             Keluar
                                         </Link>
                                     </div>

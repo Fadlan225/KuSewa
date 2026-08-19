@@ -1,4 +1,5 @@
 <script setup>
+import { ArrowLeft, Star } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -67,7 +68,7 @@ const submitReview = () => {
                 <template #content>
                     <div class="flex items-center justify-between w-full">
                         <Link :href="route('aktivitas.index')" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
-                            <i class="fa-solid fa-arrow-left text-[#0A2540]"></i>
+                            <ArrowLeft class="text-[#0A2540]" />
                         </Link>
                         <div class="text-center">
                             <h1 class="font-bold text-gray-900 leading-tight">Penyewaan Selesai</h1>
@@ -92,7 +93,7 @@ const submitReview = () => {
                         <p class="text-gray-800 font-bold md:text-lg mb-1 md:text-center">{{ asset.name }}</p>
                         <p class="text-sm text-gray-500 md:text-center">Host: {{ asset.host }}</p>
                         <div class="flex items-center justify-center gap-1.5 mt-2">
-                            <i class="fa-solid fa-star text-[#FFC000] text-lg"></i>
+                            <Star class="text-[#FFC000] text-lg" />
                             <span class="font-bold text-gray-800 text-lg">{{ asset.rating }}</span>
                         </div>
                     </div>
@@ -116,9 +117,8 @@ const submitReview = () => {
                             @mouseleave="hoverRating = 0"
                             class="text-4xl transition-transform hover:scale-110 focus:outline-none"
                         >
-                            <i class="fa-solid fa-star"
-                               :class="(hoverRating || form.rating) >= star ? 'text-[#FFC000]' : 'text-gray-200'">
-                            </i>
+                            <Star class=""
+                               :class="(hoverRating || form.rating) >= star ? 'text-[#FFC000]' : 'text-gray-200'" />
                         </button>
                     </div>
 

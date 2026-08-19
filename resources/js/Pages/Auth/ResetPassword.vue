@@ -1,4 +1,5 @@
 <script setup>
+import { Lock, Shield, ArrowLeft } from 'lucide-vue-next';
 import { Head, Link } from '@inertiajs/vue3';
 import { provide, ref } from 'vue';
 import AuthFlow from '@/Components/Auth/AuthFlow.vue';
@@ -62,13 +63,13 @@ provide('initialAuthData', initialAuthData);
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 text-sm text-gray-200 mt-4">
                     <div class="flex items-center gap-3">
                         <div class="p-2.5 rounded-lg bg-[#FFC107]/20 text-[#FFC107] backdrop-blur-sm border border-[#FFC107]/20">
-                            <i class="fa-solid fa-lock"></i>
+                            <Lock class="" />
                         </div>
                         <p class="font-medium">Gunakan Kombinasi Unik</p>
                     </div>
                     <div class="flex items-center gap-3">
                         <div class="p-2.5 rounded-lg bg-[#FFC107]/20 text-[#FFC107] backdrop-blur-sm border border-[#FFC107]/20">
-                            <i class="fa-solid fa-shield-halved"></i>
+                            <Shield class="" />
                         </div>
                         <p class="font-medium">Keamanan Terjamin</p>
                     </div>
@@ -80,7 +81,7 @@ provide('initialAuthData', initialAuthData);
                 <div class="w-full max-w-[420px] flex flex-col">
                     <!-- Back Button (Desktop) -->
                     <Link :href="route('Home')" class="hidden md:flex items-center gap-2 text-white hover:text-[#FFC000] font-medium text-sm mb-4 transition-colors w-fit">
-                        <i class="fa-solid fa-arrow-left"></i>
+                        <ArrowLeft class="" />
                         Ke Halaman Utama KuSewa
                     </Link>
 

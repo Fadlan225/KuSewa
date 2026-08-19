@@ -1,4 +1,5 @@
 <script setup>
+import { FileEdit, Clock, XCircle, CheckCircle, Power, Image, ChevronRight } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
 import { router } from '@inertiajs/vue3';
@@ -67,23 +68,23 @@ const formatRupiah = (value) => {
             <div class="absolute top-3 -left-1.5 z-20 pointer-events-none flex flex-col gap-1 items-start">
                 <!-- Status Verification Badge -->
                 <div v-if="asset.verification_status === 'draft'" class="relative bg-slate-200 text-slate-700 text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
-                    <i class="fa-solid fa-file-pen mr-1"></i>Draft
+                    <FileEdit class="mr-1" />Draft
                     <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-slate-400 border-l-[6px] border-l-transparent"></div>
                 </div>
                 <div v-else-if="asset.verification_status === 'pending'" class="relative bg-[#FFC000] text-[#0A2540] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
-                    <i class="fa-solid fa-clock mr-1"></i>Menunggu
+                    <Clock class="mr-1" />Menunggu
                     <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-[#B38600] border-l-[6px] border-l-transparent"></div>
                 </div>
                 <div v-else-if="asset.verification_status === 'rejected'" class="relative bg-rose-600 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
-                    <i class="fa-solid fa-xmark-circle mr-1"></i>Ditolak
+                    <XCircle class="mr-1" />Ditolak
                     <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-rose-800 border-l-[6px] border-l-transparent"></div>
                 </div>
                 <div v-else-if="asset.verification_status === 'approved'" class="relative bg-[#FFC000] text-[#0A2540] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
-                    <i class="fa-solid fa-check-circle mr-1"></i>Terverifikasi
+                    <CheckCircle class="mr-1" />Terverifikasi
                     <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-[#B38600] border-l-[6px] border-l-transparent"></div>
                 </div>
                 <div v-else-if="asset.verification_status === 'inactive'" class="relative bg-slate-500 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
-                    <i class="fa-solid fa-power-off mr-1"></i>Nonaktif
+                    <Power class="mr-1" />Nonaktif
                     <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-slate-700 border-l-[6px] border-l-transparent"></div>
                 </div>
             </div>
@@ -94,7 +95,7 @@ const formatRupiah = (value) => {
                 </div>
 
                 <div v-if="!img1 || asset.imageError" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-300 z-0">
-                    <i class="fa-solid fa-image text-3xl mb-1"></i>
+                    <Image class="text-3xl mb-1" />
                     <span class="text-[10px] font-medium">No Image</span>
                 </div>
                 <div v-else class="absolute inset-0 w-full h-full z-0">
@@ -141,7 +142,7 @@ const formatRupiah = (value) => {
                     </div>
                     
                     <div class="text-slate-300 group-hover:text-[#FFC000] transition-colors flex items-center justify-center pb-0.5 pr-0.5">
-                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                        <ChevronRight class="text-xs" />
                     </div>
                 </div>
             </div>

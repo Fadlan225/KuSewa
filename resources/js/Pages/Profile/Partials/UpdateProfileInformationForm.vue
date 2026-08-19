@@ -1,4 +1,5 @@
 <script setup>
+import { ChevronDown, Loader2 } from 'lucide-vue-next';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, watch, onMounted } from 'vue';
 import LocationSelect from '@/Components/UI/LocationSelect.vue';
@@ -143,7 +144,7 @@ const resetForm = () => {
                             <option value="female">Perempuan</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                            <i class="fa-solid fa-chevron-down text-gray-400 text-sm"></i>
+                            <ChevronDown class="text-gray-400 text-sm" />
                         </div>
                     </div>
                 </div>
@@ -170,7 +171,7 @@ const resetForm = () => {
                                 <option v-for="d in 31" :key="d" :value="d">{{ String(d).padStart(2, '0') }}</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                                <ChevronDown class="text-gray-400 text-xs" />
                             </div>
                         </div>
 
@@ -192,7 +193,7 @@ const resetForm = () => {
                                 <option :value="12">Desember</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                                <ChevronDown class="text-gray-400 text-xs" />
                             </div>
                         </div>
 
@@ -203,7 +204,7 @@ const resetForm = () => {
                                 <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                                <i class="fa-solid fa-chevron-down text-gray-400 text-xs"></i>
+                                <ChevronDown class="text-gray-400 text-xs" />
                             </div>
                         </div>
                     </div>
@@ -338,7 +339,7 @@ const resetForm = () => {
                     class="inline-flex items-center px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-200"
                     :class="form.isDirty ? 'bg-primary text-white hover:bg-primary/80 active:scale-95 shadow-md cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                 >
-                    <i v-if="form.processing" class="fa-solid fa-spinner fa-spin mr-2"></i>
+                    <Loader2 v-if="form.processing" class="mr-2 animate-spin" />
                     Simpan
                 </button>
             </div>

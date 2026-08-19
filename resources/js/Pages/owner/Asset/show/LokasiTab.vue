@@ -1,4 +1,5 @@
 <script setup>
+import { MapPin } from 'lucide-vue-next';
 const props = defineProps({
     asset: Object,
     form: Object,
@@ -44,7 +45,7 @@ const props = defineProps({
             <div class="w-full h-48 bg-slate-100 rounded-lg overflow-hidden relative flex items-center justify-center border border-slate-200 mt-4">
                 <div class="absolute inset-0 bg-cover bg-center opacity-50" style="background-image: url('https://map.viamichelin.com/map/carte?map=viamichelin&z=10&lat=-0.502&lon=117.153&width=800&height=400&format=png&version=latest&layer=background')"></div>
                 <div class="z-10 flex flex-col items-center bg-white/90 p-3 rounded-lg shadow-sm">
-                    <i class="fa-solid fa-location-dot text-rose-500 text-xl mb-1"></i>
+                    <MapPin class="text-rose-500 text-xl mb-1" />
                     <span class="font-bold text-xs text-slate-700">Peta belum diintegrasikan</span>
                 </div>
             </div>

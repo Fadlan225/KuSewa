@@ -1,4 +1,5 @@
 <script setup>
+import { Mail, Phone, Clock, MapPin, Facebook, Instagram, Twitter, Headset, AlertTriangle, Info, User, MessageSquareMore, Send } from 'lucide-vue-next';
 import { Head } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref } from 'vue';
@@ -51,7 +52,7 @@ const submitMasalah = () => {
                         <div class="space-y-6">
                             <div class="flex items-start gap-4">
                                 <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 text-xl">
-                                    <i class="fa-solid fa-envelope"></i>
+                                    <Mail class="" />
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-gray-900">Email</h4>
@@ -62,7 +63,7 @@ const submitMasalah = () => {
                             
                             <div class="flex items-start gap-4">
                                 <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0 text-xl">
-                                    <i class="fa-solid fa-phone"></i>
+                                    <Phone class="" />
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-gray-900">Telepon / WhatsApp</h4>
@@ -73,7 +74,7 @@ const submitMasalah = () => {
                             
                             <div class="flex items-start gap-4">
                                 <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center shrink-0 text-xl">
-                                    <i class="fa-solid fa-clock"></i>
+                                    <Clock class="" />
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-gray-900">Jam Operasional</h4>
@@ -85,7 +86,7 @@ const submitMasalah = () => {
                             
                             <div class="flex items-start gap-4">
                                 <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 text-xl">
-                                    <i class="fa-solid fa-location-dot"></i>
+                                    <MapPin class="" />
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-gray-900">Kantor Pusat</h4>
@@ -104,13 +105,13 @@ const submitMasalah = () => {
                         <h4 class="font-bold text-gray-900 mb-4">Ikuti Kami</h4>
                         <div class="flex justify-center gap-4">
                             <a href="#" class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors">
-                                <i class="fa-brands fa-facebook-f"></i>
+                                <Facebook class="" />
                             </a>
                             <a href="#" class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-pink-600 hover:text-white transition-colors">
-                                <i class="fa-brands fa-instagram"></i>
+                                <Instagram class="" />
                             </a>
                             <a href="#" class="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center hover:bg-blue-400 hover:text-white transition-colors">
-                                <i class="fa-brands fa-twitter"></i>
+                                <Twitter class="" />
                             </a>
                         </div>
                     </div>
@@ -122,10 +123,10 @@ const submitMasalah = () => {
                         <!-- Tabs -->
                         <div class="flex border-b border-gray-200">
                             <button @click="activeTab = 'admin'" :class="['flex-1 py-4 px-6 text-sm md:text-base font-bold text-center transition-colors', activeTab === 'admin' ? 'text-[var(--color-primary)] border-b-2 border-[var(--color-primary)] bg-gray-50/50' : 'text-gray-500 hover:bg-gray-50']">
-                                <i class="fa-solid fa-headset mr-2"></i> Hubungi Admin
+                                <Headset class="mr-2" /> Hubungi Admin
                             </button>
                             <button @click="activeTab = 'masalah'" :class="['flex-1 py-4 px-6 text-sm md:text-base font-bold text-center transition-colors', activeTab === 'masalah' ? 'text-red-500 border-b-2 border-red-500 bg-red-50/50' : 'text-gray-500 hover:bg-gray-50']">
-                                <i class="fa-solid fa-triangle-exclamation mr-2"></i> Laporkan Masalah
+                                <AlertTriangle class="mr-2" /> Laporkan Masalah
                             </button>
                         </div>
 
@@ -133,7 +134,7 @@ const submitMasalah = () => {
                             <!-- Form Hubungi Admin -->
                             <form v-if="activeTab === 'admin'" @submit.prevent="submitAdmin" class="space-y-5 animate-fade-in">
                                 <div class="bg-blue-50 border border-blue-100 text-blue-800 rounded-lg p-4 mb-6 flex gap-3 text-sm">
-                                    <i class="fa-solid fa-circle-info mt-0.5"></i>
+                                    <Info class="mt-0.5" />
                                     <p>Gunakan form ini untuk pertanyaan umum, penawaran kerjasama, atau informasi layanan KuSewa.</p>
                                 </div>
                                 
@@ -142,7 +143,7 @@ const submitMasalah = () => {
                                         <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
                                         <div class="relative">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <i class="fa-regular fa-user text-gray-400"></i>
+                                                <User class="text-gray-400" />
                                             </div>
                                             <input type="text" v-model="formAdmin.nama" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] text-sm" placeholder="Masukkan nama Anda">
                                         </div>
@@ -151,7 +152,7 @@ const submitMasalah = () => {
                                         <label class="block text-sm font-semibold text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
                                         <div class="relative">
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <i class="fa-regular fa-envelope text-gray-400"></i>
+                                                <Mail class="text-gray-400" />
                                             </div>
                                             <input type="email" v-model="formAdmin.email" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] text-sm" placeholder="nama@email.com">
                                         </div>
@@ -162,7 +163,7 @@ const submitMasalah = () => {
                                     <label class="block text-sm font-semibold text-gray-700 mb-1">Subjek <span class="text-red-500">*</span></label>
                                     <div class="relative">
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                            <i class="fa-regular fa-comment-dots text-gray-400"></i>
+                                            <MessageSquareMore class="text-gray-400" />
                                         </div>
                                         <input type="text" v-model="formAdmin.subjek" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] text-sm" placeholder="Topik pesan Anda">
                                     </div>
@@ -174,14 +175,14 @@ const submitMasalah = () => {
                                 </div>
                                 
                                 <button type="submit" class="w-full bg-[#0A2540] hover:bg-blue-900 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                    <i class="fa-regular fa-paper-plane"></i> Kirim Pesan
+                                    <Send class="" /> Kirim Pesan
                                 </button>
                             </form>
 
                             <!-- Form Laporkan Masalah -->
                             <form v-if="activeTab === 'masalah'" @submit.prevent="submitMasalah" class="space-y-5 animate-fade-in">
                                 <div class="bg-red-50 border border-red-100 text-red-800 rounded-lg p-4 mb-6 flex gap-3 text-sm">
-                                    <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                                    <AlertTriangle class="mt-0.5" />
                                     <p>Gunakan form ini untuk melaporkan masalah transaksi, bug aplikasi, penipuan, atau masalah serius lainnya.</p>
                                 </div>
                                 
@@ -225,7 +226,7 @@ const submitMasalah = () => {
                                 </div>
                                 
                                 <button type="submit" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
-                                    <i class="fa-solid fa-paper-plane"></i> Kirim Laporan
+                                    <Send class="" /> Kirim Laporan
                                 </button>
                             </form>
                         </div>

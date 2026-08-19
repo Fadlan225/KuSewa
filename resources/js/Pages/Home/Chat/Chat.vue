@@ -61,7 +61,7 @@
             <div class="bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
                 <img v-if="activeChat.assetImage" :src="activeChat.assetImage" :alt="activeChat.assetName" class="w-full h-32 object-cover rounded-lg mb-3">
                 <div v-else class="w-full h-32 bg-gray-50 flex items-center justify-center text-gray-400 rounded-lg mb-3">
-                    <i class="fa-solid fa-image text-3xl"></i>
+                    <Image class="text-3xl" />
                 </div>
                 <h4 class="font-medium text-gray-800 text-[15px] leading-tight mb-1">{{ activeChat.assetName }}</h4>
                 <p class="text-sm text-[#FFC000] font-bold mb-3">{{ activeChat.price }}</p>
@@ -82,6 +82,7 @@
 </template>
 
 <script setup>
+import { Image } from 'lucide-vue-next';
 import { ref, onMounted, computed, nextTick, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -119,14 +120,14 @@ const fetchChats = async () => {
 
     chatList.value = updatedChats;
 
-    // Auto select first chat if activeChatId is null and not mobile
-    if (!activeChatId.value && chatList.value.length > 0 && window.innerWidth >= 768) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const roomId = urlParams.get('room_id');
-      if (roomId) {
-        selectChat(parseInt(roomId));
-      }
-      // Dihapus agar chat tidak otomatis terbuka yang menyebabkan pesan langsung 'terbaca'
+    // Handle URL params for direct room opening
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomId = urlParams.get('room_id') || urlParams.get('room');
+    
+    if (roomId && !activeChatId.value) {
+      selectChat(parseInt(roomId));
+    } else if (!activeChatId.value && chatList.value.length > 0 && window.innerWidth >= 768) {
+      // Desktop default auto-open behavior (optional)
     }
   } catch (error) {
     console.error('Error fetching chats:', error);

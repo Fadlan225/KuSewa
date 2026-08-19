@@ -1,4 +1,5 @@
 <script setup>
+import { FolderPlus, Eye, Trash2, Loader2, Plus, Image, AlertTriangle } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import ImageViewerModal from '@/Components/UI/ImageViewerModal.vue';
@@ -141,7 +142,7 @@ const executeDelete = () => {
             <div class="border-b border-slate-100 bg-white px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h2 class="font-bold text-slate-800">Galeri Foto ({{ asset.images?.length || 0 }})</h2>
                 <button @click="showAddCategory = true" class="text-xs font-bold text-[#0A2540] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5 w-full sm:w-auto">
-                    <i class="fa-solid fa-folder-plus"></i> Tambah Kategori
+                    <FolderPlus class="" /> Tambah Kategori
                 </button>
             </div>
             
@@ -169,17 +170,17 @@ const executeDelete = () => {
                             <img :src="asset.thumbnail_images[0].image_url" class="w-full h-full object-cover" />
                             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                                 <button type="button" @click="openImageViewer(asset.thumbnail_images[0].image_url)" class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-blue-600 flex items-center justify-center shadow-sm" title="Lihat">
-                                    <i class="fa-solid fa-eye text-xs"></i>
+                                    <Eye class="text-xs" />
                                 </button>
                                 <button type="button" @click="confirmDelete(asset.thumbnail_images[0].id)" class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-rose-600 flex items-center justify-center shadow-sm" title="Hapus">
-                                    <i class="fa-solid fa-trash text-xs"></i>
+                                    <Trash2 class="text-xs" />
                                 </button>
                             </div>
                         </div>
                         <button v-else @click="triggerUpload('thumbnail')" :disabled="isUploading" class="aspect-square rounded-lg border-2 border-dashed border-slate-300 hover:border-[#0A2540] hover:bg-slate-50 bg-slate-50/50 flex flex-col items-center justify-center gap-2 transition group shadow-sm">
                             <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-[#0A2540] group-hover:scale-110 transition-transform">
-                                <i v-if="isUploading && uploadTargetCategoryId === 'thumbnail'" class="fa-solid fa-spinner fa-spin text-lg"></i>
-                                <i v-else class="fa-solid fa-plus text-lg"></i>
+                                <Loader2 v-if="isUploading && uploadTargetCategoryId === 'thumbnail'" class="text-lg animate-spin" />
+                                <Plus v-else class="text-lg" />
                             </div>
                             <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#0A2540]">
                                 {{ isUploading && uploadTargetCategoryId === 'thumbnail' ? 'Mengunggah...' : 'Unggah Thumbnail' }}
@@ -201,10 +202,10 @@ const executeDelete = () => {
                             <img :src="img.image_url" class="w-full h-full object-cover" />
                             <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
                                 <button type="button" @click="openImageViewer(img.image_url)" class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-blue-600 flex items-center justify-center shadow-sm" title="Lihat">
-                                    <i class="fa-solid fa-eye text-xs"></i>
+                                    <Eye class="text-xs" />
                                 </button>
                                 <button type="button" @click="confirmDelete(img.id)" class="w-8 h-8 rounded-full bg-white text-slate-700 hover:text-rose-600 flex items-center justify-center shadow-sm" title="Hapus">
-                                    <i class="fa-solid fa-trash text-xs"></i>
+                                    <Trash2 class="text-xs" />
                                 </button>
                             </div>
                         </div>
@@ -212,8 +213,8 @@ const executeDelete = () => {
                         <!-- Upload Button (Card +) -->
                         <button @click="triggerUpload(group.id)" :disabled="isUploading" class="aspect-square rounded-lg border-2 border-dashed border-slate-300 hover:border-[#0A2540] hover:bg-slate-50 bg-slate-50/50 flex flex-col items-center justify-center gap-2 transition group shadow-sm">
                             <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-[#0A2540] group-hover:scale-110 transition-transform">
-                                <i v-if="isUploading && uploadTargetCategoryId === group.id" class="fa-solid fa-spinner fa-spin text-lg"></i>
-                                <i v-else class="fa-solid fa-plus text-lg"></i>
+                                <Loader2 v-if="isUploading && uploadTargetCategoryId === group.id" class="text-lg animate-spin" />
+                                <Plus v-else class="text-lg" />
                             </div>
                             <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#0A2540]">
                                 {{ isUploading && uploadTargetCategoryId === group.id ? 'Mengunggah...' : 'Unggah Foto' }}
@@ -223,7 +224,7 @@ const executeDelete = () => {
                 </div>
                 
                 <div v-if="Object.keys(groupedImages).length === 0" class="text-center py-12">
-                    <i class="fa-solid fa-image text-4xl text-slate-200 mb-3"></i>
+                    <Image class="text-4xl text-slate-200 mb-3" />
                     <h3 class="font-bold text-slate-700 mb-1">Belum Ada Foto</h3>
                     <p class="text-sm text-slate-400">Properti tanpa foto akan sulit menarik perhatian penyewa.</p>
                 </div>
@@ -238,7 +239,7 @@ const executeDelete = () => {
             <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl overflow-hidden animate-in zoom-in-95 duration-200">
                 <div class="p-6 text-center">
                     <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-solid fa-triangle-exclamation text-2xl"></i>
+                        <AlertTriangle class="text-2xl" />
                     </div>
                     <h3 class="text-lg font-bold text-slate-800 mb-2">Hapus Foto?</h3>
                     <p class="text-sm text-slate-500">Tindakan ini tidak dapat dibatalkan. Foto akan dihapus secara permanen.</p>

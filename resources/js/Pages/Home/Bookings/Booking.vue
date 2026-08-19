@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { AlertCircle, X, Lock, AlertTriangle } from 'lucide-vue-next';
 import AppLayout from '@/Layouts/AppLayout.vue'
 import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue'
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue'
@@ -35,6 +37,17 @@ const rentalMode = props.requestParams?.rental_mode || props.asset?.type?.rental
 // Pesan error inline untuk booking conflict / error lainnya
 const bookingError = ref('')
 
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const getInitialDate = (dateStr, isHour) => {
+    if (!dateStr) return '';
+    const raw = isHour ? dateStr : dateStr.split(' ')[0];
+    const d = new Date(raw.replace(' ', 'T'));
+    if (d < today) return '';
+    return raw;
+};
+
 const form = useForm({
   asset_id: props.asset?.id || null,
   pricing_id: props.requestParams?.pricing_id || null,
@@ -47,14 +60,8 @@ const form = useForm({
   untukSaya: true,
   namaTamu: user?.name || '',
   guest_name: user?.name || '',
-  // Untuk mode JAM: simpan full datetime ("2026-07-30 09:00:00") agar overlap check per-jam berjalan
-  // Untuk mode lain: simpan date only ("2026-07-30")
-  startDate: rentalMode === 'hour'
-    ? (props.requestParams?.date_start || '')
-    : (props.requestParams?.date_start?.split(' ')[0] || ''),
-  endDate: rentalMode === 'hour'
-    ? (props.requestParams?.date_end || '')
-    : (props.requestParams?.date_end?.split(' ')[0] || ''),
+  startDate: getInitialDate(props.requestParams?.date_start, rentalMode === 'hour'),
+  endDate: getInitialDate(props.requestParams?.date_end, rentalMode === 'hour'),
   duration: props.requestParams?.duration ? Number(props.requestParams.duration) : 1,
   rental_mode: rentalMode,
   payment_method: props.bankAccounts?.length ? props.bankAccounts[0].id : null
@@ -108,6 +115,11 @@ const estimatedEndDate = computed(() => {
 const estimatedEndDateLabel = computed(() => {
     if (!estimatedEndDate.value) return '—';
     return estimatedEndDate.value.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+})
+
+const startDateLabel = computed(() => {
+    if (!form.startDate) return '—';
+    return new Date(form.startDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 })
 
 const flatpickrConfig = computed(() => {
@@ -169,10 +181,11 @@ const submitBooking = () => {
         },
         onError: (errors) => {
             console.error('Booking errors:', errors)
-            if (errors.startDate) {
-                bookingError.value = errors.startDate
-            } else if (errors.endDate) {
-                bookingError.value = errors.endDate
+            
+            // Ambil pesan error pertama dari semua validasi yang gagal
+            const errorMessages = Object.values(errors);
+            if (errorMessages.length > 0) {
+                bookingError.value = errorMessages[0];
             } else {
                 bookingError.value = 'Terjadi kesalahan. Silakan periksa kembali data Anda.'
             }
@@ -210,6 +223,8 @@ const displayedBanks = computed(() => {
             :showSections="false"
             :showShare="false"
             :showFavorite="false"
+            :showBackButton="true"
+            :forceBackUrl="true"
             :backUrl="asset?.slug ? `/assets/${asset.slug}` : '/'"
         />
         <div class="min-h-screen bg-slate-50/60 text-slate-800 font-sans antialiased pb-28 lg:pb-16">
@@ -225,13 +240,13 @@ const displayedBanks = computed(() => {
                     leave-to-class="opacity-0 -translate-y-2"
                 >
                     <div v-if="bookingError" class="mb-5 flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 rounded-2xl px-5 py-4">
-                        <i class="fa-solid fa-circle-exclamation mt-0.5 text-red-500 shrink-0"></i>
+                        <AlertCircle class="mt-0.5 text-red-500 shrink-0" />
                         <div class="flex-1">
                             <p class="text-sm font-semibold">Pemesanan Gagal</p>
                             <p class="text-xs mt-0.5 text-red-700">{{ bookingError }}</p>
                         </div>
                         <button @click="bookingError = ''" class="text-red-400 hover:text-red-600 transition-colors ml-2">
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
                 </transition>
@@ -295,8 +310,9 @@ const displayedBanks = computed(() => {
                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">No. Handphone*</label>
                         <div class="flex">
                             <span class="inline-flex items-center px-3 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-xs font-semibold text-slate-600">+62</span>
-                            <input type="text" v-model="form.phone" class="w-full px-3.5 py-2.5 rounded-r-xl border border-slate-200 focus:border-[#ffc000] focus:ring-4 focus:ring-[#ffc000]/20 transition-all text-sm outline-none bg-slate-50/50 focus:bg-white" />
+                            <input type="text" v-model="form.phone" required class="w-full px-3.5 py-2.5 rounded-r-xl border border-slate-200 focus:border-[#ffc000] focus:ring-4 focus:ring-[#ffc000]/20 transition-all text-sm outline-none bg-slate-50/50 focus:bg-white" />
                         </div>
+                        <span v-if="!form.phone" class="text-[11px] text-red-500 font-medium mt-1 block">* Wajib diisi agar pemilik aset bisa menghubungi Anda.</span>
                         </div>
                         <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">Email*</label>
@@ -329,7 +345,7 @@ const displayedBanks = computed(() => {
                         :class="form.untukSaya ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-slate-50/50 focus:bg-white'"
                     />
                     <span v-if="form.untukSaya" class="text-[11px] text-slate-400 mt-1 block flex items-center gap-1">
-                        <i class="fa-solid fa-lock text-[9px]"></i>
+                        <Lock class="text-[9px]" />
                         Diisi otomatis sesuai data pemesan.
                     </span>
                     </div>
@@ -368,13 +384,13 @@ const displayedBanks = computed(() => {
                                     </div>
                                     <span class="text-[11px] font-bold text-slate-400 font-mono">{{ bank.account_number }}</span>
                                 </div>
-                                
+
                                 <!-- Tombol Lihat Lebih Banyak -->
                                 <button v-if="bankAccounts.length > 3" @click="showAllBanks = !showAllBanks" type="button" class="w-full mt-2 py-2 text-xs font-semibold text-[#0A2540] hover:bg-[#0A2540]/5 rounded-xl transition-colors border border-transparent hover:border-[#0A2540]/10 flex items-center justify-center gap-1">
                                     {{ showAllBanks ? 'Tampilkan Lebih Sedikit' : 'Lihat ' + (bankAccounts.length - 3) + ' Rekening Lainnya' }}
-                                    <i class="fa-solid" :class="showAllBanks ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                    <AppIcon :iconClass="showAllBanks ? 'fa-chevron-up' : 'fa-chevron-down'"  />
                                 </button>
-                                
+
                                 <!-- Empty State -->
                                 <div v-if="bankAccounts.length === 0" class="text-center text-xs text-slate-500 py-4">
                                     Belum ada metode pembayaran yang tersedia.
@@ -405,15 +421,14 @@ const displayedBanks = computed(() => {
 
                     <div class="border border-slate-200 rounded-xl overflow-hidden">
                         <!-- Tanggal Mulai -->
-                        <div class="p-3.5 cursor-pointer hover:bg-slate-50 transition-colors border-b border-slate-200">
+                        <div class="p-3.5 bg-slate-50/80 border-b border-slate-200">
                             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Tanggal Mulai Sewa</label>
-                            <flat-pickr v-model="form.startDate" :config="flatpickrConfig" class="w-full text-sm font-bold text-slate-800 bg-transparent border-none p-0 focus:ring-0 cursor-pointer outline-none placeholder:text-slate-400 placeholder:font-medium" placeholder="Pilih Tanggal Mulai"></flat-pickr>
+                            <div class="text-sm font-bold" :class="form.startDate ? 'text-slate-800' : 'text-slate-400'">{{ startDateLabel }}</div>
                         </div>
                         <!-- Estimasi End Date (Read-only, auto dari pricing) -->
                         <div class="p-3.5 bg-slate-50/80 border-b border-slate-200">
                             <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Estimasi Selesai</label>
                             <div class="text-sm font-bold" :class="estimatedEndDate ? 'text-slate-800' : 'text-slate-400'">{{ estimatedEndDateLabel }}</div>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Dihitung otomatis dari paket</p>
                         </div>
                         <!-- Durasi (Read-only, dari pricing) -->
                         <div class="p-3.5 flex justify-between items-center bg-slate-50">
@@ -424,7 +439,7 @@ const displayedBanks = computed(() => {
 
                     <!-- BUG 7 FIX: Tampilkan pesan jika tidak ada pricing -->
                 <div v-if="!effectivePrice" class="bg-amber-50 border border-amber-200 rounded-xl p-4 text-center text-amber-700 text-xs font-semibold mb-2">
-                    <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                    <AlertTriangle class="mr-1" />
                     Harga sewa belum tersedia. Hubungi pemilik.
                 </div>
 
@@ -464,7 +479,7 @@ const displayedBanks = computed(() => {
             <DetailBottomBar
                 :price="totalPrice"
                 :durationCount="selectedPricing?.duration || 1"
-                :durationLabel="pricingPackageLabel"
+                :durationLabel="displayRentalUnit"
                 :disabled="form.processing || !form.payment_method || !effectivePrice"
                 buttonText="Pesan Sekarang"
                 @submit="submitBooking"

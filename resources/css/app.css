@@ -28,3 +28,12 @@ html { scroll-behavior: smooth; }
 .hide-scrollbar::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
 }
+
+/* Global Lucide Icon Styles to match FontAwesome scaling and make them thinner */
+svg.lucide {
+    width: 1em;
+    height: 1em;
+    stroke-width: 1.5;
+    display: inline-block;
+    vertical-align: -0.125em;
+}

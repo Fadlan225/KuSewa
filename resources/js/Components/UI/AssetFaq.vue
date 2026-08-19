@@ -1,4 +1,5 @@
 <script setup>
+import { ChevronDown, HelpCircle } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 const props = defineProps({
@@ -35,10 +36,8 @@ const toggleFaq = (index) => {
                     class="w-full flex items-center justify-between p-5 text-left bg-white hover:bg-gray-50 transition-colors"
                 >
                     <span class="font-bold text-[#0A2540] pr-4 text-[15px]">{{ faq.question }}</span>
-                    <i 
-                        class="fa-solid fa-chevron-down text-gray-400 transition-transform duration-300"
-                        :class="{'rotate-180': openIndex === index}"
-                    ></i>
+                    <ChevronDown class="text-gray-400 transition-transform duration-300"
+                        :class="{'rotate-180': openIndex === index}" />
                 </button>
                 
                 <div 
@@ -52,7 +51,7 @@ const toggleFaq = (index) => {
 
         <div v-else class="flex flex-col items-center justify-center py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
             <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm border border-gray-100">
-                <i class="fa-solid fa-circle-question text-xl text-gray-300"></i>
+                <HelpCircle class="text-xl text-gray-300" />
             </div>
             <p class="text-sm font-bold text-gray-500">Belum ada FAQ</p>
             <p class="text-xs text-gray-400 mt-1">Pemilik belum menambahkan pertanyaan umum untuk aset ini</p>

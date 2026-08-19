@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import Sidebar from '@/Components/sidebar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
+import { X, Menu } from 'lucide-vue-next';
 
 import { getOwnerMenu, getAdminMenu } from '@/Config/menus';
 
@@ -50,7 +51,7 @@ watch(() => page.url, () => {
                 @click="showMobileMenu = !showMobileMenu"
                 class="w-9 h-9 flex items-center justify-center rounded-lg bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100 transition-colors"
             >
-                <i class="fa-solid text-sm transition-transform" :class="showMobileMenu ? 'fa-xmark' : 'fa-bars'"></i>
+                <component :is="showMobileMenu ? X : Menu" class="text-sm transition-transform w-5 h-5" />
             </button>
         </header>
 

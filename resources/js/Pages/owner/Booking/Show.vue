@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Image, Loader2, X, CheckCheck, CheckCircle, Flag, Clock, ArrowLeft } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -156,7 +158,7 @@ const bookingSubMenu = computed(() => [
                 <div class="flex items-center justify-between">
                     <h2 class="font-bold text-slate-800">Detail Pesanan</h2>
                     <span :class="['text-[10px] font-extrabold px-2.5 py-1 rounded-full flex items-center gap-1.5', statusClass(booking.status)]">
-                        <i :class="['fa-solid', statusIcon(booking.status)]"></i>
+                        <AppIcon :iconClass="['fa-solid', statusIcon(booking.status)]" />
                         {{ statusLabel(booking.status) }}
                     </span>
                 </div>
@@ -225,7 +227,7 @@ const bookingSubMenu = computed(() => [
                     <div v-if="booking.payment.proof">
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Bukti Pembayaran</span>
                         <a :href="booking.payment.proof" target="_blank" class="text-[#0A2540] font-bold underline hover:text-[#FFC000] transition text-xs flex items-center gap-1 mt-0.5">
-                            <i class="fa-solid fa-file-image"></i> Lihat Bukti
+                            <Image class="" /> Lihat Bukti
                         </a>
                     </div>
                 </div>
@@ -265,8 +267,8 @@ const bookingSubMenu = computed(() => [
                         :disabled="rejecting || verifyingPayment"
                         class="px-5 py-2.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
                     >
-                        <i v-if="rejecting" class="fa-solid fa-spinner animate-spin"></i>
-                        <i v-else class="fa-solid fa-xmark"></i>
+                        <Loader2 v-if="rejecting" class="animate-spin" />
+                        <X v-else class="" />
                         {{ rejecting ? 'Menolak...' : 'Tolak Pengajuan' }}
                     </button>
                     <button
@@ -274,8 +276,8 @@ const bookingSubMenu = computed(() => [
                         :disabled="verifyingPayment || rejecting"
                         class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
                     >
-                        <i v-if="verifyingPayment" class="fa-solid fa-spinner animate-spin"></i>
-                        <i v-else class="fa-solid fa-check-double"></i>
+                        <Loader2 v-if="verifyingPayment" class="animate-spin" />
+                        <CheckCheck v-else class="" />
                         {{ verifyingPayment ? 'Memverifikasi...' : 'Konfirmasi Pembayaran & Aktifkan' }}
                     </button>
                 </template>
@@ -287,8 +289,8 @@ const bookingSubMenu = computed(() => [
                         :disabled="rejecting || confirming"
                         class="px-5 py-2.5 text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
                     >
-                        <i v-if="rejecting" class="fa-solid fa-spinner animate-spin"></i>
-                        <i v-else class="fa-solid fa-xmark"></i>
+                        <Loader2 v-if="rejecting" class="animate-spin" />
+                        <X v-else class="" />
                         {{ rejecting ? 'Menolak...' : 'Tolak Pengajuan' }}
                     </button>
                     <button
@@ -296,8 +298,8 @@ const bookingSubMenu = computed(() => [
                         :disabled="confirming || rejecting"
                         class="px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
                     >
-                        <i v-if="confirming" class="fa-solid fa-spinner animate-spin"></i>
-                        <i v-else class="fa-solid fa-circle-check"></i>
+                        <Loader2 v-if="confirming" class="animate-spin" />
+                        <CheckCircle v-else class="" />
                         {{ confirming ? 'Mengonfirmasi...' : 'Konfirmasi Booking' }}
                     </button>
                 </template>
@@ -309,8 +311,8 @@ const bookingSubMenu = computed(() => [
                         :disabled="completing"
                         class="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition flex items-center gap-1.5 disabled:opacity-50"
                     >
-                        <i v-if="completing" class="fa-solid fa-spinner animate-spin"></i>
-                        <i v-else class="fa-solid fa-flag-checkered"></i>
+                        <Loader2 v-if="completing" class="animate-spin" />
+                        <Flag v-else class="" />
                         {{ completing ? 'Memproses...' : 'Tandai Selesai' }}
                     </button>
                 </template>
@@ -318,7 +320,7 @@ const bookingSubMenu = computed(() => [
                 <!-- Informasi untuk CONFIRMED (menunggu pembayaran) -->
                 <template v-else-if="booking.status === 'confirmed'">
                     <div class="flex items-center gap-2 text-xs text-slate-500 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-200 w-full">
-                        <i class="fa-solid fa-clock text-amber-500"></i>
+                        <Clock class="text-amber-500" />
                         Menunggu penyewa menyelesaikan pembayaran.
                     </div>
                 </template>
@@ -327,7 +329,7 @@ const bookingSubMenu = computed(() => [
             <!-- Back Link -->
             <div class="flex justify-start">
                 <Link :href="route('owner.bookings')" class="text-xs text-slate-400 hover:text-[#0A2540] flex items-center gap-1.5 transition">
-                    <i class="fa-solid fa-arrow-left"></i>
+                    <ArrowLeft class="" />
                     Kembali ke Daftar Pesanan
                 </Link>
             </div>

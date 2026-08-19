@@ -27,7 +27,7 @@
             >
                 {{ getOptionName(id) }}
                 <button type="button" @click.stop="removeTag(id)" class="hover:text-rose-500 transition focus:outline-none shrink-0 w-4 h-4 flex items-center justify-center ml-1">
-                    <i class="fa-solid fa-xmark text-[11px]"></i>
+                    <X class="text-[11px]" />
                 </button>
             </span>
         </div>
@@ -46,7 +46,7 @@
                     :class="isSelected(opt) ? 'bg-[#0A2540]/5 font-semibold text-[#0A2540]' : 'text-slate-700'"
                 >
                     <span class="truncate">{{ opt.name }}</span>
-                    <i v-if="isSelected(opt)" class="fa-solid fa-check text-[#FFC000] shrink-0 ml-2"></i>
+                    <Check v-if="isSelected(opt)" class="text-[#FFC000] shrink-0 ml-2" />
                 </li>
             </ul>
         </div>
@@ -54,6 +54,7 @@
 </template>
 
 <script setup>
+import { X, Check } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({

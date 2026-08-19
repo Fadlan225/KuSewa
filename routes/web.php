@@ -122,6 +122,7 @@ Route::middleware('auth')->group(function () {
     // ==========================
     // Booking & Payment
     // ==========================
+    Route::patch('/booking/{booking}/cancel', [BookingController::class, 'cancel'])->name('booking.cancel');
     Route::resource('booking', BookingController::class);
     Route::resource('payment', PaymentController::class);
 

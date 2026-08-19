@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Search, Check, ChevronDown } from 'lucide-vue-next';
 import { usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
@@ -195,7 +197,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
 
                                     <!-- Search Aset -->
                                     <div class="flex items-center gap-3 border border-[#6C757D]/20 rounded-xl p-3 bg-white mb-4">
-                                        <i class="fa-solid fa-magnifying-glass text-[#6C757D] pl-1 text-sm"></i>
+                                        <Search class="text-[#6C757D] pl-1 text-sm" />
                                         <input
                                             v-model="assetSearchQuery"
                                             type="text"
@@ -209,7 +211,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                             <div class="space-y-2">
                                                 <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
                                                     <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.length === 0}">
-                                                        <i v-if="selectedAssets.length === 0" class="fa-solid fa-check text-white text-[10px]"></i>
+                                                        <Check v-if="selectedAssets.length === 0" class="text-white text-[10px]" />
                                                     </div>
                                                     <span class="text-sm font-bold text-[#0A2540]">Semua</span>
                                                     <input type="checkbox" :checked="selectedAssets.length === 0" @change="selectedAssets = []" class="hidden">
@@ -220,13 +222,13 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                         <!-- Kategori & Tipe Aset (Grup) -->
                                         <div v-for="cat in filteredAssetCategories" :key="cat.name" class="mb-4">
                                             <h3 class="text-xs font-bold text-[#6C757D] mb-2 flex items-center gap-1.5">
-                                                <i v-if="cat.icon" :class="cat.icon + ' text-[#FFC000] text-xs'"></i>
+                                                <AppIcon :iconClass="cat.icon + ' text-[#FFC000] text-xs'" v-if="cat.icon" />
                                                 {{ cat.name }}
                                             </h3>
                                             <div class="space-y-2">
                                                 <label v-for="item in cat.items" :key="item" class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
                                                     <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(item)}">
-                                                        <i v-if="selectedAssets.includes(item)" class="fa-solid fa-check text-white text-[10px]"></i>
+                                                        <Check v-if="selectedAssets.includes(item)" class="text-white text-[10px]" />
                                                     </div>
                                                     <span class="text-sm font-medium text-[#0A2540]">{{ item }}</span>
                                                     <input type="checkbox" :value="item" class="hidden" @change="toggleAsset(item)">
@@ -246,7 +248,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                         @click="openLokasiFullScreen"
                                         class="flex items-center gap-3 border border-[#6C757D]/30 rounded-2xl p-3 bg-white cursor-pointer hover:bg-gray-50 transition mb-4"
                                     >
-                                        <i class="fa-solid fa-magnifying-glass text-[#0A2540] pl-1"></i>
+                                        <Search class="text-[#0A2540] pl-1" />
                                         <div class="text-[#0A2540] font-medium text-[15px] flex-1 truncate">
                                             {{ searchQuery || 'Cari destinasi atau aset' }}
                                         </div>
@@ -264,7 +266,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                             class="flex gap-4 items-center cursor-pointer active:scale-95 transition"
                                         >
                                             <div :class="`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.bg}`">
-                                                <i :class="`${item.icon} ${item.iconColor} text-base`"></i>
+                                                <AppIcon :iconClass="`${item.icon} ${item.iconColor} text-base`" />
                                             </div>
                                             <div class="border-b border-[#6C757D]/10 pb-2 w-full">
                                                 <h4 class="font-bold text-[#0A2540] text-sm">{{ item.title }}</h4>
@@ -442,7 +444,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                     <!-- Search input for facilities -->
                                     <div class="mb-4 relative">
                                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                            <i class="fa-solid fa-search text-gray-400 text-xs"></i>
+                                            <Search class="text-gray-400 text-xs" />
                                         </div>
                                         <input type="text" v-model="facilitySearchMobile" placeholder="Cari fasilitas..." class="w-full text-sm border-gray-200 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl pl-9 py-2.5 bg-slate-50 transition" />
                                     </div>
@@ -458,7 +460,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                             <button @click="toggleFacilityCategoryMobile(group.name)" class="w-full flex items-center justify-between p-3.5 bg-slate-50/50 hover:bg-slate-50 transition active:bg-slate-100">
                                                 <span class="text-[15px] font-bold text-[#0A2540]">{{ group.name }}</span>
                                                 <div class="w-7 h-7 rounded-full bg-white shadow-sm flex items-center justify-center">
-                                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform" :class="{'rotate-180': openFacilityCategoriesMobile[group.name]}"></i>
+                                                    <ChevronDown class="text-xs text-slate-400 transition-transform" :class="{'rotate-180': openFacilityCategoriesMobile[group.name]}" />
                                                 </div>
                                             </button>
                                             
@@ -477,7 +479,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
                                                             class="peer sr-only"
                                                         >
                                                         <div class="w-6 h-6 rounded-md border-2 border-gray-300 bg-white peer-checked:bg-[#FFC000] peer-checked:border-[#FFC000] transition flex items-center justify-center">
-                                                            <i class="fa-solid fa-check text-white text-xs opacity-0 peer-checked:opacity-100"></i>
+                                                            <Check class="text-white text-xs opacity-0 peer-checked:opacity-100" />
                                                         </div>
                                                     </div>
                                                     <span class="text-[15px] font-medium text-[#495057] group-hover:text-[#0A2540] transition leading-tight">
@@ -496,7 +498,7 @@ import BottomSheet from '@/Components/UI/BottomSheet.vue';
             <!-- Footer Action Bar -->
             <div class="absolute bottom-0 w-full bg-[#F8F9FA] border-t border-[#6C757D]/10 p-4 flex justify-center items-center z-20">
                 <button @click="handleApply" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold w-full py-3.5 rounded-xl shadow-md transition flex items-center justify-center gap-2 text-[15px]">
-                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <Search class="" />
                     Terapkan Filter
                 </button>
             </div>

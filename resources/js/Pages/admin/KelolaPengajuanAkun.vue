@@ -1,4 +1,5 @@
 <script setup>
+import { Search, FolderOpen, X } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -94,7 +95,7 @@ const handleReject = (id) => {
     <DashboardLayout role="Admin" title="Kelola Pengajuan Akun" description="Verifikasi dan pantau permintaan akun baru dari calon pemilik aset (owner).">
         <template #header-actions>
             <div class="flex items-center gap-3 w-64 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                <Search class="text-slate-400 text-xs" />
                 <input 
                     type="text" 
                     v-model="searchQuery"
@@ -190,7 +191,7 @@ const handleReject = (id) => {
                             </tr>
                             <tr v-if="filteredApplicants.length === 0">
                                 <td colspan="6" class="py-12 text-center text-slate-400">
-                                    <i class="fa-solid fa-folder-open text-2xl mb-2 block text-slate-300"></i>
+                                    <FolderOpen class="text-2xl mb-2 block text-slate-300" />
                                     Tidak ada data pengajuan akun yang sesuai dengan filter.
                                 </td>
                             </tr>
@@ -210,7 +211,7 @@ const handleReject = (id) => {
                         <p class="text-[10px] text-slate-400">Periksa kesesuaian data diri dengan foto KTP terlampir.</p>
                     </div>
                     <button @click="selectedApplicant = null" class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
-                        <i class="fa-solid fa-xmark text-sm"></i>
+                        <X class="text-sm" />
                     </button>
                 </div>
 

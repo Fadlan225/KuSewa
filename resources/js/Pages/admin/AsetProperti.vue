@@ -1,4 +1,5 @@
 <script setup>
+import { Search, X } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -82,7 +83,7 @@ function closeStats() {
     <DashboardLayout role="Admin" title="Aset Properti" description="Kelola semua listing properti, status publikasi, dan detail pemilik.">
         <template #header-actions>
             <div class="flex items-center gap-3 w-64 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                <Search class="text-slate-400 text-xs" />
                 <input
                     type="text"
                     v-model="searchQuery"
@@ -206,7 +207,7 @@ function closeStats() {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 

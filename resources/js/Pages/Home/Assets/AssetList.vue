@@ -1,9 +1,12 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Layers, ArrowDown } from 'lucide-vue-next';
 import { computed, ref, onMounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import axios from 'axios';
 import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
 import LazyAssetCard from '@/Components/UI/LazyAssetCard.vue';
+import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
     categories: {
@@ -166,7 +169,7 @@ const getCategoryImage = (categoryName) => {
             <!-- Grup Kategori Traveloka Style -->
             <!-- <section v-if="props.categories && props.categories.length > 0" class="px-4 sm:px-6 lg:px-8 mb-12 max-w-5xl mx-auto w-full">
                 <div class="flex items-center gap-1.5 sm:gap-2 mb-4">
-                    <i class="fa-solid fa-layer-group text-[#FFC000] text-sm sm:text-base shrink-0"></i>
+                    <Layers class="text-[#FFC000] text-sm sm:text-base shrink-0" />
                     <h2 class="text-[15px] sm:text-xl md:text-2xl font-extrabold tracking-tight text-[#0A2540]">Temukan berdasarkan kategori</h2>
                 </div>
                 <div class="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
@@ -211,7 +214,7 @@ const getCategoryImage = (categoryName) => {
                         <!-- Section Header -->
                         <div class="flex justify-between items-center mb-4 pr-4 sm:pr-6 lg:pr-8 gap-2 sm:gap-4">
                             <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                                <i v-if="section.icon" :class="[section.icon, 'text-[#FFC000] text-sm sm:text-base shrink-0']"></i>
+                                <AppIcon :iconClass="[section.icon, 'text-[#FFC000] text-sm sm:text-base shrink-0']" v-if="section.icon" />
                                 <h2 class="text-[15px] sm:text-xl md:text-2xl font-extrabold tracking-tight truncate" :title="section.title">{{ section.title }}</h2>
                             </div>
                         </div>
@@ -264,7 +267,7 @@ const getCategoryImage = (categoryName) => {
                         class="group px-8 py-3 rounded border-2 border-[#FFC000] bg-transparent text-[#FFC000] text-sm font-bold hover:bg-[#FFC000] hover:text-[#0A2540] hover:shadow-md transition-all flex items-center gap-3"
                     >
                         <span>Muat Lebih Banyak</span>
-                        <i class="fa-solid fa-arrow-down transition-transform duration-300 group-hover:translate-y-1"></i>
+                        <ArrowDown class="transition-transform duration-300 group-hover:translate-y-1" />
                     </button>
                 </div>
             </template>
@@ -274,11 +277,7 @@ const getCategoryImage = (categoryName) => {
                 v-else
                 class="flex flex-col items-center pt-10 pb-32 px-4 w-full text-center"
             >
-                <img
-                    src="/empty.svg"
-                    class="w-48 h-48 object-contain mb-6"
-                    alt="Ilustrasi Kosong"
-                >
+                <EmptyStateIcon class="w-48 h-48 object-contain mb-6" />
 
                 <template v-if="props.emptyStateType === 'no-data'">
                     <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum Ada Aset</h2>

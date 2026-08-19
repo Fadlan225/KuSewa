@@ -1,4 +1,5 @@
 <script setup>
+import { ChevronLeft, ChevronRight, ChevronDown, X } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -123,13 +124,13 @@ const checkAvailability = () => {
             <!-- Navigation & Filter -->
             <!-- Mobile Nav -->
             <div class="flex justify-between md:hidden mb-4">
-                <button @click="prevMonth" class="text-slate-400 hover:text-slate-700 transition px-4 py-2"><i class="fa-solid fa-chevron-left text-xl"></i></button>
-                <button @click="nextMonth" class="text-slate-400 hover:text-slate-700 transition px-4 py-2"><i class="fa-solid fa-chevron-right text-xl"></i></button>
+                <button @click="prevMonth" class="text-slate-400 hover:text-slate-700 transition px-4 py-2"><ChevronLeft class="text-xl" /></button>
+                <button @click="nextMonth" class="text-slate-400 hover:text-slate-700 transition px-4 py-2"><ChevronRight class="text-xl" /></button>
             </div>
 
             <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 relative">
                 <!-- Desktop Nav Left -->
-                <button @click="prevMonth" class="hidden md:block text-slate-400 hover:text-slate-700 transition px-2 py-1 absolute left-0"><i class="fa-solid fa-chevron-left text-lg"></i></button>
+                <button @click="prevMonth" class="hidden md:block text-slate-400 hover:text-slate-700 transition px-2 py-1 absolute left-0"><ChevronLeft class="text-lg" /></button>
 
                 <!-- Search Bar Pill -->
                 <div class="flex-1 flex justify-center w-full px-0 md:px-12">
@@ -140,7 +141,7 @@ const checkAvailability = () => {
                             <select v-model="selectedUnitForCalendar" class="w-full text-sm border-none focus:ring-0 py-2.5 bg-transparent text-slate-700 font-medium cursor-pointer appearance-none pr-8">
                                 <option v-for="u in asset.units" :key="u.id" :value="u.id">Unit: {{ u.name }}</option>
                             </select>
-                            <i class="fa-solid fa-chevron-down absolute right-4 text-slate-400 pointer-events-none text-xs"></i>
+                            <ChevronDown class="absolute right-4 text-slate-400 pointer-events-none text-xs" />
                         </div>
 
                         <!-- Dates -->
@@ -160,14 +161,14 @@ const checkAvailability = () => {
                 </div>
 
                 <!-- Desktop Nav Right -->
-                <button @click="nextMonth" class="hidden md:block text-slate-400 hover:text-slate-700 transition px-2 py-1 absolute right-0"><i class="fa-solid fa-chevron-right text-lg"></i></button>
+                <button @click="nextMonth" class="hidden md:block text-slate-400 hover:text-slate-700 transition px-2 py-1 absolute right-0"><ChevronRight class="text-lg" /></button>
             </div>
 
             <!-- Search Result Alert -->
             <div v-if="searchResult" class="mb-6 max-w-xl mx-auto flex justify-center animate-in fade-in slide-in-from-top-2">
                 <div :class="{'bg-rose-50 border-rose-200 text-rose-700': searchResult.status === 'error' || searchResult.status === 'booked', 'bg-emerald-50 border-emerald-200 text-emerald-700': searchResult.status === 'available'}" class="px-4 py-3 rounded-xl border font-semibold text-sm w-full text-center flex items-center justify-center gap-2">
                     {{ searchResult.message }}
-                    <button @click="searchResult = null" class="ml-2 opacity-50 hover:opacity-100 transition"><i class="fa-solid fa-xmark"></i></button>
+                    <button @click="searchResult = null" class="ml-2 opacity-50 hover:opacity-100 transition"><X class="" /></button>
                 </div>
             </div>
 

@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { CheckCircle, Loader2, ArrowLeft, Circle, ChevronDown } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import axios from 'axios';
 import { router } from '@inertiajs/vue3';
@@ -356,7 +358,7 @@ const handleGoogleLogin = () => {
                 {{ error }}
             </div>
             <div v-if="successMsg" class="mb-4 p-3 bg-green-50 text-green-600 rounded-xl text-sm border border-green-100 animate-fade-in">
-                <i class="fa-solid fa-check-circle mr-1"></i> {{ successMsg }}
+                <CheckCircle class="mr-1" /> {{ successMsg }}
             </div>
 
             <!-- STEP: EMAIL -->
@@ -385,7 +387,7 @@ const handleGoogleLogin = () => {
                         :disabled="loading"
                         @click="checkEmail"
                     >
-                        <i v-if="loading" class="fa-solid fa-spinner fa-spin mr-2"></i>
+                        <Loader2 v-if="loading" class="mr-2 animate-spin" />
                         Lanjutkan
                     </PrimaryButton>
 
@@ -408,7 +410,7 @@ const handleGoogleLogin = () => {
             <!-- STEP: PASSWORD -->
             <div v-else-if="step === 'password'" class="animate-fade-in">
                 <button @click="step = 'email'" class="mb-4 text-[#6C757D] hover:text-[#0A2540] transition">
-                    <i class="fa-solid fa-arrow-left text-sm mr-1"></i> Kembali
+                    <ArrowLeft class="text-sm mr-1" /> Kembali
                 </button>
                 <h3 class="text-xl font-extrabold mb-2">Masukkan Password</h3>
                 <p class="text-sm text-[#6C757D] mb-6">Akun {{ form.email }} sudah terdaftar.</p>
@@ -427,7 +429,7 @@ const handleGoogleLogin = () => {
                                 :disabled="loading"
                             />
                             <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#6C757D] hover:text-[#0A2540]">
-                                <i :class="showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+                                <AppIcon :iconClass="showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'" />
                             </button>
                         </div>
                     </div>
@@ -443,7 +445,7 @@ const handleGoogleLogin = () => {
                         :disabled="loading"
                         @click="login"
                     >
-                        <i v-if="loading" class="fa-solid fa-spinner fa-spin mr-2"></i>
+                        <Loader2 v-if="loading" class="mr-2 animate-spin" />
                         Masuk
                     </PrimaryButton>
                 </div>
@@ -452,7 +454,7 @@ const handleGoogleLogin = () => {
             <!-- STEP: FORGOT PASSWORD EMAIL -->
             <div v-else-if="step === 'forgot_password_email'" class="animate-fade-in">
                 <button type="button" @click="goBackFromForgotEmail" class="mb-4 text-[#6C757D] hover:text-[#0A2540] transition text-left">
-                    <i class="fa-solid fa-arrow-left text-sm mr-1"></i> Kembali
+                    <ArrowLeft class="text-sm mr-1" /> Kembali
                 </button>
                 <h3 class="text-xl font-extrabold mb-2">
                     {{ purpose === 'create_password' ? 'Buat Password Baru' : 'Lupa Password?' }}
@@ -484,7 +486,7 @@ const handleGoogleLogin = () => {
                         :disabled="loading"
                         @click="submitForgotPasswordEmail"
                     >
-                        <i v-if="loading" class="fa-solid fa-spinner fa-spin mr-2"></i>
+                        <Loader2 v-if="loading" class="mr-2 animate-spin" />
                         Kirim Kode OTP
                     </PrimaryButton>
                 </div>
@@ -493,7 +495,7 @@ const handleGoogleLogin = () => {
             <!-- STEP: GOOGLE/CREATE PASSWORD CHOICE -->
             <div v-else-if="step === 'create_password_choice'" class="animate-fade-in text-center">
                 <button @click="step = 'email'" class="mb-4 text-[#6C757D] hover:text-[#0A2540] transition text-left w-full">
-                    <i class="fa-solid fa-arrow-left text-sm mr-1"></i> Kembali
+                    <ArrowLeft class="text-sm mr-1" /> Kembali
                 </button>
                 <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-blue-100">
                     <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-8 h-8" alt="Google" />
@@ -568,15 +570,15 @@ const handleGoogleLogin = () => {
                         <div class="relative">
                             <TextInput id="reg_password" :type="showPassword ? 'text' : 'password'" class="mt-1 p-2 block w-full bg-[#F8F9FA] text-sm pr-10" v-model="form.password" required />
                             <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#6C757D] hover:text-[#0A2540]">
-                                <i :class="showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+                                <AppIcon :iconClass="showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'" />
                             </button>
                         </div>
                         <ul class="text-xs mt-2 space-y-1 ml-1 font-semibold">
                             <li :class="passwordCriteria.min8 ? 'text-green-600' : 'text-[#6C757D]'">
-                                <i class="fa-solid fa-circle text-[5px] mr-2 align-middle"></i> Min. 8 karakter
+                                <Circle class="text-[5px] mr-2 align-middle" /> Min. 8 karakter
                             </li>
                             <li :class="passwordCriteria.min3unique ? 'text-green-600' : 'text-[#6C757D]'">
-                                <i class="fa-solid fa-circle text-[5px] mr-2 align-middle"></i> Pakai min. 3 karakter berbeda
+                                <Circle class="text-[5px] mr-2 align-middle" /> Pakai min. 3 karakter berbeda
                             </li>
                         </ul>
                     </div>
@@ -617,7 +619,7 @@ const handleGoogleLogin = () => {
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                     <div class="w-6 h-6 rounded-full flex items-center justify-center transition-colors" :class="dob_day ? 'bg-amber-100 text-[#FFC000]' : 'bg-gray-100 text-gray-400'">
-                                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                        <ChevronDown class="text-[10px]" />
                                     </div>
                                 </div>
                             </div>
@@ -630,7 +632,7 @@ const handleGoogleLogin = () => {
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                     <div class="w-6 h-6 rounded-full flex items-center justify-center transition-colors" :class="dob_month ? 'bg-amber-100 text-[#FFC000]' : 'bg-gray-100 text-gray-400'">
-                                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                        <ChevronDown class="text-[10px]" />
                                     </div>
                                 </div>
                             </div>
@@ -643,7 +645,7 @@ const handleGoogleLogin = () => {
                                 </select>
                                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                                     <div class="w-6 h-6 rounded-full flex items-center justify-center transition-colors" :class="dob_year ? 'bg-amber-100 text-[#FFC000]' : 'bg-gray-100 text-gray-400'">
-                                        <i class="fa-solid fa-chevron-down text-[10px]"></i>
+                                        <ChevronDown class="text-[10px]" />
                                     </div>
                                 </div>
                             </div>
@@ -671,7 +673,7 @@ const handleGoogleLogin = () => {
                             Lewati
                         </button>
                         <PrimaryButton class="flex-1 justify-center bg-primary py-3 rounded-xl" :disabled="loading" @click="finishRegistration(false)">
-                            <i v-if="loading" class="fa-solid fa-spinner fa-spin mr-2"></i>
+                            <Loader2 v-if="loading" class="mr-2 animate-spin" />
                             Daftar
                         </PrimaryButton>
                     </div>
@@ -689,15 +691,15 @@ const handleGoogleLogin = () => {
                         <div class="relative">
                             <TextInput id="new_password" :type="showPassword ? 'text' : 'password'" class="mt-1 p-2 block w-full bg-[#F8F9FA] border-primary/20 text-sm pr-10" v-model="form.password" required />
                             <button type="button" @click="showPassword = !showPassword" class="absolute inset-y-0 right-0 pr-3 flex items-center text-[#6C757D] hover:text-[#0A2540]">
-                                <i :class="showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+                                <AppIcon :iconClass="showPassword ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'" />
                             </button>
                         </div>
                         <ul class="text-xs mt-2 space-y-1 ml-1 font-semibold">
                             <li :class="passwordCriteria.min8 ? 'text-green-600' : 'text-[#6C757D]'">
-                                <i class="fa-solid fa-circle text-[5px] mr-2 align-middle"></i> Min. 8 karakter
+                                <Circle class="text-[5px] mr-2 align-middle" /> Min. 8 karakter
                             </li>
                             <li :class="passwordCriteria.min3unique ? 'text-green-600' : 'text-[#6C757D]'">
-                                <i class="fa-solid fa-circle text-[5px] mr-2 align-middle"></i> Pakai min. 3 karakter berbeda
+                                <Circle class="text-[5px] mr-2 align-middle" /> Pakai min. 3 karakter berbeda
                             </li>
                         </ul>
                     </div>
@@ -707,7 +709,7 @@ const handleGoogleLogin = () => {
                     </div>
 
                     <PrimaryButton class="w-full justify-center bg-primary py-3 rounded-xl mt-4" :disabled="loading" @click="submitResetPassword">
-                        <i v-if="loading" class="fa-solid fa-spinner fa-spin mr-2"></i>
+                        <Loader2 v-if="loading" class="mr-2 animate-spin" />
                         Simpan
                     </PrimaryButton>
                 </div>

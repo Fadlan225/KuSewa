@@ -1,4 +1,5 @@
 <script setup>
+import { Search, Paintbrush } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -163,7 +164,7 @@ function confirmCleanup() {
                     <div v-if="showFilterPanel" class="rounded-2xl bg-slate-50/60 border border-slate-100 px-4 py-4 mb-5">
                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             <div class="flex items-center gap-3 bg-white px-3.5 py-2 rounded-xl border border-slate-200/80">
-                                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                                <Search class="text-slate-400 text-xs" />
                                 <input
                                     type="text"
                                     v-model="searchQuery"
@@ -234,7 +235,7 @@ function confirmCleanup() {
             >
                 <div class="w-full max-w-sm rounded-3xl bg-white shadow-xl border border-slate-100 p-6">
                     <div class="w-11 h-11 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg mb-4">
-                        <i class="fa-solid fa-broom"></i>
+                        <Paintbrush class="" />
                     </div>
                     <h3 class="text-sm font-bold text-slate-900">Bersihkan log lama</h3>
                     <p class="text-xs text-slate-500 mt-1.5">

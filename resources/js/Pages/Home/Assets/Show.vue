@@ -1,4 +1,5 @@
 <script setup>
+import { Layers, MapPin, Calendar, Coins, Star, Heart, Check, AlertTriangle, MessageSquareMore } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -199,6 +200,7 @@ const form = useForm({
 });
 
 const showDateError = ref(false);
+const showAllUnits = ref(false);
 
 const submitBooking = () => {
     // Mencegah booking jika memiliki unit tapi belum pilih unit
@@ -560,6 +562,34 @@ const formattedDateRange = computed(() => {
     return `${startStr} - ${endStr}`;
 });
 
+// Hubungi Pemilik / Chat logic
+const chatMessage = ref('');
+const startChat = () => {
+    if (!page.props.auth?.user) {
+        window.location.href = '/login';
+        return;
+    }
+
+    const payload = {
+        asset_id: props.asset.id,
+        owner_profile_id: props.asset.owner_profile?.id
+    };
+
+    // Jika dipanggil dari input Hubungi Pemilik yang punya pesan
+    if (chatMessage.value.trim()) {
+        payload.message = chatMessage.value.trim();
+    }
+
+    router.post(route('chat.start'), payload, {
+        onSuccess: () => {
+            chatMessage.value = '';
+        },
+        onError: (errors) => {
+            console.error('Failed to start chat:', errors);
+        }
+    });
+};
+
 // Calendar Touch Gestures
 
 
@@ -588,19 +618,19 @@ const formattedDateRange = computed(() => {
         <!-- MOBILE SUB NAVBAR (Badges for Schedule and Price) -->
         <div class="flex md:hidden items-center gap-2 px-4 pb-3 overflow-x-auto hide-scrollbar">
             <div @click="openMobileSearch('jenis')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
-                <i class="fa-solid fa-layer-group text-gray-500"></i>
+                <Layers class="text-gray-500" />
                 {{ selectedAssets.length ? selectedAssets.join(', ') : (asset.type?.name || 'Semua Tipe') }}
             </div>
             <div @click="openMobileSearch('lokasi')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
-                <i class="fa-solid fa-location-dot text-gray-500"></i>
+                <MapPin class="text-gray-500" />
                 {{ searchQuery || asset.city?.name || 'Pilih Lokasi' }}
             </div>
             <div @click="openMobileSearch('jadwal')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
-                <i class="fa-regular fa-calendar text-gray-500"></i>
+                <Calendar class="text-gray-500" />
                 {{ formattedDateRange || 'Pilih Jadwal' }}
             </div>
             <div @click="openMobileSearch('harga')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
-                <i class="fa-solid fa-rupiah-sign text-gray-500"></i>
+                <Coins class="text-gray-500" />
                 {{ (parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Batas Harga' }}
             </div>
         </div>
@@ -622,20 +652,20 @@ const formattedDateRange = computed(() => {
                 <div class="flex items-center gap-4 text-sm mt-1">
                     <div class="flex items-center gap-1.5">
                         <div class="flex items-center gap-0.5 text-xs">
-                            <i v-for="n in 5" :key="n" class="fa-solid fa-star" :class="n <= Math.round(parseFloat(asset.reviews_avg_rating || 0)) ? 'text-[#FFC000]' : 'text-gray-300'"></i>
+                            <Star v-for="n in 5" :key="n" class="" :class="n <= Math.round(parseFloat(asset.reviews_avg_rating || 0)) ? 'text-[#FFC000]' : 'text-gray-300'" />
                         </div>
                         <span class="text-[#0A2540] font-bold">{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
                         <span class="text-gray-500">({{ asset.reviews_count || 0 }} ulasan)</span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-heart text-red-500"></i>
+                        <Heart class="text-red-500" />
                         <span class="text-gray-500">{{ asset.favorites_count || 0 }} favorit</span>
                     </div>
                 </div>
 
                 <!-- Lokasi -->
                 <div class="flex items-start gap-2 text-sm text-gray-500">
-                    <i class="fa-solid fa-location-dot mt-0.5 text-gray-400"></i>
+                    <MapPin class="mt-0.5 text-gray-400" />
                     <span class="leading-relaxed">{{ asset.city?.name }}, {{ asset.province?.name }}</span>
                 </div>
             </div>
@@ -669,7 +699,7 @@ const formattedDateRange = computed(() => {
                     <!-- Grid Top Facilities -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-6">
                         <div v-for="fac in topFacilities" :key="fac.id" class="flex items-start gap-3">
-                            <i class="fa-solid fa-check mt-1 text-[#FFC000] text-sm shrink-0"></i>
+                            <Check class="mt-1 text-[#FFC000] text-sm shrink-0" />
                             <span class="text-[15px] text-gray-700">{{ fac.name }}</span>
                         </div>
                     </div>
@@ -686,7 +716,7 @@ const formattedDateRange = computed(() => {
             <div v-if="asset.units && asset.units.length > 0" id="pilihan-unit" class="py-2 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
                 <h3 class="text-lg font-bold mb-2">Unit</h3>
                 <AssetUnitList
-                    :units="asset.units"
+                    :units="showAllUnits ? asset.units : asset.units.slice(0, 3)"
                     :rentalUnitLabel="rentalUnitLabel(activeScheduleMode)"
                     :durationCount="durationCount"
                     :startDate="startDate ? startDate.toISOString() : null"
@@ -694,6 +724,13 @@ const formattedDateRange = computed(() => {
                     :selectedUnitId="selectedUnitId"
                     @select="handleUnitSelect"
                 />
+                <button
+                    v-if="asset.units.length > 3 && !showAllUnits"
+                    @click="showAllUnits = true"
+                    class="w-full mt-3 py-2 border-2 border-gray-100 hover:border-gray-200 hover:bg-gray-50 text-[#0A2540] font-bold rounded-lg transition-colors text-sm"
+                >
+                    Lihat {{ asset.units.length - 3 }} Unit Lainnya
+                </button>
             </div>
 
             <!-- Lokasi Map -->
@@ -713,7 +750,7 @@ const formattedDateRange = computed(() => {
                         style="border: 0;"
                     ></iframe>
                     <div v-else class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 p-4 shadow-lg">
-                        <i class="fa-solid fa-location-dot text-red-500 text-3xl mb-2"></i>
+                        <MapPin class="text-red-500 text-3xl mb-2" />
                         <span class="font-bold">Koordinat lokasi tidak tersedia</span>
                     </div>
                 </div>
@@ -780,7 +817,7 @@ const formattedDateRange = computed(() => {
 
                         <!-- BUG 8 FIX: Pesan jika tidak ada pricing -->
                         <div v-if="!lowestPrice && (!asset.units || asset.units.length === 0)" class="text-center text-amber-600 text-[10px] font-bold mb-3 bg-amber-50 rounded-lg px-2.5 py-2 border border-amber-200">
-                            <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                            <AlertTriangle class="mr-1" />
                             Pemilik belum menetapkan harga.
                         </div>
 
@@ -848,7 +885,7 @@ const formattedDateRange = computed(() => {
                     <div v-if="asset.owner_profile" class="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                         <h3 class="text-[13px] font-bold text-[#0A2540] mb-2">Hubungi Pemilik</h3>
                         <div class="flex items-center gap-2 border-b border-gray-400 pb-1.5 focus-within:border-[#FFC000] transition-colors">
-                            <i class="fa-regular fa-comment-dots text-lg text-[#FFC000]"></i>
+                            <MessageSquareMore class="text-lg text-[#FFC000]" />
                             <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu..." class="w-full bg-transparent border-none outline-none text-[12px] text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
                             <button @click="startChat" class="text-[#FFC000] font-bold text-[12px] hover:text-[#e6ad00] transition-colors whitespace-nowrap">
                                 Kirim
@@ -894,8 +931,9 @@ const formattedDateRange = computed(() => {
         :formattedDateRange="formattedDateRange"
         :periodLabel="rentalUnitLabel(activeScheduleMode)"
         :disabled="asset.status !== 'approved' || (!asset.pricings?.length && !asset.units?.length) || !startDate || durationCount === 0"
-        :buttonText="(asset.units && asset.units.length > 0) ? 'Pilih Unit' : 'Booking'"
+        :buttonText="(asset.units && asset.units.length > 0 && !selectedUnitId) ? 'Pilih Unit' : 'Ajukan Sewa'"
         @submit="handleBottomBarSubmit"
+        @tanya-pemilik="startChat"
     />
 
     </AppLayout>

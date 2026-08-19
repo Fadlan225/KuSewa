@@ -1,8 +1,10 @@
 <script setup>
+import { Check, Clock, MoreVertical, Trash2 } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import axios from 'axios';
+import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
   initialViews: {
@@ -275,7 +277,7 @@ const executeDelete = () => {
                                       {{ tab.count }}
                                   </span>
                               </div>
-                              <i v-if="activeFilter === tab.name" class="fa-solid fa-check text-[10px] text-[#0A2540]"></i>
+                              <Check v-if="activeFilter === tab.name" class="text-[10px] text-[#0A2540]" />
                           </button>
                       </div>
                   </div>
@@ -345,7 +347,7 @@ const executeDelete = () => {
 
       <!-- Empty State -->
       <div v-if="views.length === 0" class="bg-white rounded-[1.5rem] border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
-        <img src="/empty.svg" alt="No History" class="w-48 h-48 object-contain mb-6 opacity-80" onerror="this.src='https://placehold.co/400x300?text=No+Data'" />
+        <EmptyStateIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
         <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada riwayat</h2>
         <p class="text-sm text-[#6C757D] mb-6">Anda belum melihat aset apapun.</p>
         <button @click="router.get('/')" class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors">
@@ -375,7 +377,7 @@ const executeDelete = () => {
           <div class="flex-1 min-w-0 flex flex-col justify-center">
             <div class="flex items-center gap-2 mb-1">
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 uppercase tracking-wide">{{ item.asset?.type?.category?.name || 'Aset' }}</span>
-                <span class="text-[10px] text-slate-400 flex items-center gap-1"><i class="fa-regular fa-clock"></i> {{ timeAgo(item.last_viewed) }}</span>
+                <span class="text-[10px] text-slate-400 flex items-center gap-1"><Clock class="" /> {{ timeAgo(item.last_viewed) }}</span>
             </div>
             <h3 class="font-bold text-sm md:text-base text-[#0A2540] truncate cursor-pointer hover:text-[#FFC000]" @click="router.get(`/assets/${item.asset?.slug || item.asset?.id}`)">
                 {{ item.asset?.title }}
@@ -394,7 +396,7 @@ const executeDelete = () => {
                 class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-[#0A2540] hover:bg-slate-100 transition-colors cursor-pointer"
                 title="Opsi"
             >
-                <i class="fa-solid fa-ellipsis-vertical text-sm pointer-events-none"></i>
+                <MoreVertical class="text-sm pointer-events-none" />
             </button>
 
             <!-- Dropdown Menu -->
@@ -412,7 +414,7 @@ const executeDelete = () => {
                         type="button"
                         class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors font-semibold"
                     >
-                        <i class="fa-solid fa-trash-can pointer-events-none"></i>
+                        <Trash2 class="pointer-events-none" />
                         Hapus
                     </button>
                 </div>
@@ -431,7 +433,7 @@ const executeDelete = () => {
         <div class="bg-white w-full sm:w-[400px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl transform transition-transform animate-fade-in">
           <div class="p-5 md:p-6 text-center">
             <div class="w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-2xl mx-auto mb-4">
-              <i class="fas fa-trash-can"></i>
+              <Trash2 class="" />
             </div>
             <h2 class="text-lg md:text-xl font-bold text-gray-900 mb-2">Hapus Riwayat?</h2>
             <p class="text-sm text-gray-500 mb-6">

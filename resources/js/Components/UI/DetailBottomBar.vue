@@ -1,4 +1,5 @@
 <script setup>
+import { MessageSquare } from 'lucide-vue-next';
 defineProps({
     price: {
         type: Number,
@@ -45,34 +46,42 @@ const formatRupiah = (value) => {
 </script>
 
 <template>
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 py-3 px-5 z-40 md:hidden flex justify-between items-center shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)] rounded-t-2xl" :class="{ 'gap-4': !hideLeftContent }">
-        <div v-if="!hideLeftContent" class="flex flex-col flex-1 min-w-0">
-            <slot name="left-content">
-                <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-0.5" v-if="durationCount > 0">Total Harga</span>
-                <span class="text-lg font-extrabold text-[#0A2540] underline decoration-[#0A2540] underline-offset-2" :class="{ 'mt-0': durationCount > 0 }">
+    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40 md:hidden flex flex-col gap-3 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)]">
+        
+        <!-- Top Row: Price & Period -->
+        <div v-if="!hideLeftContent" class="flex justify-between items-end w-full">
+            <div class="flex items-baseline gap-1 truncate w-full">
+                <span class="text-xl font-extrabold text-[#0A2540]">
                     {{ formatRupiah(price) }}
                 </span>
-                <span class="text-xs text-gray-500 font-medium mt-0.5 truncate max-w-full">
+                <span class="text-sm text-gray-600 font-medium">
                     <template v-if="formattedDateRange && durationCount > 0">
-                        {{ durationCount }} {{ durationLabel }} · {{ formattedDateRange }}
+                        {{ durationCount }} {{ durationLabel }}
                     </template>
                     <template v-else-if="durationCount > 0">
-                        untuk {{ durationCount }} {{ durationLabel }}
+                        / {{ durationCount }} {{ durationLabel }}
                     </template>
                     <template v-else>
-                        per {{ periodLabel }}
+                        /{{ periodLabel }}
                     </template>
                 </span>
-            </slot>
+            </div>
         </div>
-        
-        <div :class="hideLeftContent ? 'w-full' : 'shrink-0'">
+
+        <!-- Bottom Row: Buttons -->
+        <div class="flex justify-between items-center w-full gap-3">
+            <slot name="left-content">
+                <button @click="$emit('tanya-pemilik')" class="flex-1 flex items-center justify-center gap-2 border-2 border-[#FFC000] bg-[#FFC000]/10 text-[#0A2540] hover:bg-[#FFC000]/20 font-bold py-2.5 rounded-xl transition-colors text-sm">
+                    <MessageSquare class="w-4 h-4" />
+                    Tanya Pemilik
+                </button>
+            </slot>
+            
             <slot name="right-content">
                 <button
                     @click="$emit('submit')"
                     :disabled="disabled"
-                    class="bg-primary hover:bg-primary text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed"
-                    :class="hideLeftContent ? 'w-full px-6' : 'px-8'">
+                    class="flex-1 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-bold py-3 rounded-xl shadow-sm transition-colors text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed">
                     {{ buttonText }}
                 </button>
             </slot>

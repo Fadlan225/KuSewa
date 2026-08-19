@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Search, Sliders, ChevronDown, Locate, Check, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { onMounted, onUnmounted, ref, computed } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
@@ -97,13 +99,13 @@ onUnmounted(() => {
 
 <template>
     <!-- Full Width Sticky Wrapper -->
-    <div class="w-full bg-white shadow-sm border-b border-[#6C757D]/10 py-3 relative z-[70]">
+    <div class="w-full bg-white  border-b border-[#6C757D]/10 py-3 relative z-[70]">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             <!-- MOBILE VIEW: Search Bar like Image 3 -->
             <div class="flex lg:hidden items-center bg-white rounded-full border border-gray-200 shadow-sm p-1">
                 <div class="flex-1 flex items-center pl-3 pr-2 relative overflow-hidden" @click="isKeywordSheetOpen = true" style="min-height: 36px;">
-                    <i class="fa-solid fa-magnifying-glass text-[#0A2540] mr-3 relative z-10"></i>
+                    <Search class="text-[#0A2540] mr-3 relative z-10" />
                     <AnimatedPlaceholder
                         :placeholders="page.props.dynamicPlaceholders"
                         :isFocused="false"
@@ -119,7 +121,7 @@ onUnmounted(() => {
                     />
                 </div>
                 <button @click="isMobileSearchOpen = true" class="w-9 h-9 bg-[#FFC000] text-[#0A2540] rounded-full flex items-center justify-center shrink-0 shadow-sm">
-                    <i class="fa-solid fa-sliders text-sm"></i>
+                    <Sliders class="text-sm" />
                 </button>
             </div>
 
@@ -139,7 +141,7 @@ onUnmounted(() => {
                         {{ selectedAssets.length > 0 ? selectedAssets.join(', ') : 'Pilih jenis aset' }}
                     </span>
                 </div>
-                <i class="fa-solid fa-chevron-down text-[#6C757D]/70 text-[10px] group-hover:text-[#0A2540] transition-colors" :class="desktopActiveMenu === 'jenis' ? 'rotate-180 text-[#0A2540]' : ''"></i>
+                <ChevronDown class="text-[#6C757D]/70 text-[10px] group-hover:text-[#0A2540] transition-colors" :class="desktopActiveMenu === 'jenis' ? 'rotate-180 text-[#0A2540]' : ''" />
             </div>
 
             <!-- Item 2: Lokasi -->
@@ -153,7 +155,7 @@ onUnmounted(() => {
                         Cari destinasi...
                     </span>
                 </div>
-                <i class="fa-solid fa-chevron-down text-[#6C757D]/70 text-[10px] group-hover:text-[#0A2540] transition-colors" :class="desktopActiveMenu === 'lokasi' ? 'rotate-180 text-[#0A2540]' : ''"></i>
+                <ChevronDown class="text-[#6C757D]/70 text-[10px] group-hover:text-[#0A2540] transition-colors" :class="desktopActiveMenu === 'lokasi' ? 'rotate-180 text-[#0A2540]' : ''" />
             </div>
 
             <!-- Item 3: Jadwal -->
@@ -164,7 +166,7 @@ onUnmounted(() => {
                         {{ formattedSchedule || 'Tentukan tanggal' }}
                     </span>
                 </div>
-                <i class="fa-solid fa-chevron-down text-[#6C757D]/70 text-[10px] group-hover:text-[#0A2540] transition-colors" :class="desktopActiveMenu === 'jadwal' ? 'rotate-180 text-[#0A2540]' : ''"></i>
+                <ChevronDown class="text-[#6C757D]/70 text-[10px] group-hover:text-[#0A2540] transition-colors" :class="desktopActiveMenu === 'jadwal' ? 'rotate-180 text-[#0A2540]' : ''" />
             </div>
 
             <!-- Item 4: Rentang Harga -->
@@ -175,30 +177,30 @@ onUnmounted(() => {
                         {{ (parsedMinPrice > 0 || parsedMaxPrice < maxLimit) ? (formatPriceShort(parsedMinPrice) + ' - ' + formatPriceShort(parsedMaxPrice)) : 'Batas budget' }}
                     </span>
                 </div>
-                <i class="fa-solid fa-chevron-down text-[#6C757D]/70 text-[10px] group-hover:text-[#0A2540] transition-colors" :class="desktopActiveMenu === 'harga' ? 'rotate-180 text-[#0A2540]' : ''"></i>
+                <ChevronDown class="text-[#6C757D]/70 text-[10px] group-hover:text-[#0A2540] transition-colors" :class="desktopActiveMenu === 'harga' ? 'rotate-180 text-[#0A2540]' : ''" />
             </div>
 
             <!-- Tombol Search -->
             <button @click="handlePerformSearch" class="bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] w-[52px] h-[52px] rounded-lg flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg flex-shrink-0 ml-1 active:scale-95 cursor-pointer font-bold text-sm">
-                <i class="fa-solid fa-magnifying-glass"></i>
+                <Search class="" />
             </button>
 
         </div>
 
         <!-- Overlay for closing the modal on outside click -->
-        <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 cursor-default"></div>
+        <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-30 cursor-default"></div>
 
         <!-- DESKTOP MODAL DROPDOWN -->
         <Transition
-            enter-active-class="transition duration-300 ease-out"
-            enter-from-class="transform scale-95 opacity-0 -translate-y-4"
-            enter-to-class="transform scale-100 opacity-100 translate-y-0"
-            leave-active-class="transition duration-200 ease-in"
-            leave-from-class="transform scale-100 opacity-100 translate-y-0"
-            leave-to-class="transform scale-95 opacity-0 -translate-y-4"
+            enter-active-class="transition ease-out duration-200"
+            enter-from-class="opacity-0 translate-y-1"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition ease-in duration-150"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 translate-y-1"
         >
             <div v-if="desktopActiveMenu"
-                 class="absolute top-[108%] bg-white rounded-[24px] shadow-xl border border-gray-200 p-6 z-[70] flex flex-col max-h-[75vh] overflow-y-auto hide-scrollbar overscroll-contain transition-all"
+                 class="absolute top-[108%] bg-white rounded-[24px] shadow-xl border border-gray-200 p-6 z-40 flex flex-col max-h-[75vh] overflow-y-auto hide-scrollbar overscroll-contain transition-all"
                  :class="{
                     'w-[380px] left-0 origin-top-left': desktopActiveMenu === 'jenis',
                     'w-[380px] left-[20%] origin-top': desktopActiveMenu === 'lokasi',
@@ -211,7 +213,7 @@ onUnmounted(() => {
                 <div v-if="desktopActiveMenu === 'lokasi'" class="w-full max-w-sm mx-auto">
                     <h2 class="text-lg font-extrabold text-[#0A2540] mb-3">Pencarian Lokasi</h2>
                     <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#0A2540] focus-within:ring-2 focus-within:ring-[#0A2540]/20 transition">
-                        <i class="fa-solid fa-magnifying-glass text-[#0A2540] pl-1 text-sm"></i>
+                        <Search class="text-[#0A2540] pl-1 text-sm" />
                         <input v-model="searchQuery" type="text" placeholder="Cari destinasi..." class="w-full outline-none text-[#0A2540] font-medium text-sm bg-transparent">
                     </div>
 
@@ -220,7 +222,7 @@ onUnmounted(() => {
                         <!-- Gunakan Lokasi Saat Ini -->
                         <div @click="initUserLocation(true); desktopActiveMenu = 'jadwal'" class="flex gap-3 items-center cursor-pointer group hover:bg-blue-50 p-2 -mx-2 rounded-xl transition border border-transparent hover:border-blue-100">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 text-blue-600">
-                                <i class="fa-solid fa-location-crosshairs text-sm"></i>
+                                <Locate class="text-sm" />
                             </div>
                             <div class="border-b border-[#6C757D]/10 pb-2 pt-1 w-full group-last:border-0">
                                 <h4 class="font-bold text-[13px] text-blue-700">Dekat lokasi Anda saat ini</h4>
@@ -231,7 +233,7 @@ onUnmounted(() => {
                         <!-- Disarankan dari sistem -->
                         <div v-for="item in filteredLocations" :key="item.id" @click="searchQuery = item.title; desktopActiveMenu = 'jadwal'" class="flex gap-3 items-center cursor-pointer group hover:bg-gray-50 p-2 -mx-2 rounded-xl transition">
                             <div :class="`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${item.bg}`">
-                                <i :class="`${item.icon} ${item.iconColor} text-sm`"></i>
+                                <AppIcon :iconClass="`${item.icon} ${item.iconColor} text-sm`" />
                             </div>
                             <div class="border-b border-[#6C757D]/10 pb-2 pt-1 w-full group-last:border-0">
                                 <h4 class="font-bold text-[13px] text-[#0A2540]">{{ item.title }}</h4>
@@ -245,14 +247,14 @@ onUnmounted(() => {
                 <div v-if="desktopActiveMenu === 'jenis'" class="w-full max-w-sm mx-auto">
                     <h2 class="text-lg font-extrabold text-[#0A2540] mb-4">Pilih Jenis Aset</h2>
                     <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#0A2540] focus-within:ring-2 focus-within:ring-[#0A2540]/20 transition">
-                        <i class="fa-solid fa-magnifying-glass text-[#0A2540] pl-1 text-sm"></i>
+                        <Search class="text-[#0A2540] pl-1 text-sm" />
                         <input v-model="assetSearchQuery" type="text" placeholder="Cari jenis aset..." class="w-full outline-none text-[#0A2540] font-medium text-sm bg-transparent">
                     </div>
                     <div class="space-y-4 max-h-[250px] overflow-y-auto pr-2 overscroll-contain">
                         <div v-if="!assetSearchQuery" class="space-y-2">
                             <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
                                 <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.length === 0}">
-                                    <i v-if="selectedAssets.length === 0" class="fa-solid fa-check text-white text-[10px]"></i>
+                                    <Check v-if="selectedAssets.length === 0" class="text-white text-[10px]" />
                                 </div>
                                 <span class="text-sm font-bold text-[#0A2540]">Semua</span>
                                 <input type="checkbox" :checked="selectedAssets.length === 0" @change="selectedAssets = []" class="hidden">
@@ -263,7 +265,7 @@ onUnmounted(() => {
                             <div class="space-y-2">
                                 <label v-for="item in cat.items" :key="item" class="flex items-center gap-3 cursor-pointer group p-1">
                                     <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(item)}">
-                                        <i v-if="selectedAssets.includes(item)" class="fa-solid fa-check text-white text-[10px]"></i>
+                                        <Check v-if="selectedAssets.includes(item)" class="text-white text-[10px]" />
                                     </div>
                                     <span class="text-sm font-medium text-[#0A2540]">{{ item }}</span>
                                     <input type="checkbox" :value="item" class="hidden" @change="toggleAsset(item)">
@@ -278,14 +280,14 @@ onUnmounted(() => {
 
                     <div class="flex justify-between items-center mb-4 px-2">
                         <button @click="prevDesktopMonth" class="w-8 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center transition" :class="desktopCalendarPage === 0 ? 'opacity-30 cursor-not-allowed' : ''">
-                            <i class="fa-solid fa-chevron-left text-[#0A2540] text-sm"></i>
+                            <ChevronLeft class="text-[#0A2540] text-sm" />
                         </button>
                         <div class="flex gap-8 w-full px-4">
                             <h3 class="flex-1 text-center text-[15px] font-bold text-[#0A2540]">{{ monthsData[desktopCalendarPage]?.title }}</h3>
                             <h3 class="flex-1 text-center text-[15px] font-bold text-[#0A2540]">{{ monthsData[desktopCalendarPage + 1]?.title }}</h3>
                         </div>
                         <button @click="nextDesktopMonth" class="w-8 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
-                            <i class="fa-solid fa-chevron-right text-[#0A2540] text-sm"></i>
+                            <ChevronRight class="text-[#0A2540] text-sm" />
                         </button>
                     </div>
 

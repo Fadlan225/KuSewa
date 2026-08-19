@@ -1,4 +1,5 @@
 <script setup>
+import { Image, Heart, MapPin, ChevronRight } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed, inject } from 'vue';
 import AssetCardSkeleton from './AssetCardSkeleton.vue';
 import { usePage, router } from '@inertiajs/vue3';
@@ -283,7 +284,7 @@ const periodLabel = {
 
                 <!-- 0 Image / Error -->
                 <div v-if="!img1 || asset.imageError" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-300 z-0">
-                    <i class="fa-solid fa-image text-3xl mb-1"></i>
+                    <Image class="text-3xl mb-1" />
                     <span class="text-[10px] font-medium">No Image</span>
                 </div>
 
@@ -304,10 +305,8 @@ const periodLabel = {
                     @pointerdown.stop
                     @click.stop.prevent="toggleFavorite"
                 >
-                    <i
-                        class="fa-solid fa-heart text-[14px] sm:text-[16px] transition-all duration-200 mt-[1px]"
-                        :class="isFavorite ? 'text-[#ff4d6d]' : 'text-gray-300'"
-                    ></i>
+                    <Heart class="text-[14px] sm:text-[16px] transition-all duration-200 mt-[1px]"
+                        :class="isFavorite ? 'text-pink-500 fill-pink-500' : 'text-gray-300'" />
                 </button>
 
                 <!-- Rating -->
@@ -331,7 +330,7 @@ const periodLabel = {
                             '--angle': heart.angle + 'deg',
                             fontSize: heart.size + 'px',
                         }"
-                    ><i class="fa-solid fa-heart text-red-500"></i></div>
+                    ><Heart class="text-pink-500 fill-pink-500" /></div>
                 </TransitionGroup>
             </div>
 
@@ -349,7 +348,7 @@ const periodLabel = {
 
                 <!-- Detail (Secondary Context - Subdued) -->
                 <div class="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-slate-500 mb-1 truncate">
-                    <i class="fa-solid fa-location-dot text-slate-400 shrink-0"></i>
+                    <MapPin class="text-slate-400 shrink-0" />
                     <span class="truncate">{{ asset.district?.name || asset.district || asset.address || 'Detail lokasi' }}</span>
                     <span class="w-1 h-1 rounded-full bg-slate-200 shrink-0"></span>
                     <span class="truncate text-emerald-600 font-medium">{{ asset.available_at ? `Tersedia ${asset.available_at}` : 'Tersedia Sekarang' }}</span>
@@ -368,7 +367,7 @@ const periodLabel = {
                     </div>
 
                     <div class="text-slate-300 group-hover:text-[#FFC000] transition-colors flex items-center justify-center pb-0.5 pr-0.5">
-                        <i class="fa-solid fa-chevron-right text-xs"></i>
+                        <ChevronRight class="text-xs" />
                     </div>
                 </div>
             </div>

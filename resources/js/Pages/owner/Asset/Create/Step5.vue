@@ -1,4 +1,5 @@
 <script setup>
+import { Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import CustomSelect from '@/Components/UI/CustomSelect.vue';
 
@@ -89,7 +90,7 @@ const rentalUnitLabel = computed(() => {
                     class="w-10 h-10 rounded-md bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 mt-5 hover:bg-rose-500 hover:text-white transition cursor-pointer"
                     title="Hapus Varian Harga"
                 >
-                    <i class="fa-solid fa-trash text-sm"></i>
+                    <Trash2 class="text-sm" />
                 </button>
             </div>
         </div>
@@ -151,7 +152,7 @@ const rentalUnitLabel = computed(() => {
                             class="w-10 h-10 rounded-md bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 mt-5 hover:bg-rose-500 hover:text-white transition cursor-pointer"
                             title="Hapus Varian Harga"
                         >
-                            <i class="fa-solid fa-trash text-sm"></i>
+                            <Trash2 class="text-sm" />
                         </button>
                     </div>
                 </div>

@@ -11,7 +11,7 @@
             <!-- Header -->
             <div class="flex items-center justify-between p-4 pt-safe text-white bg-gradient-to-b from-black/60 to-transparent absolute top-0 left-0 right-0 z-10">
                 <button @click="stopCamera" class="p-2 hover:bg-white/10 rounded-full transition-colors active:bg-white/20">
-                    <i class="fa-solid fa-xmark text-xl"></i>
+                    <X class="text-xl" />
                 </button>
                 <h3 class="font-medium text-[15px] drop-shadow-md">Kamera</h3>
                 <div class="w-10"></div>
@@ -29,7 +29,7 @@
 
                 <!-- Error Message -->
                 <div v-if="errorMessage" class="text-center text-red-400 p-8 flex flex-col items-center gap-4">
-                    <i class="fa-solid fa-triangle-exclamation text-5xl"></i>
+                    <AlertTriangle class="text-5xl" />
                     <p class="font-medium">{{ errorMessage }}</p>
                 </div>
             </div>
@@ -49,6 +49,7 @@
 </template>
 
 <script setup>
+import { X, AlertTriangle } from 'lucide-vue-next';
 import { ref, watch, onUnmounted, nextTick } from 'vue';
 
 const props = defineProps({

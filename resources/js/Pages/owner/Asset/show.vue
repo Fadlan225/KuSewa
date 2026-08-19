@@ -1,4 +1,5 @@
 <script setup>
+import { Loader2, Camera, Clock, CheckCircle, XCircle, Check, Play, Pause, AlertTriangle } from 'lucide-vue-next';
 import { ref, computed, watch } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -226,8 +227,8 @@ const assetSubMenu = computed(() => [
                     <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
                         <input type="file" ref="fileInput" class="hidden" accept="image/png, image/jpeg, image/webp" @change="handleThumbnailUpload" />
                         <button @click="triggerThumbnailUpload" :disabled="isUploadingThumbnail" class="bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition flex items-center gap-2">
-                            <i v-if="isUploadingThumbnail" class="fa-solid fa-spinner fa-spin"></i>
-                            <i v-else class="fa-solid fa-camera"></i>
+                            <Loader2 v-if="isUploadingThumbnail" class="animate-spin" />
+                            <Camera v-else class="" />
                             {{ isUploadingThumbnail ? 'Mengunggah...' : 'Ubah Foto Utama' }}
                         </button>
                     </div>
@@ -242,12 +243,12 @@ const assetSubMenu = computed(() => [
                             <div class="flex items-center gap-3 flex-wrap mb-1.5">
                                 <input v-model="form.title" type="text" class="text-2xl font-black text-[#0A2540] border-b-2 border-transparent hover:border-slate-200 focus:border-indigo-600 focus:ring-0 px-0 py-1 w-full max-w-lg bg-transparent transition truncate" placeholder="Nama Properti" />
 
-                                <span v-if="asset.status === 'pending'" class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-clock"></i> Menunggu</span>
-                                <span v-else-if="asset.status === 'approved'" class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-circle-check"></i> Terverifikasi</span>
-                                <span v-else-if="asset.status === 'rejected'" class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-circle-xmark"></i> Ditolak</span>
+                                <span v-if="asset.status === 'pending'" class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><Clock class="" /> Menunggu</span>
+                                <span v-else-if="asset.status === 'approved'" class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><CheckCircle class="" /> Terverifikasi</span>
+                                <span v-else-if="asset.status === 'rejected'" class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><XCircle class="" /> Ditolak</span>
                                 
-                                <span v-if="form.processing" class="text-xs text-slate-400 flex items-center gap-1"><i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...</span>
-                                <span v-else-if="form.recentlySuccessful" class="text-xs text-emerald-500 flex items-center gap-1"><i class="fa-solid fa-check"></i> Tersimpan</span>
+                                <span v-if="form.processing" class="text-xs text-slate-400 flex items-center gap-1"><Loader2 class="animate-spin" /> Menyimpan...</span>
+                                <span v-else-if="form.recentlySuccessful" class="text-xs text-emerald-500 flex items-center gap-1"><Check class="" /> Tersimpan</span>
                             </div>
                             <div v-if="form.errors.title" class="text-xs text-rose-500 mt-1 mb-2">{{ form.errors.title }}</div>
 
@@ -264,12 +265,12 @@ const assetSubMenu = computed(() => [
                         <!-- Right actions -->
                         <div class="shrink-0 flex items-center gap-2">
                             <button v-if="asset.status === 'inactive'" @click="proceedToggleStatus('activate')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm flex items-center gap-2" :disabled="isTogglingStatus">
-                                <i v-if="isTogglingStatus" class="fa-solid fa-spinner fa-spin"></i>
-                                <i v-else class="fa-solid fa-play"></i>
+                                <Loader2 v-if="isTogglingStatus" class="animate-spin" />
+                                <Play v-else class="" />
                                 Aktifkan
                             </button>
                             <button v-else @click="confirmDelete" class="bg-white border border-rose-200 text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm flex items-center gap-2" :disabled="isTogglingStatus">
-                                <i class="fa-solid fa-pause"></i>
+                                <Pause class="" />
                                 Nonaktifkan
                             </button>
                         </div>
@@ -332,7 +333,7 @@ const assetSubMenu = computed(() => [
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
             <div class="p-6 text-center">
                 <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <i class="fa-solid fa-triangle-exclamation text-3xl"></i>
+                    <AlertTriangle class="text-3xl" />
                 </div>
                 <h3 class="text-xl font-bold text-slate-900 mb-2">Nonaktifkan Aset?</h3>
 
@@ -355,7 +356,7 @@ const assetSubMenu = computed(() => [
                         {{ hasActiveBookings ? 'Tutup' : 'Batal' }}
                     </button>
                     <button v-if="!hasActiveBookings" @click="proceedToggleStatus('deactivate')" class="flex-1 px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2" :disabled="isTogglingStatus">
-                        <i v-if="isTogglingStatus" class="fa-solid fa-spinner fa-spin"></i>
+                        <Loader2 v-if="isTogglingStatus" class="animate-spin" />
                         <span v-else>Ya, Nonaktifkan</span>
                     </button>
                 </div>

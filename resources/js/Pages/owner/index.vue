@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { DoorOpen, Percent, CalendarCheck, Wallet, BarChart, Map, TrendingUp, LineChart } from 'lucide-vue-next';
 import { computed, ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -241,7 +243,7 @@ const unitChartSlices = computed(() => {
                 <!-- Total Unit -->
                 <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
                     <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                        <i class="fa-solid fa-door-open text-slate-400 mt-0.5"></i> <span>Total Unit</span>
+                        <DoorOpen class="text-slate-400 mt-0.5" /> <span>Total Unit</span>
                     </p>
                     <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.totalUnit ?? 0 }}</p>
                 </div>
@@ -249,7 +251,7 @@ const unitChartSlices = computed(() => {
                 <!-- Keterisian -->
                 <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
                     <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                        <i class="fa-solid fa-percent text-slate-400 mt-0.5"></i> <span>Keterisian</span>
+                        <Percent class="text-slate-400 mt-0.5" /> <span>Keterisian</span>
                     </p>
                     <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.tingkatKeterisian ?? 0 }}%</p>
                 </div>
@@ -257,7 +259,7 @@ const unitChartSlices = computed(() => {
                 <!-- Booking Bln Ini -->
                 <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
                     <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                        <i class="fa-solid fa-calendar-check text-slate-400 mt-0.5"></i> <span>Booking Bulan Ini</span>
+                        <CalendarCheck class="text-slate-400 mt-0.5" /> <span>Booking Bulan Ini</span>
                     </p>
                     <div class="flex items-end gap-3">
                         <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.bookingBulanIni ?? 0 }}</p>
@@ -270,7 +272,7 @@ const unitChartSlices = computed(() => {
                 <!-- Income Bln Ini -->
                 <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
                     <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                        <i class="fa-solid fa-wallet text-slate-400 mt-0.5"></i> <span>Pendapatan Bulan Ini</span>
+                        <Wallet class="text-slate-400 mt-0.5" /> <span>Pendapatan Bulan Ini</span>
                     </p>
                     <div class="flex items-end gap-3">
                         <p class="text-2xl lg:text-3xl font-black text-[#0A2540] truncate" :title="formatCurrency(props.stats?.pendapatanBulanIni)">
@@ -283,11 +285,10 @@ const unitChartSlices = computed(() => {
                             'text-rose-600': pendapatanPersentase < 0,
                             'text-slate-400': pendapatanPersentase === 0
                          }">
-                        <i class="fa-solid shrink-0 text-[10px]" :class="{
+                        <AppIcon iconClass="fa-solid shrink-0 text-[10px]" :class="{
                             'fa-arrow-up': pendapatanPersentase > 0,
                             'fa-arrow-down': pendapatanPersentase < 0,
-                            'fa-minus': pendapatanPersentase === 0
-                        }"></i>
+                        }" />
                         <span>{{ pendapatanPersentase > 0 ? '+' : '' }}{{ Math.round(pendapatanPersentase) }}% dari bulan lalu</span>
                     </div>
                 </div>
@@ -343,7 +344,7 @@ const unitChartSlices = computed(() => {
                     <!-- Empty State -->
                     <div v-else class="w-full h-full min-h-[300px] flex flex-col items-center justify-center text-slate-400">
                         <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                            <i class="fa-solid fa-chart-column text-2xl text-slate-300"></i>
+                            <BarChart class="text-2xl text-slate-300" />
                         </div>
                         <p class="text-sm font-semibold text-slate-500 mb-1">Belum ada data pendapatan.</p>
                         <p class="text-xs text-slate-400 mb-4">Tunggu hingga ada penyewa yang menyelesaikan pemesanan.</p>
@@ -383,7 +384,7 @@ const unitChartSlices = computed(() => {
                         </div>
                     </div>
                     <div v-else class="h-full flex flex-col items-center justify-center text-slate-400 space-y-2 mt-10">
-                        <i class="fa-solid fa-map-location-dot text-2xl"></i>
+                        <Map class="text-2xl" />
                         <p class="text-xs italic">Belum ada data persebaran</p>
                     </div>
                 </CardContent>
@@ -391,7 +392,7 @@ const unitChartSlices = computed(() => {
                 <!-- Card Footer (Trending Info) -->
                 <div v-if="kotaList.length" class="p-4 bg-slate-50 border-t border-slate-100">
                     <div class="flex items-center gap-2 text-xs font-semibold text-slate-700">
-                        <i class="fa-solid fa-arrow-trend-up text-emerald-500"></i>
+                        <TrendingUp class="text-emerald-500" />
                         <span><span class="font-bold text-emerald-600">{{ kotaList[0].name }}</span> memiliki aset terbanyak bulan ini.</span>
                     </div>
                 </div>
@@ -443,7 +444,7 @@ const unitChartSlices = computed(() => {
                     <!-- Empty State -->
                     <div v-else class="w-full h-full min-h-[250px] flex flex-col items-center justify-center text-slate-400">
                         <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                            <i class="fa-solid fa-chart-line text-2xl text-slate-300"></i>
+                            <LineChart class="text-2xl text-slate-300" />
                         </div>
                         <p class="text-sm font-semibold text-slate-500 mb-1">Belum ada data pemesanan.</p>
                     </div>

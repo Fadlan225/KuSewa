@@ -1,4 +1,5 @@
 <script setup>
+import { ChevronDown } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 
 const props = defineProps({
@@ -78,7 +79,7 @@ const selectedLabel = computed(() => {
             ]"
         >
             <span class="text-slate-600 truncate pr-4">{{ selectedLabel }}</span>
-            <i class="fa-solid fa-chevron-down text-[10px] text-slate-500 transition-transform duration-200" :class="{ 'rotate-180': isOpen }"></i>
+            <ChevronDown class="text-[10px] text-slate-500 transition-transform duration-200" :class="{ 'rotate-180': isOpen }" />
         </div>
 
         <!-- Dropdown Menu -->

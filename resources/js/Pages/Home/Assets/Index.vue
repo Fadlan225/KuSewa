@@ -1,9 +1,12 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Map, Search, ChevronDown, Check } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { router, usePage, Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue';
 import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
+import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
 import axios from 'axios';
 
 const page = usePage();
@@ -286,7 +289,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                         <!-- Gambar peta sebagai background -->
                         <div class="absolute inset-0 opacity-40 bg-[url('/images/dummy-map.png')] bg-cover bg-center"></div>
                         <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-md text-[#0A2540] mb-3 relative z-10">
-                            <i class="fa-solid fa-map-location-dot text-xl"></i>
+                            <Map class="text-xl" />
                         </div>
                         <button class="bg-[#0A2540] text-white px-6 py-2 rounded-full font-bold text-xs shadow hover:bg-[#1a365d] transition relative z-10 w-full">
                             Eksplor di Peta
@@ -311,7 +314,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                         <!-- Search input for facilities -->
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <i class="fa-solid fa-search text-gray-400 text-xs"></i>
+                                <Search class="text-gray-400 text-xs" />
                             </div>
                             <input type="text" v-model="facilitySearch" placeholder="Cari fasilitas..." class="w-full text-sm border-gray-200 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl pl-9 py-2 bg-slate-50 transition" />
                         </div>
@@ -329,7 +332,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                             <button @click="toggleFacilityCategory(group.name)" class="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition">
                                 <span class="text-[15px] font-extrabold text-[#0A2540]">{{ group.name }}</span>
                                 <div class="w-7 h-7 rounded-full bg-slate-50 flex items-center justify-center">
-                                    <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition-transform" :class="{'rotate-180': openFacilityCategories[group.name]}"></i>
+                                    <ChevronDown class="text-xs text-slate-400 transition-transform" :class="{'rotate-180': openFacilityCategories[group.name]}" />
                                 </div>
                             </button>
 
@@ -348,7 +351,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                                             class="peer sr-only"
                                         >
                                         <div class="w-5 h-5 rounded border border-gray-300 bg-white peer-checked:bg-[#FFC000] peer-checked:border-[#FFC000] transition flex items-center justify-center">
-                                            <i class="fa-solid fa-check text-white text-[10px] opacity-0 peer-checked:opacity-100"></i>
+                                            <Check class="text-white text-[10px] opacity-0 peer-checked:opacity-100" />
                                         </div>
                                     </div>
                                     <span class="text-sm font-medium text-[#6C757D] group-hover:text-[#0A2540] transition leading-tight">
@@ -379,10 +382,10 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                                     class="w-full flex items-center justify-between rounded-xl bg-slate-100/80 hover:bg-slate-200/60 border-0 px-3 py-2 text-xs font-medium text-[#1D1D1F] transition-colors"
                                 >
                                     <div class="flex items-center gap-2">
-                                        <i class="text-slate-500 w-3 text-center" :class="sortOptions.find(o => o.value === sortOption)?.icon"></i>
+                                        <AppIcon iconClass="text-slate-500 w-3 text-center" :class="sortOptions.find(o => o.value === sortOption)?.icon" />
                                         {{ sortOptions.find(o => o.value === sortOption)?.label || 'Urutkan' }}
                                     </div>
-                                    <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''"></i>
+                                    <ChevronDown class="text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''" />
                                 </button>
 
                                 <Transition
@@ -402,7 +405,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                                                 class="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-left"
                                                 :class="sortOption === option.value ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
                                             >
-                                                <i :class="[option.icon, sortOption === option.value ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center"></i>
+                                                <AppIcon :iconClass="[option.icon, sortOption === option.value ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center" />
                                                 {{ option.label }}
                                             </button>
                                         </div>
@@ -445,12 +448,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                             v-else
                             class="flex flex-col items-center justify-center pt-12 pb-32 px-4 w-full text-center"
                         >
-                            <img
-                                src="/empty.svg"
-                                class="w-40 sm:w-48 h-40 sm:h-48 object-contain mb-6 opacity-80"
-                                alt="Ilustrasi Kosong"
-                                onerror="this.src='https://placehold.co/400x300/f8f9fa/6c757d.png?text=Kosong'"
-                            >
+                            <EmptyStateIcon class="w-40 sm:w-48 h-40 sm:h-48 object-contain mb-6 opacity-80" />
                             <h3 class="text-lg sm:text-xl font-extrabold text-[#0A2540] mb-2">
                                 {{ hasActiveFilters ? 'Filter Terlalu Spesifik' : 'Pencarian Kosong' }}
                             </h3>

@@ -1,4 +1,5 @@
 <script setup>
+import { Loader2, X, AlertTriangle, Check, Search } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -135,7 +136,7 @@ function closeAll() {
                         :disabled="isBackingUp"
                         class="rounded-2xl bg-[#0A2540] px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-900 transition disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                        <i v-if="isBackingUp" class="fa-solid fa-circle-notch fa-spin text-[11px]"></i>
+                        <Loader2 v-if="isBackingUp" class="text-[11px] animate-spin" />
                         {{ isBackingUp ? 'Memproses...' : 'Backup Sekarang' }}
                     </button>
                     <button
@@ -202,7 +203,7 @@ function closeAll() {
                                             'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold',
                                             item.status === 'Berhasil' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : item.status === 'Memproses' ? 'bg-slate-50 text-slate-600 border border-slate-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
                                         ]">
-                                            <i v-if="item.status === 'Memproses'" class="fa-solid fa-circle-notch fa-spin text-[9px]"></i>
+                                            <Loader2 v-if="item.status === 'Memproses'" class="text-[9px] animate-spin" />
                                             {{ item.status }}
                                         </span>
                                     </td>
@@ -253,7 +254,7 @@ function closeAll() {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 
@@ -277,7 +278,7 @@ function closeAll() {
                                 </div>
 
                                 <div class="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 flex gap-2.5">
-                                    <i class="fa-solid fa-triangle-exclamation text-amber-600 text-xs mt-0.5"></i>
+                                    <AlertTriangle class="text-amber-600 text-xs mt-0.5" />
                                     <p class="text-[11px] text-amber-800">
                                         Semua data saat ini akan digantikan dengan data dari backup terpilih. Tindakan ini tidak bisa dibatalkan.
                                     </p>
@@ -299,7 +300,7 @@ function closeAll() {
 
                         <div v-else class="text-center py-6 space-y-2">
                             <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg mx-auto">
-                                <i class="fa-solid fa-check"></i>
+                                <Check class="" />
                             </div>
                             <p class="text-sm font-bold text-slate-900">Restore berhasil</p>
                             <p class="text-[11px] text-slate-500">
@@ -324,7 +325,7 @@ function closeAll() {
                             :disabled="restoreConfirmText.trim().toUpperCase() !== 'RESTORE' || isRestoring"
                             class="rounded-2xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
                         >
-                            <i v-if="isRestoring" class="fa-solid fa-circle-notch fa-spin text-[11px]"></i>
+                            <Loader2 v-if="isRestoring" class="text-[11px] animate-spin" />
                             {{ isRestoring ? 'Memulihkan...' : 'Restore Sekarang' }}
                         </button>
                         <button
@@ -359,13 +360,13 @@ function closeAll() {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 
                     <div class="px-6 pt-4 shrink-0 flex flex-col sm:flex-row gap-2">
                         <div class="flex items-center gap-3 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60 flex-1">
-                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            <Search class="text-slate-400 text-xs" />
                             <input
                                 type="text"
                                 v-model="allSearch"
@@ -396,7 +397,7 @@ function closeAll() {
                                     'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold',
                                     item.status === 'Berhasil' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : item.status === 'Memproses' ? 'bg-slate-50 text-slate-600 border border-slate-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
                                 ]">
-                                    <i v-if="item.status === 'Memproses'" class="fa-solid fa-circle-notch fa-spin text-[9px]"></i>
+                                    <Loader2 v-if="item.status === 'Memproses'" class="text-[9px] animate-spin" />
                                     {{ item.status }}
                                 </span>
                                 <button

@@ -1,4 +1,5 @@
 <script setup>
+import { Minus, Plus } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue';
 
 const props = defineProps({
@@ -142,7 +143,7 @@ onUnmounted(() => {
             :disabled="value <= min"
             class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-[#0A2540] hover:bg-gray-100 hover:shadow-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 border border-gray-200"
         >
-            <i class="fa-solid fa-minus"></i>
+            <Minus class="" />
         </button>
 
         <div class="relative flex items-center justify-center select-none" :style="{ width: size + 'px', height: size + 'px' }">
@@ -213,7 +214,7 @@ onUnmounted(() => {
             :disabled="value >= max"
             class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-[#0A2540] hover:bg-gray-100 hover:shadow-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed shrink-0 border border-gray-200"
         >
-            <i class="fa-solid fa-plus"></i>
+            <Plus class="" />
         </button>
     </div>
 </template>

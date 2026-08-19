@@ -1,4 +1,5 @@
 <script setup>
+import { Image, Pen, X, Trash2, Plus, Loader2 } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import BottomSheet from '@/Components/UI/BottomSheet.vue';
@@ -273,7 +274,7 @@ const submit = () => {
                             </template>
                             <template v-else>
                                 <div class="w-full h-full flex items-center justify-center">
-                                    <i class="fa-solid fa-image text-slate-300"></i>
+                                    <Image class="text-slate-300" />
                                 </div>
                             </template>
                         </div>
@@ -298,7 +299,7 @@ const submit = () => {
                     <!-- Action Button -->
                     <div class="absolute top-4 right-4 md:static md:text-right">
                         <button @click="openEditModal(unit)" class="text-slate-400 hover:text-primary hover:bg-yellow-50 transition w-8 h-8 rounded-lg flex items-center justify-center border border-slate-200 md:border-transparent bg-slate-50 md:bg-transparent">
-                            <i class="fa-solid fa-pen text-xs"></i>
+                            <Pen class="text-xs" />
                         </button>
                     </div>
                 </div>
@@ -311,7 +312,7 @@ const submit = () => {
                 <div class="p-6 border-b border-slate-100 shrink-0 flex justify-between items-center">
                     <h3 class="text-lg font-bold text-slate-900">{{ isEditing ? 'Edit Unit' : 'Tambah Unit Baru' }}</h3>
                     <button type="button" @click="showModal = false" class="text-slate-400 hover:text-slate-600">
-                        <i class="fa-solid fa-xmark"></i>
+                        <X class="" />
                     </button>
                 </div>
                 
@@ -360,7 +361,7 @@ const submit = () => {
                                         <input v-model="pricing.price" type="number" min="0" placeholder="100000" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#0A2540] focus:ring-0" required />
                                     </div>
                                     <button v-if="form.pricings.length > 1" type="button" @click="form.pricings.splice(pIdx, 1)" class="w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center shrink-0 mt-4" title="Hapus">
-                                        <i class="fa-solid fa-trash text-xs"></i>
+                                        <Trash2 class="text-xs" />
                                     </button>
                                 </div>
                                 <div v-if="formErrors.pricings" class="text-xs text-rose-500">{{ formErrors.pricings }}</div>
@@ -378,7 +379,7 @@ const submit = () => {
                                         @change="handleUnitThumbnailUpload"
                                         class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                     />
-                                    <i class="fa-solid fa-image text-2xl text-slate-300 mb-2"></i>
+                                    <Image class="text-2xl text-slate-300 mb-2" />
                                     <p class="text-xs font-bold text-slate-500">Pilih Thumbnail Unit</p>
                                 </div>
                                 <div v-else class="relative w-32 h-24 group/thumb">
@@ -389,7 +390,7 @@ const submit = () => {
                                         class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow opacity-0 group-hover/thumb:opacity-100 transition cursor-pointer"
                                         title="Hapus Thumbnail"
                                     >
-                                        <i class="fa-solid fa-xmark"></i>
+                                        <X class="" />
                                     </button>
                                 </div>
                             </div>
@@ -450,7 +451,7 @@ const submit = () => {
                                                 {{ img.gallery_category?.name || 'Umum' }}
                                             </span>
                                             <button type="button" @click="removeExistingImage(img)" class="w-8 h-8 rounded-full bg-white text-rose-500 hover:text-rose-600 flex items-center justify-center shadow-sm">
-                                                <i class="fa-solid fa-trash text-xs"></i>
+                                                <Trash2 class="text-xs" />
                                             </button>
                                         </div>
                                     </div>
@@ -471,13 +472,13 @@ const submit = () => {
                                             <img :src="item.preview" class="w-full h-full object-cover" />
                                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition flex items-center justify-center">
                                                 <button type="button" @click="removeGroupItem(gIdx, iIdx)" class="text-white text-xs bg-rose-500 rounded-full w-6 h-6 flex items-center justify-center shadow-sm">
-                                                    <i class="fa-solid fa-xmark"></i>
+                                                    <X class="" />
                                                 </button>
                                             </div>
                                         </div>
                                         
                                         <div class="w-20 h-20 shrink-0 bg-white rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-slate-400 hover:bg-slate-100 transition" @click="triggerGroupFileInput(group.id, false)">
-                                            <i class="fa-solid fa-plus text-slate-400 text-xl"></i>
+                                            <Plus class="text-slate-400 text-xl" />
                                             <input :id="'fileInput_desktop_' + group.id" type="file" class="hidden" multiple accept="image/*" @change="e => handleGroupImageChange(e, gIdx)" />
                                         </div>
                                     </div>
@@ -491,7 +492,7 @@ const submit = () => {
                             Batal
                         </button>
                         <button type="submit" :disabled="isSubmitting" class="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition text-sm flex items-center justify-center gap-2">
-                            <i v-if="isSubmitting" class="fa-solid fa-spinner fa-spin"></i>
+                            <Loader2 v-if="isSubmitting" class="animate-spin" />
                             {{ isEditing ? 'Simpan Perubahan' : 'Simpan Unit' }}
                         </button>
                     </div>
@@ -579,7 +580,7 @@ const submit = () => {
                                             {{ img.gallery_category?.name || 'Umum' }}
                                         </span>
                                         <button type="button" @click="removeExistingImage(img)" class="w-8 h-8 rounded-full bg-white text-rose-500 hover:text-rose-600 flex items-center justify-center shadow-sm">
-                                            <i class="fa-solid fa-trash text-xs"></i>
+                                            <Trash2 class="text-xs" />
                                         </button>
                                     </div>
                                 </div>
@@ -593,7 +594,7 @@ const submit = () => {
                                         <option v-for="cat in galleryCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                                     </select>
                                     <button type="button" @click="removeGroup(gIdx)" class="w-10 h-10 shrink-0 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-rose-500 shadow-sm">
-                                        <i class="fa-solid fa-trash"></i>
+                                        <Trash2 class="" />
                                     </button>
                                 </div>
                                 
@@ -602,13 +603,13 @@ const submit = () => {
                                         <img :src="item.preview" class="w-full h-full object-cover" />
                                         <div class="absolute top-1 right-1">
                                             <button type="button" @click="removeGroupItem(gIdx, iIdx)" class="text-white text-xs bg-rose-500 rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
-                                                <i class="fa-solid fa-xmark"></i>
+                                                <X class="" />
                                             </button>
                                         </div>
                                     </div>
                                     
                                     <div class="w-20 h-20 shrink-0 bg-white rounded-lg border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer snap-start" @click="triggerGroupFileInput(group.id, true)">
-                                        <i class="fa-solid fa-plus text-slate-400 text-lg mb-1"></i>
+                                        <Plus class="text-slate-400 text-lg mb-1" />
                                         <span class="text-[9px] font-semibold text-slate-500">Tambah</span>
                                         <input :id="'fileInput_mobile_' + group.id" type="file" class="hidden" multiple accept="image/*" @change="e => handleGroupImageChange(e, gIdx)" />
                                     </div>
@@ -621,7 +622,7 @@ const submit = () => {
                 <!-- Footer (dalam form) -->
                 <div class="p-5 border-t border-[#6C757D]/10 bg-white shrink-0">
                     <button type="submit" :disabled="isSubmitting" class="w-full py-3 bg-primary hover:bg-primary/90 text-slate-800 font-bold rounded-xl transition text-sm flex items-center justify-center gap-2 shadow-sm">
-                        <i v-if="isSubmitting" class="fa-solid fa-spinner fa-spin"></i>
+                        <Loader2 v-if="isSubmitting" class="animate-spin" />
                         {{ isEditing ? 'Simpan Perubahan' : 'Simpan Unit' }}
                     </button>
                 </div>

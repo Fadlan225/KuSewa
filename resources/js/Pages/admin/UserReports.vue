@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Download, Search, X } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -167,7 +169,7 @@ function exportReports() {
                 @click="exportReports"
                 class="rounded-2xl bg-[#0A2540] px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-900 transition flex items-center gap-2"
             >
-                <i class="fa-solid fa-download text-[#FFC000]"></i>
+                <Download class="text-[#FFC000]" />
                 Export CSV
             </button>
             <button
@@ -225,7 +227,7 @@ function exportReports() {
                 <div v-if="showFilterPanel" class="px-6 py-4 border-b border-slate-100 bg-slate-50/60">
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div class="flex items-center gap-3 bg-white px-3.5 py-2 rounded-xl border border-slate-200/80 sm:col-span-1">
-                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            <Search class="text-slate-400 text-xs" />
                             <input
                                 type="text"
                                 v-model="searchQuery"
@@ -292,7 +294,7 @@ function exportReports() {
                                         v-if="item.sanction"
                                         :class="['inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold', sanctionMeta[item.sanction].badge]"
                                     >
-                                        <i :class="['fa-solid', sanctionMeta[item.sanction].icon, 'text-[9px]']"></i>
+                                        <AppIcon :iconClass="['fa-solid', sanctionMeta[item.sanction].icon, 'text-[9px]']" />
                                         {{ item.sanction }}
                                     </span>
                                     <span v-else class="text-slate-300 text-[11px]">-</span>
@@ -347,7 +349,7 @@ function exportReports() {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 
@@ -480,7 +482,7 @@ function exportReports() {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 
@@ -493,7 +495,7 @@ function exportReports() {
                             <div class="flex items-center justify-between gap-3">
                                 <p class="text-xs font-semibold text-slate-900">{{ entry.user }}</p>
                                 <span :class="['inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold', sanctionMeta[entry.type].badge]">
-                                    <i :class="['fa-solid', sanctionMeta[entry.type].icon, 'text-[9px]']"></i>
+                                    <AppIcon :iconClass="['fa-solid', sanctionMeta[entry.type].icon, 'text-[9px]']" />
                                     {{ entry.type }}
                                 </span>
                             </div>

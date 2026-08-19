@@ -35,18 +35,17 @@ class AssetPricingSeeder extends Seeder
             if ($asset->allow_units) {
                 $units = $unitsByAsset->get($asset->id, collect());
                 foreach ($units as $unit) {
-                    foreach ($tiers as $tier) {
-                        $batch[] = [
-                            'asset_id'      => $asset->id,
-                            'asset_unit_id' => $unit->id,
-                            'duration'      => $tier['duration'],
-                            'rental_unit'   => $tier['rental_unit'],
-                            'price'         => (int) round($tier['price']),
-                            'created_at'    => now(),
-                            'updated_at'    => now(),
-                        ];
-                        $totalPricings++;
-                    }
+                    $tier = $tiers[0];
+                    $batch[] = [
+                        'asset_id'      => $asset->id,
+                        'asset_unit_id' => $unit->id,
+                        'duration'      => $tier['duration'],
+                        'rental_unit'   => $tier['rental_unit'],
+                        'price'         => (int) round($tier['price']),
+                        'created_at'    => now(),
+                        'updated_at'    => now(),
+                    ];
+                    $totalPricings++;
                 }
             } else {
                 foreach ($tiers as $tier) {

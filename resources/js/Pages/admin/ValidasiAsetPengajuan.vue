@@ -1,4 +1,5 @@
 <script setup>
+import { Search, RotateCw, ChevronRight, MapPin, X, Check } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -43,7 +44,7 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
     <DashboardLayout role="Admin" title="Validasi Aset Properti" description="Pantau dan verifikasi aset properti yang didaftarkan oleh para owner.">
         <template #header-actions>
             <div class="flex items-center gap-2.5 w-64 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 focus-within:border-[#0A2540] focus-within:ring-1 focus-within:ring-[#0A2540] transition-all">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-sm"></i>
+                <Search class="text-slate-400 text-sm" />
                 <input
                     type="text"
                     v-model="searchQuery"
@@ -52,7 +53,7 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                 />
             </div>
             <button @click="refresh" class="rounded-lg bg-[#0A2540] px-4 py-2 text-sm font-semibold text-white hover:bg-slate-800 transition flex items-center gap-2 shadow-sm">
-                <i class="fa-solid fa-rotate-right text-xs"></i>
+                <RotateCw class="text-xs" />
                 <span>Refresh</span>
             </button>
         </template>
@@ -161,7 +162,7 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
             <section class="bg-[#F8FAFC] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[94vh] overflow-y-auto">
                 <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between sticky top-0 z-10">
                     <div class="flex items-center gap-2 text-xs font-semibold text-slate-400">
-                        <span>Validasi Aset</span><i class="fa-solid fa-chevron-right text-[9px] text-slate-300"></i>
+                        <span>Validasi Aset</span><ChevronRight class="text-[9px] text-slate-300" />
                         <span class="text-slate-800 font-bold">{{ selectedAsset.title }}</span>
                     </div>
                     <button @click="selectedAsset = null" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 hover:bg-slate-200 text-lg">&times;</button>
@@ -178,7 +179,7 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                                 </div>
                                 <div class="p-5 space-y-3">
                                     <h1 class="text-lg font-black text-slate-900">{{ selectedAsset.title }}</h1>
-                                    <p class="text-xs text-slate-500 flex items-center gap-1.5"><i class="fa-solid fa-location-dot text-[#FFC000]"></i>{{ selectedAsset.address }}, {{ selectedAsset.location }}</p>
+                                    <p class="text-xs text-slate-500 flex items-center gap-1.5"><MapPin class="text-[#FFC000]" />{{ selectedAsset.address }}, {{ selectedAsset.location }}</p>
                                 </div>
                             </div>
 
@@ -217,8 +218,8 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                             </div>
                             <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-2"><h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">Lokasi</h3><div class="flex justify-between text-xs"><span class="text-slate-400">Provinsi</span><b>{{ selectedAsset.province || '-' }}</b></div><div class="flex justify-between text-xs"><span class="text-slate-400">Kota</span><b>{{ selectedAsset.location || '-' }}</b></div><div class="text-xs text-slate-500 pt-2 border-t border-slate-100">{{ selectedAsset.address || '-' }}</div></div>
                             <div class="flex gap-2">
-                                <button v-if="selectedAsset.status === 'Pending'" @click="updateStatus(selectedAsset.id, 'reject'); selectedAsset = null" class="flex-1 border border-rose-200 text-rose-700 font-bold px-4 py-3 rounded-xl hover:bg-rose-50 text-xs"><i class="fa-solid fa-xmark mr-1"></i>Tolak Aset</button>
-                                <button v-if="selectedAsset.status === 'Pending'" @click="updateStatus(selectedAsset.id, 'approve'); selectedAsset = null" class="flex-1 bg-emerald-600 text-white font-bold px-4 py-3 rounded-xl hover:bg-emerald-700 text-xs"><i class="fa-solid fa-check mr-1"></i>Validasi Aset</button>
+                                <button v-if="selectedAsset.status === 'Pending'" @click="updateStatus(selectedAsset.id, 'reject'); selectedAsset = null" class="flex-1 border border-rose-200 text-rose-700 font-bold px-4 py-3 rounded-xl hover:bg-rose-50 text-xs"><X class="mr-1" />Tolak Aset</button>
+                                <button v-if="selectedAsset.status === 'Pending'" @click="updateStatus(selectedAsset.id, 'approve'); selectedAsset = null" class="flex-1 bg-emerald-600 text-white font-bold px-4 py-3 rounded-xl hover:bg-emerald-700 text-xs"><Check class="mr-1" />Validasi Aset</button>
                             </div>
                         </div>
                     </div>

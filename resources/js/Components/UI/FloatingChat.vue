@@ -88,7 +88,7 @@
                 </div>
                 <p class="text-xs text-slate-500 truncate leading-tight flex items-center gap-1">
                   <span v-if="contact.lastMessage && contact.isLastMessageSelf" class="shrink-0 text-[10px]">
-                    <i :class="['fa-solid fa-check-double transition-colors duration-500 ease-in-out', contact.isLastMessageRead ? 'text-blue-600 read-bounce' : 'text-slate-400']"></i>
+                    <CheckCheck :class="['', contact.isLastMessageRead ? 'text-blue-600 read-bounce' : 'text-slate-400']" />
                   </span>
                   <span class="truncate">{{ contact.lastMessage }}</span>
                 </p>
@@ -100,7 +100,7 @@
             </template>
             <!-- Empty State for Contacts -->
             <div v-else class="flex flex-col items-center justify-center h-full px-6 text-center py-10">
-              <img src="/no-chat.svg" alt="No Chat" class="w-24 h-24 mb-4 opacity-80" onerror="this.src='/images/dummy-map.png'" />
+              <NoChatIcon class="w-24 h-24 mb-4 opacity-80" />
               <h3 class="text-slate-800 font-semibold text-sm mb-1">Belum Ada Percakapan</h3>
               <p class="text-slate-500 text-xs">Anda belum memiliki percakapan aktif.</p>
             </div>
@@ -134,7 +134,7 @@
                    @touchend="cancelLongPress"
                    @touchmove="cancelLongPress">
                 <div v-if="msg.status === 'policy_error'" class="text-[10px] md:text-xs text-red-600 font-medium mb-1 pb-1 border-b border-red-100 flex items-start gap-1.5">
-                  <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                  <AlertCircle class="mt-0.5" />
                   <span>{{ msg.error_text }}</span>
                 </div>
 
@@ -144,7 +144,7 @@
                         <div class="truncate max-w-[150px]" :class="msg.isSender ? 'text-yellow-800' : 'text-gray-600'">{{ msg.replyTo.text }}</div>
                     </div>
                     <template v-if="msg.isDeleted">
-                        <div class="italic text-gray-800 text-xs"><i class="fa-solid fa-ban mr-1"></i> Pesan ini telah dihapus</div>
+                        <div class="italic text-gray-800 text-xs"><Ban class="mr-1" /> Pesan ini telah dihapus</div>
                     </template>
                     <template v-else-if="msg.attachments && msg.attachments.length > 0">
                         <div class="grid gap-1 mb-1 max-w-[200px]" :class="[
@@ -173,7 +173,7 @@
                     </template>
                     <template v-else-if="msg.type === 'file'">
                         <a :href="msg.file_url" target="_blank" class="flex items-center gap-2 p-1.5 rounded-lg border border-black/10" :class="msg.status === 'policy_error' ? 'bg-red-100 pointer-events-none' : (msg.isSender ? 'bg-yellow-400 hover:bg-black/5' : 'bg-slate-50 hover:bg-black/5')">
-                            <i class="fa-solid fa-file-lines text-lg" :class="msg.isSender ? 'text-black' : 'text-red-500'"></i>
+                            <FileText class="text-lg" :class="msg.isSender ? 'text-black' : 'text-red-500'" />
                             <span class="text-xs truncate max-w-[100px]">{{ msg.file_name }}</span>
                         </a>
                         <div v-if="msg.text" class="mt-1 whitespace-pre-wrap">{{ msg.text }}</div>
@@ -187,7 +187,7 @@
                 <span v-if="msg.isEdited" class="text-[9px] font-mono italic mr-0.5">diedit</span>
                 <span class="text-[9px] font-mono">{{ msg.time }}</span>
                 <template v-if="msg.isSender || msg.isSelf">
-                  <i v-if="msg.status === 'policy_error'" class="fa-solid fa-circle-exclamation text-[9px]"></i>
+                  <AlertCircle v-if="msg.status === 'policy_error'" class="text-[9px]" />
                   <i v-else :class="[
                     'fa-solid text-[9px] transition-colors duration-500 ease-in-out',
                     (msg.status === 'failed' || msg.status === 'sending') ? 'fa-check text-slate-400' :
@@ -217,14 +217,14 @@
                  <span class="text-[10px] text-gray-500 truncate">{{ editingMessageId ? editingMessageOriginal : replyingToMessage.text }}</span>
              </div>
              <button @click="cancelReplyOrEdit" class="text-gray-400 hover:text-gray-600 w-6 h-6 flex items-center justify-center shrink-0 ml-1 rounded-full hover:bg-slate-100 transition-colors">
-                <i class="fa-solid fa-xmark text-sm"></i>
+                <X class="text-sm" />
              </button>
           </div>
 
           <form @submit.prevent="sendChatMessage" class="p-3 bg-white flex items-center gap-2 shrink-0 transition-all" :class="{'pt-1': replyingToMessage || editingMessageId}">
             <input v-model="newChatMessage" @input="handleTyping" type="text" placeholder="Ketik pesan..." class="flex-1 bg-slate-100 text-slate-800 text-xs md:text-sm px-4 py-2.5 rounded-full border-0 focus:ring-2 focus:ring-[#ffc000]" />
             <button type="submit" :disabled="!newChatMessage.trim()" class="w-9 h-9 rounded-full bg-[#ffc000] text-slate-950 flex items-center justify-center disabled:opacity-40">
-              <i class="fa-solid fa-paper-plane text-[15px] -ml-0.5"></i>
+              <Send class="text-[15px] -ml-0.5" />
             </button>
           </form>
         </template>
@@ -250,20 +250,20 @@
              @click.stop
              @touchstart.stop>
             <button @click="handleAction('info')" class="w-full text-left px-3 py-1.5 font-semibold text-gray-500 border-b flex items-center gap-2 hover:bg-gray-100 transition-colors">
-              <i class="fa-solid fa-circle-info"></i> Info Pesan
+              <Info class="" /> Info Pesan
             </button>
             <button @click="handleAction('reply')" class="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2 transition-colors">
-              <i class="fa-solid fa-reply w-3 text-gray-400"></i> Balas
+              <Reply class="w-3 text-gray-400" /> Balas
             </button>
             <button @click="handleAction('copy')" class="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2 transition-colors">
-              <i class="fa-regular fa-copy w-3 text-gray-400"></i> Salin
+              <Copy class="w-3 text-gray-400" /> Salin
             </button>
             <template v-if="contextMenu.message.isSender || contextMenu.message.isSelf">
                 <button v-if="isEditable(contextMenu.message)" @click="handleAction('edit')" class="w-full text-left px-3 py-2 hover:bg-gray-100 flex items-center gap-2 transition-colors">
-                  <i class="fa-solid fa-pen w-3 text-gray-400"></i> Edit Pesan
+                  <Pen class="w-3 text-gray-400" /> Edit Pesan
                 </button>
                 <button @click="handleAction('delete')" class="w-full text-left px-3 py-2 hover:bg-gray-100 text-red-600 flex items-center gap-2 transition-colors">
-                  <i class="fa-regular fa-trash-can w-3"></i> Hapus
+                  <Trash2 class="w-3" /> Hapus
                 </button>
             </template>
         </div>
@@ -287,12 +287,14 @@
 </template>
 
 <script setup>
+import { CheckCheck, AlertCircle, Ban, FileText, X, Send, Info, Reply, Copy, Pen, Trash2 } from 'lucide-vue-next';
 import { ref, computed, nextTick, onMounted, onUnmounted, watch } from 'vue'
 import { usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import ImageViewerModal from '@/Components/UI/ImageViewerModal.vue'
 import MessageInfoModal from '@/Components/UI/MessageInfoModal.vue'
 import Toast from '@/Components/UI/Toast.vue'
+import NoChatIcon from '@/Components/UI/Icons/NoChatIcon.vue'
 
 const emit = defineEmits(['update:isOpen'])
 

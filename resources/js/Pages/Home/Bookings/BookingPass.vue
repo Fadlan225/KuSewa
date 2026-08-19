@@ -1,4 +1,5 @@
 <script setup>
+import { Loader2, Download, X, Clock, CalendarCheck, Copy, Calendar, MessageCircle } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -9,6 +10,7 @@ import JsBarcode from 'jsbarcode';
 import QRCode from 'qrcode';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
+import NoImageIcon from '@/Components/UI/Icons/NoImageIcon.vue';
 
 const props = defineProps({
     booking: {
@@ -22,6 +24,7 @@ const qrcodeRef = ref(null);
 const ticketRef = ref(null);
 const isDownloading = ref(false);
 const activeCodeTab = ref('barcode');
+const imageError = ref(false);
 
 const isConfirmedAndPaid = computed(() => {
     // Tiket ditampilkan jika booking confirmed/active/completed DAN payment paid
@@ -65,7 +68,7 @@ const assetImage = computed(() => {
         if (img.startsWith('assets/')) return '/' + img;
         return img.startsWith('/') ? '/storage' + img : '/storage/' + img;
     }
-    return '/no-image.svg';
+    return null;
 });
 
 const generateCodes = async () => {
@@ -253,7 +256,7 @@ const copyCode = async () => {
     <AppLayout :hideNavbar="true" hideBottombar>
         <div class="min-h-screen bg-[#F8F9FA] pb-24 md:pb-8 text-[#1D1D1F] font-sans relative flex flex-col">
             <!-- NAVBAR -->
-            <DetailNavbar backUrl="/aktivitas" :forceBackUrl="true" :showSections="false" :showShare="false" :showFavorite="false" />
+            <DetailNavbar backUrl="/aktivitas" :showBackButton="true" :forceBackUrl="true" :showSections="false" :showShare="false" :showFavorite="false" />
 
         <!-- CONTAINER (Responsive Width Constraint) -->
         <div class="w-full max-w-3xl mx-auto p-4 flex-1">
@@ -269,10 +272,15 @@ const copyCode = async () => {
 
                         <!-- Image Header (h-56 = 224px) -->
                         <div class="relative h-56 w-full bg-gray-200 shrink-0">
-                            <img :src="assetImage"
-                                 :class="assetImage === '/no-image.svg' ? 'w-full h-full object-contain p-8 opacity-60' : 'w-full h-full object-cover'"
-                                 alt="Asset Image" crossorigin="anonymous"
-                                 onerror="this.src='/no-image.svg'; this.className='w-full h-full object-contain p-8 opacity-60'" />
+                            <template v-if="assetImage && !imageError">
+                                <img :src="assetImage"
+                                     class="w-full h-full object-cover"
+                                     alt="Asset Image" crossorigin="anonymous"
+                                     @error="imageError = true" />
+                            </template>
+                            <template v-else>
+                                <NoImageIcon class="w-full h-full object-contain p-8 opacity-60" />
+                            </template>
                             <div class="absolute inset-0 bg-gradient-to-t from-[#0A2540]/90 via-[#0A2540]/30 to-transparent"></div>
 
                             <div class="absolute bottom-6 left-6 right-6 flex justify-between items-end">
@@ -375,8 +383,8 @@ const copyCode = async () => {
                 <!-- Buttons (Desktop) -->
                 <div class="mt-5 space-y-3 max-w-sm mx-auto hidden md:block">
                     <button @click="downloadTicketPDF" :disabled="isDownloading" class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-[0.98] transition-all text-[#0A2540] font-bold py-3.5 rounded-xl shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <i v-if="isDownloading" class="fa-solid fa-spinner fa-spin"></i>
-                        <i v-else class="fa-solid fa-download"></i>
+                        <Loader2 v-if="isDownloading" class="animate-spin" />
+                        <Download v-else class="" />
                         {{ isDownloading ? 'Mengunduh...' : 'Download Tiket' }}
                     </button>
                 </div>
@@ -392,11 +400,11 @@ const copyCode = async () => {
                     <div class="relative w-32 h-32 mb-6">
                         <div class="absolute inset-0 rounded-full" :class="isCancelled ? 'bg-red-500/20' : 'bg-[#FFC000]/20'"></div>
                         <div class="absolute inset-4 bg-white rounded-full shadow-sm flex items-center justify-center border-4" :class="isCancelled ? 'border-red-500' : 'border-[#FFC000]'">
-                            <i v-if="isCancelled" class="fa-solid fa-xmark text-5xl text-red-500"></i>
-                            <i v-else class="fa-regular fa-clock text-4xl text-[#0A2540]"></i>
+                            <X v-if="isCancelled" class="text-5xl text-red-500" />
+                            <Clock v-else class="text-4xl text-[#0A2540]" />
                         </div>
                         <div v-if="!isCancelled" class="absolute -bottom-2 -right-2 bg-white rounded-lg shadow-md p-2 border border-gray-100">
-                            <i class="fa-regular fa-calendar-check text-[#FFC000] text-xl"></i>
+                            <CalendarCheck class="text-[#FFC000] text-xl" />
                         </div>
                     </div>
 
@@ -421,14 +429,14 @@ const copyCode = async () => {
                                 <h3 class="text-xl font-black text-[#0A2540]">{{ booking.booking_code }}</h3>
                             </div>
                             <button @click="copyCode" class="bg-amber-50 text-[#0A2540] hover:bg-amber-100 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1.5 border border-amber-200">
-                                <i class="fa-regular fa-copy text-amber-600"></i> Salin
+                                <Copy class="text-amber-600" /> Salin
                             </button>
                         </div>
 
                         <div class="mb-4">
                             <p class="font-bold text-sm text-[#0A2540]">{{ assetTitle }}</p>
                             <p class="text-[11px] text-gray-500 mt-0.5 truncate">{{ locationString || 'Lokasi tidak diketahui' }}</p>
-                            <p class="text-[11px] text-gray-500 mt-1"><i class="fa-regular fa-calendar mr-1"></i> {{ formatDate(booking.start_date) }} &bull; {{ formatTime(booking.start_date) }} - {{ formatTime(booking.end_date) }}</p>
+                            <p class="text-[11px] text-gray-500 mt-1"><Calendar class="mr-1" /> {{ formatDate(booking.start_date) }} &bull; {{ formatTime(booking.start_date) }} - {{ formatTime(booking.end_date) }}</p>
                         </div>
 
                         <div class="border-t border-dashed border-gray-200 my-4"></div>
@@ -463,7 +471,7 @@ const copyCode = async () => {
 
                         <div class="space-y-2">
                             <a href="https://wa.me/6281234567890" target="_blank" class="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-[#0A2540] font-bold py-2.5 rounded-xl text-xs transition-colors shadow-sm">
-                                <i class="fa-brands fa-whatsapp text-green-500 text-sm"></i> WhatsApp Admin
+                                <MessageCircle class="text-green-500 text-sm" /> WhatsApp Admin
                             </a>
                             <button @click="router.get(`/payment/${booking.payment?.id}`)" class="w-full flex items-center justify-center gap-2 bg-white hover:bg-gray-50 border border-gray-200 text-[#0A2540] font-bold py-2.5 rounded-xl text-xs transition-colors shadow-sm">
                                 Lihat Cara Pembayaran
@@ -506,7 +514,7 @@ const copyCode = async () => {
         <DetailBottomBar v-if="isVerifying" hideLeftContent>
             <template #right-content>
                 <div class="w-full flex items-center justify-center gap-2.5 py-3 px-6 bg-amber-50 border border-amber-200 rounded-xl">
-                    <i class="fa-regular fa-clock text-amber-500 animate-pulse"></i>
+                    <Clock class="text-amber-500 animate-pulse" />
                     <span class="text-sm font-bold text-amber-700">Menunggu Konfirmasi Owner</span>
                 </div>
             </template>
@@ -516,8 +524,8 @@ const copyCode = async () => {
         <DetailBottomBar v-if="isConfirmedAndPaid" hideLeftContent>
             <template #right-content>
                 <button @click="downloadTicketPDF" :disabled="isDownloading" class="w-full bg-[#FFC000] hover:bg-[#ebd000] text-[#0A2540] font-bold py-3 px-6 rounded-xl shadow-md transition-colors text-sm tracking-wide flex items-center justify-center gap-2 disabled:opacity-50">
-                    <i v-if="isDownloading" class="fa-solid fa-spinner fa-spin"></i>
-                    <i v-else class="fa-solid fa-download"></i>
+                    <Loader2 v-if="isDownloading" class="animate-spin" />
+                    <Download v-else class="" />
                     {{ isDownloading ? 'Mengunduh...' : 'Download Tiket' }}
                 </button>
             </template>

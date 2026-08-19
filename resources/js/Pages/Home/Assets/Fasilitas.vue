@@ -1,4 +1,5 @@
 <script setup>
+import { X, Check } from 'lucide-vue-next';
 import { ref, watch, computed, onUnmounted } from 'vue';
 
 const props = defineProps({
@@ -97,7 +98,7 @@ const topFacilities = computed(() => {
                     <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
                         <h2 class="text-lg md:text-xl font-extrabold text-[#0A2540]">Semua Fasilitas</h2>
                         <button @click="close" class="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-[#0A2540] transition">
-                            <i class="fa-solid fa-xmark"></i>
+                            <X class="" />
                         </button>
                     </div>
 
@@ -112,7 +113,7 @@ const topFacilities = computed(() => {
                                 </div>
                                 <ul class="space-y-4">
                                     <li v-for="fac in group.facilities" :key="fac.id" class="flex items-start gap-3">
-                                        <i class="fa-solid fa-check mt-1 text-[#FFC000] text-sm shrink-0"></i>
+                                        <Check class="mt-1 text-[#FFC000] text-sm shrink-0" />
                                         <span class="text-[15px] text-gray-700 leading-relaxed">{{ fac.name }}</span>
                                     </li>
                                 </ul>

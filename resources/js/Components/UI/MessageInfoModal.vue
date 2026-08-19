@@ -4,7 +4,7 @@
       <!-- Header -->
       <div class="flex items-center px-4 py-4 bg-white border-b border-gray-100 shadow-sm">
         <button @click="close" class="mr-4 text-gray-500 hover:text-gray-800 transition-colors w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-          <i class="fa-solid fa-xmark text-lg"></i>
+          <X class="text-lg" />
         </button>
         <h3 class="text-gray-800 font-bold text-[15px]">Info Pesan</h3>
       </div>
@@ -40,7 +40,7 @@
                 </template>
                 <div class="flex justify-end mt-1 items-center gap-1 opacity-70">
                     <span class="text-[10px]">{{ message.time }}</span>
-                    <i class="fa-solid fa-check-double text-[10px]" :class="message.isRead ? 'text-blue-600' : 'text-gray-600'"></i>
+                    <CheckCheck class="text-[10px]" :class="message.isRead ? 'text-blue-600' : 'text-gray-600'" />
                 </div>
             </div>
         </div>
@@ -50,7 +50,7 @@
             <!-- Read -->
             <div>
                 <div class="flex items-center gap-3 mb-1">
-                    <i class="fa-solid fa-check-double text-blue-500 text-lg w-6 text-center"></i>
+                    <CheckCheck class="text-blue-500 text-lg w-6 text-center" />
                     <span class="font-bold text-gray-900 text-[15px]">Dibaca</span>
                 </div>
                 <div class="pl-9 text-sm text-gray-500 font-medium">
@@ -61,7 +61,7 @@
             <!-- Delivered -->
             <div>
                 <div class="flex items-center gap-3 mb-1">
-                    <i class="fa-solid fa-check-double text-gray-400 text-lg w-6 text-center"></i>
+                    <CheckCheck class="text-gray-400 text-lg w-6 text-center" />
                     <span class="font-bold text-gray-900 text-[15px]">Terkirim</span>
                 </div>
                 <div class="pl-9 text-sm text-gray-500 font-medium">
@@ -75,6 +75,7 @@
 </template>
 
 <script setup>
+import { X, CheckCheck } from 'lucide-vue-next';
 const props = defineProps({
     show: {
         type: Boolean,

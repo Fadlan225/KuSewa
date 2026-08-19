@@ -1,4 +1,5 @@
 <script setup>
+import { AlertCircle } from 'lucide-vue-next';
 defineProps({
     message: {
         type: String,
@@ -9,7 +10,7 @@ defineProps({
 
 <template>
     <p v-if="message" class="flex items-center gap-1.5 text-xs text-red-500 font-medium">
-        <i class="fa-solid fa-circle-exclamation text-[10px]"></i>
+        <AlertCircle class="text-[10px]" />
         {{ message }}
     </p>
 </template>

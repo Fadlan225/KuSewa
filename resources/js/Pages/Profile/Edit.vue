@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Loader2, Camera, Medal, AlertTriangle, ChevronRight, ClipboardList, Wallet, Heart, Briefcase } from 'lucide-vue-next';
 import { ref, computed, nextTick } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
@@ -205,12 +207,12 @@ const requestLocationPermission = () => {
 
                     <!-- Loading overlay -->
                     <div v-if="uploadingPhoto" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-spinner fa-spin text-white text-xl"></i>
+                        <Loader2 class="text-white text-xl animate-spin" />
                     </div>
 
                     <!-- Camera icon hover -->
                     <div v-else class="absolute -bottom-0 -right-0 bg-white p-1.5 rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-[#FFC000] hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-camera text-xs"></i>
+                        <Camera class="text-xs" />
                     </div>
                 </div>
                 <input type="file" class="hidden" ref="photoInput" @change="handleFileChange" accept="image/*">
@@ -224,7 +226,7 @@ const requestLocationPermission = () => {
                     <!-- Badge status keanggotaan -->
                     <div class="flex justify-center md:justify-start mt-4">
                         <div class="flex items-center space-x-2 bg-[#F8F9FA] px-3.5 py-1.5 rounded-full text-xs border border-gray-100">
-                            <i class="fa-solid fa-medal text-[#FFC000]"></i>
+                            <Medal class="text-[#FFC000]" />
                             <span class="text-[#000000] font-medium">
                                 Penyewa Aktif <span class="mx-1.5 text-gray-300">|</span> Total Aset Disewa: <strong>{{ total_assets_rented }}</strong>
                             </span>
@@ -237,7 +239,7 @@ const requestLocationPermission = () => {
             <div v-if="locationDenied" class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div class="flex items-start">
                     <div class="flex-shrink-0 mt-0.5">
-                        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg"></i>
+                        <AlertTriangle class="text-amber-500 text-lg" />
                     </div>
                     <div class="ml-3">
                         <h3 class="text-sm font-bold text-amber-800">Izin Lokasi Ditolak</h3>
@@ -263,7 +265,7 @@ const requestLocationPermission = () => {
                         class="text-xs sm:text-sm font-semibold text-[#466080] hover:text-[#0A2540] transition-colors flex items-center space-x-1"
                     >
                         <span>Lihat Riwayat Pesanan</span>
-                        <i class="fa-solid fa-chevron-right text-[10px] ml-1 text-[#6C757D]"></i>
+                        <ChevronRight class="text-[10px] ml-1 text-[#6C757D]" />
                     </Link>
                 </div>
 
@@ -271,7 +273,7 @@ const requestLocationPermission = () => {
                     <!-- Booking -->
                     <Link :href="route('aktivitas.index', { status: 'Berlangsung' })" class="flex flex-col items-center group cursor-pointer">
                         <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-[#FFC000]/10 transition-colors duration-200">
-                            <i class="fa-solid fa-clipboard-list text-2xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors"></i>
+                            <ClipboardList class="text-2xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                             <span v-if="bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ bookings_count }}</span>
                         </div>
                         <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Booking</p>
@@ -280,7 +282,7 @@ const requestLocationPermission = () => {
                     <!-- Belum Bayar -->
                     <Link :href="route('aktivitas.index', { status: 'Belum Bayar' })" class="flex flex-col items-center group cursor-pointer">
                         <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-red-50 transition-colors duration-200">
-                            <i class="fa-solid fa-wallet text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors"></i>
+                            <Wallet class="text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors" />
                             <span v-if="unpaid_bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ unpaid_bookings_count }}</span>
                         </div>
                         <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-red-500 transition-colors">Belum Bayar</p>
@@ -289,7 +291,7 @@ const requestLocationPermission = () => {
                     <!-- Aset Favorit -->
                     <Link :href="route('favorites.index')" class="flex flex-col items-center group cursor-pointer">
                         <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-pink-50 transition-colors duration-200">
-                            <i class="fa-solid fa-heart text-2xl text-[#0A2540] group-hover:text-pink-500 transition-colors"></i>
+                            <Heart class="text-2xl text-[#0A2540] group-hover:text-pink-500 transition-colors" />
                             <span v-if="favorite_assets_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ favorite_assets_count }}</span>
                         </div>
                         <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-pink-500 transition-colors">Aset Favorit</p>
@@ -311,10 +313,10 @@ const requestLocationPermission = () => {
                         class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group"
                     >
                         <div class="flex items-center space-x-4">
-                            <i :class="[item.icon, 'text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors']"></i>
+                            <AppIcon :iconClass="[item.icon, 'text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors']" />
                             <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">{{ item.label }}</span>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200"></i>
+                        <ChevronRight class="text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200" />
                     </Link>
 
                     <!-- Profile Bisnis (Bagi yang belum jadi mitra) -->
@@ -324,10 +326,10 @@ const requestLocationPermission = () => {
                         class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group"
                     >
                         <div class="flex items-center space-x-4">
-                            <i class="fa-solid fa-briefcase text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors"></i>
+                            <Briefcase class="text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors" />
                             <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Buka Bisnis / Jadi Mitra</span>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200"></i>
+                        <ChevronRight class="text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200" />
                     </Link>
                 </div>
 
@@ -343,10 +345,10 @@ const requestLocationPermission = () => {
                         class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group"
                     >
                         <div class="flex items-center space-x-4">
-                            <i :class="[item.icon, 'text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors']"></i>
+                            <AppIcon :iconClass="[item.icon, 'text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors']" />
                             <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">{{ item.label }}</span>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200"></i>
+                        <ChevronRight class="text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200" />
                     </Link>
                 </div>
 
@@ -362,10 +364,10 @@ const requestLocationPermission = () => {
                             class="w-full flex items-center justify-between py-3 border-b border-gray-50 hover:bg-red-50 px-3 rounded-xl transition-colors duration-150 group"
                         >
                             <div class="flex items-center space-x-4">
-                                <i :class="[item.icon, 'text-lg text-[#6C757D] group-hover:text-red-500 w-6 text-center transition-colors']"></i>
+                                <AppIcon :iconClass="[item.icon, 'text-lg text-[#6C757D] group-hover:text-red-500 w-6 text-center transition-colors']" />
                                 <span class="text-sm sm:text-base font-semibold text-red-500 group-hover:text-red-600 transition-colors">{{ item.label }}</span>
                             </div>
-                            <i class="fa-solid fa-chevron-right text-sm text-red-500 group-hover:text-red-600 transition-all duration-200 group-hover:translate-x-1"></i>
+                            <ChevronRight class="text-sm text-red-500 group-hover:text-red-600 transition-all duration-200 group-hover:translate-x-1" />
                         </button>
                         <Link
                             v-else
@@ -373,10 +375,10 @@ const requestLocationPermission = () => {
                             class="w-full flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group"
                         >
                             <div class="flex items-center space-x-4">
-                                <i :class="[item.icon, 'text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors']"></i>
+                                <AppIcon :iconClass="[item.icon, 'text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors']" />
                                 <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">{{ item.label }}</span>
                             </div>
-                            <i class="fa-solid fa-chevron-right text-sm text-[#6C757D] group-hover:text-[#FFC000] transition-all duration-200 group-hover:translate-x-1"></i>
+                            <ChevronRight class="text-sm text-[#6C757D] group-hover:text-[#FFC000] transition-all duration-200 group-hover:translate-x-1" />
                         </Link>
                     </template>
                 </div>

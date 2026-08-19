@@ -12,7 +12,7 @@
             <!-- Header Actions -->
             <div class="absolute top-0 left-0 right-0 p-4 pt-safe flex justify-end z-10 bg-gradient-to-b from-black/60 to-transparent">
                 <button @click="close" class="w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors active:scale-95">
-                    <i class="fa-solid fa-xmark text-xl"></i>
+                    <X class="text-xl" />
                 </button>
             </div>
 
@@ -22,7 +22,7 @@
                 @click.stop="prev"
                 class="absolute left-2 md:left-6 z-10 w-10 h-10 md:w-12 md:h-12 bg-black/50 hover:bg-black/80 border border-white/20 rounded-full flex items-center justify-center text-white transition-colors active:scale-95"
             >
-                <i class="fa-solid fa-chevron-left text-lg md:text-xl -ml-1"></i>
+                <ChevronLeft class="text-lg md:text-xl -ml-1" />
             </button>
 
             <!-- Image Container (Swipeable) -->
@@ -57,7 +57,7 @@
                 @click.stop="next"
                 class="absolute right-2 md:right-6 z-10 w-10 h-10 md:w-12 md:h-12 bg-black/50 hover:bg-black/80 border border-white/20 rounded-full flex items-center justify-center text-white transition-colors active:scale-95"
             >
-                <i class="fa-solid fa-chevron-right text-lg md:text-xl -mr-1"></i>
+                <ChevronRight class="text-lg md:text-xl -mr-1" />
             </button>
 
             <!-- Counter Info -->
@@ -72,6 +72,7 @@
 </template>
 
 <script setup>
+import { X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({

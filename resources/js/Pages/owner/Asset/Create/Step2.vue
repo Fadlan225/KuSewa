@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Search, Locate } from 'lucide-vue-next';
 import { computed, watch, ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import L from 'leaflet';
 import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
@@ -326,7 +328,7 @@ onBeforeUnmount(() => {
         <!-- Search bar + tombol GPS -->
         <div class="flex gap-2 mb-3 search-container relative z-20">
             <div class="flex-1 relative">
-                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm"></i>
+                <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-300 text-sm" />
                 <input
                     v-model="cariAlamatInput"
                     @input="onSearchInput"
@@ -373,7 +375,7 @@ onBeforeUnmount(() => {
                 title="Gunakan Lokasi Saya Saat Ini"
                 class="bg-slate-100 text-[#0A2540] text-sm font-semibold px-3.5 rounded-md hover:bg-slate-200 transition cursor-pointer shrink-0 disabled:opacity-50"
             >
-                <i class="fa-solid fa-location-crosshairs"></i>
+                <Locate class="" />
             </button>
         </div>
 
@@ -382,7 +384,7 @@ onBeforeUnmount(() => {
 
         <!-- Info koordinat terpilih -->
         <div class="flex items-center gap-2 mt-3 text-xs" :class="form.latitude ? 'text-emerald-600' : 'text-slate-500'">
-            <i :class="['fa-solid', form.latitude ? 'fa-circle-check' : 'fa-circle-exclamation']"></i>
+            <AppIcon :iconClass="['fa-solid', form.latitude ? 'fa-circle-check' : 'fa-circle-exclamation']" />
             <span v-if="form.latitude">
                 Titik lokasi terpilih: {{ form.latitude }}, {{ form.longitude }}
             </span>

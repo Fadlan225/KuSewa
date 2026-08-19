@@ -1,4 +1,5 @@
 <script setup>
+import { Loader2 } from 'lucide-vue-next';
 import { useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import axios from 'axios';
@@ -152,7 +153,7 @@ const closeModal = () => {
                                 @click="sendOtp"
                                 class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-sm text-white uppercase tracking-widest hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
                             >
-                                <span v-if="isSendingOtp"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Mengirim...</span>
+                                <span v-if="isSendingOtp"><Loader2 class="mr-2 animate-spin" /> Mengirim...</span>
                                 <span v-else>Kirim Kode OTP</span>
                             </button>
 
@@ -198,7 +199,7 @@ const closeModal = () => {
                                 @click="verifyOtpAndDelete"
                                 class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-sm text-white uppercase tracking-widest hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
                             >
-                                <span v-if="isVerifyingOtp || form.processing"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Memproses...</span>
+                                <span v-if="isVerifyingOtp || form.processing"><Loader2 class="mr-2 animate-spin" /> Memproses...</span>
                                 <span v-else>Hapus Akun</span>
                             </button>
 

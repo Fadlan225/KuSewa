@@ -19,8 +19,9 @@ class FavoriteController extends Controller
             ->with(['asset' => function ($query) {
                 $query->select([
                     'id', 'asset_type_id', 'owner_profile_id',
-                    'title', 'city', 'address', 'status', 'detail'
+                    'title', 'city_code', 'district_code', 'address', 'status', 'detail'
                 ])->with([
+                    'city:code,name',
                     'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                     'defaultPricing:id,asset_id,price,rental_unit',
                     'type:id,name,allow_units,category_id',
@@ -36,6 +37,7 @@ class FavoriteController extends Controller
             $asset = $fav->asset;
             if (!$asset) return null;
             
+            $asset->city_name = $asset->city->name ?? '';
             $asset->isFavorite = true;
             $asset->favorite_id = $fav->id;
             

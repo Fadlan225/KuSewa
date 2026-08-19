@@ -1,7 +1,10 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Check, ChevronDown, AlertTriangle, Image, Loader2 } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
   bookings: {
@@ -216,7 +219,7 @@ const activitiesBase = ref(
     }
 
     let actions = [];
-    if (bs === 'pending') {
+    if (bs === 'pending' && (!ps || ps === 'pending')) {
       actions.push({ label: 'Batalkan', primary: false, actionId: 'cancel' });
     } else if (bs === 'confirmed' && (!ps || ps === 'pending')) {
       actions.push({ label: 'Bayar Sekarang', primary: true, actionId: 'pay' });
@@ -334,9 +337,6 @@ const groupedActivities = computed(() => {
   return orderedGroups;
 });
 
-const isCancelModalOpen = ref(false);
-const selectedAssetToCancel = ref(null);
-const cancelReason = ref('');
 
 const handleActionClick = (action, item) => {
   if (action.actionId === 'cancel') {
@@ -362,13 +362,22 @@ const handleActionClick = (action, item) => {
   }
 };
 
+const isCancelModalOpen = ref(false);
+const selectedAssetToCancel = ref(null);
+const cancelReason = ref('');
+const cancelReasonOther = ref('');
+const isCancelling = ref(false);
+
 const openCancelModal = (item) => {
   selectedAssetToCancel.value = item;
   cancelReason.value = '';
+  cancelReasonOther.value = '';
+  isCancelling.value = false;
   isCancelModalOpen.value = true;
 };
 
 const closeCancelModal = () => {
+  if (isCancelling.value) return;
   isCancelModalOpen.value = false;
   setTimeout(() => {
     selectedAssetToCancel.value = null;
@@ -376,10 +385,28 @@ const closeCancelModal = () => {
 };
 
 const processCancellation = () => {
-  if (!cancelReason.value) return;
-  console.log(`Membatalkan ${selectedAssetToCancel.value.name} dengan alasan: ${cancelReason.value}`);
-  closeCancelModal();
-  alert('Penyewaan berhasil dibatalkan (Simulasi)');
+  if (!cancelReason.value || !selectedAssetToCancel.value) return;
+  
+  let finalReason = cancelReason.value;
+  if (finalReason === 'lainnya') {
+      if (!cancelReasonOther.value.trim()) return;
+      finalReason = cancelReasonOther.value.trim();
+  }
+  
+  isCancelling.value = true;
+  router.patch(route('booking.cancel', selectedAssetToCancel.value.id), {
+      cancel_reason: finalReason
+  }, {
+      preserveScroll: true,
+      onSuccess: () => {
+          isCancelling.value = false;
+          closeCancelModal();
+      },
+      onError: () => {
+          isCancelling.value = false;
+          alert('Terjadi kesalahan saat membatalkan pesanan.');
+      }
+  });
 };
 </script>
 
@@ -438,7 +465,7 @@ const processCancellation = () => {
                                       {{ tab.count }}
                                   </span>
                               </div>
-                              <i v-if="activeFilter === tab.name" class="fa-solid fa-check text-[10px] text-[#0A2540]"></i>
+                              <Check v-if="activeFilter === tab.name" class="text-[10px] text-[#0A2540]" />
                           </button>
                       </div>
                   </div>
@@ -455,7 +482,7 @@ const processCancellation = () => {
                                   <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 w-3 text-center"></i>
                                   {{ sort }}
                               </div>
-                              <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''"></i>
+                              <ChevronDown class="text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''" />
                           </button>
 
                           <!-- Dropdown Menu -->
@@ -476,7 +503,7 @@ const processCancellation = () => {
                                           class="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-left"
                                           :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
                                       >
-                                          <i :class="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center"></i>
+                                          <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center" />
                                           {{ option.label }}
                                       </button>
                                   </div>
@@ -507,7 +534,7 @@ const processCancellation = () => {
                       >
                           <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
                           {{ sort }}
-                          <i class="fa-solid fa-chevron-down text-slate-400 text-[9px] ml-1 transition-transform" :class="isSortOpenMobile ? 'rotate-180' : ''"></i>
+                          <ChevronDown class="text-slate-400 text-[9px] ml-1 transition-transform" :class="isSortOpenMobile ? 'rotate-180' : ''" />
                       </button>
 
                       <Transition
@@ -527,7 +554,7 @@ const processCancellation = () => {
                                       class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left"
                                       :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
                                   >
-                                      <i :class="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center text-[10px]"></i>
+                                      <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center text-[10px]" />
                                       {{ option.label }}
                                   </button>
                               </div>
@@ -537,7 +564,7 @@ const processCancellation = () => {
               </div>
 
               <div v-if="groupedActivities.length === 0" class="bg-white rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 py-12 sm:py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
-                <img src="/empty.svg" alt="No Activity" class="w-48 h-48 object-contain mb-6 opacity-80" onerror="this.src='https://placehold.co/400x300?text=No+Data'" />
+                <EmptyStateIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
                 <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada aktivitas</h2>
                 <p class="text-sm text-[#6C757D] mb-6">Mulai cari aset untuk disewa dan pantau di sini.</p>
                 <button @click="router.get('/')" class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors">
@@ -590,7 +617,7 @@ const processCancellation = () => {
                           <div class="w-full h-1.5 md:h-2 bg-gray-200 rounded-full relative">
                             <!-- Progress Fill -->
                             <div class="absolute top-0 left-0 h-full bg-[#10B981] transition-all rounded-full" :style="{ width: item.progressPercent + '%' }"></div>
-                            
+
                             <!-- Checkpoints -->
                             <div class="absolute top-1/2 -translate-y-1/2 left-[15%] w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white border-[1.5px] transition-colors" :class="item.progressPercent >= 15 ? 'border-[#10B981]' : 'border-gray-300'"></div>
                             <div class="absolute top-1/2 -translate-y-1/2 left-[40%] w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white border-[1.5px] transition-colors" :class="item.progressPercent >= 40 ? 'border-[#10B981]' : 'border-gray-300'"></div>
@@ -599,7 +626,7 @@ const processCancellation = () => {
                             <div class="absolute top-1/2 -translate-y-1/2 right-0 w-2 h-2 md:w-2.5 md:h-2.5 rounded-full bg-white border-[1.5px] transition-colors" :class="item.progressPercent >= 100 ? 'border-[#10B981]' : 'border-gray-300'"></div>
                           </div>
                         </div>
-                        
+
                         <!-- Actions -->
                         <div v-if="item.actions.length > 0" class="flex justify-end gap-1.5 md:gap-2 mt-1 md:mt-2 pt-2 md:pt-3 border-t border-gray-100">
                           <button
@@ -626,11 +653,11 @@ const processCancellation = () => {
       </div>
 
       <!-- POP-UP PEMBATALAN -->
-      <div v-if="isCancelModalOpen" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-0 sm:p-4">
+      <div v-if="isCancelModalOpen" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-0 sm:p-4">
         <div class="bg-white w-full sm:w-[450px] max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-xl transform transition-transform animate-slide-up sm:animate-fade-in">
           <div class="p-5 md:p-6 border-b border-gray-100 flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xl shrink-0">
-              <i class="fas fa-exclamation-triangle"></i>
+              <AlertTriangle class="" />
             </div>
             <h2 class="text-lg md:text-xl font-bold text-gray-900">Batalkan Penyewaan?</h2>
           </div>
@@ -644,7 +671,7 @@ const processCancellation = () => {
               </template>
               <template v-else>
                 <div class="w-14 h-14 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center text-gray-400 shrink-0">
-                  <i class="fas fa-image text-lg"></i>
+                  <Image class="text-lg" />
                 </div>
               </template>
               <div class="flex-1 min-w-0">
@@ -657,7 +684,6 @@ const processCancellation = () => {
               <h4 class="font-bold text-gray-800 mb-2">Konsekuensi Pembatalan:</h4>
               <ul class="space-y-2 text-gray-600 text-sm">
                 <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">•</span> <span>Jadwal penyewaan akan dibatalkan permanen.</span></li>
-                <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">•</span> <span>Refund diproses sesuai dengan kebijakan pemilik/KuSewa.</span></li>
                 <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">•</span> <span>Aset akan kembali tersedia untuk disewa orang lain.</span></li>
               </ul>
             </div>
@@ -674,18 +700,26 @@ const processCancellation = () => {
                   <option value="lainnya">Lainnya</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                  <i class="fas fa-chevron-down text-xs"></i>
+                  <ChevronDown class="text-xs" />
                 </div>
               </div>
+
+              <!-- Input text for 'Lainnya' -->
+              <transition name="fade">
+                <div v-if="cancelReason === 'lainnya'" class="mt-3">
+                  <input type="text" v-model="cancelReasonOther" placeholder="Tuliskan alasan spesifik..." class="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl focus:outline-none focus:border-[#0A2540] focus:ring-2 focus:ring-[#0A2540]/20 transition-all text-sm" />
+                </div>
+              </transition>
             </div>
           </div>
 
           <div class="p-5 md:p-6 border-t border-gray-100 flex gap-3 flex-col-reverse sm:flex-row">
-            <button @click="closeCancelModal" class="flex-1 py-3 px-4 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors text-center">
+            <button @click="closeCancelModal" :disabled="isCancelling" class="flex-1 py-3 px-4 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed">
               Kembali
             </button>
-            <button @click="processCancellation" :disabled="!cancelReason" :class="['flex-1 py-3 px-4 font-bold rounded-xl transition-colors text-center shadow-sm', cancelReason ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-200 text-white cursor-not-allowed']">
-              Batalkan Penyewaan
+            <button @click="processCancellation" :disabled="!cancelReason || (cancelReason === 'lainnya' && !cancelReasonOther.trim()) || isCancelling" :class="['flex-1 py-3 px-4 font-bold rounded-xl transition-colors text-center shadow-sm flex items-center justify-center gap-2', (cancelReason && (cancelReason !== 'lainnya' || cancelReasonOther.trim())) && !isCancelling ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-200 text-white cursor-not-allowed']">
+              <Loader2 v-if="isCancelling" class="animate-spin" />
+              {{ isCancelling ? 'Membatalkan...' : 'Batalkan Penyewaan' }}
             </button>
           </div>
         </div>

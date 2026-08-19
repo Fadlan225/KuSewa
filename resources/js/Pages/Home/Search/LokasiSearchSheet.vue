@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { ChevronDown, XCircle } from 'lucide-vue-next';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 
 const {
@@ -53,7 +55,7 @@ const {
 
                     <div class="px-4 pb-4 border-b border-[#6C757D]/10 flex items-center gap-3 pt-2">
                         <button @click="closeLokasiFullScreen" class="w-10 h-10 flex items-center justify-center rounded-full bg-white shadow-sm border border-[#6C757D]/10 hover:bg-gray-50 flex-shrink-0 active:scale-95 transition">
-                            <i class="fa-solid fa-chevron-down text-[#0A2540] text-sm"></i>
+                            <ChevronDown class="text-[#0A2540] text-sm" />
                         </button>
                         <div class="flex-1 flex items-center gap-2 border-2 border-[#0A2540] rounded-xl p-2 px-3 bg-white">
                             <input
@@ -64,7 +66,7 @@ const {
                                 autofocus
                             >
                             <button v-if="searchQuery" @click="searchQuery = ''" class="text-[#6C757D]">
-                                <i class="fa-solid fa-circle-xmark"></i>
+                                <XCircle class="" />
                             </button>
                         </div>
                     </div>
@@ -78,7 +80,7 @@ const {
                                 class="flex gap-4 items-center cursor-pointer group"
                             >
                                 <div :class="`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${item.bg}`">
-                                    <i :class="`${item.icon} ${item.iconColor} text-lg`"></i>
+                                    <AppIcon :iconClass="`${item.icon} ${item.iconColor} text-lg`" />
                                 </div>
                                 <div class="border-b border-[#6C757D]/10 pb-4 w-full group-last:border-0">
                                     <h4 class="font-bold text-[#0A2540] text-[15px]">{{ item.title }}</h4>

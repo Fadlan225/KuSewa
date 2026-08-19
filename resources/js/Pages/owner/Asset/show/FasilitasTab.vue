@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { FolderPlus, X, Plus, Layers } from 'lucide-vue-next';
 import { ref, watch, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 
@@ -159,7 +161,7 @@ const removeFacility = (id) => {
             <div class="border-b border-slate-100 bg-white px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <h2 class="font-bold text-slate-800">Fasilitas Aset ({{ localFacilities.length }})</h2>
                 <button @click="showAddCategory = true" class="text-xs font-bold text-[#0A2540] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center justify-center gap-1.5 w-full sm:w-auto">
-                    <i class="fa-solid fa-folder-plus"></i> Tambah Kategori
+                    <FolderPlus class="" /> Tambah Kategori
                 </button>
             </div>
 
@@ -180,7 +182,7 @@ const removeFacility = (id) => {
                 <div v-for="(group, categoryId) in groupedFacilities" :key="categoryId" class="space-y-4">
                     <div class="flex items-center gap-3 border-b border-slate-100 pb-2">
                         <div class="w-6 h-6 rounded bg-blue-50 text-blue-600 flex items-center justify-center">
-                            <i class="fa-solid text-xs" :class="group.icon || 'fa-list'"></i>
+                            <AppIcon :iconClass="group.icon || 'fa-list'"  />
                         </div>
                         <h4 class="font-bold text-slate-700 text-sm">{{ group.name }}</h4>
                         <span class="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">{{ group.facilities.length }} fasilitas</span>
@@ -190,20 +192,20 @@ const removeFacility = (id) => {
                         <!-- Existing Facilities -->
                         <div v-for="fac in group.facilities" :key="fac.id" class="aspect-square rounded-lg border border-slate-200 relative group shadow-sm bg-white flex flex-col items-center justify-center p-3 text-center transition hover:border-slate-300">
                             <div class="w-10 h-10 rounded-full bg-slate-50 text-slate-400 mb-2 flex items-center justify-center border border-slate-100">
-                                <i class="fa-solid" :class="fac.icon || 'fa-check'"></i>
+                                <AppIcon :iconClass="fac.icon || 'fa-check'"  />
                             </div>
                             <span class="text-[10px] font-bold text-slate-600 line-clamp-2 leading-tight">{{ fac.name }}</span>
 
                             <!-- Remove button -->
                             <button @click="removeFacility(fac.id)" class="absolute -top-1 right-2 w-5 h-5 bg-rose-500 text-white rounded-full text-[10px] flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity hover:bg-rose-600" title="Hapus Fasilitas">
-                                <i class="fa-solid fa-xmark"></i>
+                                <X class="" />
                             </button>
                         </div>
 
                         <!-- Upload Button (Card +) -->
                         <button @click="openAddFacilityModal(group.id)" class="aspect-square rounded-lg border-2 border-dashed border-slate-300 hover:border-[#0A2540] hover:bg-slate-50 bg-slate-50/50 flex flex-col items-center justify-center gap-2 transition group shadow-sm">
                             <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-[#0A2540] group-hover:scale-110 transition-transform">
-                                <i class="fa-solid fa-plus text-lg"></i>
+                                <Plus class="text-lg" />
                             </div>
                             <span class="text-[10px] font-bold text-slate-500 group-hover:text-[#0A2540] text-center px-2">Tambah<br>Fasilitas</span>
                         </button>
@@ -213,12 +215,12 @@ const removeFacility = (id) => {
                 <!-- Empty State -->
                 <div v-if="Object.keys(groupedFacilities).length === 0 && !showAddCategory" class="text-center py-12">
                     <div class="w-16 h-16 rounded-full bg-slate-50 text-slate-300 flex items-center justify-center mx-auto mb-4 border border-slate-100">
-                        <i class="fa-solid fa-layer-group text-3xl"></i>
+                        <Layers class="text-3xl" />
                     </div>
                     <h3 class="font-bold text-slate-700 mb-1">Belum Ada Kategori Fasilitas</h3>
                     <p class="text-sm text-slate-400 max-w-sm mx-auto mb-4">Aset tanpa fasilitas yang lengkap mungkin kurang diminati penyewa. Tambahkan kategori fasilitas sekarang.</p>
                     <button @click="showAddCategory = true" class="text-xs font-bold text-white bg-primary hover:bg-primary/90 px-4 py-2 rounded-lg transition shadow-sm inline-flex items-center gap-1.5">
-                        <i class="fa-solid fa-plus"></i> Tambah Kategori
+                        <Plus class="" /> Tambah Kategori
                     </button>
                 </div>
             </div>

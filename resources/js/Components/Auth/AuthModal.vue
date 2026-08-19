@@ -1,4 +1,5 @@
 <script setup>
+import { X } from 'lucide-vue-next';
 import { useAuthModalStore } from '@/Stores/AuthModalStore';
 import BottomSheet from '@/Components/UI/BottomSheet.vue';
 import AuthFlow from './AuthFlow.vue';
@@ -49,7 +50,7 @@ const close = () => {
                             @click="close"
                             class="w-8 h-8 rounded-full bg-[#F8F9FA] hover:bg-gray-200 flex items-center justify-center text-[#0A2540] transition ml-auto"
                         >
-                            <i class="fa-solid fa-xmark"></i>
+                            <X class="" />
                         </button>
                     </div>
 

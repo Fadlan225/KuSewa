@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Receipt, Clock, Wallet, ChevronDown, Image, User, Calendar, Search, Filter, Shield } from 'lucide-vue-next';
 import { computed, ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -166,7 +168,7 @@ const filterTime = ref('daily');
                             <!-- Total Pesanan -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                    <i class="fa-solid fa-receipt text-blue-500 mt-0.5"></i> <span>Total Pesanan</span>
+                                    <Receipt class="text-blue-500 mt-0.5" /> <span>Total Pesanan</span>
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.all || 0 }}</p>
                             </div>
@@ -174,7 +176,7 @@ const filterTime = ref('daily');
                             <!-- Menunggu Konfirmasi -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                    <i class="fa-solid fa-clock text-amber-500 mt-0.5"></i> <span>Menunggu Konfirmasi</span>
+                                    <Clock class="text-amber-500 mt-0.5" /> <span>Menunggu Konfirmasi</span>
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.pending || 0 }}</p>
                             </div>
@@ -182,7 +184,7 @@ const filterTime = ref('daily');
                             <!-- Menunggu Pembayaran -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                    <i class="fa-solid fa-wallet text-rose-500 mt-0.5"></i> <span>Menunggu Pembayaran</span>
+                                    <Wallet class="text-rose-500 mt-0.5" /> <span>Menunggu Pembayaran</span>
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.confirmed || 0 }}</p>
                             </div>
@@ -190,7 +192,7 @@ const filterTime = ref('daily');
                             <!-- Verifikasi Pembayaran -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                    <i class="fa-solid fa-file-invoice-dollar text-emerald-500 mt-0.5"></i> <span>Verifikasi Pembayaran</span>
+                                    <Receipt class="text-emerald-500 mt-0.5" /> <span>Verifikasi Pembayaran</span>
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.active || 0 }}</p>
                             </div>
@@ -235,7 +237,7 @@ const filterTime = ref('daily');
                                     class="flex items-center justify-between w-full pl-3 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] cursor-pointer transition font-medium text-slate-700 min-w-[130px]"
                                 >
                                     <span class="truncate">{{ kategoriOptions.find(o => o.value === filterKategori)?.label }}</span>
-                                    <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"></i>
+                                    <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400" />
                                 </button>
                                 
                                 <Transition
@@ -272,7 +274,7 @@ const filterTime = ref('daily');
                                     class="flex items-center justify-between w-full pl-3 pr-8 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] cursor-pointer transition font-medium text-slate-700 min-w-[130px]"
                                 >
                                     <span class="truncate">{{ jenisOptions.find(o => o.value === filterJenis)?.label }}</span>
-                                    <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400"></i>
+                                    <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400" />
                                 </button>
                                 
                                 <Transition
@@ -356,7 +358,7 @@ const filterTime = ref('daily');
                                             <img :src="`/storage/${booking.asset_image}`" @error="booking.imageError = true" class="w-full h-full object-cover" alt="Asset" loading="lazy" />
                                         </template>
                                         <div v-else class="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
-                                            <i class="fa-solid fa-image text-xl md:text-2xl"></i>
+                                            <Image class="text-xl md:text-2xl" />
                                         </div>
                                     </div>
 
@@ -368,7 +370,7 @@ const filterTime = ref('daily');
                                             </span>
                                             <!-- STATUS BADGE -->
                                             <span :class="['px-1.5 py-0.5 rounded text-[9px] font-bold flex items-center gap-1', bookingStatusClass(booking.status)]">
-                                                <i :class="['fa-solid', bookingStatusIcon(booking.status)]"></i>
+                                                <AppIcon :iconClass="['fa-solid', bookingStatusIcon(booking.status)]" />
                                                 {{ bookingStatusLabel(booking.status) }}
                                             </span>
                                         </div>
@@ -378,12 +380,12 @@ const filterTime = ref('daily');
                                         </h3>
 
                                         <div class="text-[10px] md:text-xs text-gray-500 font-medium truncate mt-0.5">
-                                            <i class="fa-solid fa-file-invoice text-[#FFC000] mr-0.5"></i>
-                                            {{ booking.code }} <span class="mx-1">•</span> <i class="fa-solid fa-user text-slate-400 mr-0.5"></i> {{ booking.tenant }}
+                                            <Receipt class="text-[#FFC000] mr-0.5" />
+                                            {{ booking.code }} <span class="mx-1">•</span> <User class="text-slate-400 mr-0.5" /> {{ booking.tenant }}
                                         </div>
 
                                         <div class="text-[10px] md:text-[11px] text-[#10B981] font-bold mt-1.5 flex items-center gap-1">
-                                            <i class="fa-regular fa-calendar"></i>
+                                            <Calendar class="" />
                                             {{ booking.period }}
                                         </div>
                                     </div>
@@ -401,7 +403,7 @@ const filterTime = ref('daily');
                                                 v-if="booking.status === 'pending'"
                                                 class="bg-[#FFC000] text-[#0A2540] text-[9px] md:text-xs font-bold px-3 py-1.5 md:px-4 md:py-1.5 rounded-full hover:bg-[#e6ad00] transition shadow-sm z-30 flex items-center gap-1"
                                             >
-                                                <i class="fa-solid fa-magnifying-glass text-[10px]"></i> Tinjau
+                                                <Search class="text-[10px]" /> Tinjau
                                             </div>
                                             <div
                                                 v-else
@@ -418,12 +420,12 @@ const filterTime = ref('daily');
 
                     <!-- Empty -->
                     <div v-if="!filteredBookings.length && !bookingItems.length" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                        <i class="fa-solid fa-receipt text-3xl text-slate-200"></i>
+                        <Receipt class="text-3xl text-slate-200" />
                         <p class="mt-3 font-bold text-slate-700">Belum ada pesanan</p>
                         <p class="mt-1 text-sm text-slate-400">Pesanan dari aset Anda akan tampil di halaman ini.</p>
                     </div>
                     <div v-else-if="!filteredBookings.length" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                        <i class="fa-solid fa-filter text-3xl text-slate-200"></i>
+                        <Filter class="text-3xl text-slate-200" />
                         <p class="mt-3 font-bold text-slate-700">Tidak ada pesanan dengan filter ini</p>
                         <button @click="filterKategori = 'all'; filterJenis = 'all'; applyFilter('all')" class="mt-3 px-4 py-2 bg-[#0A2540] text-white text-xs font-bold rounded-lg hover:bg-[#081d33] transition">
                             Lihat Semua Pesanan
@@ -520,13 +522,13 @@ const filterTime = ref('daily');
                             <p class="text-xs text-amber-700">Status verifikasi</p>
                             <p class="font-black text-amber-900">{{ statusLabel }}</p>
                         </div>
-                        <i class="fa-solid fa-shield-halved text-xl text-amber-500"></i>
+                        <Shield class="text-xl text-amber-500" />
                     </div>
                     <div class="mt-6 space-y-3">
                         <div v-for="document in documents" :key="document.name" class="flex items-center justify-between p-4 border border-slate-100 rounded-xl">
                             <span class="font-semibold text-sm">{{ document.name }}</span>
                             <span :class="document.complete ? 'text-emerald-600' : 'text-amber-600'" class="text-xs font-bold">
-                                <i :class="document.complete ? 'fa-circle-check' : 'fa-clock'" class="fa-solid mr-1"></i>
+                                <AppIcon :iconClass="document.complete ? 'fa-circle-check' : 'fa-clock'" class="fa-solid mr-1" />
                                 {{ document.complete ? 'Lengkap' : 'Perlu dilengkapi' }}
                             </span>
                         </div>
@@ -565,7 +567,7 @@ const filterTime = ref('daily');
                     <div v-for="(faq, index) in faqs" :key="faq.question" class="bg-white border border-slate-200 rounded-xl">
                         <button @click="activeFaq = activeFaq === index ? null : index" class="w-full p-4 text-left flex items-center justify-between font-bold text-sm">
                             <span>{{ faq.question }}</span>
-                            <i :class="activeFaq === index ? 'fa-minus' : 'fa-plus'" class="fa-solid text-slate-400"></i>
+                            <AppIcon :iconClass="activeFaq === index ? 'fa-minus' : 'fa-plus'" class="fa-solid text-slate-400" />
                         </button>
                         <p v-if="activeFaq === index" class="px-4 pb-4 text-sm text-slate-500 leading-relaxed">{{ faq.answer }}</p>
                     </div>

@@ -1,4 +1,5 @@
 <script setup>
+import { Image, Heart, Star } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, inject } from 'vue';
 import AssetCardSkeleton from './AssetCardSkeleton.vue';
 import { usePage, router } from '@inertiajs/vue3';
@@ -288,13 +289,13 @@ const availabilityText = computed(() => {
                     @touchend.stop="onTouchEnd"
                 >
                     <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
-                        <i class="fa-solid fa-image text-xl"></i>
+                        <Image class="text-xl" />
                     </div>
                     <img v-else :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" loading="lazy" />
 
                     <!-- Animasi Hati TikTok -->
                     <TransitionGroup name="heart-fly" tag="div" class="absolute inset-0 pointer-events-none z-30">
-                        <div v-for="heart in hearts" :key="heart.id" class="heart-particle absolute" :style="{ left: heart.x + 'px', top: heart.y + 'px', '--drift': heart.drift + 'px', '--angle': heart.angle + 'deg', fontSize: heart.size + 'px' }"><i class="fa-solid fa-heart text-red-500"></i></div>
+                        <div v-for="heart in hearts" :key="heart.id" class="heart-particle absolute" :style="{ left: heart.x + 'px', top: heart.y + 'px', '--drift': heart.drift + 'px', '--angle': heart.angle + 'deg', fontSize: heart.size + 'px' }"><Heart class="text-pink-500 fill-pink-500" /></div>
                     </TransitionGroup>
                     
                     <div class="absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10"></div>
@@ -323,7 +324,7 @@ const availabilityText = computed(() => {
                     <template v-if="asset.reviews_avg_rating">
                         <span class="w-1 h-1 rounded-full bg-slate-200 shrink-0"></span>
                         <div class="flex items-center gap-1 shrink-0">
-                            <i class="fa-solid fa-star text-[#FFC000] text-[9px]"></i>
+                            <Star class="text-[#FFC000] text-[9px]" />
                             <span class="font-bold text-slate-700">{{ parseFloat(asset.reviews_avg_rating).toFixed(1) }}</span>
                         </div>
                     </template>
@@ -354,7 +355,7 @@ const availabilityText = computed(() => {
                         :class="isPending ? 'opacity-70 pointer-events-none' : 'hover:scale-110'"
                         @click.stop.prevent="toggleFavorite"
                     >
-                        <i :class="isFavorite ? 'fa-solid fa-heart text-rose-500' : 'fa-regular fa-heart text-slate-300'" class="text-base drop-shadow-sm transition-all duration-200"></i>
+                        <Heart :class="isFavorite ? 'text-pink-500 fill-pink-500' : 'text-gray-300'" class="text-base drop-shadow-sm transition-all duration-200" />
                     </button>
                     <button class="bg-[#FFC000] text-[#0A2540] text-[10px] md:text-[11px] font-extrabold px-4 md:px-5 py-1.5 md:py-2 rounded hover:bg-[#e6ad00] transition-colors shadow-sm z-30" @click.stop.prevent="navigateToAsset">
                         Sewa

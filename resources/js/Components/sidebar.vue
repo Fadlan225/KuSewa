@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { User, Settings, Headset, LogOut, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-vue-next';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 
@@ -72,7 +74,7 @@ const handleLogout = () => {
     <aside :class="[isCollapsed ? 'w-20' : 'w-60', 'h-full max-h-screen bg-white border-r border-slate-200/80 flex flex-col p-3 md:p-4 shrink-0 transition-all duration-300 relative z-40']">
         <!-- Toggle Collapse Button -->
         <button @click="toggleCollapse" class="absolute -right-3 top-8 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:text-[#0A2540] shadow-sm z-50 hidden lg:flex cursor-pointer transition-transform duration-300 focus:outline-none">
-            <i :class="isCollapsed ? 'fa-solid fa-chevron-right' : 'fa-solid fa-chevron-left'" class="text-[10px]"></i>
+            <component :is="isCollapsed ? ChevronRight : ChevronLeft" class="text-[10px] w-3 h-3" />
         </button>
 
         <!-- Brand Logo -->
@@ -105,7 +107,7 @@ const handleLogout = () => {
                             <p class="text-[10px] text-slate-400 truncate">{{ role }}</p>
                         </div>
                     </div>
-                    <i v-if="!isCollapsed" :class="showProfileMenu ? 'rotate-180' : ''" class="fa-solid fa-chevron-down text-[10px] text-slate-400 transition-transform duration-200 shrink-0"></i>
+                    <ChevronDown v-if="!isCollapsed" :class="showProfileMenu ? 'rotate-180' : ''" class="text-[10px] w-3 h-3 text-slate-400 transition-transform duration-200 shrink-0" />
                 </button>
 
                 <!-- Dropdown Animasi Vue Transition -->
@@ -119,19 +121,19 @@ const handleLogout = () => {
                 >
                     <div v-if="showProfileMenu" class="absolute z-50 top-full mt-2 w-full rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg text-xs origin-top">
                         <Link :href="route('profile.edit')" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
-                            <i class="fa-solid fa-user w-4 text-center text-slate-400"></i> Profil Saya
+                            <User class="w-4 text-center text-slate-400" /> Profil Saya
                         </Link>
                         <Link v-if="role === 'Owner'" href="#" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
-                            <i class="fa-solid fa-gear w-4 text-center text-slate-400"></i> Pengaturan Akun
+                            <Settings class="w-4 text-center text-slate-400" /> Pengaturan Akun
                         </Link>
                         <Link v-if="role === 'Owner'" href="#" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
-                            <i class="fa-solid fa-headset w-4 text-center text-slate-400"></i> Bantuan
+                            <Headset class="w-4 text-center text-slate-400" /> Bantuan
                         </Link>
 
                         <div class="h-px bg-slate-100 my-1"></div>
 
                         <button @click="handleLogout" type="button" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-rose-600 hover:bg-rose-50 font-medium text-left transition-colors">
-                            <i class="fa-solid fa-right-from-bracket w-4 text-center"></i> Keluar
+                            <LogOut class="w-4 text-center" /> Keluar
                         </button>
                     </div>
                 </Transition>
@@ -155,12 +157,12 @@ const handleLogout = () => {
                             :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200', isCollapsed ? 'justify-center' : 'justify-between']"
                         >
                             <div class="flex items-center gap-3">
-                                <i :class="[item.icon, route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']"></i>
+                                <component :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']" />
                                 <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                             </div>
 
                             <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">
-                                <i v-if="item.badgeIcon && !item.badge" :class="item.badgeIcon"></i>
+                                <AppIcon :iconClass="item.badgeIcon" v-if="item.badgeIcon && !item.badge" />
                                 <span v-else-if="item.badge" :class="item.badgeClass || 'bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold'">
                                     {{ item.badge }}
                                 </span>
@@ -186,7 +188,7 @@ const handleLogout = () => {
                                 ]"
                             >
                                 <div class="flex items-center" :class="isCollapsed ? 'justify-center' : 'gap-2'">
-                                    <i :class="[sub.icon, sub.active ? 'text-[#0A2540]' : 'text-slate-400', isCollapsed ? 'w-4 text-sm' : 'w-3.5 text-center text-[11px]']"></i>
+                                    <component :is="sub.icon" :class="[sub.active ? 'text-[#0A2540]' : 'text-slate-400', isCollapsed ? 'w-4 text-sm' : 'w-3.5 text-center text-[11px]']" />
                                     <span v-if="!isCollapsed" class="text-[11px] whitespace-nowrap">{{ sub.label }}</span>
                                 </div>
                                 <span v-if="!isCollapsed && sub.badge" class="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full shrink-0">
@@ -217,11 +219,11 @@ const handleLogout = () => {
                         :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200', isCollapsed ? 'justify-center' : 'justify-between']"
                     >
                         <div class="flex items-center gap-3">
-                            <i :class="[item.icon, route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']"></i>
+                            <component :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']" />
                             <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                         </div>
                         <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">
-                            <i v-if="item.badgeIcon && !item.badge" :class="item.badgeIcon"></i>
+                            <AppIcon :iconClass="item.badgeIcon" v-if="item.badgeIcon && !item.badge" />
                             <span v-else-if="item.badge" :class="item.badgeClass || 'bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold'">
                                 {{ item.badge }}
                             </span>

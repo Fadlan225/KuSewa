@@ -1,8 +1,11 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Search, Check, ChevronDown } from 'lucide-vue-next';
 import { ref, computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Head } from '@inertiajs/vue3';
 import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue'
+import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
     initialFavorites: {
@@ -93,7 +96,7 @@ const filteredFavorites = computed(() => {
             <div class="block lg:hidden mb-5 space-y-2.5">
                 <!-- Search Input Mobile -->
                 <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
                     <input
                         v-model="search"
                         type="text"
@@ -135,7 +138,7 @@ const filteredFavorites = computed(() => {
 
                             <!-- Search Field -->
                             <div class="mt-3 relative">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                                <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
                                 <input
                                     v-model="search"
                                     type="text"
@@ -167,7 +170,7 @@ const filteredFavorites = computed(() => {
                                             {{ getCategoryCount(item) }}
                                         </span>
                                     </div>
-                                    <i v-if="selectedCategory === item" class="fa-solid fa-check text-[10px] text-[#0A2540]"></i>
+                                    <Check v-if="selectedCategory === item" class="text-[10px] text-[#0A2540]" />
                                 </button>
                             </div>
                         </div>
@@ -184,7 +187,7 @@ const filteredFavorites = computed(() => {
                                         <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 w-3 text-center"></i>
                                         {{ sort }}
                                     </div>
-                                    <i class="fa-solid fa-chevron-down text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''"></i>
+                                    <ChevronDown class="text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''" />
                                 </button>
 
                                 <!-- Dropdown Menu -->
@@ -205,7 +208,7 @@ const filteredFavorites = computed(() => {
                                                 class="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-left"
                                                 :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
                                             >
-                                                <i :class="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center"></i>
+                                                <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center" />
                                                 {{ option.label }}
                                             </button>
                                         </div>
@@ -237,7 +240,7 @@ const filteredFavorites = computed(() => {
                             >
                                 <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
                                 {{ sort }}
-                                <i class="fa-solid fa-chevron-down text-slate-400 text-[9px] ml-1 transition-transform" :class="isSortOpenMobile ? 'rotate-180' : ''"></i>
+                                <ChevronDown class="text-slate-400 text-[9px] ml-1 transition-transform" :class="isSortOpenMobile ? 'rotate-180' : ''" />
                             </button>
 
                             <!-- Dropdown Menu -->
@@ -258,7 +261,7 @@ const filteredFavorites = computed(() => {
                                             class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left"
                                             :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
                                         >
-                                            <i :class="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center text-[10px]"></i>
+                                            <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center text-[10px]" />
                                             {{ option.label }}
                                         </button>
                                     </div>
@@ -272,11 +275,7 @@ const filteredFavorites = computed(() => {
                         v-if="filteredFavorites.length === 0"
                         class="bg-white rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 py-12 sm:py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center"
                     >
-                        <img
-                            src="/empty.svg"
-                            class="w-48 h-48 object-contain mb-6"
-                            alt="Ilustrasi Kosong"
-                        >
+                        <EmptyStateIcon class="w-48 h-48 object-contain mb-6" />
 
                         <template v-if="props.initialFavorites.length === 0">
                             <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum Ada Favorit</h2>

@@ -1,4 +1,5 @@
 <script setup>
+import { FileSignature } from 'lucide-vue-next';
 defineProps({
     policies: {
         type: Array,
@@ -29,7 +30,7 @@ defineProps({
 
         <div v-else class="flex flex-col items-center justify-center py-8 text-center bg-gray-50 rounded-xl border border-dashed border-gray-200">
             <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center mb-3 shadow-sm border border-gray-100">
-                <i class="fa-solid fa-file-contract text-xl text-gray-300"></i>
+                <FileSignature class="text-xl text-gray-300" />
             </div>
             <p class="text-sm font-bold text-gray-500">Belum ada kebijakan khusus</p>
             <p class="text-xs text-gray-400 mt-1">Pemilik belum menambahkan kebijakan untuk aset ini</p>

@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Receipt, Building, Calculator, DoorOpen, Calendar } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -164,7 +166,7 @@ const getStatusClass = (status) => {
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 text-xs font-semibold" :class="props.summaryData.pendapatanGrowth >= 0 ? 'text-emerald-400' : 'text-rose-400'">
-                        <i class="fa-solid" :class="props.summaryData.pendapatanGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                        <AppIcon iconClass="fa-solid" :class="props.summaryData.pendapatanGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'" />
                         <span>{{ Math.abs(props.summaryData.pendapatanGrowth) }}% <span class="text-slate-400 font-normal">dari periode lalu</span></span>
                     </div>
                 </CardContent>
@@ -178,11 +180,11 @@ const getStatusClass = (status) => {
                             <p class="text-lg lg:text-xl font-black text-slate-800 mt-1 truncate">{{ summaryData.totalTransaksi }} Transaksi</p>
                         </div>
                         <div class="w-8 h-8 rounded-xl bg-blue-50 flex shrink-0 items-center justify-center text-blue-500 group-hover:bg-blue-100 transition-colors">
-                            <i class="fa-solid fa-receipt text-xs"></i>
+                            <Receipt class="text-xs" />
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 text-[10px] font-semibold" :class="props.summaryData.transaksiGrowth >= 0 ? 'text-emerald-500' : 'text-rose-500'">
-                        <i class="fa-solid" :class="props.summaryData.transaksiGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'"></i>
+                        <AppIcon iconClass="fa-solid" :class="props.summaryData.transaksiGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'" />
                         <span>{{ Math.abs(props.summaryData.transaksiGrowth) }} transaksi <span class="text-slate-400 font-normal">dari periode lalu</span></span>
                     </div>
                 </CardContent>
@@ -196,7 +198,7 @@ const getStatusClass = (status) => {
                             <p class="text-base font-black text-slate-800 mt-1 truncate leading-tight">{{ summaryData.asetTerbaik }}</p>
                         </div>
                         <div class="w-8 h-8 rounded-xl bg-amber-50 flex shrink-0 items-center justify-center text-amber-500 group-hover:bg-amber-100 transition-colors">
-                            <i class="fa-solid fa-building text-xs"></i>
+                            <Building class="text-xs" />
                         </div>
                     </div>
                     <div class="flex flex-col gap-0.5 mt-1">
@@ -214,7 +216,7 @@ const getStatusClass = (status) => {
                             <p class="text-lg lg:text-xl font-black text-slate-800 mt-1 truncate">{{ formatCurrency(summaryData.avgTransaksi) }}</p>
                         </div>
                         <div class="w-8 h-8 rounded-xl bg-purple-50 flex shrink-0 items-center justify-center text-purple-500 group-hover:bg-purple-100 transition-colors">
-                            <i class="fa-solid fa-calculator text-xs"></i>
+                            <Calculator class="text-xs" />
                         </div>
                     </div>
                     <div class="flex items-center gap-1.5 text-[10px] font-medium text-slate-400 mt-1">
@@ -317,7 +319,7 @@ const getStatusClass = (status) => {
                         <div v-for="(unit, idx) in activeUnitBreakdown" :key="idx" class="p-5 hover:bg-slate-50 transition-colors flex items-center justify-between">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
-                                    <i class="fa-solid fa-door-open"></i>
+                                    <DoorOpen class="" />
                                 </div>
                                 <div class="flex flex-col">
                                     <span class="text-sm font-bold text-slate-800">{{ unit.name }}</span>
@@ -358,7 +360,7 @@ const getStatusClass = (status) => {
                                     </span>
                                 </div>
                                 <span class="text-[11px] font-semibold text-slate-600">{{ trx.asset }} - {{ trx.unit }}</span>
-                                <span class="text-[10px] text-slate-400"><i class="fa-regular fa-calendar mr-1"></i> {{ trx.date }}</span>
+                                <span class="text-[10px] text-slate-400"><Calendar class="mr-1" /> {{ trx.date }}</span>
                             </div>
                             <div class="text-sm font-black text-[#0A2540]">
                                 {{ formatCurrency(trx.total) }}

@@ -1,4 +1,5 @@
 <script setup>
+import { MessageCircle, MessageSquareMore } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 
@@ -74,7 +75,7 @@ const startChat = () => {
                     <template v-if="ownerProfile?.user?.phone">
                         <span class="font-bold text-gray-300">·</span>
                         <a :href="'https://wa.me/' + ownerProfile.user.phone" target="_blank" class="hover:underline text-[#0A2540] flex items-center gap-1 font-medium">
-                            <i class="fa-brands fa-whatsapp text-green-500"></i> {{ ownerProfile.user.phone }}
+                            <MessageCircle class="text-green-500" /> {{ ownerProfile.user.phone }}
                         </a>
                     </template>
                 </div>
@@ -86,7 +87,7 @@ const startChat = () => {
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <h3 class="text-lg font-bold text-[#0A2540] mb-4">Hubungi Pemilik</h3>
                 <div class="flex items-center gap-3 border-b-2 border-gray-800 pb-2 focus-within:border-[#FFC000] transition-colors">
-                    <i class="fa-regular fa-comment-dots text-xl text-[#FFC000]"></i>
+                    <MessageSquareMore class="text-xl text-[#FFC000]" />
                     <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu ke pemilik..." class="w-full bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
                     <button @click="startChat" class="text-[#FFC000] font-bold text-sm hover:text-[#e6ad00] transition-colors whitespace-nowrap">
                         kirim

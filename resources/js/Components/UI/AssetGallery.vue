@@ -1,4 +1,5 @@
 <script setup>
+import { X, Image, Images, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { ref, computed, watch, onUnmounted } from 'vue';
 const props = defineProps({
     images: {
@@ -185,7 +186,7 @@ const closeGalleryModal = () => {
                 <div class="flex items-center justify-between px-4 sm:px-8 py-4 border-b border-gray-200/50 bg-transparent sticky top-0 z-10">
                     <h2 class="text-xl md:text-2xl font-extrabold text-[#0A2540]">Galeri Foto</h2>
                     <button @click="closeGalleryModal" class="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 md:bg-white/50 hover:bg-gray-200 md:hover:bg-white shadow-sm transition-colors">
-                        <i class="fa-solid fa-xmark text-xl text-[#0A2540]"></i>
+                        <X class="text-xl text-[#0A2540]" />
                     </button>
                 </div>
 
@@ -224,7 +225,7 @@ const closeGalleryModal = () => {
                                     <!-- Full width image -->
                                     <div v-if="chunk.length === 1" class="w-full aspect-video bg-gray-200 overflow-hidden relative group">
                                         <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
-                                            <i class="fa-solid fa-image text-4xl mb-2"></i>
+                                            <Image class="text-4xl mb-2" />
                                         </div>
                                         <img :src="chunk[0].url" class="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105" @error="$event.target.style.display='none'" loading="lazy" />
                                     </div>
@@ -233,13 +234,13 @@ const closeGalleryModal = () => {
                                     <div v-else-if="chunk.length === 2" class="flex gap-2 sm:gap-4">
                                         <div class="w-1/2 aspect-[4/3] bg-gray-200 overflow-hidden relative group">
                                             <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
-                                                <i class="fa-solid fa-image text-3xl mb-2"></i>
+                                                <Image class="text-3xl mb-2" />
                                             </div>
                                             <img :src="chunk[0].url" class="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105" @error="$event.target.style.display='none'" loading="lazy" />
                                         </div>
                                         <div class="w-1/2 aspect-[4/3] bg-gray-200 overflow-hidden relative group">
                                             <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
-                                                <i class="fa-solid fa-image text-3xl mb-2"></i>
+                                                <Image class="text-3xl mb-2" />
                                             </div>
                                             <img :src="chunk[1].url" class="w-full h-full object-cover relative z-10 transition-transform duration-500 group-hover:scale-105" @error="$event.target.style.display='none'" loading="lazy" />
                                         </div>
@@ -259,7 +260,7 @@ const closeGalleryModal = () => {
             <transition :name="galleryTransitionName" mode="out-in">
                 <div :key="currentMobileImageIndex" class="w-full h-full relative" @click="hasImages && (showGalleryModal = true)">
                     <div v-if="!hasImages" class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0 bg-gray-100">
-                        <i class="fa-solid fa-image text-6xl mb-3"></i>
+                        <Image class="text-6xl mb-3" />
                         <span class="font-medium text-sm">Tidak ada foto</span>
                     </div>
                     <img v-else :src="allImages[currentMobileImageIndex]" class="w-full h-full object-cover relative z-10" @error="$event.target.style.display='none'" />
@@ -272,16 +273,16 @@ const closeGalleryModal = () => {
 
             <!-- Tampilkan Semua Foto Mobile -->
             <button v-if="hasImages" @click.stop="showGalleryModal = true" class="absolute bottom-4 left-4 bg-white/90 text-[#0A2540] hover:bg-white text-xs font-bold px-4 py-2 rounded-full z-10 shadow-md backdrop-blur-sm flex items-center gap-2">
-                <i class="fa-solid fa-images"></i>
+                <Images class="" />
                 Lihat Semua Foto
             </button>
 
             <!-- Left/Right navigation hints -->
             <button v-if="hasImages && currentMobileImageIndex > 0" @click.stop="prevImage" class="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white text-gray-800 rounded-full z-20 shadow-sm transition">
-                <i class="fa-solid fa-chevron-left text-xs"></i>
+                <ChevronLeft class="text-xs" />
             </button>
             <button v-if="hasImages && currentMobileImageIndex < allImages.length - 1" @click.stop="nextImage" class="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center bg-white/70 hover:bg-white text-gray-800 rounded-full z-20 shadow-sm transition">
-                <i class="fa-solid fa-chevron-right text-xs"></i>
+                <ChevronRight class="text-xs" />
             </button>
         </div>
 
@@ -290,7 +291,7 @@ const closeGalleryModal = () => {
             <!-- Left Large Image -->
             <div class="w-full md:w-1/2 h-full cursor-pointer hover:opacity-95 transition bg-gray-100 flex items-center justify-center relative overflow-hidden" @click="hasImages && (showGalleryModal = true)">
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
-                    <i class="fa-solid fa-image text-6xl mb-3"></i>
+                    <Image class="text-6xl mb-3" />
                     <span class="font-medium text-sm">Tidak ada foto</span>
                 </div>
                 <img v-if="hasImages" :src="mainImage" class="w-full h-full object-cover relative z-10" alt="Main Image" @error="$event.target.style.display='none'" />
@@ -300,7 +301,7 @@ const closeGalleryModal = () => {
             <div class="hidden md:grid w-1/2 h-full grid-cols-2 grid-rows-2 gap-2">
                 <div v-for="(img, index) in gridImages" :key="index" class="relative h-full w-full cursor-pointer overflow-hidden group bg-gray-100" @click="showGalleryModal = true">
                     <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-0">
-                        <i class="fa-solid fa-image text-3xl mb-1"></i>
+                        <Image class="text-3xl mb-1" />
                         <span class="text-[10px] font-medium">No Image</span>
                     </div>
                     <img :src="img" class="w-full h-full object-cover relative z-10 group-hover:scale-105 transition duration-500" :alt="`Gallery image ${index+1}`" @error="$event.target.style.display='none'" />
@@ -311,7 +312,7 @@ const closeGalleryModal = () => {
             </div>
 
             <button v-if="hasImages" @click="showGalleryModal = true" class="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl text-sm font-bold shadow-lg border border-gray-200 hover:bg-gray-50 transition z-10 flex items-center gap-2">
-                <i class="fa-solid fa-images"></i> Tampilkan semua foto
+                <Images class="" /> Tampilkan semua foto
             </button>
         </div>
     </div>

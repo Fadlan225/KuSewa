@@ -1,4 +1,5 @@
 <script setup>
+import { Search, AlertCircle } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -38,7 +39,7 @@ const totals = computed(() => ({
         <template #header-actions>
             <!-- Search Bar di Header -->
             <div class="flex items-center gap-3 w-64 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 rounded-xl border border-transparent focus-within:bg-white focus-within:border-slate-300 focus-within:shadow-sm transition-all duration-300">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-[13px]"></i>
+                <Search class="text-slate-400 text-[13px]" />
                 <input
                     type="text"
                     v-model="searchQuery"
@@ -116,7 +117,7 @@ const totals = computed(() => ({
                                     <!-- Pelanggaran -->
                                     <td class="py-4 px-5 text-slate-600">
                                         <span v-if="owner.violation !== '-'" class="font-semibold text-rose-600 text-[12px]">
-                                            <i class="fa-solid fa-circle-exclamation text-[10px] mr-1"></i> {{ owner.violation }}
+                                            <AlertCircle class="text-[10px] mr-1" /> {{ owner.violation }}
                                         </span>
                                         <span v-else class="text-slate-400 italic">Bersih</span>
                                     </td>
@@ -147,7 +148,7 @@ const totals = computed(() => ({
                                 <tr v-if="filteredOwners.length === 0">
                                     <td colspan="5" class="py-16 text-center">
                                         <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-slate-400 mb-3">
-                                            <i class="fa-solid fa-magnifying-glass text-xl"></i>
+                                            <Search class="text-xl" />
                                         </div>
                                         <p class="text-[13px] font-semibold text-slate-500">Tidak ada akun yang sesuai dengan pencarian.</p>
                                     </td>

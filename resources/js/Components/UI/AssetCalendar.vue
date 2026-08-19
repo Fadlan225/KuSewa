@@ -1,4 +1,5 @@
 <script setup>
+import { AlertCircle, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { ref, computed, watch } from 'vue';
 
 const props = defineProps({
@@ -228,7 +229,7 @@ const handleTouchEnd = (e) => {
 
         <!-- Error Alert -->
         <div v-if="showDateError" class="mt-3 mb-2 text-red-500 font-bold text-sm bg-red-50 p-3.5 rounded-xl border border-red-200 flex items-center gap-2">
-            <i class="fa-solid fa-circle-exclamation text-lg"></i>
+            <AlertCircle class="text-lg" />
             Silakan pilih tanggal penyewaan terlebih dahulu!
         </div>
 
@@ -238,14 +239,14 @@ const handleTouchEnd = (e) => {
             <!-- Header Bulan (Hanya untuk kalender grid) -->
             <div v-if="['day', 'night'].includes(activeScheduleMode)" class="flex justify-between items-center mb-10 px-2 pt-6">
                 <button @click="prevMonth" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition" :class="calendarPage === 0 ? 'opacity-30 cursor-not-allowed' : ''">
-                    <i class="fa-solid fa-chevron-left text-[#0A2540] text-sm"></i>
+                    <ChevronLeft class="text-[#0A2540] text-sm" />
                 </button>
                 <div class="flex gap-8 w-full px-4">
                     <h3 class="flex-1 text-center text-[15px] font-bold text-[#0A2540]">{{ monthsData[calendarPage]?.title }}</h3>
                     <h3 class="flex-1 text-center text-[15px] font-bold text-[#0A2540] hidden sm:block">{{ monthsData[calendarPage + 1]?.title }}</h3>
                 </div>
                 <button @click="nextMonth" class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition">
-                    <i class="fa-solid fa-chevron-right text-[#0A2540] text-sm"></i>
+                    <ChevronRight class="text-[#0A2540] text-sm" />
                 </button>
             </div>
 

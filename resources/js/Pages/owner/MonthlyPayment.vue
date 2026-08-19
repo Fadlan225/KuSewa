@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { CheckCircle, Clock, Hourglass, Info, HelpCircle, Headset, ArrowRight, CloudUpload, Loader2, FolderOpen } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -77,14 +79,14 @@ const canPay = computed(() => props.billInfo?.canPay === true);
     >
         <!-- SUCCESS FLASH -->
         <div v-if="successMessage" class="mb-6 flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold px-5 py-4 rounded-2xl">
-            <i class="fa-solid fa-circle-check text-emerald-500"></i>
+            <CheckCircle class="text-emerald-500" />
             {{ successMessage }}
         </div>
 
         <!-- TIDAK ADA TAGIHAN AKTIF -->
         <div v-if="!billInfo" class="flex flex-col items-center justify-center py-24 text-center">
             <div class="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 mb-4">
-                <i class="fa-solid fa-circle-check text-3xl"></i>
+                <CheckCircle class="text-3xl" />
             </div>
             <h2 class="text-xl font-black text-slate-800 mb-2">Semua Tagihan Lunas!</h2>
             <p class="text-sm text-slate-500 max-w-xs">Tidak ada tagihan aktif saat ini. Tagihan periode berikutnya akan muncul di awal bulan mendatang.</p>
@@ -153,7 +155,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                             <div class="flex items-center gap-3">
                                 <input type="radio" name="payment_method" :value="method.id" v-model="selectedMethod" class="accent-[#0A2540]" />
                                 <div class="flex items-center gap-2.5">
-                                    <i :class="['fa-solid text-slate-600 text-sm', method.icon]"></i>
+                                    <AppIcon :iconClass="['fa-solid text-slate-600 text-sm', method.icon]" />
                                     <span class="font-bold text-slate-800">{{ method.name }}</span>
                                 </div>
                             </div>
@@ -167,7 +169,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                 <!-- Banner: Bulan berjalan, belum bisa dibayar -->
                 <div v-if="isCurrentMonth" class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
                     <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-500 shrink-0">
-                        <i class="fa-solid fa-clock"></i>
+                        <Clock class="" />
                     </div>
                     <div>
                         <p class="text-sm font-bold text-amber-800">Tagihan Sedang Berjalan</p>
@@ -178,7 +180,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                 <!-- Pesan status jika sudah waiting -->
                 <div v-if="isWaiting" class="bg-blue-50 border border-blue-200 rounded-2xl p-5 flex items-start gap-4">
                     <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center text-blue-500 shrink-0">
-                        <i class="fa-solid fa-hourglass-half"></i>
+                        <Hourglass class="" />
                     </div>
                     <div>
                         <p class="text-sm font-bold text-blue-800">Bukti Pembayaran Sedang Diverifikasi</p>
@@ -197,7 +199,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                     <div class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-[#0A2540]/5 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-circle-info text-[#0A2540] text-sm"></i>
+                                <Info class="text-[#0A2540] text-sm" />
                             </div>
                             <h3 class="text-sm font-black text-[#0A2540]">Apa itu Biaya Layanan?</h3>
                         </div>
@@ -210,7 +212,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                     <div class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-question text-amber-500 text-sm"></i>
+                                <HelpCircle class="text-amber-500 text-sm" />
                             </div>
                             <h3 class="text-sm font-black text-[#0A2540]">Pertanyaan Umum</h3>
                         </div>
@@ -238,13 +240,13 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                     <div class="bg-gradient-to-br from-[#0A2540] to-[#1a3a5c] rounded-2xl p-5 space-y-3 text-white">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-headset text-white text-sm"></i>
+                                <Headset class="text-white text-sm" />
                             </div>
                             <h3 class="text-sm font-black">Butuh Bantuan?</h3>
                         </div>
                         <p class="text-xs text-white/70 leading-relaxed">Jika ada pertanyaan mengenai tagihan atau pembayaran, tim kami siap membantu Anda.</p>
                         <a :href="route('owner.help')" class="inline-flex items-center gap-2 text-xs font-bold bg-white/10 hover:bg-white/20 transition px-4 py-2.5 rounded-xl">
-                            <i class="fa-solid fa-arrow-right"></i>
+                            <ArrowRight class="" />
                             Hubungi Tim KuSewa
                         </a>
                     </div>
@@ -290,11 +292,11 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                             :disabled="isWaiting"
                         />
                         <div v-if="!paymentProof" class="space-y-1">
-                            <i class="fa-solid fa-cloud-arrow-up text-slate-400 text-xl"></i>
+                            <CloudUpload class="text-slate-400 text-xl" />
                             <p class="text-xs font-bold text-slate-600">Klik atau Drop file di sini</p>
                         </div>
                         <div v-else class="flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-circle-check text-emerald-500"></i>
+                            <CheckCircle class="text-emerald-500" />
                             <span class="text-xs font-bold text-slate-700">{{ paymentProof }}</span>
                         </div>
                     </div>
@@ -305,7 +307,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                         :disabled="form.processing || isWaiting || !paymentProof"
                         class="w-full bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] text-xs font-black py-3 rounded-xl transition shadow-xs flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <i v-if="form.processing" class="fa-solid fa-spinner animate-spin"></i>
+                        <Loader2 v-if="form.processing" class="animate-spin" />
                         <span>{{ isWaiting ? 'Menunggu Verifikasi Admin...' : 'Konfirmasi Pembayaran' }}</span>
                     </button>
                 </div>
@@ -352,7 +354,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
         <!-- Belum ada riwayat -->
         <div v-else-if="!billInfo" class="hidden"></div>
         <div v-else class="mt-6 mb-8 text-center py-8 text-xs text-slate-400">
-            <i class="fa-regular fa-folder-open text-2xl mb-2 block"></i>
+            <FolderOpen class="text-2xl mb-2 block" />
             Belum ada riwayat tagihan.
         </div>
 

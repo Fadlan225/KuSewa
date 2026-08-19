@@ -1,4 +1,5 @@
 <script setup>
+import { Plus, Loader2, Pen, Trash2, HelpCircle, CheckCircle, FileSignature } from 'lucide-vue-next';
 import { ref, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
 
@@ -120,7 +121,7 @@ const deletePolicy = (policyId) => {
                     @click="isAddingFaq = true"
                     class="text-xs font-bold text-white bg-[#0A2540] hover:bg-[#0A2540]/90 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5"
                 >
-                    <i class="fa-solid fa-plus"></i> Tambah FAQ
+                    <Plus class="" /> Tambah FAQ
                 </button>
             </div>
 
@@ -139,7 +140,7 @@ const deletePolicy = (policyId) => {
                 <div class="flex gap-2">
                     <button @click="submitFaq" :disabled="isSavingFaq || !newFaq.question.trim() || !newFaq.answer.trim()"
                         class="flex-1 px-4 py-2 bg-[#0A2540] text-white text-xs font-bold rounded-lg transition disabled:opacity-50">
-                        <i v-if="isSavingFaq" class="fa-solid fa-spinner fa-spin mr-1"></i>
+                        <Loader2 v-if="isSavingFaq" class="mr-1 animate-spin" />
                         Simpan
                     </button>
                     <button @click="isAddingFaq = false"
@@ -163,11 +164,11 @@ const deletePolicy = (policyId) => {
                             <div class="flex gap-1.5 shrink-0">
                                 <button @click="startEditFaq(faq)" title="Edit"
                                     class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition text-xs">
-                                    <i class="fa-solid fa-pen"></i>
+                                    <Pen class="" />
                                 </button>
                                 <button @click="deleteFaq(faq.id)" title="Hapus"
                                     class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition text-xs">
-                                    <i class="fa-solid fa-trash"></i>
+                                    <Trash2 class="" />
                                 </button>
                             </div>
                         </div>
@@ -194,7 +195,7 @@ const deletePolicy = (policyId) => {
 
             <div v-else-if="!isAddingFaq" class="flex flex-col items-center justify-center py-8 text-center">
                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                    <i class="fa-solid fa-circle-question text-xl text-slate-300"></i>
+                    <HelpCircle class="text-xl text-slate-300" />
                 </div>
                 <p class="text-sm font-bold text-slate-500">Belum ada FAQ</p>
                 <p class="text-xs text-slate-400 mt-1">Tambahkan pertanyaan umum untuk membantu penyewa</p>
@@ -213,7 +214,7 @@ const deletePolicy = (policyId) => {
                     @click="isAddingPolicy = true"
                     class="text-xs font-bold text-white bg-[#0A2540] hover:bg-[#0A2540]/90 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5"
                 >
-                    <i class="fa-solid fa-plus"></i> Tambah Kebijakan
+                    <Plus class="" /> Tambah Kebijakan
                 </button>
             </div>
 
@@ -232,7 +233,7 @@ const deletePolicy = (policyId) => {
                 <div class="flex gap-2">
                     <button @click="submitPolicy" :disabled="isSavingPolicy || !newPolicy.title.trim()"
                         class="flex-1 px-4 py-2 bg-[#FFC000] text-[#0A2540] text-xs font-bold rounded-lg transition disabled:opacity-50">
-                        <i v-if="isSavingPolicy" class="fa-solid fa-spinner fa-spin mr-1"></i>
+                        <Loader2 v-if="isSavingPolicy" class="mr-1 animate-spin" />
                         Simpan
                     </button>
                     <button @click="isAddingPolicy = false"
@@ -252,7 +253,7 @@ const deletePolicy = (policyId) => {
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2">
                                     <div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                                        <i class="fa-solid fa-circle-check text-amber-500 text-[10px]"></i>
+                                        <CheckCircle class="text-amber-500 text-[10px]" />
                                     </div>
                                     <p class="font-bold text-slate-800 text-sm">{{ policy.title }}</p>
                                 </div>
@@ -261,11 +262,11 @@ const deletePolicy = (policyId) => {
                             <div class="flex gap-1.5 shrink-0">
                                 <button @click="startEditPolicy(policy)" title="Edit"
                                     class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-amber-600 hover:bg-amber-50 transition text-xs">
-                                    <i class="fa-solid fa-pen"></i>
+                                    <Pen class="" />
                                 </button>
                                 <button @click="deletePolicy(policy.id)" title="Hapus"
                                     class="w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition text-xs">
-                                    <i class="fa-solid fa-trash"></i>
+                                    <Trash2 class="" />
                                 </button>
                             </div>
                         </div>
@@ -292,7 +293,7 @@ const deletePolicy = (policyId) => {
 
             <div v-else-if="!isAddingPolicy" class="flex flex-col items-center justify-center py-8 text-center">
                 <div class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                    <i class="fa-solid fa-file-contract text-xl text-slate-300"></i>
+                    <FileSignature class="text-xl text-slate-300" />
                 </div>
                 <p class="text-sm font-bold text-slate-500">Belum ada kebijakan</p>
                 <p class="text-xs text-slate-400 mt-1">Tambahkan aturan agar penyewa tahu ketentuan Anda</p>

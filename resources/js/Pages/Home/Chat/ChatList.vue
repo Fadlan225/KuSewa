@@ -9,7 +9,7 @@
     <div class="p-3 border-b border-gray-200 shrink-0 bg-white sticky top-0 z-10">
       <div class="relative flex items-center">
         <span class="absolute left-4 text-gray-400">
-          <i class="fa-solid fa-magnifying-glass text-sm"></i>
+          <Search class="text-sm" />
         </span>
         <input
           type="text"
@@ -21,9 +21,9 @@
 
     <!-- Chat List -->
     <div class="flex-1 overflow-y-auto">
-      <template v-if="chatList && chatList.length > 0">
+      <template v-if="displayChats && displayChats.length > 0">
         <div
-          v-for="chat in chatList"
+          v-for="chat in displayChats"
         :key="chat.id"
         @click="$emit('selectChat', chat.id)"
         class="flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-200/70"
@@ -48,10 +48,10 @@
           <div class="flex justify-between items-center">
             <p class="text-[13px] text-gray-600 truncate pr-2 flex-1 flex items-center gap-1">
               <span v-if="chat.lastMessage && chat.isLastMessageSelf" class="shrink-0 text-[10px]">
-                <i :class="['fa-solid fa-check-double transition-colors duration-500 ease-in-out', chat.isLastMessageRead ? 'text-blue-600 read-bounce' : 'text-gray-400']"></i>
+                <CheckCheck :class="['', chat.isLastMessageRead ? 'text-blue-600 read-bounce' : 'text-gray-400']" />
               </span>
-              <span v-if="chat.lastMessageType === 'image'" class="shrink-0"><i class="fa-solid fa-image"></i></span>
-              <span v-else-if="chat.lastMessageType === 'file'" class="shrink-0"><i class="fa-solid fa-file-lines"></i></span>
+              <span v-if="chat.lastMessageType === 'image'" class="shrink-0"><Image class="" /></span>
+              <span v-else-if="chat.lastMessageType === 'file'" class="shrink-0"><FileText class="" /></span>
               <span class="truncate">{{ chat.lastMessage || 'Mulai percakapan baru' }}</span>
             </p>
             <!-- Unread Badge -->
@@ -65,7 +65,7 @@
 
       <!-- Empty State for Chat List -->
       <div v-else class="flex flex-col items-center justify-center h-full px-6 text-center pt-24 pb-8">
-        <img src="/no-chat.svg" alt="No Chat" class="w-48 h-48 mb-6 opacity-80" onerror="this.src='/images/dummy-map.png'" />
+        <NoChatIcon class="w-48 h-48 mb-6 opacity-80" />
         <h3 class="text-gray-800 font-semibold text-lg mb-1">Belum Ada Percakapan</h3>
         <p class="text-gray-500 text-sm">Mulai diskusi dengan penyewa atau pemilik aset sekarang.</p>
       </div>
@@ -74,7 +74,11 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from 'vue';
+import { Search, CheckCheck, Image, FileText } from 'lucide-vue-next';
+import NoChatIcon from '@/Components/UI/Icons/NoChatIcon.vue';
+
+const props = defineProps({
   chatList: {
       type: Array,
       default: () => []
@@ -88,6 +92,11 @@ defineProps({
       default: false
   },
 });
+
+const displayChats = computed(() => {
+  return props.chatList.filter(chat => chat.lastMessage || chat.id === props.activeChatId);
+});
+
 defineEmits(['selectChat']);
 </script>
 

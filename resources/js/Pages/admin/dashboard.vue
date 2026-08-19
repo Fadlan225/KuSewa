@@ -1,4 +1,5 @@
 <script setup>
+import { Download, Users, Building2, AlertTriangle, LineChart, RefreshCw, IdCard, ChevronRight, ShieldCheck, Receipt } from 'lucide-vue-next';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
@@ -40,7 +41,7 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
     <DashboardLayout role="Admin" title="Panel Kontrol Administrator" description="Pantau seluruh aktivitas platform, verifikasi aset, dan pengguna kusewa.id">
         <template #header-actions>
             <button class="bg-[#0A2540] hover:bg-slate-800 active:scale-95 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
-                <i class="fa-solid fa-download text-xs text-[#FFC000]"></i>
+                <Download class="text-xs text-[#FFC000]" />
                 <span>Export Laporan</span>
             </button>
         </template>
@@ -50,7 +51,7 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
 
                     <div class="flex items-center gap-3 text-xs">
                         <button class="bg-[#0A2540] hover:bg-slate-800 active:scale-95 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
-                            <i class="fa-solid fa-download text-xs text-[#FFC000]"></i>
+                            <Download class="text-xs text-[#FFC000]" />
                             <span>Export Laporan</span>
                         </button>
                     </div>
@@ -78,7 +79,7 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                         <!-- Card 1 -->
                         <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
                             <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
-                                <i class="fa-solid fa-users"></i>
+                                <Users class="" />
                             </div>
                             <div class="mt-4">
                                 <span class="text-[11px] font-medium text-slate-400 block">Total Pengguna</span>
@@ -89,7 +90,7 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                         <!-- Card 2 -->
                         <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
                             <div class="w-8 h-8 rounded-full bg-amber-50 text-[#0A2540] flex items-center justify-center text-xs">
-                                <i class="fa-solid fa-city text-[#FFC000]"></i>
+                                <Building2 class="text-[#FFC000]" />
                             </div>
                             <div class="mt-4">
                                 <span class="text-[11px] font-medium text-slate-400 block">Total Listing Properti</span>
@@ -100,7 +101,7 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                         <!-- Card 3 -->
                         <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
                             <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center text-xs">
-                                <i class="fa-solid fa-triangle-exclamation"></i>
+                                <AlertTriangle class="" />
                             </div>
                             <div class="mt-4">
                                 <span class="text-[11px] font-medium text-slate-400 block">Menunggu Verifikasi</span>
@@ -111,7 +112,7 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                         <!-- Card 4 -->
                         <div class="bg-white rounded-2xl p-4 border border-slate-200/70 shadow-sm flex flex-col justify-between">
                             <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
-                                <i class="fa-solid fa-chart-line"></i>
+                                <LineChart class="" />
                             </div>
                             <div class="mt-4">
                                 <span class="text-[11px] font-medium text-slate-400 block">Omset Platform (Bulan Ini)</span>
@@ -171,7 +172,7 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                         <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 text-[11px]">
                             <span class="text-slate-400">Sinkronisasi Terakhir: Baru saja</span>
                             <button class="text-[#0A2540] font-bold hover:underline flex items-center gap-1">
-                                <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+                                <RefreshCw class="text-[10px]" />
                                 <span>Clear Cache</span>
                             </button>
                         </div>
@@ -228,40 +229,40 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                                 <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
                                     <div class="flex items-center gap-3">
                                         <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
-                                            <i class="fa-solid fa-id-card"></i>
+                                            <IdCard class="" />
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Validasi Identitas Pemilik</p>
                                             <p class="text-[10px] text-slate-400">3 NIK baru menunggu pencocokan Dukcapil</p>
                                         </div>
                                     </div>
-                                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                                    <ChevronRight class="text-[10px] text-slate-400" />
                                 </button>
 
                                 <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
                                     <div class="flex items-center gap-3">
                                         <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
-                                            <i class="fa-solid fa-building-shield"></i>
+                                            <ShieldCheck class="" />
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Review Listing Properti</p>
                                             <p class="text-[10px] text-slate-400">5 Kos & Rumah baru diunggah owner</p>
                                         </div>
                                     </div>
-                                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                                    <ChevronRight class="text-[10px] text-slate-400" />
                                 </button>
 
                                 <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
                                     <div class="flex items-center gap-3">
                                         <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
-                                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                                            <Receipt class="" />
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Persetujuan Withdrawal</p>
                                             <p class="text-[10px] text-slate-400">4 Permintaan pencairan dana sewa</p>
                                         </div>
                                     </div>
-                                    <i class="fa-solid fa-chevron-right text-[10px] text-slate-400"></i>
+                                    <ChevronRight class="text-[10px] text-slate-400" />
                                 </button>
                             </div>
                         </div>

@@ -1,4 +1,5 @@
 <script setup>
+import { Send, History } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -769,7 +770,7 @@ const closeModalAndRedirect = () => {
                         <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#0A2540] via-[#FFC000] to-[#0A2540]"></div>
 
                         <div class="w-16 h-16 rounded-xl bg-amber-50 text-[#FFC000] flex items-center justify-center mx-auto text-2xl relative shadow-inner">
-                            <i class="fa-solid fa-paper-plane text-[#0A2540]"></i>
+                            <Send class="text-[#0A2540]" />
                             <span class="absolute -top-1 -right-1 flex h-4 w-4">
                                 <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                                 <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
@@ -783,7 +784,7 @@ const closeModalAndRedirect = () => {
 
                         <div class="bg-amber-50/60 border border-amber-200/80 rounded-lg p-4 flex items-center gap-3 text-left">
                             <div class="w-10 h-10 rounded-md bg-[#FFC000]/20 text-[#0A2540] flex items-center justify-center shrink-0 text-lg">
-                                <i class="fa-solid fa-clock-rotate-left"></i>
+                                <History class="" />
                             </div>
                             <div>
                                 <span class="text-xs font-semibold text-amber-800 uppercase tracking-wider block">Status Pengajuan</span>

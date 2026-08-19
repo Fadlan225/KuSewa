@@ -1,7 +1,7 @@
 <template>
   <AppLayout hideNavbar hideBottombar>
     <!-- NAV DETIL dengan tombol back -->
-    <DetailNavbar backUrl="/aktivitas" :showSections="false" :showShare="false" :showFavorite="false" />
+    <DetailNavbar backUrl="/aktivitas" :showBackButton="true" :forceBackUrl="true" :showSections="false" :showShare="false" :showFavorite="false" />
 
     <div class="min-h-screen bg-[#f2f2f7] text-slate-900 font-sans antialiased pb-24 pt-4 selection:bg-[#ffc000]/30">
       <main class="max-w-3xl mx-auto px-4 sm:px-6 space-y-6">
@@ -80,7 +80,7 @@
                 <div v-if="selectedBank" class="bg-white rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 border border-slate-200 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)]">
                   <div class="flex items-center gap-4">
                     <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center border-slate-100 bg-slate-50 shadow-inner shrink-0">
-                      <i class="fa-solid fa-building-columns text-slate-400 text-lg sm:text-xl"></i>
+                      <Landmark class="text-slate-400 text-lg sm:text-xl" />
                     </div>
                     <div>
                       <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">{{ selectedBank.bank_name }}</p>
@@ -89,8 +89,8 @@
                     </div>
                   </div>
                   <button type="button" @click="copyToClipboard(selectedBank.account_number)" class="w-full sm:w-auto text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-300 py-2.5 sm:py-3 px-4 sm:px-5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm shrink-0 active:scale-95">
-                    <i v-if="!isCopied" class="fa-regular fa-copy"></i>
-                    <i v-else class="fa-solid fa-check text-green-600"></i>
+                    <Copy v-if="!isCopied" class="" />
+                    <Check v-else class="text-green-600" />
                     <span v-if="!isCopied">Salin Rekening</span>
                     <span v-else class="text-green-600">Tersalin!</span>
                   </button>
@@ -205,6 +205,7 @@
 </template>
 
 <script setup>
+import { Landmark, Copy, Check } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'

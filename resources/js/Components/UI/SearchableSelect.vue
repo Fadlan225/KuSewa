@@ -16,7 +16,7 @@
       <!-- Chevron / Loading icon -->
       <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
         <div class="w-6 h-6 rounded-full flex items-center justify-center transition-colors bg-gray-100 text-gray-400">
-          <i class="fa-solid fa-chevron-down text-[10px]"></i>
+          <ChevronDown class="text-[10px]" />
         </div>
       </div>
     </div>
@@ -39,7 +39,7 @@
           :class="{'bg-[#FFF9E6] text-[#FFC000] font-medium': isSelected(option), 'text-[#0A2540]': !isSelected(option)}"
         >
           {{ option.name }}
-          <i v-if="isSelected(option)" class="fa-solid fa-check text-[#FFC000] text-xs"></i>
+          <Check v-if="isSelected(option)" class="text-[#FFC000] text-xs" />
         </li>
       </ul>
     </div>
@@ -47,6 +47,7 @@
 </template>
 
 <script setup>
+import { ChevronDown, Check } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({

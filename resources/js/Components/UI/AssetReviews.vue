@@ -1,4 +1,5 @@
 <script setup>
+import { Star } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -93,12 +94,11 @@ const formatDate = (dateString) => {
                     </div>
 
                     <div class="flex gap-1 text-[#FFC000] my-2 text-lg">
-                        <i v-for="i in 5" :key="i" class="fa-solid fa-star"
+                        <Star v-for="i in 5" :key="i" class=""
                             :class="{
                                 'fa-star-half-stroke': i - 0.5 <= averageRating && i > averageRating,
                                 'text-gray-200': i > Math.ceil(averageRating)
-                            }">
-                        </i>
+                            }" />
                     </div>
 
                     <span class="text-[10px] font-bold text-gray-400 mt-2 uppercase tracking-wider">
@@ -143,7 +143,7 @@ const formatDate = (dateString) => {
                             </div>
                             <!-- Bintang Ulasan User -->
                             <div class="flex gap-0.5">
-                                <i v-for="i in 5" :key="i" class="fa-solid fa-star text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'"></i>
+                                <Star v-for="i in 5" :key="i" class="text-[11px]" :class="i <= review.rating ? 'text-[#FFC000]' : 'text-gray-200'" />
                             </div>
                         </div>
 
@@ -172,7 +172,7 @@ const formatDate = (dateString) => {
         <!-- EMPTY STATE (Jika belum ada ulasan) -->
         <div v-else class="flex flex-col items-center justify-center py-16 text-center">
             <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
-                <i class="fa-solid fa-star text-2xl text-gray-200"></i>
+                <Star class="text-2xl text-gray-200" />
             </div>
             <h3 class="text-[#0A2540] font-bold text-lg mb-1">Belum Ada Ulasan</h3>
             <p class="text-sm text-gray-500">Jadilah yang pertama memberikan ulasan!</p>

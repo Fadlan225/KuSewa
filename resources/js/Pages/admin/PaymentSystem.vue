@@ -1,4 +1,5 @@
 <script setup>
+import { Landmark, ArrowDownWideNarrow, Edit, Trash2, X } from 'lucide-vue-next';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -82,11 +83,11 @@ const prioritizeMethods = () => { const ids = methods.value.map(method => method
                     <div class="px-6 py-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                         <div>
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center"><i class="fa-solid fa-building-columns"></i></div>
+                                <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center"><Landmark class="" /></div>
                                 <div><h2 class="text-sm font-extrabold text-slate-900">Metode Pembayaran</h2><p class="text-[11px] text-slate-400 mt-0.5">Kelola kanal pembayaran yang tersedia untuk owner.</p></div>
                             </div>
                         </div>
-                        <button @click="prioritizeMethods" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-[11px] font-bold text-[#0A2540] hover:bg-slate-50 transition"><i class="fa-solid fa-arrow-down-wide-short"></i> Atur Prioritas</button>
+                        <button @click="prioritizeMethods" class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 px-3.5 py-2 text-[11px] font-bold text-[#0A2540] hover:bg-slate-50 transition"><ArrowDownWideNarrow class="" /> Atur Prioritas</button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full w-full text-left text-xs border-collapse">
@@ -111,8 +112,8 @@ const prioritizeMethods = () => { const ids = methods.value.map(method => method
                                         </span>
                                     </td>
                                     <td class="py-4 px-5 text-right whitespace-nowrap">
-                                        <button @click="openMethodModal(method)" class="rounded-xl border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><i class="fa-solid fa-pen-to-square mr-1"></i>Edit</button>
-                                        <button @click="deleteMethod(method)" class="ml-1 rounded-xl border border-rose-100 px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50 transition"><i class="fa-solid fa-trash-can mr-1"></i>Hapus</button>
+                                        <button @click="openMethodModal(method)" class="rounded-xl border border-slate-200 px-3 py-1.5 text-[11px] font-bold text-slate-700 hover:bg-slate-50 transition"><Edit class="mr-1" />Edit</button>
+                                        <button @click="deleteMethod(method)" class="ml-1 rounded-xl border border-rose-100 px-3 py-1.5 text-[11px] font-bold text-rose-600 hover:bg-rose-50 transition"><Trash2 class="mr-1" />Hapus</button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -180,7 +181,7 @@ const prioritizeMethods = () => { const ids = methods.value.map(method => method
     </DashboardLayout>
     <div v-if="methodModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4" @click.self="closeMethodModal">
         <form class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" @submit.prevent="saveMethod">
-            <div class="flex items-start justify-between"><div><h3 class="text-lg font-extrabold text-slate-900">{{ methodModal === 'edit' ? 'Edit Metode Pembayaran' : 'Tambah Metode Pembayaran' }}</h3><p class="mt-1 text-xs text-slate-400">Lengkapi informasi metode pembayaran.</p></div><button type="button" @click="closeMethodModal" class="text-slate-400 hover:text-slate-700"><i class="fa-solid fa-xmark"></i></button></div>
+            <div class="flex items-start justify-between"><div><h3 class="text-lg font-extrabold text-slate-900">{{ methodModal === 'edit' ? 'Edit Metode Pembayaran' : 'Tambah Metode Pembayaran' }}</h3><p class="mt-1 text-xs text-slate-400">Lengkapi informasi metode pembayaran.</p></div><button type="button" @click="closeMethodModal" class="text-slate-400 hover:text-slate-700"><X class="" /></button></div>
             <div class="mt-5 space-y-4"><label class="block text-xs font-bold text-slate-600">Nama metode<input v-model="methodForm.name" required class="mt-1.5 w-full rounded-xl border-slate-200 text-sm" placeholder="Contoh: BCA" /></label><label class="block text-xs font-bold text-slate-600">Kode metode<input v-model="methodForm.code" required class="mt-1.5 w-full rounded-xl border-slate-200 text-sm" placeholder="Contoh: bca" /></label><label class="block text-xs font-bold text-slate-600">Deskripsi<textarea v-model="methodForm.description" rows="2" class="mt-1.5 w-full rounded-xl border-slate-200 text-sm" placeholder="Deskripsi singkat"></textarea></label><label class="flex items-center gap-2 text-xs font-bold text-slate-600"><input v-model="methodForm.is_active" type="checkbox" class="rounded border-slate-300 text-[#0A2540]" /> Metode aktif</label></div>
             <div class="mt-6 flex justify-end gap-2"><button type="button" @click="closeMethodModal" class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600">Batal</button><button class="rounded-xl bg-[#0A2540] px-4 py-2 text-xs font-bold text-white hover:bg-[#14385f]">Simpan</button></div>
         </form>

@@ -1,4 +1,5 @@
 <script setup>
+import { Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import CustomSelect from '@/Components/UI/CustomSelect.vue';
 import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
@@ -61,7 +62,7 @@ const allUnitFacilitiesOptions = computed(() => {
                 class="absolute top-4 right-4 w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center text-sm cursor-pointer shadow-sm"
                 title="Hapus Unit"
             >
-                <i class="fa-solid fa-trash"></i>
+                <Trash2 class="" />
             </button>
 
             <div class="flex items-center gap-3 mb-5">

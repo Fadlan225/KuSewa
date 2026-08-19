@@ -1,4 +1,5 @@
 <script setup>
+import { CloudUpload, X, Images, Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
 import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
 
@@ -57,7 +58,7 @@ const galleryCategoriesOptions = computed(() => {
                     @change="emit('handleThumbnailUpload', $event)"
                     class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
-                <i class="fa-solid fa-cloud-arrow-up text-3xl text-[#0A2540] mb-3 opacity-50"></i>
+                <CloudUpload class="text-3xl text-[#0A2540] mb-3 opacity-50" />
                 <p class="text-sm font-semibold text-[#0A2540]">Klik untuk upload foto sampul</p>
                 <p class="text-xs text-slate-500 mt-1.5">Format: JPG, PNG, WEBP (Maks. 5MB)</p>
             </div>
@@ -69,7 +70,7 @@ const galleryCategoriesOptions = computed(() => {
                     class="absolute -top-2 -right-2 w-6 h-6 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow opacity-0 group-hover/thumb:opacity-100 transition cursor-pointer"
                     title="Hapus Thumbnail"
                 >
-                    <i class="fa-solid fa-xmark"></i>
+                    <X class="" />
                 </button>
             </div>
         </div>
@@ -96,7 +97,7 @@ const galleryCategoriesOptions = computed(() => {
 
             <!-- Jika tidak ada galery_categories untuk jenis aset ini -->
             <div v-if="!hasGalleryCategories && assetTypeDetails" class="py-6 text-center text-sm text-slate-500 bg-white rounded-lg border border-slate-200 shadow-sm">
-                <i class="fa-solid fa-images text-3xl text-slate-300 block mb-3"></i>
+                <Images class="text-3xl text-slate-300 block mb-3" />
                 Kategori galeri foto belum dikonfigurasi untuk jenis aset ini.
             </div>
 
@@ -114,7 +115,7 @@ const galleryCategoriesOptions = computed(() => {
                         class="absolute top-4 right-4 w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center text-sm cursor-pointer"
                         title="Hapus Album"
                     >
-                        <i class="fa-solid fa-trash"></i>
+                        <Trash2 class="" />
                     </button>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
@@ -150,7 +151,7 @@ const galleryCategoriesOptions = computed(() => {
                                 @click.prevent="emit('hapusFoto', index, fileIndex)"
                                 class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow-sm opacity-0 group-hover/photo:opacity-100 transition cursor-pointer"
                             >
-                                <i class="fa-solid fa-xmark"></i>
+                                <X class="" />
                             </button>
                         </div>
                     </div>
@@ -192,7 +193,7 @@ const galleryCategoriesOptions = computed(() => {
                             @change="emit('handleUnitThumbnailUpload', $event, unitIndex)"
                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                         />
-                        <i class="fa-solid fa-cloud-arrow-up text-2xl text-slate-400 mb-3"></i>
+                        <CloudUpload class="text-2xl text-slate-400 mb-3" />
                         <p class="text-xs font-semibold text-slate-500">Upload sampul tipe unit ini</p>
                     </div>
                     <div v-else class="relative w-32 h-24 group/thumb">
@@ -203,7 +204,7 @@ const galleryCategoriesOptions = computed(() => {
                             class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow opacity-0 group-hover/thumb:opacity-100 transition cursor-pointer"
                             title="Hapus Thumbnail"
                         >
-                            <i class="fa-solid fa-xmark"></i>
+                            <X class="" />
                         </button>
                     </div>
                 </div>
@@ -236,7 +237,7 @@ const galleryCategoriesOptions = computed(() => {
                                 class="absolute top-3 right-3 w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center text-sm cursor-pointer"
                                 title="Hapus Kategori Foto"
                             >
-                                <i class="fa-solid fa-trash"></i>
+                                <Trash2 class="" />
                             </button>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
@@ -273,7 +274,7 @@ const galleryCategoriesOptions = computed(() => {
                                         @click="emit('hapusUnitFoto', unitIndex, photoIdx, fileIdx)"
                                         class="absolute -top-1 -right-1 w-4 h-4 bg-rose-500 text-white rounded-full flex items-center justify-center text-[9px] shadow opacity-0 group-hover/photo:opacity-100 transition cursor-pointer"
                                     >
-                                        <i class="fa-solid fa-xmark"></i>
+                                        <X class="" />
                                     </button>
                                 </div>
                             </div>

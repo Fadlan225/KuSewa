@@ -1,4 +1,5 @@
 <script setup>
+import { FileEdit, Clock, XCircle, CheckCircle, Power, Image, ChevronRight } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 
@@ -85,30 +86,30 @@ const availabilityText = computed(() => {
                 <!-- Ribbon Badge Status -->
                 <div class="absolute top-1 -left-1.5 z-20 pointer-events-none flex flex-col gap-1 items-start">
                     <div v-if="asset.verification_status === 'draft'" class="relative bg-slate-200 text-slate-700 text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
-                        <i class="fa-solid fa-file-pen mr-1"></i>Draft
+                        <FileEdit class="mr-1" />Draft
                         <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-slate-400 border-l-[4px] border-l-transparent"></div>
                     </div>
                     <div v-else-if="asset.verification_status === 'pending'" class="relative bg-[#FFC000] text-[#0A2540] text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
-                        <i class="fa-solid fa-clock mr-1"></i>Menunggu
+                        <Clock class="mr-1" />Menunggu
                         <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-[#B38600] border-l-[4px] border-l-transparent"></div>
                     </div>
                     <div v-else-if="asset.verification_status === 'rejected'" class="relative bg-rose-600 text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
-                        <i class="fa-solid fa-xmark-circle mr-1"></i>Ditolak
+                        <XCircle class="mr-1" />Ditolak
                         <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-rose-800 border-l-[4px] border-l-transparent"></div>
                     </div>
                     <div v-else-if="asset.verification_status === 'approved'" class="relative bg-[#FFC000] text-[#0A2540] text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
-                        <i class="fa-solid fa-check-circle mr-1"></i>Terverifikasi
+                        <CheckCircle class="mr-1" />Terverifikasi
                         <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-[#B38600] border-l-[4px] border-l-transparent"></div>
                     </div>
                     <div v-else-if="asset.verification_status === 'inactive'" class="relative bg-slate-500 text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
-                        <i class="fa-solid fa-power-off mr-1"></i>Nonaktif
+                        <Power class="mr-1" />Nonaktif
                         <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-slate-700 border-l-[4px] border-l-transparent"></div>
                     </div>
                 </div>
 
                 <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-md overflow-hidden bg-slate-100">
                     <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
-                        <i class="fa-solid fa-image text-xl"></i>
+                        <Image class="text-xl" />
                     </div>
                     <img v-else :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" loading="lazy" />
                     
@@ -154,7 +155,7 @@ const availabilityText = computed(() => {
                 </div>
 
                 <div class="mt-auto text-slate-300 group-hover:text-[#FFC000] transition-colors flex items-center justify-center">
-                    <i class="fa-solid fa-chevron-right text-xs md:text-sm"></i>
+                    <ChevronRight class="text-xs md:text-sm" />
                 </div>
             </div>
         </template>

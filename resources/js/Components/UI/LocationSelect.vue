@@ -16,8 +16,8 @@
       <!-- Chevron / Loading icon -->
       <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
         <div class="w-6 h-6 rounded-full flex items-center justify-center transition-colors bg-gray-100 text-gray-400">
-          <i v-if="loading" class="fa-solid fa-spinner fa-spin text-[10px]"></i>
-          <i v-else class="fa-solid fa-chevron-down text-[10px]"></i>
+          <Loader2 v-if="loading" class="text-[10px] animate-spin" />
+          <ChevronDown v-else class="text-[10px]" />
         </div>
       </div>
     </div>
@@ -40,7 +40,7 @@
           :class="{'bg-[#FFF9E6] text-[#FFC000] font-medium': modelValue == option.code, 'text-[#0A2540]': modelValue != option.code}"
         >
           {{ option.name }}
-          <i v-if="modelValue == option.code" class="fa-solid fa-check text-[#FFC000] text-xs"></i>
+          <Check v-if="modelValue == option.code" class="text-[#FFC000] text-xs" />
         </li>
       </ul>
     </div>
@@ -48,6 +48,7 @@
 </template>
 
 <script setup>
+import { Loader2, ChevronDown, Check } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import axios from 'axios';
 

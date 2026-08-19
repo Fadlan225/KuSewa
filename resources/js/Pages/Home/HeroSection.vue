@@ -1,4 +1,5 @@
 <script setup>
+import { Search, Sliders } from 'lucide-vue-next';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import DesktopSearchBar from '@/Components/UI/DesktopSearchBar.vue';
 import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
@@ -44,7 +45,7 @@ const {
                 <div class="md:hidden mt-4 sm:mt-6 w-full max-w-sm mx-auto">
                     <div class="relative w-full flex items-center">
                         <!-- Ikon Kaca Pembesar -->
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 text-[#6C757D] text-xs z-10"></i>
+                        <Search class="absolute left-4 text-[#6C757D] text-xs z-10" />
 
                         <!-- Fake Input that opens Keyword Sheet -->
                         <div
@@ -69,7 +70,7 @@ const {
                                 @click.stop="isMobileSearchOpen = true"
                                 class="relative w-8 h-8 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] rounded-full flex items-center justify-center hover:scale-105 hover:shadow-[0_0_10px_rgba(255,192,0,0.5)] active:scale-90 transition-all shadow-sm group-hover:rotate-12"
                             >
-                                <i class="fa-solid fa-sliders text-[11px] font-bold"></i>
+                                <Sliders class="text-[11px] font-bold" />
                             </button>
                         </div>
                     </div>

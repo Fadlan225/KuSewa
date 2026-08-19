@@ -1,4 +1,5 @@
 <script setup>
+import { History, Check, AlertTriangle } from 'lucide-vue-next';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
@@ -15,7 +16,7 @@ const props = defineProps({
     <Head title="Status Verifikasi Owner - kusewa.id" />
 
     <AppLayout hideNavbar hideBottombar>
-        <DetailNavbar :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />
+        <DetailNavbar :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />
 
         <div class="min-h-screen bg-background font-sans text-text flex items-center justify-center -mt-16">
             <div class="max-w-md w-full px-6 py-12">
@@ -24,7 +25,7 @@ const props = defineProps({
 
                     <template v-if="status === 'pending'">
                         <div class="w-20 h-20 mx-auto bg-amber-50 rounded-full flex items-center justify-center mb-6">
-                            <i class="fa-solid fa-clock-rotate-left text-3xl text-amber-500"></i>
+                            <History class="text-3xl text-amber-500" />
                         </div>
                         <h2 class="text-2xl font-bold text-secondary mb-3">Verifikasi Diproses</h2>
                         <p class="text-[15px] text-muted leading-relaxed mb-8">
@@ -37,7 +38,7 @@ const props = defineProps({
 
                     <template v-else-if="status === 'verified'">
                         <div class="w-20 h-20 mx-auto bg-emerald-50 rounded-full flex items-center justify-center mb-6">
-                            <i class="fa-solid fa-check text-3xl text-emerald-500"></i>
+                            <Check class="text-3xl text-emerald-500" />
                         </div>
                         <h2 class="text-2xl font-bold text-secondary mb-3">Verifikasi Berhasil!</h2>
                         <p class="text-[15px] text-muted leading-relaxed mb-8">
@@ -50,7 +51,7 @@ const props = defineProps({
 
                     <template v-else-if="status === 'rejected'">
                         <div class="w-20 h-20 mx-auto bg-red-50 rounded-full flex items-center justify-center mb-6">
-                            <i class="fa-solid fa-triangle-exclamation text-3xl text-red-500"></i>
+                            <AlertTriangle class="text-3xl text-red-500" />
                         </div>
                         <h2 class="text-2xl font-bold text-secondary mb-3">Verifikasi Ditolak</h2>
                         <p class="text-[15px] text-muted leading-relaxed mb-8">

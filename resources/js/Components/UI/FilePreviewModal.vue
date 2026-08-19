@@ -11,7 +11,7 @@
             <!-- Header -->
             <div class="flex items-center justify-between p-4 pt-safe text-gray-800 bg-white border-b border-gray-200 shadow-sm z-10 w-full shrink-0">
                 <button @click="$emit('close')" class="p-2 hover:bg-gray-100 rounded-full transition-colors active:bg-gray-200">
-                    <i class="fa-solid fa-xmark text-xl"></i>
+                    <X class="text-xl" />
                 </button>
                 <h3 class="font-semibold text-[15px]">Kirim Berkas</h3>
                 <div class="w-10"></div>
@@ -32,7 +32,7 @@
                             class="max-w-full max-h-full object-contain shadow-sm rounded-lg bg-black/5"
                         >
                         <div v-else class="flex flex-col items-center gap-4 text-gray-700 bg-white p-8 rounded-2xl shadow-sm border border-gray-200">
-                            <i class="fa-solid fa-file-lines text-6xl text-gray-400"></i>
+                            <FileText class="text-6xl text-gray-400" />
                             <p class="font-medium text-center break-all text-sm md:text-base max-w-[200px]">{{ currentFile?.name }}</p>
                             <p class="text-xs text-gray-500 font-mono">{{ (currentFile?.size / 1024 / 1024).toFixed(2) }} MB</p>
                         </div>
@@ -57,17 +57,17 @@
                         >
                             <img v-if="isImage(file)" :src="getFileUrl(file)" class="w-full h-full object-cover">
                             <div v-else class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-500">
-                                <i class="fa-solid fa-file"></i>
+                                <File class="" />
                             </div>
                         </div>
                         <button @click.stop="handleRemove(index)" class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-gray-800 hover:bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] shadow-sm transition-colors z-10">
-                            <i class="fa-solid fa-xmark"></i>
+                            <X class="" />
                         </button>
                     </div>
 
                     <!-- Add More Button -->
                     <button v-if="files.length < 30" @click="$emit('addMore')" class="flex-shrink-0 w-14 h-14 rounded-lg border-1 border-gray-400 flex items-center justify-center text-gray-500 hover:bg-black/5 transition-colors snap-center">
-                        <i class="fa-solid fa-plus text-xl"></i>
+                        <Plus class="text-xl" />
                     </button>
                 </div>
 
@@ -85,7 +85,7 @@
                     </div>
 
                     <button @click="handleSend" class="bg-[#FFC000] hover:bg-yellow-500 text-black w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center shadow-sm transition-transform active:scale-90 mb-0.5">
-                        <i class="fa-solid fa-paper-plane text-xl -ml-1"></i>
+                        <Send class="text-xl -ml-1" />
                     </button>
                 </div>
             </div>
@@ -94,6 +94,7 @@
 </template>
 
 <script setup>
+import { X, FileText, File, Plus, Send } from 'lucide-vue-next';
 import { ref, watch, computed, onUnmounted, nextTick } from 'vue';
 
 const props = defineProps({

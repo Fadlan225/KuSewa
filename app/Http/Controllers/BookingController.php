@@ -149,6 +149,15 @@ class BookingController extends Controller
             'booker_phone'   => 'required|string|max:20',
             'booker_email'   => 'required|email|max:255',
             'guest_name'     => 'required|string|max:255',
+        ], [
+            'booker_name.required' => 'Nama Pemesan wajib diisi.',
+            'booker_phone.required' => 'Nomor Handphone wajib diisi.',
+            'booker_email.required' => 'Alamat Email wajib diisi.',
+            'booker_email.email' => 'Format Email tidak valid.',
+            'guest_name.required' => 'Nama Tamu wajib diisi.',
+            'payment_method.required' => 'Metode Pembayaran wajib dipilih.',
+            'startDate.required' => 'Tanggal Sewa wajib dipilih.',
+            'startDate.after_or_equal' => 'Tanggal Sewa tidak boleh di masa lalu.'
         ]);
 
 
@@ -340,11 +349,36 @@ class BookingController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Cancel the booking.
      */
-    public function destroy(string $id)
+    public function cancel(Request $request, booking $booking)
     {
-        //
+        if ($booking->user_id !== auth()->id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        // Hanya izinkan pembatalan jika belum dibayar lunas
+        $payment = $booking->payment;
+        if ($payment && $payment->payment_status === 'paid') {
+            return back()->with('error', 'Tidak dapat membatalkan pesanan yang sudah dibayar.');
+        }
+
+        $request->validate([
+            'cancel_reason' => 'required|string|max:255',
+        ]);
+
+        $booking->update([
+            'booking_status' => 'cancelled',
+            'cancel_reason' => $request->cancel_reason,
+            'cancelled_at' => now(),
+        ]);
+
+        // Batalkan juga tagihan pembayaran jika masih pending
+        if ($payment && $payment->payment_status === 'pending') {
+            $payment->update(['payment_status' => 'expired']);
+        }
+
+        return back()->with('success', 'Pesanan berhasil dibatalkan.');
     }
 }
 

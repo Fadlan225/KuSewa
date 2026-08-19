@@ -1,4 +1,5 @@
 <script setup>
+import { X } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -98,7 +99,7 @@ const sheetTransform = computed(() => {
                                 @click="close"
                                 class="w-8 h-8 rounded-full bg-white border border-[#6C757D]/20 flex items-center justify-center text-[#0A2540] shadow-sm active:scale-95 transition ml-auto"
                             >
-                                <i class="fa-solid fa-xmark"></i>
+                                <X class="" />
                             </button>
                         </div>
                         <slot name="tabs"></slot>

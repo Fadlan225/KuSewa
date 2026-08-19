@@ -1,4 +1,6 @@
 <script setup>
+import AppIcon from '@/Components/AppIcon.vue';
+import { Search, HelpCircle, BookOpen, Headset, Volume2, X, CreditCard, CheckCircle, Home, Check } from 'lucide-vue-next';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { ref } from 'vue';
@@ -48,7 +50,7 @@ const toggleFaq = (index) => {
                 
                 <div class="relative max-w-2xl mx-auto">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                        <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+                        <Search class="text-gray-400" />
                     </div>
                     <input type="text" class="block w-full pl-12 pr-4 py-4 rounded-xl border-0 ring-4 ring-white/20 focus:ring-[var(--color-primary)] bg-white text-gray-900 placeholder-gray-500 shadow-lg text-lg transition-all" placeholder="Cari topik bantuan (contoh: cara bayar, refund)...">
                     <button class="absolute inset-y-2 right-2 bg-[var(--color-primary)] hover:bg-yellow-400 text-[#0A2540] px-6 rounded-lg font-semibold transition-colors">
@@ -66,7 +68,7 @@ const toggleFaq = (index) => {
                 <div class="md:col-span-2 space-y-6 order-2 md:order-1">
                     <div class="flex items-center gap-3 mb-6">
                         <div class="w-10 h-10 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-[#0A2540] text-xl shadow-sm">
-                            <i class="fa-solid fa-circle-question"></i>
+                            <HelpCircle class="" />
                         </div>
                         <h2 class="text-2xl font-bold text-[#0A2540] m-0">Pertanyaan Populer (FAQ)</h2>
                     </div>
@@ -75,7 +77,7 @@ const toggleFaq = (index) => {
                         <div v-for="(faq, index) in faqs" :key="index" class="border-b border-gray-200 last:border-0">
                             <button @click="toggleFaq(index)" class="w-full text-left px-6 py-4 flex items-center justify-between focus:outline-none hover:bg-gray-50 transition-colors">
                                 <span class="font-semibold text-gray-800" :class="{ 'text-[var(--color-primary)]': faq.isOpen }">{{ faq.question }}</span>
-                                <i class="fa-solid text-gray-400 transition-transform duration-300" :class="faq.isOpen ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                                <AppIcon :iconClass="faq.isOpen ? 'fa-chevron-up' : 'fa-chevron-down'"  />
                             </button>
                             <div v-show="faq.isOpen" class="px-6 pb-4 text-gray-600 text-sm leading-relaxed border-t border-gray-50 bg-gray-50 pt-3">
                                 {{ faq.answer }}
@@ -89,7 +91,7 @@ const toggleFaq = (index) => {
                     <!-- Kategori Bantuan (Panduan) -->
                     <div @click="showGuideModal = true" class="bg-white rounded-xl shadow-md hover:shadow-lg p-6 sm:p-8 text-center transition-all cursor-pointer border border-gray-100 group hover:-translate-y-1">
                         <div class="w-16 h-16 mx-auto bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-3xl mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                            <i class="fa-solid fa-book-open"></i>
+                            <BookOpen class="" />
                         </div>
                         <h3 class="font-bold text-gray-900 mb-2 text-xl">Panduan Pembayaran & Sewa</h3>
                         <p class="text-sm text-gray-500">Ketuk untuk melihat panduan lengkap mengenai tata cara pembayaran dan penyewaan properti.</p>
@@ -97,11 +99,11 @@ const toggleFaq = (index) => {
 
                     <!-- Hubungi Kami Banner -->
                     <div class="bg-gradient-to-br from-[#0A2540] to-blue-900 p-6 rounded-xl shadow-md text-center text-white relative overflow-hidden">
-                        <i class="fa-solid fa-headset absolute -right-4 -bottom-4 text-7xl text-white opacity-10"></i>
+                        <Headset class="absolute -right-4 -bottom-4 text-7xl text-white opacity-10" />
                         <h3 class="text-lg font-bold mb-2">Masih Butuh Bantuan?</h3>
                         <p class="text-sm text-blue-100 mb-6">Tim dukungan kami siap membantu Anda menyelesaikan masalah dengan cepat.</p>
                         <Link href="/hubungi-kami" class="inline-block bg-[var(--color-primary)] text-[#0A2540] font-bold py-2.5 px-6 rounded-lg w-full hover:bg-yellow-400 transition-colors shadow-sm">
-                            <i class="fa-solid fa-phone-volume mr-2"></i> Hubungi Kami
+                            <Volume2 class="mr-2" /> Hubungi Kami
                         </Link>
                     </div>
                 </div>
@@ -115,10 +117,10 @@ const toggleFaq = (index) => {
             <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col transform transition-all">
                 <div class="flex items-center justify-between p-5 sm:p-6 border-b border-gray-100 bg-white">
                     <h2 class="text-lg sm:text-xl font-bold text-[#0A2540] flex items-center gap-2">
-                        <i class="fa-solid fa-book-open text-[var(--color-primary)]"></i> Panduan Pembayaran & Sewa
+                        <BookOpen class="text-[var(--color-primary)]" /> Panduan Pembayaran & Sewa
                     </h2>
                     <button @click="showGuideModal = false" class="text-gray-400 hover:text-red-500 bg-gray-100 hover:bg-red-50 rounded-full w-8 h-8 flex items-center justify-center transition-colors">
-                        <i class="fa-solid fa-xmark"></i>
+                        <X class="" />
                     </button>
                 </div>
                 <div class="p-5 sm:p-6 overflow-y-auto custom-scrollbar">
@@ -126,21 +128,21 @@ const toggleFaq = (index) => {
                         <!-- Panduan Pembayaran -->
                         <div class="flex gap-4">
                             <div class="w-10 h-10 rounded-full bg-green-50 text-green-600 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-credit-card text-lg"></i>
+                                <CreditCard class="text-lg" />
                             </div>
                             <div>
                                 <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3">Panduan Pembayaran</h3>
                                 <ul class="space-y-3 text-sm sm:text-base text-gray-600">
                                     <li class="flex items-start gap-3">
-                                        <i class="fa-solid fa-check-circle text-green-500 mt-1 shrink-0"></i>
+                                        <CheckCircle class="text-green-500 mt-1 shrink-0" />
                                         <span>Pilih metode pembayaran yang tersedia (Transfer Bank, E-Wallet, Kartu Kredit).</span>
                                     </li>
                                     <li class="flex items-start gap-3">
-                                        <i class="fa-solid fa-check-circle text-green-500 mt-1 shrink-0"></i>
+                                        <CheckCircle class="text-green-500 mt-1 shrink-0" />
                                         <span>Pastikan melakukan pembayaran sebelum batas waktu (jatuh tempo) yang telah ditentukan agar pesanan tidak dibatalkan otomatis.</span>
                                     </li>
                                     <li class="flex items-start gap-3">
-                                        <i class="fa-solid fa-check-circle text-green-500 mt-1 shrink-0"></i>
+                                        <CheckCircle class="text-green-500 mt-1 shrink-0" />
                                         <span>Setelah berhasil, sistem akan secara otomatis memverifikasi pembayaran Anda, dan status sewa akan diperbarui.</span>
                                     </li>
                                 </ul>
@@ -150,25 +152,25 @@ const toggleFaq = (index) => {
                         <!-- Panduan Sewa -->
                         <div class="flex gap-4">
                             <div class="w-10 h-10 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center shrink-0">
-                                <i class="fa-solid fa-house-chimney text-lg"></i>
+                                <Home class="text-lg" />
                             </div>
                             <div>
                                 <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-3">Panduan Sewa</h3>
                                 <ul class="space-y-3 text-sm sm:text-base text-gray-600">
                                     <li class="flex items-start gap-3">
-                                        <i class="fa-solid fa-circle-check text-orange-500 mt-1 shrink-0"></i>
+                                        <CheckCircle class="text-orange-500 mt-1 shrink-0" />
                                         <span>Gunakan fitur pencarian untuk menemukan properti yang sesuai dengan kriteria dan lokasi yang Anda inginkan.</span>
                                     </li>
                                     <li class="flex items-start gap-3">
-                                        <i class="fa-solid fa-circle-check text-orange-500 mt-1 shrink-0"></i>
+                                        <CheckCircle class="text-orange-500 mt-1 shrink-0" />
                                         <span>Periksa dengan teliti ketersediaan jadwal, rincian harga, serta fasilitas atau spesifikasi yang ditawarkan.</span>
                                     </li>
                                     <li class="flex items-start gap-3">
-                                        <i class="fa-solid fa-circle-check text-orange-500 mt-1 shrink-0"></i>
+                                        <CheckCircle class="text-orange-500 mt-1 shrink-0" />
                                         <span>Ajukan penyewaan (booking) dan tunggu konfirmasi atau persetujuan dari pemilik aset.</span>
                                     </li>
                                     <li class="flex items-start gap-3">
-                                        <i class="fa-solid fa-circle-check text-orange-500 mt-1 shrink-0"></i>
+                                        <CheckCircle class="text-orange-500 mt-1 shrink-0" />
                                         <span>Untuk baliho, pastikan Anda juga menyiapkan desain materi iklan sesuai dengan ukuran dan ketentuan dari pemilik.</span>
                                     </li>
                                 </ul>
@@ -178,7 +180,7 @@ const toggleFaq = (index) => {
                 </div>
                 <div class="p-4 sm:p-6 border-t border-gray-100 flex justify-end bg-gray-50">
                     <button @click="showGuideModal = false" class="bg-[var(--color-primary)] hover:bg-yellow-400 text-[#0A2540] px-6 py-2.5 rounded-lg font-bold transition-colors shadow-sm text-sm sm:text-base w-full sm:w-auto">
-                        <i class="fa-solid fa-check mr-2"></i> Mengerti
+                        <Check class="mr-2" /> Mengerti
                     </button>
                 </div>
             </div>

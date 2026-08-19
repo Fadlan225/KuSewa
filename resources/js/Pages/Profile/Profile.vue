@@ -1,4 +1,5 @@
 <script setup>
+import { Loader2, Camera, CheckCircle, Chrome } from 'lucide-vue-next';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, nextTick } from 'vue';
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
@@ -139,7 +140,7 @@ const showUnlinkGoogleModal = ref(false);
     <Head title="Pengaturan Profil" />
 
     <div class="min-h-screen bg-white pb-24 text-[#333333] font-sans">
-        <DetailNavbar backUrl="/profile" :forceBackUrl="true" :showSections="false" :showShare="false" :showFavorite="false" />
+        <DetailNavbar backUrl="/profile" :forceBackUrl="true" :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" />
 
         <main class="max-w-3xl mx-auto py-6 px-5 sm:px-6 lg:px-8 space-y-8">
 
@@ -162,12 +163,12 @@ const showUnlinkGoogleModal = ref(false);
 
                     <!-- Loading overlay -->
                     <div v-if="uploadingPhoto" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
-                        <i class="fa-solid fa-spinner fa-spin text-white text-xl"></i>
+                        <Loader2 class="text-white text-xl animate-spin" />
                     </div>
 
                     <!-- Camera icon hover -->
                     <div v-else class="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-md border border-gray-100 flex items-center justify-center text-primary hover:scale-110 transition-transform">
-                        <i class="fa-solid fa-camera text-xs"></i>
+                        <Camera class="text-xs" />
                     </div>
                 </div>
                 <input type="file" class="hidden" ref="photoInput" @change="handleFileChange" accept="image/*">
@@ -213,7 +214,7 @@ const showUnlinkGoogleModal = ref(false);
                         </svg>
                         <div class="flex items-center space-x-1.5">
                             <p class="text-[16px] font-bold text-[#1D1D1F]">Google</p>
-                            <i v-if="user.is_google_linked" class="fa-solid fa-circle-check text-[#00B14F] text-sm"></i>
+                            <CheckCircle v-if="user.is_google_linked" class="text-[#00B14F] text-sm" />
                         </div>
                     </div>
 
@@ -232,7 +233,7 @@ const showUnlinkGoogleModal = ref(false);
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
                 <div class="bg-white rounded-2xl max-w-sm w-full p-6 sm:p-8 shadow-xl transform transition-all duration-300 text-center">
                     <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i class="fa-brands fa-google text-2xl text-red-600"></i>
+                        <Chrome class="text-2xl text-red-600" />
                     </div>
                     <h2 class="text-xl font-bold text-gray-900">Putuskan Tautan</h2>
                     <p class="mt-2 text-sm text-gray-600">

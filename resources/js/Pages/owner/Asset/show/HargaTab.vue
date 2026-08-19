@@ -1,4 +1,5 @@
 <script setup>
+import { Trash2, Loader2, Save } from 'lucide-vue-next';
 import { useForm } from '@inertiajs/vue3';
 import { onMounted } from 'vue';
 
@@ -121,7 +122,7 @@ const submitPricings = () => {
                             class="absolute top-2 right-2 sm:relative sm:top-0 sm:right-0 sm:mt-6 w-7 h-7 shrink-0 rounded-lg bg-rose-100 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center text-xs"
                             title="Hapus Harga"
                         >
-                            <i class="fa-solid fa-trash"></i>
+                            <Trash2 class="" />
                         </button>
 
                         <div class="w-full sm:w-1/4">
@@ -155,8 +156,8 @@ const submitPricings = () => {
 
                 <div class="flex justify-end pt-4 border-t border-slate-100">
                     <button type="submit" :disabled="form.processing" class="bg-[#0A2540] hover:bg-slate-800 text-white text-sm font-bold px-6 py-2.5 rounded-xl shadow-sm transition flex items-center gap-2">
-                        <i v-if="form.processing" class="fa-solid fa-spinner fa-spin"></i>
-                        <i v-else class="fa-solid fa-save"></i>
+                        <Loader2 v-if="form.processing" class="animate-spin" />
+                        <Save v-else class="" />
                         {{ form.processing ? 'Menyimpan...' : 'Simpan Perubahan Harga' }}
                     </button>
                 </div>

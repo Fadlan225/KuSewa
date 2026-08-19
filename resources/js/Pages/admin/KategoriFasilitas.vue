@@ -1,4 +1,5 @@
 <script setup>
+import { Search, X, Pen, Trash2 } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -224,7 +225,7 @@ function removeItem(item) {
     <DashboardLayout role="Admin" title="Kategori & Fasilitas" description="Kelola master data kategori & jenis aset, serta kategori & jenis fasilitas.">
         <template #header-actions>
             <div class="flex items-center gap-3 w-64 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
-                <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                <Search class="text-slate-400 text-xs" />
                 <input
                     type="text"
                     v-model="searchQuery"
@@ -369,7 +370,7 @@ function removeItem(item) {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 
@@ -453,13 +454,13 @@ function removeItem(item) {
                             class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition"
                             aria-label="Tutup"
                         >
-                            <i class="fa-solid fa-xmark text-sm"></i>
+                            <X class="text-sm" />
                         </button>
                     </div>
 
                     <div class="px-6 pt-4 shrink-0">
                         <div class="flex items-center gap-3 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
-                            <i class="fa-solid fa-magnifying-glass text-slate-400 text-xs"></i>
+                            <Search class="text-slate-400 text-xs" />
                             <input
                                 type="text"
                                 v-model="manageSearch"
@@ -488,7 +489,7 @@ function removeItem(item) {
                                     class="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
                                     aria-label="Edit"
                                 >
-                                    <i class="fa-solid fa-pen text-[11px]"></i>
+                                    <Pen class="text-[11px]" />
                                 </button>
                                 <button
                                     type="button"
@@ -506,7 +507,7 @@ function removeItem(item) {
                                     class="w-7 h-7 rounded-full flex items-center justify-center text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
                                     aria-label="Hapus"
                                 >
-                                    <i class="fa-solid fa-trash text-[11px]"></i>
+                                    <Trash2 class="text-[11px]" />
                                 </button>
                             </div>
                         </div>

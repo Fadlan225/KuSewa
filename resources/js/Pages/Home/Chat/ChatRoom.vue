@@ -7,8 +7,7 @@
   >
     <!-- Empty State -->
     <div v-if="!activeChatId" class="flex-1 flex flex-col items-center justify-center bg-[#F0F2F5] text-center p-6">
-        <!-- Using a placeholder if no-chat.svg is not available, but user requested no-chat.svg -->
-        <img src="/no-chat.svg" alt="No Chat" class="w-64 h-64 mb-6 opacity-80" onerror="this.src='/images/dummy-map.png'" />
+        <NoChatIcon class="w-64 h-64 mb-6 opacity-80" />
         <h2 class="text-2xl font-bold text-gray-700 mb-2">KuSewa Web</h2>
         <p class="text-gray-500 max-w-sm">Pilih pesan di samping untuk mulai berdiskusi atau hubungi pemilik aset.</p>
     </div>
@@ -24,17 +23,17 @@
               {{ activeChat.avatarText }}
           </div>
 
-          <div class="flex-1 min-w-0 cursor-pointer">
-            <h2 class="font-semibold text-gray-900 text-[15px] leading-tight truncate">
-              {{ activeChat.name }} <template v-if="activeChat.assetName && activeChat.isContactOwner">- {{ activeChat.assetName }}</template>
-            </h2>
-            <p v-if="activeChat.assetName && !activeChat.isContactOwner" class="text-[12px] text-gray-500 flex items-center gap-1 mt-0.5 truncate">
+          <div class="flex-1 min-w-0 cursor-pointer overflow-hidden">
+              <h2 v-marquee class="font-semibold text-gray-900 text-[15px] leading-tight flex items-center h-[22px] whitespace-nowrap w-fit">
+                {{ chatTitle }}
+              </h2>
+              <p v-if="activeChat.assetName && !activeChat.isContactOwner" class="text-[12px] text-gray-500 flex items-center gap-1 mt-0.5 truncate h-[18px]">
               {{ activeChat.assetName }}
             </p>
           </div>
         </div>
         <button class="text-gray-500 hover:text-gray-700 p-2">
-          <i class="fa-solid fa-ellipsis-vertical"></i>
+          <MoreVertical class="" />
         </button>
       </div>
 
@@ -43,17 +42,17 @@
           <template #content>
             <div class="flex items-center gap-3 w-full pr-4 py-2">
               <button @click="$emit('closeMobile')" class="p-2 -ml-2 text-[#0A2540] hover:text-gray-800 transition-colors">
-                <i class="fa-solid fa-arrow-left"></i>
+                <ArrowLeft class="" />
               </button>
               <img v-if="activeChat.avatar" :src="activeChat.avatar" alt="Avatar" class="w-9 h-9 rounded-full object-cover shrink-0">
               <div v-else class="w-9 h-9 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
                   {{ activeChat.avatarText }}
               </div>
-              <div class="flex-1 min-w-0 flex flex-col justify-center">
-                <h2 class="font-semibold text-gray-900 text-[14px] leading-tight truncate">
-                  {{ activeChat.name }} <template v-if="activeChat.assetName && activeChat.isContactOwner">- {{ activeChat.assetName }}</template>
+              <div class="flex-1 min-w-0 flex flex-col justify-center overflow-hidden">
+                <h2 v-marquee class="font-semibold text-gray-900 text-[14px] leading-tight flex items-center h-[20px] whitespace-nowrap w-fit">
+                  {{ chatTitle }}
                 </h2>
-                <p v-if="activeChat.assetName && !activeChat.isContactOwner" class="text-[11px] text-gray-500 truncate mt-0.5">
+                <p v-if="activeChat.assetName && !activeChat.isContactOwner" class="text-[11px] text-gray-500 truncate mt-0.5 h-[16px]">
                   {{ activeChat.assetName }}
                 </p>
               </div>
@@ -69,7 +68,7 @@
             <div class="flex gap-3">
                 <img v-if="activeChat.assetImage" :src="activeChat.assetImage" class="w-20 h-20 object-cover rounded-lg shrink-0">
                 <div v-else class="w-20 h-20 bg-gray-50 flex items-center justify-center text-gray-400 rounded-lg shrink-0">
-                    <i class="fa-solid fa-image text-xl"></i>
+                    <Image class="text-xl" />
                 </div>
                 <div class="flex-1 min-w-0 flex flex-col justify-center">
                     <h4 class="font-bold text-gray-800 text-[14px] leading-tight mb-1 truncate">{{ activeChat.assetName }}</h4>
@@ -83,10 +82,13 @@
 
         <div class="z-10 flex flex-col gap-1 w-full">
             <!-- Warning Banner -->
-            <div class="bg-yellow-50 border-b border-yellow-100 p-3 flex gap-3 text-sm text-yellow-800 shadow-sm z-20">
-                <i class="fa-solid fa-lock text-yellow-600 mt-0.5"></i>
-                <div class="flex-1 leading-snug font-medium">
-                    <p>Keamanan Chat: Semua percakapan tersimpan dan diawasi oleh Admin. Dilarang bertukar Nomor HP, Email, atau Link eksternal demi keamanan transaksi.</p>
+            <div class="bg-[#FFF8E6] border-b border-[#FFC000]/20 px-4 py-2.5 flex items-start gap-2.5 z-20">
+                <div class="mt-0.5 shrink-0 bg-[#FFC000]/20 p-1 rounded-full text-[#B28600]">
+                   <Lock class="w-3.5 h-3.5" />
+                </div>
+                <div class="flex-1 flex flex-col">
+                    <span class="text-[11px] font-bold text-[#8C6900] leading-tight">Keamanan Chat Diawasi Admin</span>
+                    <span class="text-[10.5px] text-[#A67C00] leading-snug mt-0.5">Demi keamanan transaksi, dilarang bertukar kontak pribadi (No. HP/Email) atau link eksternal.</span>
                 </div>
             </div>
 
@@ -112,7 +114,7 @@
                   </div>
 
                   <template v-if="msg.isDeleted">
-                      <div class="italic text-gray-500 text-sm"><i class="fa-solid fa-ban mr-1"></i> Pesan ini telah dihapus</div>
+                      <div class="italic text-gray-500 text-sm"><Ban class="mr-1" /> Pesan ini telah dihapus</div>
                   </template>
                   <template v-else-if="msg.attachments && msg.attachments.length > 0">
                       <div class="grid gap-1 mb-1 max-w-[250px]" :class="[
@@ -138,9 +140,9 @@
                   </template>
                   <template v-else-if="msg.type === 'file'">
                       <a :href="msg.file_url" target="_blank" class="flex items-center gap-2 bg-white p-2 rounded-lg border border-gray-200 mb-1 hover:bg-gray-50">
-                          <i class="fa-solid fa-file-lines text-2xl text-red-500"></i>
+                          <FileText class="text-2xl text-red-500" />
                           <span class="text-sm truncate max-w-[150px]">{{ msg.file_name }}</span>
-                          <i class="fa-solid fa-download text-gray-400 ml-auto"></i>
+                          <Download class="text-gray-400 ml-auto" />
                       </a>
                       <div v-if="msg.text" class="mt-1 whitespace-pre-wrap">{{ msg.text }}</div>
                   </template>
@@ -165,13 +167,13 @@
                   </div>
 
                   <div v-if="msg.status === 'policy_error'" class="text-[11px] md:text-xs text-red-600 font-medium mb-1 pb-1 border-b border-red-100 flex items-start gap-1.5">
-                    <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                    <AlertCircle class="mt-0.5" />
                     <span>{{ msg.error_text }}</span>
                   </div>
 
                   <div :class="{'opacity-60': msg.status === 'policy_error'}">
                       <template v-if="msg.isDeleted">
-                          <div class="italic text-gray-800 text-sm"><i class="fa-solid fa-ban mr-1"></i> Pesan ini telah dihapus</div>
+                          <div class="italic text-gray-800 text-sm"><Ban class="mr-1" /> Pesan ini telah dihapus</div>
                       </template>
                       <template v-else-if="msg.attachments && msg.attachments.length > 0">
                           <div class="grid gap-1 mb-1 max-w-[250px]" :class="[
@@ -200,9 +202,9 @@
                       </template>
                       <template v-else-if="msg.type === 'file'">
                           <a :href="msg.file_url" target="_blank" class="flex items-center gap-2 p-2 rounded-lg mb-1" :class="msg.status === 'policy_error' ? 'bg-red-100 border border-red-200 pointer-events-none' : 'bg-yellow-400 border border-yellow-500 hover:bg-yellow-500'">
-                              <i class="fa-solid fa-file-lines text-2xl text-black"></i>
+                              <FileText class="text-2xl text-black" />
                               <span class="text-sm truncate max-w-[150px]">{{ msg.file_name }}</span>
-                              <i class="fa-solid fa-download text-black ml-auto"></i>
+                              <Download class="text-black ml-auto" />
                           </a>
                           <div v-if="msg.text" class="mt-1 whitespace-pre-wrap">{{ msg.text }}</div>
                       </template>
@@ -214,7 +216,7 @@
                   <div class="text-[10px] ml-3 float-right mt-1.5 flex items-center gap-1" :class="msg.status === 'policy_error' ? 'text-red-500' : 'text-gray-700'">
                       <span v-if="msg.isEdited" class="mr-1 italic">diedit</span>
                       {{ msg.time }}
-                      <i v-if="msg.status === 'policy_error'" class="fa-solid fa-circle-exclamation"></i>
+                      <AlertCircle v-if="msg.status === 'policy_error'" class="" />
                       <i v-else :class="[
                         'fa-solid transition-colors duration-500 ease-in-out',
                         (msg.status === 'failed' || msg.status === 'sending') ? 'fa-check text-gray-500' :
@@ -236,17 +238,29 @@
               </div>
             </div>
 
+          </div>
         </div>
-      </div>
 
-      <!-- Reply / Edit Preview -->
+        <!-- Quick Replies (Ice Breakers) - Sticky above keyboard -->
+        <div v-if="messages && messages.length === 0" class="shrink-0 w-full z-10 px-4 md:px-16 pt-2 pb-2 bg-white animate-fade-in-up">
+            <div class="bg-white rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 overflow-hidden flex flex-col md:max-w-4xl md:mx-auto">
+                <button v-for="(q, index) in suggestedQuestions" :key="index" @click="sendSuggestion(q)"
+                        class="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors text-left group"
+                        :class="{'border-b border-gray-100': index !== suggestedQuestions.length - 1}">
+                    <span class="text-[14px] text-gray-700 font-medium pr-4 group-hover:text-gray-900 transition-colors">{{ q }}</span>
+                    <Send class="w-[18px] h-[18px] text-[#FFC000] shrink-0" />
+                </button>
+            </div>
+        </div>
+
+        <!-- Reply / Edit Preview -->
       <div v-if="replyingToMessage || editingMessageId" class="shrink-0 bg-[#F0F2F5] px-4 pt-3 pb-1 flex items-center justify-between w-full z-10 md:px-16" style="border-radius: 12px 12px 0 0; margin-top: -12px;">
          <div class="flex flex-col flex-1 min-w-0 pr-4 border-l-4 border-[#FFC000] pl-3 bg-black/5 py-1.5 rounded-r-lg">
              <span class="text-[12px] font-bold text-[#FFC000]">{{ editingMessageId ? 'Mengedit Pesan' : ('Membalas ' + replyingToMessage.sender_name) }}</span>
              <span class="text-[12px] text-gray-600 truncate">{{ editingMessageId ? editingMessageOriginal : replyingToMessage.text }}</span>
          </div>
          <button @click="cancelReplyOrEdit" class="text-gray-500 hover:text-gray-700 w-8 h-8 flex items-center justify-center shrink-0 ml-2 rounded-full hover:bg-black/5 transition-colors">
-            <i class="fa-solid fa-xmark text-lg"></i>
+            <X class="text-lg" />
          </button>
       </div>
 
@@ -255,20 +269,20 @@
 
         <div class="relative">
           <button @click="isAttachmentMenuOpen = !isAttachmentMenuOpen" class="p-2 text-gray-500 hover:text-gray-700 text-xl transition-colors" :class="{'text-[#FFC000]': isAttachmentMenuOpen}">
-             <i class="fa-solid fa-paperclip"></i>
+             <Paperclip class="" />
           </button>
 
           <!-- Attachment Menu Desktop -->
           <div v-if="isAttachmentMenuOpen" class="absolute bottom-full mb-2 left-0 bg-white rounded-2xl shadow-lg border border-gray-100 p-2 flex flex-col gap-2 z-50 min-w-[160px] animate-fade-in-up">
               <button @click="triggerFile('gallery')" class="flex items-center gap-3 w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left">
                   <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                      <i class="fa-solid fa-image text-lg"></i>
+                      <Image class="text-lg" />
                   </div>
                   <span class="font-medium text-gray-700 text-sm">Galeri</span>
               </button>
               <button @click="triggerFile('camera')" class="flex items-center gap-3 w-full p-2 hover:bg-gray-50 rounded-xl transition-colors text-left">
                   <div class="w-10 h-10 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center shrink-0">
-                      <i class="fa-solid fa-camera text-lg"></i>
+                      <Camera class="text-lg" />
                   </div>
                   <span class="font-medium text-gray-700 text-sm">Kamera</span>
               </button>
@@ -287,14 +301,14 @@
         </div>
 
         <button @click="handleSend" :disabled="!localNewMessage.trim()" class="bg-[#FFC000] hover:bg-yellow-500 disabled:opacity-50 text-black w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors">
-          <i class="fa-solid fa-paper-plane text-[15px] -ml-0.5"></i>
+          <Send class="text-[15px] -ml-0.5" />
         </button>
       </div>
 
       <!-- Input Chat Mobile -->
       <div class="md:hidden shrink-0 p-2 z-50 flex items-center gap-2 pb-safe w-full transition-colors" :class="(replyingToMessage || editingMessageId) ? 'bg-[#F0F2F5]' : 'bg-white border-t border-gray-200 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)]'">
         <button @click="isAttachmentMenuOpen = true" class="p-2 text-gray-500 hover:text-gray-700 text-lg transition-colors" :class="{'text-[#FFC000]': isAttachmentMenuOpen}">
-            <i class="fa-solid fa-paperclip"></i>
+            <Paperclip class="" />
         </button>
         <div class="flex-1 bg-gray-50 rounded-full flex items-center transition-all overflow-hidden border border-gray-200">
           <textarea
@@ -307,7 +321,7 @@
           ></textarea>
         </div>
         <button @click="handleSend" :disabled="!localNewMessage.trim()" class="bg-[#FFC000] hover:bg-yellow-500 disabled:opacity-50 text-black w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors mr-1">
-          <i class="fa-solid fa-paper-plane text-[14px] -ml-0.5"></i>
+          <Send class="text-[14px] -ml-0.5" />
         </button>
       </div>
     </template>
@@ -323,20 +337,20 @@
              @touchstart.stop>
 
             <button @click="handleAction('info')" class="w-full text-left px-4 py-2 text-xs font-semibold text-gray-500 border-b flex items-center gap-2 hover:bg-gray-100 transition-colors">
-              <i class="fa-solid fa-circle-info"></i> Info Pesan
+              <Info class="" /> Info Pesan
             </button>
             <button @click="handleAction('reply')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-3 transition-colors">
-              <i class="fa-solid fa-reply w-4 text-gray-400"></i> Balas
+              <Reply class="w-4 text-gray-400" /> Balas
             </button>
             <button @click="handleAction('copy')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-3 transition-colors">
-              <i class="fa-regular fa-copy w-4 text-gray-400"></i> Salin
+              <Copy class="w-4 text-gray-400" /> Salin
             </button>
             <template v-if="contextMenu.message.isSelf">
                 <button v-if="isEditable(contextMenu.message)" @click="handleAction('edit')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 flex items-center gap-3 transition-colors">
-                  <i class="fa-solid fa-pen w-4 text-gray-400"></i> Edit Pesan
+                  <Pen class="w-4 text-gray-400" /> Edit Pesan
                 </button>
                 <button @click="handleAction('delete')" class="w-full text-left px-4 py-2.5 hover:bg-gray-100 text-red-600 flex items-center gap-3 transition-colors">
-                  <i class="fa-regular fa-trash-can w-4"></i> Hapus
+                  <Trash2 class="w-4" /> Hapus
                 </button>
             </template>
         </div>
@@ -363,13 +377,13 @@
             <div class="grid grid-cols-2 gap-6 max-w-[250px] mx-auto">
                 <button @click="triggerFile('gallery')" class="flex flex-col items-center gap-2">
                     <div class="w-14 h-14 rounded-full bg-white shadow-sm text-blue-600 flex items-center justify-center border border-gray-100 active:scale-95 transition-transform">
-                        <i class="fa-solid fa-image text-2xl"></i>
+                        <Image class="text-2xl" />
                     </div>
                     <span class="text-xs font-medium text-gray-700">Galeri</span>
                 </button>
                 <button @click="triggerFile('camera')" class="flex flex-col items-center gap-2">
                     <div class="w-14 h-14 rounded-full bg-white shadow-sm text-pink-600 flex items-center justify-center border border-gray-100 active:scale-95 transition-transform">
-                        <i class="fa-solid fa-camera text-2xl"></i>
+                        <Camera class="text-2xl" />
                     </div>
                     <span class="text-xs font-medium text-gray-700">Kamera</span>
                 </button>
@@ -412,12 +426,14 @@
 </template>
 
 <script setup>
+import { MoreVertical, ArrowLeft, Image, Lock, Ban, FileText, Download, AlertCircle, X, Paperclip, Camera, Send, Info, Reply, Copy, Pen, Trash2 } from 'lucide-vue-next';
 import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue';
 import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
 import FilePreviewModal from '@/Components/UI/FilePreviewModal.vue';
 import WebcamCaptureModal from '@/Components/UI/WebcamCaptureModal.vue';
 import ImageViewerModal from '@/Components/UI/ImageViewerModal.vue';
 import Toast from '@/Components/UI/Toast.vue';
+import NoChatIcon from '@/Components/UI/Icons/NoChatIcon.vue';
 
 const props = defineProps({
   isMobileChatOpen: {
@@ -447,6 +463,58 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['closeMobile', 'update:newMessage', 'sendMessage', 'typing', 'editMessage', 'deleteMessage']);
+
+const chatTitle = computed(() => {
+    if (!props.activeChat) return '';
+    let title = props.activeChat.name;
+    if (props.activeChat.assetName && props.activeChat.isContactOwner) {
+        title += ` - ${props.activeChat.assetName}`;
+    }
+    return title;
+});
+
+const vMarquee = {
+    mounted(el) {
+        const setupMarquee = () => {
+            el.style.animation = 'none';
+            el.style.transform = 'translateX(0)';
+            
+            requestAnimationFrame(() => {
+                const scrollWidth = el.scrollWidth;
+                const clientWidth = el.parentElement.clientWidth;
+                
+                if (scrollWidth > clientWidth) {
+                    const dist = scrollWidth - clientWidth;
+                    el.style.setProperty('--scroll-dist', `${dist}px`);
+                    el.style.animation = 'custom-marquee 6s linear infinite alternate';
+                }
+            });
+        };
+        
+        const observer = new ResizeObserver(setupMarquee);
+        observer.observe(el.parentElement);
+        el._marqueeObserver = observer;
+    },
+    updated(el) {
+        requestAnimationFrame(() => {
+            el.style.animation = 'none';
+            requestAnimationFrame(() => {
+                const scrollWidth = el.scrollWidth;
+                const clientWidth = el.parentElement.clientWidth;
+                if (scrollWidth > clientWidth) {
+                    const dist = scrollWidth - clientWidth;
+                    el.style.setProperty('--scroll-dist', `${dist}px`);
+                    el.style.animation = 'custom-marquee 6s linear infinite alternate';
+                }
+            });
+        });
+    },
+    unmounted(el) {
+        if (el._marqueeObserver) {
+            el._marqueeObserver.disconnect();
+        }
+    }
+};
 
 const localNewMessage = ref(props.newMessage);
 const replyingToMessage = ref(null);
@@ -726,6 +794,17 @@ const scrollToMsg = (id) => {
     // optional logic to scroll to specific message later
 };
 
+const suggestedQuestions = [
+    "Halo, apakah aset ini masih tersedia?",
+    "Apakah ada syarat khusus untuk menyewa ini?",
+    "Apakah bisa survei aset terlebih dahulu?"
+];
+
+const sendSuggestion = (text) => {
+    localNewMessage.value = text;
+    handleSend();
+};
+
 const handleSend = () => {
     if (!localNewMessage.value.trim()) return;
 
@@ -748,6 +827,12 @@ const handleSend = () => {
 </script>
 
 <style scoped>
+/* Custom Marquee Animation */
+@keyframes custom-marquee {
+  0%, 15% { transform: translateX(0); }
+  85%, 100% { transform: translateX(calc(-1 * var(--scroll-dist, 0px))); }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar { width: 4px; }
 @media (min-width: 768px) { ::-webkit-scrollbar { width: 6px; } }

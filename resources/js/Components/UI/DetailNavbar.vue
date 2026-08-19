@@ -1,4 +1,5 @@
 <script setup>
+import { ArrowLeft, Upload, Heart, X, Link as LinkIcon, Share2 } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import BottomSheet from './BottomSheet.vue';
@@ -186,7 +187,7 @@ onUnmounted(() => {
             <slot name="content">
                 <div class="flex items-center gap-6">
                     <button v-if="showBackButton" @click="goBack" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors" :class="mobileBackOnly ? 'md:hidden' : ''">
-                        <i class="fa-solid fa-arrow-left text-[#0A2540]"></i>
+                        <ArrowLeft class="text-[#0A2540]" />
                     </button>
 
                     <!-- Desktop Scroll Menu -->
@@ -202,10 +203,10 @@ onUnmounted(() => {
 
                 <div class="flex items-center gap-2">
                     <button v-if="showShare" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors" @click="showShareUI = true">
-                        <i class="fa-solid fa-arrow-up-from-bracket text-[#0A2540]"></i>
+                        <Upload class="text-[#0A2540]" />
                     </button>
                     <button v-if="showFavorite" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors" @click="$emit('favorite')">
-                        <i class="fa-heart" :class="isFavorited ? 'fa-solid text-red-500' : 'fa-regular text-[#0A2540]'"></i>
+                        <Heart class="transition-colors" :class="isFavorited ? 'text-pink-500 fill-pink-500' : 'text-[#0A2540]'" />
                     </button>
                 </div>
             </slot>
@@ -220,16 +221,16 @@ onUnmounted(() => {
                     <div class="flex justify-between items-center mb-6">
                         <h3 class="text-xl font-bold text-[#0A2540]">Bagikan Aset</h3>
                         <button @click="showShareUI = false" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center hover:bg-gray-100 text-gray-500 transition-colors">
-                            <i class="fa-solid fa-xmark"></i>
+                            <X class="" />
                         </button>
                     </div>
                     <div class="flex flex-col gap-3">
                         <button @click="copyLink" class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition font-bold text-[#0A2540]">
-                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"><i class="fa-solid fa-link"></i></div>
+                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"><LinkIcon class="" /></div>
                             Salin Tautan
                         </button>
                         <button v-if="supportsNativeShare" @click="nativeShare" class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition font-bold text-[#0A2540]">
-                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-share-nodes"></i></div>
+                            <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><Share2 class="" /></div>
                             Opsi Lainnya
                         </button>
                     </div>
@@ -242,11 +243,11 @@ onUnmounted(() => {
     <BottomSheet v-model="showShareUI" title="Bagikan" heightClass="h-auto pb-10">
         <div class="px-5 pt-4 flex flex-col gap-3">
             <button @click="copyLink" class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition font-bold text-[#0A2540] active:scale-95">
-                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"><i class="fa-solid fa-link"></i></div>
+                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-700"><LinkIcon class="" /></div>
                 Salin Tautan
             </button>
             <button v-if="supportsNativeShare" @click="nativeShare" class="w-full flex items-center gap-4 p-4 rounded-xl border border-gray-100 hover:bg-gray-50 transition font-bold text-[#0A2540] active:scale-95">
-                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><i class="fa-solid fa-share-nodes"></i></div>
+                <div class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center"><Share2 class="" /></div>
                 Opsi Lainnya
             </button>
         </div>
