@@ -8,7 +8,12 @@ use App\Models\booking;
 
 class AktivitasController extends Controller
 {
-    public function index()
+    public function hub()
+    {
+        return Inertia::render('Home/Activity/Index');
+    }
+
+    public function transaksi()
     {
         $userId = auth()->id();
 
@@ -36,8 +41,20 @@ class AktivitasController extends Controller
             }
         });
 
-        return Inertia::render("Home/Aktivitas", [
+        return Inertia::render("Home/Activity/Transaksi", [
             "bookings" => $bookings
+        ]);
+    }
+
+    public function searchHistory()
+    {
+        $userId = auth()->id();
+        $searchLogs = \App\Models\search_log::where('user_id', $userId)
+            ->orderBy('searched_at', 'desc')
+            ->paginate(15);
+
+        return Inertia::render('Home/Activity/SearchHistory', [
+            'searchLogs' => $searchLogs
         ]);
     }
 }

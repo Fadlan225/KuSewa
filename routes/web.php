@@ -115,7 +115,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/chats/{room}/messages/{message}', [ChatController::class, 'deleteMessage'])->name('api.chats.delete');
     Route::put('/api/chats/{room}/messages/read', [ChatController::class, 'markAsRead'])->name('api.chats.read');
 
-    Route::get('/aktivitas', [AktivitasController::class, 'index'])->name('aktivitas.index');
+    // ==========================
+    // Activity Hub & Sub-menus
+    // ==========================
+    Route::get('/aktivitas', [AktivitasController::class, 'hub'])->name('aktivitas.hub');
+    Route::get('/aktivitas/transaksi', [AktivitasController::class, 'transaksi'])->name('aktivitas.transaksi');
+    Route::get('/aktivitas/pencarian', [AktivitasController::class, 'searchHistory'])->name('aktivitas.pencarian');
+    Route::get('/aktivitas/ulasan', [ReviewController::class, 'myReviews'])->name('aktivitas.ulasan');
+
     Route::get('/ulasan/{id}', [ReviewController::class, 'create'])->name('ulasan.index');
     Route::post('/ulasan/{id}', [ReviewController::class, 'store'])->name('ulasan.store');
 
@@ -129,13 +136,14 @@ Route::middleware('auth')->group(function () {
     // ==========================
     // Favorite
     // ==========================
-    Route::resource('favorites', FavoriteController::class)
-        ->only(['index', 'store', 'destroy']);
+    Route::get('/aktivitas/favorit', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::post('/favorites', [FavoriteController::class, 'store'])->name('favorites.store');
+    Route::delete('/favorites/{favorite}', [FavoriteController::class, 'destroy'])->name('favorites.destroy');
 
     // ==========================
     // Last Seen / Terakhir Dilihat
     // ==========================
-    Route::get('/last-seen', [AssetViewController::class, 'index'])->name('last-seen.index');
+    Route::get('/aktivitas/terakhir-dilihat', [AssetViewController::class, 'index'])->name('last-seen.index');
     Route::delete('/last-seen/bulk', [AssetViewController::class, 'bulkDestroy'])->name('last-seen.bulkDestroy');
     Route::delete('/last-seen/{assetView}', [AssetViewController::class, 'destroy'])->name('last-seen.destroy');
 

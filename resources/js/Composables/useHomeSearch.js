@@ -210,11 +210,24 @@ const isPastDate = (year, month, date) => {
     return check < today;
 };
 
+const isDateDisabled = (year, month, date) => {
+    if (isPastDate(year, month, date)) return true;
+    
+    // Disable dates before startDate if we are waiting for endDate selection
+    if (activeScheduleMode.value === 'day' && startDate.value && !endDate.value) {
+        const check = new Date(year, month, date);
+        const start = new Date(startDate.value);
+        start.setHours(0,0,0,0);
+        if (check < start) return true;
+    }
+    return false;
+};
+
 const selectDate = (year, month, date) => {
     const selected = new Date(year, month, date);
     
-    // Blokir tanggal masa lalu
-    if (isPastDate(year, month, date)) return;
+    // Blokir tanggal masa lalu atau sebelum startDate (jika sedang pilih endDate)
+    if (isDateDisabled(year, month, date)) return;
     
     if (activeScheduleMode.value === 'hour' || activeScheduleMode.value === 'month') {
         // Mode hour/month: hanya pilih 1 tanggal (startDate)
@@ -279,7 +292,29 @@ const formatDate = (date) => {
 const minPrice = ref(0);
 const maxPrice = ref(10000000);
 const sliderTrack = ref(null);
-const maxLimit = 10000000;
+const maxLimit = computed(() => {
+    try {
+        const page = usePage();
+        return page?.props?.globalPriceRange?.max ?? 10000000;
+    } catch(e) {
+        return 10000000;
+    }
+});
+
+let isPriceInitialized = false;
+const initPriceBounds = () => {
+    if (isPriceInitialized) return;
+    try {
+        const page = usePage();
+        if (page?.props?.globalPriceRange) {
+            minPrice.value = page.props.globalPriceRange.min;
+            maxPrice.value = page.props.globalPriceRange.max;
+            isPriceInitialized = true;
+        }
+    } catch (e) {
+        // ignore
+    }
+};
 
 const priceStep = computed(() => {
     if (maxPrice.value <= 1000000) return 50000;
@@ -294,7 +329,7 @@ const validatePrices = () => {
     let min = parseInt(minPrice.value) || 0;
     let max = parseInt(maxPrice.value) || 0;
     if (min < 0) { min = 0; minPrice.value = 0; }
-    if (max >= maxLimit) { max = maxLimit; maxPrice.value = maxLimit; }
+    if (max >= maxLimit.value) { max = maxLimit.value; maxPrice.value = maxLimit.value; }
 
     if (min > max) {
         priceError.value = 'Maksimal harga tidak boleh lebih kecil dari minimal.';
@@ -308,7 +343,7 @@ const parsedMaxPrice = computed(() => parseInt(maxPrice.value) || 0);
 
 const formattedMinPrice = computed(() => parsedMinPrice.value.toLocaleString('id-ID'));
 const formattedMaxPrice = computed(() => {
-    if (parsedMaxPrice.value >= maxLimit) return maxLimit.toLocaleString('id-ID') + ' +';
+    if (parsedMaxPrice.value >= maxLimit.value) return maxLimit.value.toLocaleString('id-ID') + ' +';
     return parsedMaxPrice.value.toLocaleString('id-ID');
 });
 
@@ -321,7 +356,7 @@ const handleMinPriceInput = (e) => {
 
 const handleMaxPriceInput = (e) => {
     let val = parseInt(e.target.value.replace(/\D/g, '')) || 0;
-    if (val > maxLimit) val = maxLimit;
+    if (val > maxLimit.value) val = maxLimit.value;
     maxPrice.value = val;
     validatePrices();
     nextTick(() => { e.target.value = formattedMaxPrice.value; });
@@ -331,14 +366,14 @@ const minPercent = computed(() => {
     let min = parsedMinPrice.value;
     let max = parsedMaxPrice.value;
     if (min > max) min = max;
-    let percent = (min / maxLimit) * 100;
+    let percent = (min / maxLimit.value) * 100;
     return percent > 100 ? 100 : percent;
 });
 const maxPercent = computed(() => {
     let min = parsedMinPrice.value;
     let max = parsedMaxPrice.value;
     if (max < min) max = min;
-    let percent = (max / maxLimit) * 100;
+    let percent = (max / maxLimit.value) * 100;
     return percent > 100 ? 100 : percent;
 });
 
@@ -366,11 +401,11 @@ const onDrag = (e) => {
 
     if (activeThumb.value === 'min') {
         percent = Math.max(0, Math.min(percent, maxPercent.value - 1));
-        let rawPrice = (percent / 100) * maxLimit;
+        let rawPrice = (percent / 100) * maxLimit.value;
         minPrice.value = Math.round(rawPrice / priceStep.value) * priceStep.value;
     } else {
         percent = Math.max(minPercent.value + 1, Math.min(percent, 100));
-        let rawPrice = (percent / 100) * maxLimit;
+        let rawPrice = (percent / 100) * maxLimit.value;
         maxPrice.value = Math.round(rawPrice / priceStep.value) * priceStep.value;
     }
     validatePrices();
@@ -387,7 +422,7 @@ const stopDrag = () => {
 const handleBucketClick = (idx) => {
     const totalBuckets = 30;
     const bucketCenterPercent = ((idx + 0.5) / totalBuckets) * 100;
-    const bucketCenterPrice = Math.round(((bucketCenterPercent / 100) * maxLimit) / priceStep.value) * priceStep.value;
+    const bucketCenterPrice = Math.round(((bucketCenterPercent / 100) * maxLimit.value) / priceStep.value) * priceStep.value;
 
     const minDiff = Math.abs(bucketCenterPrice - parsedMinPrice.value);
     const maxDiff = Math.abs(bucketCenterPrice - parsedMaxPrice.value);
@@ -395,7 +430,7 @@ const handleBucketClick = (idx) => {
     if (minDiff <= maxDiff) {
         minPrice.value = Math.max(0, Math.min(bucketCenterPrice, parsedMaxPrice.value - priceStep.value));
     } else {
-        maxPrice.value = Math.min(maxLimit, Math.max(bucketCenterPrice, parsedMinPrice.value + priceStep.value));
+        maxPrice.value = Math.min(maxLimit.value, Math.max(bucketCenterPrice, parsedMinPrice.value + priceStep.value));
     }
     validatePrices();
 };
@@ -661,7 +696,7 @@ const performSearch = () => {
     if (parsedMinPrice.value > 0) {
         params.min_price = parsedMinPrice.value;
     }
-    if (parsedMaxPrice.value < maxLimit) {
+    if (parsedMaxPrice.value < maxLimit.value) {
         params.max_price = parsedMaxPrice.value;
     }
     
@@ -705,6 +740,7 @@ const performSearch = () => {
 };
 
 export function useHomeSearch() {
+    initPriceBounds();
     const page = usePage();
 
     const hasFetchedLocation = ref(false);
@@ -794,6 +830,7 @@ export function useHomeSearch() {
         isEndDate,
         isInRange,
         isPastDate,
+        isDateDisabled,
         formattedSchedule,
         formatDate,
 

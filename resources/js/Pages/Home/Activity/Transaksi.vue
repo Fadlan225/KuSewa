@@ -1,6 +1,6 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { Check, ChevronDown, AlertTriangle, Image, Loader2 } from 'lucide-vue-next';
+import { Check, ChevronDown, AlertTriangle, Image, Loader2, ChevronLeft } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -386,13 +386,13 @@ const closeCancelModal = () => {
 
 const processCancellation = () => {
   if (!cancelReason.value || !selectedAssetToCancel.value) return;
-  
+
   let finalReason = cancelReason.value;
   if (finalReason === 'lainnya') {
       if (!cancelReasonOther.value.trim()) return;
       finalReason = cancelReasonOther.value.trim();
   }
-  
+
   isCancelling.value = true;
   router.patch(route('booking.cancel', selectedAssetToCancel.value.id), {
       cancel_reason: finalReason
@@ -411,10 +411,20 @@ const processCancellation = () => {
 </script>
 
 <template>
-  <AppLayout>
-    <Head title="Aktivitas Saya" />
+  <AppLayout :hideNavbar="true">
+    <Head title="Riwayat Transaksi & Booking" />
 
-    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-16 text-[#1D1D1F]">
+    <div class="bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16">
+      <!-- Custom Top Navbar -->
+      <div class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
+          <button @click="router.get(route('aktivitas.hub'))" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
+              <ChevronLeft class="w-6 h-6 text-[#1D1D1F]" />
+          </button>
+          <h1 class="text-base font-bold text-[#1D1D1F]">Riwayat Transaksi</h1>
+          <div class="w-10"></div> <!-- Placeholder -->
+      </div>
+
+      <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]">
 
       <!-- Mobile Top: Search or Filter Summary -->
       <div class="flex justify-between items-center mb-5 lg:hidden">
@@ -723,6 +733,8 @@ const processCancellation = () => {
             </button>
           </div>
         </div>
+      </div>
+
       </div>
 
     </div>

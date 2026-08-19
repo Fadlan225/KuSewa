@@ -47,7 +47,7 @@ const formatRupiah = (value) => {
 
 <template>
     <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 z-40 md:hidden flex flex-col gap-3 shadow-[0_-4px_10px_-2px_rgba(0,0,0,0.05)]">
-        
+
         <!-- Top Row: Price & Period -->
         <div v-if="!hideLeftContent" class="flex justify-between items-end w-full">
             <div class="flex items-baseline gap-1 truncate w-full">
@@ -71,12 +71,12 @@ const formatRupiah = (value) => {
         <!-- Bottom Row: Buttons -->
         <div class="flex justify-between items-center w-full gap-3">
             <slot name="left-content">
-                <button @click="$emit('tanya-pemilik')" class="flex-1 flex items-center justify-center gap-2 border-2 border-[#FFC000] bg-[#FFC000]/10 text-[#0A2540] hover:bg-[#FFC000]/20 font-bold py-2.5 rounded-xl transition-colors text-sm">
+                <button @click="$emit('tanya-pemilik')" class="flex-1 flex items-center justify-center gap-2 border-2 border-[#FFC000] text-primary hover:bg-[#FFC000]/20 font-bold py-2.5 rounded-xl transition-colors text-sm">
                     <MessageSquare class="w-4 h-4" />
                     Tanya Pemilik
                 </button>
             </slot>
-            
+
             <slot name="right-content">
                 <button
                     @click="$emit('submit')"

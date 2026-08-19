@@ -33,6 +33,8 @@ const {
     isStartDate,
     isEndDate,
     isInRange,
+    isPastDate,
+    isDateDisabled,
     endDate,
     formattedMinPrice,
     formattedMaxPrice,
@@ -297,21 +299,27 @@ onUnmounted(() => {
                             <div class="grid grid-cols-7 gap-y-5 mb-1">
                                 <div v-for="day in daysOfWeek" :key="'d1-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
                                 <div v-for="i in monthsData[desktopCalendarPage]?.emptyDaysStart" :key="'e1-'+i"></div>
-                                <div v-for="date in monthsData[desktopCalendarPage]?.daysInMonth" :key="'d1-'+date" class="relative flex justify-center items-center h-10" @click="selectDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)">
+                                <div v-for="date in monthsData[desktopCalendarPage]?.daysInMonth" :key="'d1-'+date" class="relative flex justify-center items-center h-10">
                                     <!-- KONEKTOR RENTANG -->
-                                    <div v-if="isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                    <div v-else-if="isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                    <div v-else-if="isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                    <template v-if="date">
+                                        <div v-if="isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                        <div v-else-if="isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
+                                        <div v-else-if="isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
 
-                                    <!-- TANGGAL -->
-                                    <div class="relative z-10 w-9 h-9 flex flex-col items-center justify-center rounded-full text-[13px] font-bold cursor-pointer transition"
-                                        :class="{ 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) || isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date),
+                                        <!-- TANGGAL -->
+                                        <div class="relative z-10 w-9 h-9 flex flex-col items-center justify-center rounded-full text-[13px] font-bold cursor-pointer transition"
+                                            :class="[
+                                                isDateDisabled(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'hover:bg-gray-100',
+                                                { 'bg-[#1A1A1A] text-white shadow-md hover:bg-[#1A1A1A]': isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) || isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date),
                                                 'text-[#1A1A1A]': isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date),
-                                                'text-[#0A2540] hover:border hover:border-[#1A1A1A]': !isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) }">
-                                        <span>{{ date }}</span>
-                                    </div>
-                                    <div v-if="isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                    <div v-else-if="isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                                'text-[#0A2540] hover:border hover:border-[#1A1A1A]': !isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isInRange(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && !isDateDisabled(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) }
+                                            ]"
+                                            @click="!isDateDisabled(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date) && selectDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)">
+                                            <span>{{ date }}</span>
+                                        </div>
+                                        <div v-if="isStartDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
+                                        <div v-else-if="isEndDate(monthsData[desktopCalendarPage].year, monthsData[desktopCalendarPage].month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -321,21 +329,27 @@ onUnmounted(() => {
                             <div class="grid grid-cols-7 gap-y-5 mb-1">
                                 <div v-for="day in daysOfWeek" :key="'d2-'+day" class="text-center text-[11px] font-bold text-[#6C757D]">{{ day }}</div>
                                 <div v-for="i in monthsData[desktopCalendarPage + 1]?.emptyDaysStart" :key="'e2-'+i"></div>
-                                <div v-for="date in monthsData[desktopCalendarPage + 1]?.daysInMonth" :key="'d2-'+date" class="relative flex justify-center items-center h-10" @click="selectDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)">
+                                <div v-for="date in monthsData[desktopCalendarPage + 1]?.daysInMonth" :key="'d2-'+date" class="relative flex justify-center items-center h-10">
                                     <!-- KONEKTOR RENTANG -->
-                                    <div v-if="isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
-                                    <div v-else-if="isInRange(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
-                                    <div v-else-if="isEndDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                    <template v-if="date">
+                                        <div v-if="isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && endDate" class="absolute right-0 w-1/2 h-full bg-[#F2F2F2]"></div>
+                                        <div v-else-if="isInRange(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute inset-0 w-full h-full bg-[#F2F2F2]"></div>
+                                        <div v-else-if="isEndDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute left-0 w-1/2 h-full bg-[#F2F2F2]"></div>
 
-                                    <!-- TANGGAL -->
-                                    <div class="relative z-10 w-9 h-9 flex flex-col items-center justify-center rounded-full text-[13px] font-bold cursor-pointer transition"
-                                        :class="{ 'bg-[#1A1A1A] text-white shadow-md': isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) || isEndDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date),
+                                        <!-- TANGGAL -->
+                                        <div class="relative z-10 w-9 h-9 flex flex-col items-center justify-center rounded-full text-[13px] font-bold cursor-pointer transition"
+                                            :class="[
+                                                isDateDisabled(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) ? 'text-gray-300 cursor-not-allowed line-through' : 'hover:bg-gray-100',
+                                                { 'bg-[#1A1A1A] text-white shadow-md hover:bg-[#1A1A1A]': isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) || isEndDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date),
                                                 'text-[#1A1A1A]': isInRange(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date),
-                                                'text-[#0A2540] hover:border hover:border-[#1A1A1A]': !isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && !isEndDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && !isInRange(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) }">
-                                        <span>{{ date }}</span>
-                                    </div>
-                                    <div v-if="isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
-                                    <div v-else-if="isEndDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                                'text-[#0A2540] hover:border hover:border-[#1A1A1A]': !isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && !isEndDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && !isInRange(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && !isDateDisabled(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) }
+                                            ]"
+                                            @click="!isDateDisabled(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date) && selectDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)">
+                                            <span>{{ date }}</span>
+                                        </div>
+                                        <div v-if="isStartDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Mulai</div>
+                                        <div v-else-if="isEndDate(monthsData[desktopCalendarPage+1].year, monthsData[desktopCalendarPage+1].month, date)" class="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#0A2540] whitespace-nowrap">Selesai</div>
+                                    </template>
                                 </div>
                             </div>
                         </div>
@@ -423,28 +437,28 @@ onUnmounted(() => {
                         <div class="absolute h-full bg-[#0A2540] rounded-full" :style="`left: ${minPercent}%; right: ${100 - maxPercent}%`"></div>
 
                         <!-- Min Thumb & Tooltip -->
-                        <div @mousedown="startDrag($event, 'min')" @touchstart.prevent="startDrag($event, 'min')"
+                        <div @mousedown.prevent="startDrag($event, 'min')" @touchstart.prevent="startDrag($event, 'min')"
                             class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-[3px] border-[#0A2540] rounded-full shadow-sm z-20 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
                             :style="`left: calc(${minPercent}% - 10px)`">
-                            <div v-show="activeThumb === 'min'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
-                                {{ parsedMinPrice >= maxLimit ? '10 Jt +' : formatPriceShort(parsedMinPrice) }}
+                            <div v-show="activeThumb === 'min'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px] select-none">
+                                {{ parsedMinPrice >= maxLimit ? formatPriceShort(maxLimit) + ' +' : formatPriceShort(parsedMinPrice) }}
                                 <div class="absolute -bottom-[4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0A2540] rotate-45 rounded-sm -z-10"></div>
                             </div>
                         </div>
 
                         <!-- Max Thumb & Tooltip -->
-                        <div @mousedown="startDrag($event, 'max')" @touchstart.prevent="startDrag($event, 'max')"
+                        <div @mousedown.prevent="startDrag($event, 'max')" @touchstart.prevent="startDrag($event, 'max')"
                             class="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white border-[3px] border-[#0A2540] rounded-full shadow-sm z-20 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
                             :style="`left: calc(${maxPercent}% - 10px)`">
-                            <div v-show="activeThumb === 'max'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px]">
-                                {{ parsedMaxPrice >= maxLimit ? '10 Jt +' : formatPriceShort(parsedMaxPrice) }}
+                            <div v-show="activeThumb === 'max'" class="absolute -top-[45px] left-1/2 -translate-x-1/2 bg-[#0A2540] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-full whitespace-nowrap shadow-lg flex items-center justify-center min-w-[30px] select-none">
+                                {{ parsedMaxPrice >= maxLimit ? formatPriceShort(maxLimit) + ' +' : formatPriceShort(parsedMaxPrice) }}
                                 <div class="absolute -bottom-[4px] left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0A2540] rotate-45 rounded-sm -z-10"></div>
                             </div>
                         </div>
                     </div>
                     <div class="flex justify-between mt-3 mx-2 text-[10px] font-bold text-[#6C757D]">
-                        <span>Rp0</span>
-                        <span>Rp10 jt +</span>
+                        <span>{{ 'Rp' + formatPriceShort(0) }}</span>
+                        <span>{{ 'Rp' + formatPriceShort(maxLimit) + ' +' }}</span>
                     </div>
                 </div>
             </div>

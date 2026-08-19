@@ -1,5 +1,5 @@
 <script setup>
-import { Check, Clock, MoreVertical, Trash2 } from 'lucide-vue-next';
+import { Check, Clock, MoreVertical, Trash2, ChevronLeft } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -223,10 +223,20 @@ const executeDelete = () => {
 </script>
 
 <template>
-  <AppLayout>
+  <AppLayout :hideNavbar="true">
     <Head title="Terakhir Dilihat" />
 
-    <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-16 text-[#1D1D1F]">
+    <div class="bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16">
+      <!-- Custom Top Navbar -->
+      <div class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
+          <button @click="router.get(route('aktivitas.hub'))" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
+              <ChevronLeft class="w-6 h-6 text-[#1D1D1F]" />
+          </button>
+          <h1 class="text-base font-bold text-[#1D1D1F]">Terakhir Dilihat</h1>
+          <div class="w-10"></div> <!-- Placeholder -->
+      </div>
+
+      <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]">
 
       <!-- Mobile Top: Search or Filter Summary -->
       <div class="flex justify-between items-center mb-5 lg:hidden">
@@ -288,13 +298,7 @@ const executeDelete = () => {
           <section class="col-span-12 lg:col-span-9">
 
       <!-- Header & Bulk Actions -->
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 px-1">
-          <div>
-              <h2 class="text-base sm:text-lg font-semibold text-[#1D1D1F]">
-                  Terakhir Dilihat
-              </h2>
-          </div>
-
+      <div class="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-6 px-1">
           <div class="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
               <template v-if="views.length > 0">
                   <button
@@ -455,6 +459,8 @@ const executeDelete = () => {
       </div>
 
           </section>
+      </div>
+
       </div>
 
     </div>

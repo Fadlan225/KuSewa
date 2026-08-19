@@ -47,6 +47,18 @@ const isPastDate = (year, month, date) => {
     return check < today;
 };
 
+const isDateDisabled = (year, month, date) => {
+    if (isPastDate(year, month, date)) return true;
+    
+    if (props.activeScheduleMode === 'day' && props.startDate && !props.endDate) {
+        const check = new Date(year, month, date);
+        const start = new Date(props.startDate);
+        start.setHours(0,0,0,0);
+        if (check < start) return true;
+    }
+    return false;
+};
+
 const isDateBooked = (year, month, date) => {
     if (!props.bookedDates || props.bookedDates.length === 0) return false;
     const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
@@ -270,13 +282,13 @@ const handleTouchEnd = (e) => {
                                             <!-- BULATAN TANGGAL -->
                                             <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
                                                 :class="[
-                                                    (isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
-                                                    { 'bg-[#1A1A1A] text-white shadow-md': isStartDateFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isEndDateFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
+                                                    (isDateDisabled(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
+                                                    { 'bg-[#1A1A1A] text-white shadow-md hover:bg-[#1A1A1A]': isStartDateFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isEndDateFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
                                                     'text-[#1A1A1A]': isInRangeFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                    'text-[#0A2540]': !isStartDateFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isEndDateFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isInRangeFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
-                                                    'bg-red-50 text-red-300': isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date) }
+                                                    'text-[#0A2540]': !isStartDateFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isEndDateFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isInRangeFn(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isDateDisabled(monthsData[calendarPage].year, monthsData[calendarPage].month, date) && !isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date),
+                                                    'bg-red-50 text-red-500': isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date) }
                                                 ]"
-                                                @click="!(isPastDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date)) && selectDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)">
+                                                @click="!(isDateDisabled(monthsData[calendarPage].year, monthsData[calendarPage].month, date) || isDateBooked(monthsData[calendarPage].year, monthsData[calendarPage].month, date)) && selectDate(monthsData[calendarPage].year, monthsData[calendarPage].month, date)">
                                                 <span>{{ date }}</span>
                                             </div>
 
@@ -305,13 +317,13 @@ const handleTouchEnd = (e) => {
                                             <!-- BULATAN TANGGAL -->
                                             <div class="relative z-10 w-10 h-10 flex flex-col items-center justify-center rounded-full text-[13px] font-bold transition"
                                                 :class="[
-                                                    (isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
-                                                    { 'bg-[#1A1A1A] text-white shadow-md': isStartDateFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isEndDateFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
+                                                    (isDateDisabled(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)) ? 'text-gray-300 cursor-not-allowed line-through' : 'cursor-pointer hover:border hover:border-[#1A1A1A]',
+                                                    { 'bg-[#1A1A1A] text-white shadow-md hover:bg-[#1A1A1A]': isStartDateFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isEndDateFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
                                                     'text-[#1A1A1A]': isInRangeFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                    'text-[#0A2540]': !isStartDateFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isEndDateFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isInRangeFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
-                                                    'bg-red-50 text-red-300': isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) }
+                                                    'text-[#0A2540]': !isStartDateFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isEndDateFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isInRangeFn(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isDateDisabled(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) && !isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date),
+                                                    'bg-red-50 text-red-500': isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) }
                                                 ]"
-                                                @click="!(isPastDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)) && selectDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)">
+                                                @click="!(isDateDisabled(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date) || isDateBooked(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)) && selectDate(monthsData[calendarPage+1].year, monthsData[calendarPage+1].month, date)">
                                                 <span>{{ date }}</span>
                                             </div>
 

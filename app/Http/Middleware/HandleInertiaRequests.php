@@ -56,6 +56,28 @@ class HandleInertiaRequests extends Middleware
             'unreadNotificationCount' => $unreadCount, // Menggunakan query yang sudah ada
         ];
 
+        $globalPriceRange = \Illuminate\Support\Facades\Cache::remember('global_price_range', 3600, function() {
+            $minPrice = \App\Models\asset_pricing::min('price') ?? 0;
+            $maxPrice = \App\Models\asset_pricing::max('price') ?? 0;
+            
+            // Bulatkan ke kelipatan 50.000 terdekat sesuai request
+            $minPriceRounded = floor($minPrice / 50000) * 50000;
+            $maxPriceRounded = ceil($maxPrice / 50000) * 50000;
+            
+            // Cegah error jika database kosong
+            if ($maxPriceRounded == 0) {
+                $maxPriceRounded = 10000000;
+            }
+            if ($minPriceRounded < 0) {
+                $minPriceRounded = 0;
+            }
+
+            return [
+                'min' => $minPriceRounded,
+                'max' => $maxPriceRounded,
+            ];
+        });
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -63,6 +85,7 @@ class HandleInertiaRequests extends Middleware
                 'unreadCount' => $unreadCount,
             ],
             'sidebarCounts' => $sidebarCounts,
+            'globalPriceRange' => $globalPriceRange,
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

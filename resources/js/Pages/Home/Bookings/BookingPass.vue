@@ -108,7 +108,7 @@ onMounted(() => {
 });
 
 const goBack = () => {
-    router.visit(route('aktivitas.index'));
+    router.visit(route('aktivitas.transaksi'));
 };
 
 const formatPrice = (price) => {

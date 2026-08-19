@@ -18,12 +18,12 @@ class ReviewController extends Controller
 
         // Pastikan hanya user yang bersangkutan yang bisa memberikan ulasan
         if ($booking->user_id !== Auth::id()) {
-            return redirect()->route('aktivitas.index')->with('error', 'Anda tidak memiliki akses ke ulasan ini.');
+            return redirect()->route('aktivitas.transaksi')->with('error', 'Anda tidak memiliki akses ke ulasan ini.');
         }
 
         // Cek apakah booking ini sudah pernah diberi ulasan
         if (review::where('booking_id', $id)->exists()) {
-            return redirect()->route('aktivitas.index')->with('error', 'Anda sudah memberikan ulasan untuk penyewaan ini.');
+            return redirect()->route('aktivitas.transaksi')->with('error', 'Anda sudah memberikan ulasan untuk penyewaan ini.');
         }
 
         $avgRating = $booking->asset->reviews->avg('rating') ?? 0;
@@ -59,11 +59,11 @@ class ReviewController extends Controller
         $booking = booking::findOrFail($id);
 
         if ($booking->user_id !== Auth::id()) {
-            return redirect()->route('aktivitas.index')->with('error', 'Akses ditolak.');
+            return redirect()->route('aktivitas.transaksi')->with('error', 'Akses ditolak.');
         }
 
         if (review::where('booking_id', $id)->exists()) {
-            return redirect()->route('aktivitas.index')->with('error', 'Anda sudah memberikan ulasan.');
+            return redirect()->route('aktivitas.transaksi')->with('error', 'Anda sudah memberikan ulasan.');
         }
 
         // Simpan review utama
@@ -84,6 +84,19 @@ class ReviewController extends Controller
             }
         }
 
-        return redirect()->route('aktivitas.index')->with('success', 'Ulasan berhasil dikirim! Terima kasih.');
+        return redirect()->route('aktivitas.transaksi')->with('success', 'Ulasan berhasil dikirim! Terima kasih.');
+    }
+
+    public function myReviews()
+    {
+        $userId = Auth::id();
+        $reviews = review::with(['booking.asset.firstImage', 'booking.asset.type.category', 'items.reviewTag'])
+            ->where('user_id', $userId)
+            ->orderBy('created_at', 'desc')
+            ->paginate(15);
+            
+        return Inertia::render('Home/Activity/MyReviews', [
+            'reviews' => $reviews
+        ]);
     }
 }

@@ -62,12 +62,12 @@ const submitReview = () => {
                 :showSections="false"
                 :showShare="false"
                 :showFavorite="false"
-                :backUrl="route('aktivitas.index')"
+                :backUrl="route('aktivitas.transaksi')"
                 class="!sticky top-0"
             >
                 <template #content>
                     <div class="flex items-center justify-between w-full">
-                        <Link :href="route('aktivitas.index')" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
+                        <Link :href="route('aktivitas.transaksi')" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors">
                             <ArrowLeft class="text-[#0A2540]" />
                         </Link>
                         <div class="text-center">

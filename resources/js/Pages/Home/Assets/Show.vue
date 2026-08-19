@@ -704,8 +704,8 @@ const startChat = () => {
                         </div>
                     </div>
 
-                    <button @click="showFasilitasModal = true" class="mt-8 px-6 py-3 rounded-lg border border-black bg-white hover:bg-gray-50 text-[#222222] font-semibold text-[15px] transition-colors inline-block">
-                        Tampilkan ke-{{ assetFacilities.length }} fasilitas
+                    <button v-if="assetFacilities.length > topFacilities.length" @click="showFasilitasModal = true" class="mt-8 px-6 py-3 rounded-md border border-gray-200 bg-white hover:bg-gray-50 text-[#222222] font-semibold text-[15px] transition-colors inline-block">
+                        Tampilkan seluruh fasilitas
                     </button>
                 </div>
 

@@ -1,9 +1,9 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { Search, Check, ChevronDown } from 'lucide-vue-next';
+import { Search, Check, ChevronDown, ChevronLeft } from 'lucide-vue-next';
 import { ref, computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue'
 import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
 
@@ -89,8 +89,18 @@ const filteredFavorites = computed(() => {
 <template>
     <Head title="Favorit" />
 
-    <AppLayout>
-        <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-8 sm:py-12 pb-24 sm:pb-16 text-[#1D1D1F]">
+    <AppLayout :hideNavbar="true">
+        <div class="bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16">
+            <!-- Custom Top Navbar -->
+            <div class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
+                <button @click="router.get(route('aktivitas.hub'))" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
+                    <ChevronLeft class="w-6 h-6 text-[#1D1D1F]" />
+                </button>
+                <h1 class="text-base font-bold text-[#1D1D1F]">Favorit</h1>
+                <div class="w-10"></div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]">
 
             <!-- MOBILE SEARCH & KATEGORI -->
             <div class="block lg:hidden mb-5 space-y-2.5">
@@ -223,17 +233,7 @@ const filteredFavorites = computed(() => {
                 <section class="col-span-12 lg:col-span-9">
 
                     <div class="flex justify-between items-center mb-3 sm:mb-5 px-1">
-                        <div>
-                            <h2 class="text-base sm:text-lg font-semibold text-[#1D1D1F]">
-                                Daftar Favorit
-                            </h2>
-                            <p class="text-slate-400 text-xs">
-                                {{ filteredFavorites.length }} tempat ditemukan
-                            </p>
-                        </div>
-
-                        <!-- Sort Dropdown untuk Mobile -->
-                        <div class="block lg:hidden relative">
+                        <div class="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
                             <button
                                 @click="isSortOpenMobile = !isSortOpenMobile"
                                 class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
@@ -325,6 +325,7 @@ const filteredFavorites = computed(() => {
 
             </div>
 
+            </div>
         </div>
     </AppLayout>
 </template>

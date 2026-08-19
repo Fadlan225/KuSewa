@@ -11,12 +11,6 @@ const props = defineProps({
     user: {
         type: Object,
         required: true,
-        default: () => ({
-            name: 'Fadlan Ramadhan',
-            email: 'fadlan.ramadhan@example.com',
-            phone: '0812-3456-7890',
-            is_owner: false,
-        })
     },
     total_assets_rented: {
         type: Number,
@@ -135,10 +129,7 @@ const initials = computed(() => {
 // Mendefinisikan class FontAwesome untuk setiap menu
 const accountMenuItems = [
     { label: 'Profil Saya', icon: 'fa-regular fa-user', route: route('profile.settings') },
-    { label: 'Favorit', icon: 'fa-regular fa-heart', route: route('favorites.index') },
-    { label: 'Ulasan', icon: 'fa-regular fa-comment-dots', route: '#' },
-    { label: 'Aktivitas', icon: 'fa-solid fa-chart-line', route: route('aktivitas.index') },
-    { label: 'Terakhir di lihat', icon: 'fa-regular fa-clock', route: route('last-seen.index') },
+    { label: 'Aktivitas', icon: 'fa-solid fa-chart-line', route: route('aktivitas.hub') },
 ];
 
 const settingsMenuItems = [
@@ -261,7 +252,7 @@ const requestLocationPermission = () => {
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-lg sm:text-xl font-bold text-[#0A2540]">Pesanan Saya</h2>
                     <Link
-                        :href="route('aktivitas.index')"
+                        :href="route('aktivitas.hub')"
                         class="text-xs sm:text-sm font-semibold text-[#466080] hover:text-[#0A2540] transition-colors flex items-center space-x-1"
                     >
                         <span>Lihat Riwayat Pesanan</span>
@@ -271,7 +262,7 @@ const requestLocationPermission = () => {
 
                 <div class="grid grid-cols-3 gap-4 sm:gap-6 text-center">
                     <!-- Booking -->
-                    <Link :href="route('aktivitas.index', { status: 'Berlangsung' })" class="flex flex-col items-center group cursor-pointer">
+                    <Link :href="route('aktivitas.transaksi', { status: 'Berlangsung' })" class="flex flex-col items-center group cursor-pointer">
                         <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-[#FFC000]/10 transition-colors duration-200">
                             <ClipboardList class="text-2xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                             <span v-if="bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ bookings_count }}</span>
@@ -280,7 +271,7 @@ const requestLocationPermission = () => {
                     </Link>
 
                     <!-- Belum Bayar -->
-                    <Link :href="route('aktivitas.index', { status: 'Belum Bayar' })" class="flex flex-col items-center group cursor-pointer">
+                    <Link :href="route('aktivitas.transaksi', { status: 'Belum Bayar' })" class="flex flex-col items-center group cursor-pointer">
                         <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-red-50 transition-colors duration-200">
                             <Wallet class="text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors" />
                             <span v-if="unpaid_bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ unpaid_bookings_count }}</span>

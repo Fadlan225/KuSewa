@@ -112,7 +112,7 @@ const clearAllHistory = () => {
                     @blur="isInputFocused = false"
                     type="text"
                     autocomplete="off"
-                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-9 pr-10 py-2 border border-[#6C757D]/20 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all relative z-10 bg-transparent focus:bg-white placeholder-transparent"
+                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-9 pr-10 py-2 border border-[#6C757D]/20 focus:outline-none focus:bg-white transition-all relative z-10 bg-transparent focus:bg-white placeholder-transparent"
                 />
                 <button
                     v-if="keywordQuery"
