@@ -34,6 +34,11 @@ class ProfileController extends Controller
             $avatarUrl = (filter_var($photo, FILTER_VALIDATE_URL)) ? $photo : asset('storage/' . $photo);
         }
 
+        // Total Assets Rented for Sidebar
+        $totalAssetsRented = $user->bookings()
+            ->where('booking_status', 'accepted')
+            ->count();
+
         return Inertia::render('Profile/Profile', [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
@@ -61,6 +66,64 @@ class ProfileController extends Controller
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
+            'total_assets_rented' => $totalAssetsRented,
+        ]);
+    }
+
+    /**
+     * Display the user's security form (Mobile only).
+     */
+    public function security(Request $request): Response
+    {
+        $user = $request->user()->load(['ownerProfile.bankAccounts']);
+
+        $ownerProfile = null;
+        $bankAccount = null;
+
+        if ($user->ownerProfile) {
+            $ownerProfile = $user->ownerProfile;
+            $bankAccount = $ownerProfile->bankAccounts->first();
+        }
+
+        $photo = $user->profile_photo;
+        $avatarUrl = null;
+        if ($photo) {
+            $avatarUrl = (filter_var($photo, FILTER_VALIDATE_URL)) ? $photo : asset('storage/' . $photo);
+        }
+
+        // Total Assets Rented for Sidebar
+        $totalAssetsRented = $user->bookings()
+            ->where('booking_status', 'accepted')
+            ->count();
+
+        return Inertia::render('Profile/Security', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'status' => session('status'),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'date_of_birth' => $user->date_of_birth,
+                'place_of_birth_code' => $user->place_of_birth_code,
+                'gender' => $user->gender,
+                'avatar' => $avatarUrl,
+                'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
+                'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+            ],
+            'owner_profile' => $ownerProfile ? [
+                'national_id' => $ownerProfile->national_id,
+                'address' => $ownerProfile->address,
+                'place_of_birth' => $ownerProfile->place_of_birth,
+                'date_of_birth' => $ownerProfile->date_of_birth,
+                'status' => $ownerProfile->status,
+            ] : null,
+            'bank_account' => $bankAccount ? [
+                'bank_name' => $bankAccount->bank_name,
+                'account_number' => $bankAccount->account_number,
+                'account_holder' => $bankAccount->account_holder,
+            ] : null,
+            'total_assets_rented' => $totalAssetsRented,
         ]);
     }
 
@@ -69,10 +132,13 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): Response
     {
-        $user = $request->user();
+        $user = $request->user()->load(['ownerProfile.bankAccounts']);
         
         // Check if the user has an owner profile
-        $isOwner = $user->ownerProfile()->exists();
+        $isOwner = $user->ownerProfile !== null;
+
+        $ownerProfile = $user->ownerProfile;
+        $bankAccount = $ownerProfile ? $ownerProfile->bankAccounts->first() : null;
 
         // Total Assets Rented: Bookings with status 'accepted'
         $totalAssetsRented = $user->bookings()
@@ -116,15 +182,31 @@ class ProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'phone' => $user->phone ?? '-',
+                'date_of_birth' => $user->date_of_birth,
+                'place_of_birth_code' => $user->place_of_birth_code,
+                'gender' => $user->gender,
                 'avatar' => $avatarUrl,
                 'profile_photo' => $avatarUrl,
-                'is_owner' => $isOwner,
-                'place_of_birth_code' => $user->place_of_birth_code,
+                'is_owner' => $isOwner || $user->role === 'admin',
+                'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
             ],
+            'owner_profile' => $ownerProfile ? [
+                'national_id' => $ownerProfile->national_id,
+                'address' => $ownerProfile->address,
+                'place_of_birth' => $ownerProfile->place_of_birth,
+                'date_of_birth' => $ownerProfile->date_of_birth,
+                'status' => $ownerProfile->status,
+            ] : null,
+            'bank_account' => $bankAccount ? [
+                'bank_name' => $bankAccount->bank_name,
+                'account_number' => $bankAccount->account_number,
+                'account_holder' => $bankAccount->account_holder,
+            ] : null,
             'total_assets_rented' => $totalAssetsRented,
             'bookings_count' => $bookingsCount,
             'unpaid_bookings_count' => $unpaidBookingsCount,
             'favorite_assets_count' => $favoriteAssetsCount,
+            'tab' => $request->query('tab', 'profil'),
         ]);
     }
 

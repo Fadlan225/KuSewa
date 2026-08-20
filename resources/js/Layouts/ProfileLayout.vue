@@ -1,31 +1,22 @@
 <script setup>
-import { Loader2, Camera } from 'lucide-vue-next';
-import { Head, router } from '@inertiajs/vue3';
+import AppIcon from '@/Components/AppIcon.vue';
+import ProfileMenu from '@/Components/ProfileMenu.vue';
+import { Loader2, Camera, Medal, AlertTriangle, ChevronRight, ClipboardList, Wallet, Heart, Briefcase } from 'lucide-vue-next';
 import { ref, computed, nextTick } from 'vue';
-import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
-import SettingsForms from './Partials/SettingsForms.vue';
-import ProfileLayout from '@/Layouts/ProfileLayout.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 
-const props = defineProps({
-    mustVerifyEmail: Boolean,
-    status: String,
-    user: Object,
-    owner_profile: { type: Object, default: null },
-    bank_account: { type: Object, default: null },
-});
+const page = usePage();
 
-const user = computed(() => props.user);
+const user = computed(() => page.props.user || page.props.auth.user);
+const total_assets_rented = computed(() => page.props.total_assets_rented || 0);
 
-const initials = computed(() => {
-    const name = user.value?.name ?? '';
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
-    return parts[0] ? parts[0].substring(0, 2).toUpperCase() : '?';
-});
+// Image load error fallback state
+const imageError = ref(false);
 
-// Photo upload state (for Mobile Only)
+// Photo upload state
 const photoInput = ref(null);
 const uploadingPhoto = ref(false);
 
@@ -36,9 +27,7 @@ let cropperInstance = null;
 const originalFile = ref(null);
 
 const selectNewPhoto = () => {
-    if (photoInput.value) {
-        photoInput.value.click();
-    }
+    photoInput.value.click();
 };
 
 const handleFileChange = (e) => {
@@ -90,6 +79,7 @@ const submitCroppedImage = () => {
             preserveState: true,
             forceFormData: true,
             onSuccess: () => {
+                imageError.value = false;
                 if (photoInput.value) photoInput.value.value = null;
             },
             onError: (errors) => {
@@ -108,29 +98,67 @@ const submitCroppedImage = () => {
         cropperInstance.destroy();
     }, originalFile.value.type);
 };
+
+// Generate initials from user's name
+const initials = computed(() => {
+    const name = user.value?.name ?? '';
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0] ? parts[0].substring(0, 2).toUpperCase() : '?';
+});
+
+const locationDenied = ref(false);
+import { onMounted } from 'vue';
+
+onMounted(() => {
+    if (localStorage.getItem('location_denied') === 'true') {
+        locationDenied.value = true;
+    }
+});
+
+const requestLocationPermission = () => {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                localStorage.removeItem('location_denied');
+                locationDenied.value = false;
+            },
+            (error) => {
+                alert("Izin lokasi masih ditolak atau diblokir secara permanen oleh browser. Silakan ubah pengaturan situs pada browser Anda.");
+            }
+        );
+    } else {
+        alert("Geolocation tidak didukung oleh browser Anda.");
+    }
+};
 </script>
 
 <template>
-    <Head title="Pengaturan Profil" />
+    <Head title="Profil Saya" />
 
-    <!-- MOBILE VIEW (Standalone layout) -->
-    <div class="md:hidden min-h-screen bg-white pb-24 text-[#333333] font-sans">
-        <DetailNavbar title="Profil Saya" backUrl="/profile" :forceBackUrl="true" :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" />
+    <AppLayout>
+        <div class="max-w-6xl mx-auto pt-6 pb-24 md:pb-8 px-4 sm:px-6 lg:px-8 flex flex-col md:grid md:grid-cols-12 gap-6 md:items-start">
+            
+            <!-- LEFT PANEL WRAPPER -->
+            <div :class="[route().current('profile.edit') ? 'contents md:flex md:flex-col md:gap-6' : 'hidden md:flex md:flex-col md:gap-6', 'md:col-span-4 md:col-start-1 md:order-1']">
+                <!-- Hero Section -->
+                <div class="bg-white p-6 shadow-md rounded-2xl flex flex-col items-center gap-6 relative order-1 md:order-none">
 
-        <main class="max-w-3xl mx-auto py-6 px-5 sm:px-6 lg:px-8 space-y-8">
-            <!-- Hero / Profile Photo -->
-            <div class="flex flex-col items-center justify-center pt-2 pb-4">
-                <div class="relative group cursor-pointer" @click="selectNewPhoto">
-                    <template v-if="user.avatar">
+                <!-- Foto Profil / Initials -->
+                <div class="relative flex-shrink-0 group cursor-pointer" @click="selectNewPhoto">
+                    <template v-if="user.avatar && !imageError">
                         <img
                             :src="user.avatar"
+                            @error="imageError = true"
                             alt="Foto Profil"
-                            class="w-24 h-24 rounded-full border-4 border-white shadow-sm object-cover transition-opacity duration-200 group-hover:opacity-80"
+                            class="w-24 h-24 sm:w-20 sm:h-20 rounded-full border-2 border-dashed border-[#FFC000] object-cover shadow-sm transition-opacity duration-200 group-hover:opacity-80"
                         />
                     </template>
                     <div
                         v-else
-                        class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#0A2540] to-[#466080] text-white flex items-center justify-center font-bold text-3xl border-4 border-white shadow-sm select-none transition-opacity duration-200 group-hover:opacity-80"
+                        class="w-24 h-24 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#0A2540] to-[#466080] text-white flex items-center justify-center font-bold text-2xl sm:text-xl border-2 border-dashed border-[#FFC000] shadow-sm select-none transition-opacity duration-200 group-hover:opacity-80"
                     >
                         {{ initials }}
                     </div>
@@ -141,24 +169,40 @@ const submitCroppedImage = () => {
                     </div>
 
                     <!-- Camera icon hover -->
-                    <div v-else class="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-md border border-gray-100 flex items-center justify-center text-primary hover:scale-110 transition-transform">
+                    <div v-else class="absolute -bottom-0 -right-0 bg-white p-1.5 rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-[#FFC000] hover:scale-110 transition-transform">
                         <Camera class="text-xs" />
                     </div>
                 </div>
                 <input type="file" class="hidden" ref="photoInput" @change="handleFileChange" accept="image/*">
+
+                <!-- Informasi Profil -->
+                <div class="flex-grow text-center w-full">
+                    <h1 class="text-2xl sm:text-3xl font-extrabold text-[#0A2540] leading-tight">
+                        {{ user.name }}
+                    </h1>
+
+                    <!-- Badge status keanggotaan -->
+                    <div class="flex justify-center mt-4">
+                        <div class="flex items-center space-x-2 bg-[#F8F9FA] px-3.5 py-1.5 rounded-full text-xs border border-gray-100">
+                            <Medal class="text-[#FFC000]" />
+                            <span class="text-[#000000] font-medium">
+                                Penyewa Aktif <span class="mx-1.5 text-gray-300">|</span> Total Aset Disewa: <strong>{{ total_assets_rented }}</strong>
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <!-- Forms -->
-            <SettingsForms 
-                :must-verify-email="mustVerifyEmail"
-                :status="status"
-                :user="user"
-                :owner_profile="owner_profile"
-                :bank_account="bank_account"
-            />
-        </main>
-        
-        <!-- Mobile Crop Modal -->
+            <!-- Daftar Menu -->
+            <ProfileMenu class="order-3 md:order-none" :user="user" />
+            </div>
+
+            <!-- MAIN CONTENT SLOT -->
+            <div :class="['md:col-span-8 md:col-start-5 w-full order-2 md:order-2', route().current('profile.edit') ? 'flex flex-col gap-6' : 'block']">
+                <slot />
+            </div>
+        </div>
+        <!-- Crop Modal -->
         <Teleport to="body" v-if="showCropModal">
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 overflow-hidden">
                 <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl flex flex-col max-h-[90vh]">
@@ -187,21 +231,5 @@ const submitCroppedImage = () => {
                 </div>
             </div>
         </Teleport>
-    </div>
-
-    <!-- DESKTOP VIEW (Using ProfileLayout) -->
-    <div class="hidden md:block">
-        <ProfileLayout>
-            <div class="bg-white p-6 shadow-md rounded-2xl">
-                <!-- Forms -->
-                <SettingsForms 
-                    :must-verify-email="mustVerifyEmail"
-                    :status="status"
-                    :user="user"
-                    :owner_profile="owner_profile"
-                    :bank_account="bank_account"
-                />
-            </div>
-        </ProfileLayout>
-    </div>
+    </AppLayout>
 </template>
