@@ -14,7 +14,7 @@ const accountMenuItems = [
         icon: 'fa-regular fa-user',
         routeDesktop: route('profile.edit', { tab: 'profil' }),
         routeMobile: route('profile.settings'),
-        isActive: () => route().current('profile.settings') || (route().current('profile.edit') && route().params.tab !== 'keamanan')
+        isActive: () => route().current('profile.settings') || (route().current('profile.edit') && (!route().params.tab || route().params.tab === 'profil'))
     },
     {
         label: 'Keamanan',
@@ -26,8 +26,41 @@ const accountMenuItems = [
     {
         label: 'Aktivitas',
         icon: 'fa-solid fa-chart-line',
-        route: route('aktivitas.hub'),
-        routeNames: ['aktivitas.*']
+        routeMobile: route('aktivitas.hub'),
+        isActive: () => route().current('aktivitas.*') || route().current('last-seen.*') || route().current('favorites.*')
+    },
+];
+
+const activityMenuItems = [
+    {
+        label: 'Pesanan',
+        icon: 'fa-solid fa-clipboard-list',
+        routeDesktop: route('profile.edit', { tab: 'transaksi' }),
+        isActive: () => route().current('profile.edit') && route().params.tab === 'transaksi'
+    },
+    {
+        label: 'Terakhir Dilihat',
+        icon: 'fa-solid fa-clock-rotate-left',
+        routeDesktop: route('profile.edit', { tab: 'terakhir-dilihat' }),
+        isActive: () => route().current('profile.edit') && route().params.tab === 'terakhir-dilihat'
+    },
+    {
+        label: 'Riwayat Pencarian',
+        icon: 'fa-solid fa-magnifying-glass',
+        routeDesktop: route('profile.edit', { tab: 'pencarian' }),
+        isActive: () => route().current('profile.edit') && route().params.tab === 'pencarian'
+    },
+    {
+        label: 'Ulasan',
+        icon: 'fa-solid fa-star',
+        routeDesktop: route('profile.edit', { tab: 'ulasan' }),
+        isActive: () => route().current('profile.edit') && route().params.tab === 'ulasan'
+    },
+    {
+        label: 'Favorit',
+        icon: 'fa-regular fa-heart',
+        routeDesktop: route('profile.edit', { tab: 'favorit' }),
+        isActive: () => route().current('profile.edit') && route().params.tab === 'favorit'
     },
 ];
 
@@ -127,6 +160,31 @@ const checkIsActive = (item) => {
             </Link>
         </div>
 
+        <!-- Grup Menu 'Pusat Aktivitas' (Hanya tampil di Desktop karena isinya hanya rute desktop) -->
+        <div class="hidden md:block bg-white p-6 shadow-md rounded-2xl space-y-2">
+            <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Pusat Aktivitas</h3>
+            <div class="border-t border-[#F8F9FA] mb-2"></div>
+
+            <template v-for="(item, index) in activityMenuItems" :key="index">
+                <!-- Desktop Link -->
+                <Link
+                    v-if="item.routeDesktop"
+                    :href="item.routeDesktop"
+                    :class="[
+                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
+                    ]"
+                >
+                    <div v-if="checkIsActive(item)" class="hidden md:block absolute left-0 top-0 bottom-0 w-1 bg-[#FFC000]"></div>
+                    <div class="flex items-center space-x-4">
+                        <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D]' : 'text-[#6C757D] group-hover:text-[#FFC000]']" />
+                        <span :class="['text-sm sm:text-base font-semibold transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#0A2540]' : 'text-[#0A2540] group-hover:text-[#FFC000]']">{{ item.label }}</span>
+                    </div>
+                    <ChevronRight :class="['text-sm transition-all duration-200', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D] md:translate-x-1' : 'text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]']" />
+                </Link>
+            </template>
+        </div>
+
         <!-- Grup Menu 'Pengaturan Aplikasi' -->
         <div class="bg-white p-6 shadow-md rounded-2xl space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Pengaturan Aplikasi</h3>
@@ -219,3 +277,4 @@ const checkIsActive = (item) => {
         </Teleport>
     </div>
 </template>
+

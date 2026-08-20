@@ -3,6 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Models\booking;
+use App\Models\search_log;
+use App\Models\AssetView;
+use App\Models\review;
+use App\Models\asset_category;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -174,7 +179,9 @@ class ProfileController extends Controller
             $avatarUrl = (filter_var($photo, FILTER_VALIDATE_URL)) ? $photo : asset('storage/' . $photo);
         }
 
-        return Inertia::render('Profile/Edit', [
+                $tab = $request->query('tab', 'profil');
+        
+        $data = [
             'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
             'status' => session('status'),
             'user' => [
@@ -206,8 +213,62 @@ class ProfileController extends Controller
             'bookings_count' => $bookingsCount,
             'unpaid_bookings_count' => $unpaidBookingsCount,
             'favorite_assets_count' => $favoriteAssetsCount,
-            'tab' => $request->query('tab', 'profil'),
-        ]);
+            'tab' => $tab,
+        ];
+
+        $userId = $user->id;
+
+        if ($tab === 'transaksi') {
+            $data['bookings'] = booking::with([
+                "asset" => function($q) use ($userId) {
+                    $q->with(['favorites' => function($f) use ($userId) {
+                        $f->where('user_id', $userId);
+                    }]);
+                },
+                "asset.firstImage",
+                "asset.type.category",
+                "payment",
+                "reviews"
+            ])->where("user_id", $userId)->orderBy("id", "desc")->get();
+        } elseif ($tab === 'terakhir-dilihat') {
+            $data['lastSeen'] = AssetView::with(['asset.firstImage', 'asset.type.category', 'asset.defaultPricing'])
+                ->where('user_id', $userId)->orderBy('last_viewed', 'desc')->paginate(24);
+        } elseif ($tab === 'pencarian') {
+            $data['searchLogs'] = search_log::where('user_id', $userId)->orderBy('searched_at', 'desc')->paginate(15);
+        } elseif ($tab === 'ulasan') {
+            $data['reviews'] = review::with(['booking.asset.firstImage', 'booking.asset.type.category', 'items.reviewTag'])
+                ->where('user_id', $userId)->orderBy('created_at', 'desc')->paginate(15);
+        } elseif ($tab === 'favorit') {
+            $favorites = $user->favorites()->with(['asset' => function ($query) {
+                $query->select([
+                    'id', 'asset_type_id', 'owner_profile_id',
+                    'title', 'city_code', 'district_code', 'address', 'status', 'detail'
+                ])->with([
+                    'city:code,name',
+                    'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
+                    'defaultPricing:id,asset_id,price,rental_unit',
+                    'type:id,name,allow_units,category_id',
+                    'type.category:id,name,icon',
+                ])
+                ->withAvg('reviews as reviews_avg_rating', 'rating')
+                ->withCount('reviews');
+            }])->latest()->get();
+            
+            $data['initialFavorites'] = $favorites->map(function ($fav) {
+                $asset = $fav->asset;
+                if (!$asset) return null;
+                
+                $asset->city_name = $asset->city->name ?? '';
+                $asset->isFavorite = true;
+                $asset->favorite_id = $fav->id;
+                
+                return $asset;
+            })->filter()->values();
+            
+            $data['categoriesList'] = collect(['Semua'])->merge(asset_category::pluck('name'))->values();
+        }
+
+        return Inertia::render('Profile/Edit', $data);
     }
 
     /**
@@ -317,3 +378,4 @@ class ProfileController extends Controller
         return Redirect::to('/')->with('success', 'Akun Anda berhasil dihapus.');
     }
 }
+

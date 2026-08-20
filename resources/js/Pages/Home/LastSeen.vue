@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { Check, Clock, MoreVertical, Trash2, ChevronLeft } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
@@ -7,6 +7,7 @@ import axios from 'axios';
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
+  isComponent: { type: Boolean, default: false },
   initialViews: {
     type: Object,
     required: true
@@ -223,12 +224,12 @@ const executeDelete = () => {
 </script>
 
 <template>
-  <AppLayout :hideNavbar="true">
+  <component :is="isComponent ? 'div' : AppLayout" :hideNavbar="!isComponent" class="w-full">
     <Head title="Terakhir Dilihat" />
 
-    <div class="bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16">
+    <div :class="isComponent ? '' : 'bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16'">
       <!-- Custom Top Navbar -->
-      <div class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
+      <div v-if="!isComponent" class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
           <button @click="router.get(route('aktivitas.hub'))" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
               <ChevronLeft class="w-6 h-6 text-[#1D1D1F]" />
           </button>
@@ -236,10 +237,15 @@ const executeDelete = () => {
           <div class="w-10"></div> <!-- Placeholder -->
       </div>
 
-      <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]">
+      <div :class="isComponent ? 'text-[#1D1D1F]' : 'max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]'">
+
+      <!-- DESKTOP COMPONENT HEADER -->
+      <div v-if="isComponent" class="flex justify-between items-center mb-4 mt-2">
+          <h2 class="text-xl font-bold text-[#1D1D1F]">Terakhir Dilihat</h2>
+      </div>
 
       <!-- Mobile Top: Search or Filter Summary -->
-      <div class="flex justify-between items-center mb-5 lg:hidden">
+      <div class="flex justify-between items-center mb-5" :class="isComponent ? '' : 'lg:hidden'">
           <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 w-full">
             <button
               v-for="tab in filterTabs"
@@ -262,44 +268,21 @@ const executeDelete = () => {
       </div>
 
       <div class="grid grid-cols-12 gap-5 lg:gap-8">
-          <!-- SIDEBAR FILTER (Desktop Only) -->
-          <aside class="hidden lg:block lg:col-span-3">
-              <div class="bg-white backdrop-blur-xl rounded-[1.5rem] border border-slate-100 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-24 space-y-6">
-                  <!-- Kategori Filter -->
-                  <div>
-                      <h3 class="font-medium text-xs text-slate-400 uppercase tracking-wider px-1 mb-2">Kategori Aset</h3>
-                      <div class="space-y-1">
-                          <button
-                              v-for="tab in filterTabs"
-                              :key="tab.name"
-                              @click="activeFilter = tab.name"
-                              class="w-full rounded-xl px-3 py-2 text-left text-xs font-medium transition-all duration-200 flex items-center justify-between group"
-                              :class="activeFilter === tab.name
-                                  ? 'bg-[#FFC000] text-[#0A2540] shadow-sm'
-                                  : 'text-slate-600 hover:bg-slate-100/80'"
-                          >
-                              <div class="flex items-center gap-2">
-                                  <span>{{ tab.name }}</span>
-                                  <span
-                                      class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 transition-colors"
-                                      :class="activeFilter === tab.name ? 'bg-white text-[#0A2540]' : 'bg-slate-200 text-slate-500 group-hover:bg-slate-200/80'"
-                                  >
-                                      {{ tab.count }}
-                                  </span>
-                              </div>
-                              <Check v-if="activeFilter === tab.name" class="text-[10px] text-[#0A2540]" />
-                          </button>
-                      </div>
-                  </div>
-              </div>
-          </aside>
-
           <!-- CONTENT LIST -->
-          <section class="col-span-12 lg:col-span-9">
+          <section class="col-span-12">
 
       <!-- Header & Bulk Actions -->
-      <div class="flex flex-col sm:flex-row justify-end items-start sm:items-center gap-4 mb-6 px-1">
-          <div class="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+      <div class="flex flex-row justify-between items-center gap-4 mb-6 px-1">
+          <div v-if="!isComponent">
+              <h2 class="text-base sm:text-lg font-semibold text-[#1D1D1F]">
+                  {{ activeFilter === 'Semua' ? 'Semua Aset' : 'Aset ' + activeFilter }}
+              </h2>
+              <p class="text-slate-400 text-xs mt-0.5">
+                  Menampilkan total {{ filterTabs.find(t => t.name === activeFilter)?.count || 0 }} aset
+              </p>
+          </div>
+
+          <div class="flex items-center gap-3 w-full sm:w-auto mt-0 ml-auto">
               <template v-if="views.length > 0">
                   <button
                       @click="toggleSelectionMode"
@@ -464,7 +447,7 @@ const executeDelete = () => {
       </div>
 
     </div>
-  </AppLayout>
+  </component>
 </template>
 
 <style scoped>
@@ -484,3 +467,6 @@ const executeDelete = () => {
   animation: fade-in 0.2s ease-out forwards;
 }
 </style>
+
+
+

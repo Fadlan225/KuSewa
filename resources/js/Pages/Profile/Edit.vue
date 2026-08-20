@@ -4,6 +4,11 @@ import { AlertTriangle, ClipboardList, Wallet, Heart, ChevronRight } from 'lucid
 import ProfileLayout from '@/Layouts/ProfileLayout.vue';
 import SettingsForms from './Partials/SettingsForms.vue';
 import SecurityForms from './Partials/SecurityForms.vue';
+import Transaksi from '@/Pages/Home/Activity/Transaksi.vue';
+import SearchHistory from '@/Pages/Home/Activity/SearchHistory.vue';
+import LastSeen from '@/Pages/Home/LastSeen.vue';
+import MyReviews from '@/Pages/Home/Activity/MyReviews.vue';
+import Favorite from '@/Pages/Home/Favorite.vue';
 import { ref, onMounted } from 'vue';
 
 const props = defineProps({
@@ -15,7 +20,13 @@ const props = defineProps({
     status: String,
     owner_profile: { type: Object, default: null },
     bank_account: { type: Object, default: null },
-    tab: { type: String, default: 'profil' }
+    tab: { type: String, default: 'profil' },
+    bookings: { type: Array, default: () => [] },
+    searchLogs: { type: Object, default: () => ({}) },
+    lastSeen: { type: Object, default: () => ({}) },
+    reviews: { type: Object, default: () => ({}) },
+    initialFavorites: { type: Array, default: () => [] },
+    categoriesList: { type: Array, default: () => ['Semua'] }
 });
 
 const locationDenied = ref(false);
@@ -121,10 +132,37 @@ const requestLocationPermission = () => {
                 :owner_profile="owner_profile"
                 :bank_account="bank_account"
             />
-            
             <SecurityForms 
-                v-else-if="tab === 'keamanan'"
+                v-if="tab === 'keamanan'"
                 :user="user"
+            />
+            
+            <!-- Aktivitas Components -->
+            <Transaksi 
+                v-if="tab === 'transaksi'" 
+                :isComponent="true" 
+                :bookings="bookings" 
+            />
+            <LastSeen 
+                v-if="tab === 'terakhir-dilihat'" 
+                :isComponent="true" 
+                :initialViews="lastSeen" 
+            />
+            <SearchHistory 
+                v-if="tab === 'pencarian'" 
+                :isComponent="true" 
+                :searchLogs="searchLogs" 
+            />
+            <MyReviews 
+                v-if="tab === 'ulasan'" 
+                :isComponent="true" 
+                :reviews="reviews" 
+            />
+            <Favorite 
+                v-if="tab === 'favorit'" 
+                :isComponent="true" 
+                :initialFavorites="initialFavorites" 
+                :categoriesList="categoriesList" 
             />
         </div>
     </ProfileLayout>

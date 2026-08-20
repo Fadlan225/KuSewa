@@ -1,10 +1,11 @@
-<script setup>
+﻿<script setup>
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Star, ChevronLeft, Calendar } from 'lucide-vue-next';
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
+    isComponent: { type: Boolean, default: false },
     reviews: {
         type: Object,
         required: true
@@ -40,20 +41,24 @@ const getImageUrl = (imgObj) => {
 </script>
 
 <template>
-    <AppLayout :hideNavbar="true">
-        <Head title="Ulasan Saya" />
+    <component :is="isComponent ? 'div' : AppLayout" :hideNavbar="!isComponent" class="w-full">
+        <Head title="Ulasan" />
 
-        <div class="bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16">
+        <div :class="isComponent ? '' : 'bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16'">
             <!-- Custom Top Navbar -->
-            <div class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
+            <div v-if="!isComponent" class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
                 <button @click="router.get(route('aktivitas.hub'))" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
                     <ChevronLeft class="w-6 h-6 text-[#1D1D1F]" />
                 </button>
-                <h1 class="text-base font-bold text-[#1D1D1F]">Ulasan Saya</h1>
+                    <h2 class="text-xl font-bold text-[#1D1D1F]">Ulasan</h2>
                 <div class="w-10"></div>
             </div>
 
             <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F] min-h-[70vh]">
+                <!-- DESKTOP COMPONENT HEADER -->
+                <div v-if="isComponent" class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-[#1D1D1F]">Ulasan</h2>
+                </div>
 
             <!-- Empty State -->
             <div v-if="!reviews.data || reviews.data.length === 0" class="bg-white rounded-[1.5rem] border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
@@ -148,5 +153,7 @@ const getImageUrl = (imgObj) => {
 
         </div>
         </div>
-    </AppLayout>
+    </component>
 </template>
+
+

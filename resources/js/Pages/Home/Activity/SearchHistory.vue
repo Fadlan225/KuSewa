@@ -7,6 +7,7 @@ import { ref } from 'vue';
 import axios from 'axios';
 
 const props = defineProps({
+    isComponent: { type: Boolean, default: false },
     searchLogs: {
         type: Object,
         required: true
@@ -61,12 +62,12 @@ const timeAgo = (dateString) => {
 </script>
 
 <template>
-    <AppLayout :hideNavbar="true">
+    <component :is="isComponent ? 'div' : AppLayout" :hideNavbar="!isComponent" class="w-full">
         <Head title="Riwayat Pencarian" />
 
         <div class="bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16">
             <!-- Custom Top Navbar -->
-            <div class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
+            <div v-if="!isComponent" class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
                 <button @click="router.get(route('aktivitas.hub'))" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
                     <ChevronLeft class="w-6 h-6 text-[#1D1D1F]" />
                 </button>
@@ -147,5 +148,6 @@ const timeAgo = (dateString) => {
 
         </div>
         </div>
-    </AppLayout>
+    </component>
 </template>
+

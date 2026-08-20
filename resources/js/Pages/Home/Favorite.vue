@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import AppIcon from '@/Components/AppIcon.vue';
 import { Search, Check, ChevronDown, ChevronLeft } from 'lucide-vue-next';
 import { ref, computed } from 'vue'
@@ -8,6 +8,7 @@ import HorizontalAssetCard from '@/Components/ui/HorizontalAssetCard.vue'
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
+    isComponent: { type: Boolean, default: false },
     initialFavorites: {
         type: Array,
         default: () => []
@@ -87,12 +88,11 @@ const filteredFavorites = computed(() => {
 </script>
 
 <template>
-    <Head title="Favorit" />
-
-    <AppLayout :hideNavbar="true">
-        <div class="bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16">
+    <component :is="isComponent ? 'div' : AppLayout" :hideNavbar="!isComponent" class="w-full">
+        <Head title="Favorit" />
+        <div :class="isComponent ? '' : 'bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16'">
             <!-- Custom Top Navbar -->
-            <div class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
+            <div v-if="!isComponent" class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
                 <button @click="router.get(route('aktivitas.hub'))" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
                     <ChevronLeft class="w-6 h-6 text-[#1D1D1F]" />
                 </button>
@@ -100,21 +100,50 @@ const filteredFavorites = computed(() => {
                 <div class="w-10"></div>
             </div>
 
-            <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]">
+            <div :class="isComponent ? 'text-[#1D1D1F]' : 'max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]'">
 
-            <!-- MOBILE SEARCH & KATEGORI -->
-            <div class="block lg:hidden mb-5 space-y-2.5">
-                <!-- Search Input Mobile -->
+            <!-- DESKTOP COMPONENT HEADER -->
+            <div v-if="isComponent" class="flex justify-between items-center mb-4 mt-2">
+                <h2 class="text-xl font-bold text-[#1D1D1F]">Favorit</h2>
+                
                 <div class="relative">
-                    <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
-                    <input
-                        v-model="search"
-                        type="text"
-                        placeholder="Cari properti favorit..."
-                        class="w-full rounded-xl bg-white border border-slate-200 pl-9 pr-3.5 py-2.5 text-xs text-[#1D1D1F] placeholder-slate-400 outline-none focus:ring-2 focus:ring-amber-400/50 shadow-xs"
-                    />
-                </div>
+                    <button
+                        @click="isSortOpenMobile = !isSortOpenMobile"
+                        class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
+                    >
+                        <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
+                        {{ sort }}
+                        <ChevronDown class="text-slate-400 text-[9px] ml-1 transition-transform" :class="isSortOpenMobile ? 'rotate-180' : ''" />
+                    </button>
 
+                    <Transition
+                        enter-active-class="transition ease-out duration-100"
+                        enter-from-class="transform opacity-0 scale-95"
+                        enter-to-class="transform opacity-100 scale-100"
+                        leave-active-class="transition ease-in duration-75"
+                        leave-from-class="transform opacity-100 scale-100"
+                        leave-to-class="transform opacity-0 scale-95"
+                    >
+                        <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+                            <div class="py-1">
+                                <button
+                                    v-for="option in sortOptions"
+                                    :key="option.label"
+                                    @click="selectSort(option.label)"
+                                    class="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-left"
+                                    :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
+                                >
+                                    <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center" />
+                                    {{ option.label }}
+                                </button>
+                            </div>
+                        </div>
+                    </Transition>
+                </div>
+            </div>
+
+            <!-- SEARCH & KATEGORI -->
+            <div class="mb-5 space-y-2.5" :class="isComponent ? '' : 'block lg:hidden'">
                 <!-- Horizontal Scroll Category Chips (Mobile) -->
                 <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
                     <button
@@ -140,102 +169,23 @@ const filteredFavorites = computed(() => {
             <!-- BODY CONTENT GRID -->
             <div class="grid grid-cols-12 gap-5 lg:gap-8">
 
-                <!-- SIDEBAR FILTER (Desktop Only) -->
-                <aside class="hidden lg:block lg:col-span-3">
-                    <div class="bg-white backdrop-blur-xl rounded-[1.5rem] border border-slate-100 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-24 space-y-6">
-                        <div>
-                            <h2 class="text-base font-semibold text-[#1D1D1F] px-1">Filter & Cari</h2>
-
-                            <!-- Search Field -->
-                            <div class="mt-3 relative">
-                                <Search class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs" />
-                                <input
-                                    v-model="search"
-                                    type="text"
-                                    placeholder="Cari properti..."
-                                    class="w-full rounded-xl bg-slate-100/80 border-0 pl-9 pr-3.5 py-2 text-xs text-[#1D1D1F] placeholder-slate-400 outline-none focus:ring-2 focus:ring-amber-400/50 transition-all"
-                                />
-                            </div>
-                        </div>
-
-                        <!-- Kategori Filter -->
-                        <div>
-                            <h3 class="font-medium text-xs text-slate-400 uppercase tracking-wider px-1 mb-2">Jenis Aset</h3>
-                            <div class="space-y-1">
-                                <button
-                                    v-for="item in categories"
-                                    :key="item"
-                                    @click="selectedCategory = item"
-                                    class="w-full rounded-xl px-3 py-2 text-left text-xs font-medium transition-all duration-200 flex items-center justify-between group"
-                                    :class="selectedCategory === item
-                                        ? 'bg-[#FFC000] text-[#0A2540] shadow-sm'
-                                        : 'text-slate-600 hover:bg-slate-100/80'"
-                                >
-                                    <div class="flex items-center gap-2">
-                                        <span>{{ item }}</span>
-                                        <span
-                                            class="inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-[10px] font-bold px-1 transition-colors"
-                                            :class="selectedCategory === item ? 'bg-white text-[#0A2540]' : 'bg-slate-200 text-slate-500 group-hover:bg-slate-200/80'"
-                                        >
-                                            {{ getCategoryCount(item) }}
-                                        </span>
-                                    </div>
-                                    <Check v-if="selectedCategory === item" class="text-[10px] text-[#0A2540]" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- Dropdown Urutkan -->
-                        <div>
-                            <h3 class="font-medium text-xs text-slate-400 uppercase tracking-wider px-1 mb-2">Urutkan</h3>
-                            <div class="relative">
-                                <button
-                                    @click="isSortOpenDesktop = !isSortOpenDesktop"
-                                    class="w-full flex items-center justify-between rounded-xl bg-slate-100/80 hover:bg-slate-200/60 border-0 px-3 py-2 text-xs font-medium text-[#1D1D1F] transition-colors"
-                                >
-                                    <div class="flex items-center gap-2">
-                                        <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 w-3 text-center"></i>
-                                        {{ sort }}
-                                    </div>
-                                    <ChevronDown class="text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''" />
-                                </button>
-
-                                <!-- Dropdown Menu -->
-                                <Transition
-                                    enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95"
-                                >
-                                    <div v-if="isSortOpenDesktop" class="absolute z-50 left-0 right-0 mt-2 w-full origin-top-left rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
-                                        <div class="py-1">
-                                            <button
-                                                v-for="option in sortOptions"
-                                                :key="option.label"
-                                                @click="selectSort(option.label)"
-                                                class="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-left"
-                                                :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
-                                            >
-                                                <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center" />
-                                                {{ option.label }}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </Transition>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
-
                 <!-- CONTENT LIST -->
-                <section class="col-span-12 lg:col-span-9">
+                <section class="col-span-12">
 
                     <div class="flex justify-between items-center mb-3 sm:mb-5 px-1">
-                        <div class="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
-                            <button
-                                @click="isSortOpenMobile = !isSortOpenMobile"
+                        <div v-if="!isComponent" class="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+                            <div>
+                                <h2 class="text-base sm:text-lg font-semibold text-[#1D1D1F]">
+                                    {{ selectedCategory === 'Semua' ? 'Semua Aset' : 'Aset ' + selectedCategory }}
+                                </h2>
+                                <p class="text-slate-400 text-xs mt-0.5">
+                                    Menampilkan total {{ getCategoryCount(selectedCategory) }} aset
+                                </p>
+                            </div>
+
+                            <div class="block lg:hidden relative ml-auto">
+                                <button
+                                    @click="isSortOpenMobile = !isSortOpenMobile"
                                 class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
                             >
                                 <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
@@ -269,6 +219,7 @@ const filteredFavorites = computed(() => {
                             </Transition>
                         </div>
                     </div>
+                </div>
 
                     <!-- EMPTY STATES -->
                     <div
@@ -277,29 +228,7 @@ const filteredFavorites = computed(() => {
                     >
                         <EmptyStateIcon class="w-48 h-48 object-contain mb-6" />
 
-                        <template v-if="props.initialFavorites.length === 0">
-                            <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum Ada Favorit</h2>
-                            <p class="text-sm text-[#6C757D] mb-6">Simpan properti favoritmu agar mudah ditemukan di kemudian hari.</p>
-                            <button
-                                @click="$inertia.visit(route('Home'))"
-                                class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors"
-                            >
-                                Ke Beranda
-                            </button>
-                        </template>
-
-                        <template v-else-if="search">
-                            <h2 class="text-xl font-bold text-[#0A2540] mb-2">Hasil Kosong</h2>
-                            <p class="text-sm text-[#6C757D] mb-6">Coba kata kunci lain.</p>
-                            <button
-                                @click="search = ''"
-                                class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors"
-                            >
-                                Hapus Pencarian
-                            </button>
-                        </template>
-
-                        <template v-else>
+                        <template v-if="props.initialFavorites.length === 0 || filteredFavorites.length === 0">
                             <h2 class="text-xl font-bold text-[#0A2540] mb-2">Tidak Ditemukan</h2>
                             <p class="text-sm text-[#6C757D] mb-6">Ubah filter pencarian Anda.</p>
                             <button
@@ -327,7 +256,7 @@ const filteredFavorites = computed(() => {
 
             </div>
         </div>
-    </AppLayout>
+    </component>
 </template>
 
 <style scoped>
@@ -354,3 +283,6 @@ const filteredFavorites = computed(() => {
     background: rgba(0, 0, 0, 0.3);
 }
 </style>
+
+
+

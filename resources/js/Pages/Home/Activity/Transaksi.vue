@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import AppIcon from '@/Components/AppIcon.vue';
 import { Check, ChevronDown, AlertTriangle, Image, Loader2, ChevronLeft } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
@@ -7,6 +7,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
+  isComponent: { type: Boolean, default: false },
   bookings: {
     type: Array,
     default: () => []
@@ -411,24 +412,64 @@ const processCancellation = () => {
 </script>
 
 <template>
-  <AppLayout :hideNavbar="true">
-    <Head title="Riwayat Transaksi & Booking" />
+  <component :is="isComponent ? 'div' : AppLayout" :hideNavbar="true" class="w-full">
+    <Head title="Pesanan" />
 
-    <div class="bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16">
+    <div :class="isComponent ? '' : 'bg-[#F8F9FA] min-h-screen pb-24 sm:pb-16'">
       <!-- Custom Top Navbar -->
-      <div class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
+      <div v-if="!isComponent" class="sticky top-0 z-50 bg-white border-b border-slate-100 flex items-center justify-between px-4 h-14 shadow-sm">
           <button @click="router.get(route('aktivitas.hub'))" class="p-2 -ml-2 rounded-full hover:bg-slate-50 transition-colors">
               <ChevronLeft class="w-6 h-6 text-[#1D1D1F]" />
           </button>
-          <h1 class="text-base font-bold text-[#1D1D1F]">Riwayat Transaksi</h1>
+          <h1 class="text-base font-bold text-[#1D1D1F]">Pesanan</h1>
           <div class="w-10"></div> <!-- Placeholder -->
       </div>
 
-      <div class="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]">
+      <div :class="isComponent ? 'text-[#1D1D1F]' : 'max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F]'">
 
-      <!-- Mobile Top: Search or Filter Summary -->
-      <div class="flex justify-between items-center mb-5 lg:hidden">
-          <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 w-full">
+      <!-- DESKTOP COMPONENT HEADER -->
+      <div v-if="isComponent" class="flex justify-between items-center mb-4 mt-2">
+          <h2 class="text-xl font-bold text-[#1D1D1F]">Pesanan</h2>
+
+          <div class="relative">
+              <button
+                  @click="isSortOpenMobile = !isSortOpenMobile"
+                  class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
+              >
+                  <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
+                  {{ sort }}
+                  <ChevronDown class="text-slate-400 text-[9px] ml-1 transition-transform" :class="isSortOpenMobile ? 'rotate-180' : ''" />
+              </button>
+
+              <Transition
+                  enter-active-class="transition ease-out duration-100"
+                  enter-from-class="transform opacity-0 scale-95"
+                  enter-to-class="transform opacity-100 scale-100"
+                  leave-active-class="transition ease-in duration-75"
+                  leave-from-class="transform opacity-100 scale-100"
+                  leave-to-class="transform opacity-0 scale-95"
+              >
+                  <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+                      <div class="py-1">
+                          <button
+                              v-for="option in sortOptions"
+                              :key="option.label"
+                              @click="selectSort(option.label)"
+                              class="w-full flex items-center gap-2 px-3 py-2.5 text-xs text-left"
+                              :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
+                          >
+                              <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center" />
+                              {{ option.label }}
+                          </button>
+                      </div>
+                  </div>
+              </Transition>
+          </div>
+      </div>
+
+      <!-- Mobile Tabs Navigation -->
+      <div class="flex justify-between items-center mb-5" :class="isComponent ? '' : 'lg:hidden'">
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 w-full">
             <button
               v-for="tab in filterTabs"
               :key="tab.name"
@@ -451,7 +492,7 @@ const processCancellation = () => {
 
       <div class="grid grid-cols-12 gap-5 lg:gap-8">
           <!-- SIDEBAR FILTER (Desktop Only) -->
-          <aside class="hidden lg:block lg:col-span-3">
+          <aside v-if="!isComponent" class="hidden lg:block lg:col-span-3">
               <div class="bg-white backdrop-blur-xl rounded-[1.5rem] border border-slate-100 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-24 space-y-6">
                   <!-- Kategori Filter -->
                   <div>
@@ -525,51 +566,53 @@ const processCancellation = () => {
           </aside>
 
           <!-- CONTENT LIST -->
-          <section class="col-span-12 lg:col-span-9">
-              <div class="flex justify-between items-center mb-4 px-1">
-                  <div>
-                      <h2 class="text-base sm:text-lg font-semibold text-[#1D1D1F]">
-                          {{ activeFilter === 'Semua' ? 'Semua Pesanan' : 'Pesanan ' + activeFilter }}
-                      </h2>
-                      <p class="text-slate-400 text-xs mt-0.5">
-                          Menampilkan total {{ filterTabs.find(t => t.name === activeFilter)?.count || 0 }} pesanan
-                      </p>
-                  </div>
+          <section class="col-span-12" :class="!isComponent ? 'lg:col-span-9' : ''">
+              <div class="flex justify-between items-center mb-3 sm:mb-5 px-1">
+                  <!-- Mobile Sort (hidden on Desktop) -->
+                  <div v-if="!isComponent" class="flex items-center gap-3 w-full sm:w-auto mt-4 sm:mt-0">
+                      <div>
+                          <h2 class="text-base sm:text-lg font-semibold text-[#1D1D1F]">
+                              {{ activeFilter === 'Semua' ? 'Semua Pesanan' : 'Pesanan ' + activeFilter }}
+                          </h2>
+                          <p class="text-slate-400 text-xs mt-0.5">
+                              Menampilkan total {{ filterTabs.find(t => t.name === activeFilter)?.count || 0 }} pesanan
+                          </p>
+                      </div>
 
-                  <!-- Sort Dropdown untuk Mobile -->
-                  <div class="block lg:hidden relative">
-                      <button
-                          @click="isSortOpenMobile = !isSortOpenMobile"
-                          class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
-                      >
-                          <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
-                          {{ sort }}
-                          <ChevronDown class="text-slate-400 text-[9px] ml-1 transition-transform" :class="isSortOpenMobile ? 'rotate-180' : ''" />
-                      </button>
+                      <div class="block lg:hidden relative ml-auto">
+                        <button
+                            @click="isSortOpenMobile = !isSortOpenMobile"
+                            class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
+                        >
+                            <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
+                            {{ sort }}
+                            <ChevronDown class="text-slate-400 text-[9px] ml-1 transition-transform" :class="isSortOpenMobile ? 'rotate-180' : ''" />
+                        </button>
 
-                      <Transition
-                          enter-active-class="transition ease-out duration-100"
-                          enter-from-class="transform opacity-0 scale-95"
-                          enter-to-class="transform opacity-100 scale-100"
-                          leave-active-class="transition ease-in duration-75"
-                          leave-from-class="transform opacity-100 scale-100"
-                          leave-to-class="transform opacity-0 scale-95"
-                      >
-                          <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden border border-slate-100">
-                              <div class="py-1">
-                                  <button
-                                      v-for="option in sortOptions"
-                                      :key="option.label"
-                                      @click="selectSort(option.label)"
-                                      class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left"
-                                      :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
-                                  >
-                                      <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center text-[10px]" />
-                                      {{ option.label }}
-                                  </button>
-                              </div>
-                          </div>
-                      </Transition>
+                        <Transition
+                            enter-active-class="transition ease-out duration-100"
+                            enter-from-class="transform opacity-0 scale-95"
+                            enter-to-class="transform opacity-100 scale-100"
+                            leave-active-class="transition ease-in duration-75"
+                            leave-from-class="transform opacity-100 scale-100"
+                            leave-to-class="transform opacity-0 scale-95"
+                        >
+                            <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden border border-slate-100">
+                                <div class="py-1">
+                                    <button
+                                        v-for="option in sortOptions"
+                                        :key="option.label"
+                                        @click="selectSort(option.label)"
+                                        class="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs text-left"
+                                        :class="sort === option.label ? 'bg-amber-50 text-[#0A2540] font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-[#1D1D1F]'"
+                                    >
+                                        <AppIcon :iconClass="[option.icon, sort === option.label ? 'text-amber-500' : 'text-slate-400']" class="w-4 text-center text-[10px]" />
+                                        {{ option.label }}
+                                    </button>
+                                </div>
+                            </div>
+                        </Transition>
+                    </div>
                   </div>
               </div>
 
@@ -584,6 +627,8 @@ const processCancellation = () => {
 
               <template v-else>
                 <div v-for="group in groupedActivities" :key="group.label" class="mb-8">
+
+
                   <!-- Header Group Tanggal -->
                   <div class="flex items-center gap-3 mb-4 px-1">
                       <h3 class="text-sm font-bold text-[#1D1D1F]">{{ group.label }}</h3>
@@ -693,8 +738,8 @@ const processCancellation = () => {
             <div class="mb-6">
               <h4 class="font-bold text-gray-800 mb-2">Konsekuensi Pembatalan:</h4>
               <ul class="space-y-2 text-gray-600 text-sm">
-                <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">•</span> <span>Jadwal penyewaan akan dibatalkan permanen.</span></li>
-                <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">•</span> <span>Aset akan kembali tersedia untuk disewa orang lain.</span></li>
+                <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">â€¢</span> <span>Jadwal penyewaan akan dibatalkan permanen.</span></li>
+                <li class="flex items-start gap-2"><span class="text-red-500 mt-0.5">â€¢</span> <span>Aset akan kembali tersedia untuk disewa orang lain.</span></li>
               </ul>
             </div>
 
@@ -738,7 +783,7 @@ const processCancellation = () => {
       </div>
 
     </div>
-  </AppLayout>
+  </component>
 </template>
 
 <style scoped>
@@ -767,3 +812,5 @@ const processCancellation = () => {
   }
 }
 </style>
+
+
