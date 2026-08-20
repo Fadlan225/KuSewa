@@ -625,7 +625,7 @@
     ]
   },
   "resources/js/app.js": {
-    "file": "assets/app-DZrMmq9v.js",
+    "file": "assets/app-D96piGZj.js",
     "name": "app",
     "src": "resources/js/app.js",
     "isEntry": true,
@@ -690,7 +690,7 @@
       "resources/js/Pages/owner/index.vue"
     ],
     "css": [
-      "assets/app-DRGM8MKH.css"
+      "assets/app-CqX0wG_4.css"
     ]
   }
 }
