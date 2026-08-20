@@ -40,6 +40,17 @@ router.on('finish', () => {
 
 });
 
+// Google Analytics 4 – catat page view setiap navigasi Inertia
+router.on('navigate', (event) => {
+    if (typeof gtag === 'function') {
+        gtag('event', 'page_view', {
+            page_title: document.title,
+            page_location: window.location.href,
+            page_path: event.detail.page.url,
+        });
+    }
+});
+
 createInertiaApp({
     title: (title) => `${title} - ${appName}`,
     resolve: (name) =>
