@@ -150,7 +150,7 @@ onUnmounted(() => {
                 <div @click="desktopActiveMenu = desktopActiveMenu === 'jadwal' ? null : 'jadwal'" class="flex-1 flex items-center justify-between px-5 py-2 cursor-pointer group hover:bg-[#F8F9FA] rounded-full transition-all duration-300" :class="desktopActiveMenu === 'jadwal' ? 'bg-[#F8F9FA] shadow-inner' : ''">
                     <div class="flex flex-col">
                         <span class="text-[13px] font-bold text-[#0A2540] tracking-wide group-hover:text-[#FFC000] transition-colors">Jadwal</span>
-                        <span class="text-[13px] text-[#6C757D] truncate max-w-[150px]" :class="formattedSchedule !== 'Pilih Tanggal' && formattedSchedule ? 'text-[#0A2540] font-bold' : ''">
+                        <span class="text-[13px] text-[#6C757D] truncate max-w-[150px]" :class="formattedSchedule !== 'Pilih tanggal' && formattedSchedule ? 'text-[#0A2540] font-bold' : ''">
                             {{ formattedSchedule || 'Tentukan tanggal' }}
                         </span>
                     </div>

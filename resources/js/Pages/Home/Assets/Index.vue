@@ -237,6 +237,7 @@ const groupedFacilities = computed(() => {
 
 const resetFilters = () => {
     keywordQuery.value = '';
+    searchQuery.value = '';
     selectedAssets.value = [];
     startDate.value = null;
     endDate.value = null;
@@ -445,17 +446,17 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                             v-else
                             class="flex flex-col items-center justify-center pt-12 pb-32 px-4 w-full text-center"
                         >
-                            <EmptyStateIcon class="w-40 sm:w-48 h-40 sm:h-48 object-contain mb-6 opacity-80" />
+                            <EmptyStateIcon class="w-40 sm:w-48 h-40 sm:h-48 object-contain opacity-80" />
                             <h3 class="text-lg sm:text-xl font-extrabold text-[#0A2540] mb-2">
-                                {{ hasActiveFilters ? 'Filter Terlalu Spesifik' : 'Pencarian Kosong' }}
+                                {{ hasActiveFilters ? 'Belum menemukan yang cocok?' : 'Pencarian Kosong' }}
                             </h3>
                             <p class="text-xs sm:text-sm text-gray-500 max-w-md mx-auto mb-6">
-                                {{ hasActiveFilters ? 'Coba ubah harga, jadwal, atau hapus beberapa kategori/fasilitas untuk melihat lebih banyak hasil.' : 'Belum ada aset yang sesuai dengan kata kunci pencarian Anda.' }}
+                                {{ hasActiveFilters ? 'Coba ubah kata kunci atau filter untuk melihat lebih banyak pilihan.' : 'Belum ada aset yang sesuai dengan kata kunci pencarian Anda.' }}
                             </p>
                             <button
                                 v-if="hasActiveFilters"
                                 @click="resetFilters"
-                                class="bg-[#FFC000] text-[#0A2540] text-sm font-bold py-2.5 px-6 rounded-full shadow uppercase tracking-wide hover:bg-[#e6ad00] transition-colors active:scale-95"
+                                class="bg-[#FFC000] text-[#0A2540] text-sm font-bold py-2.5 px-6 rounded shadow uppercase tracking-wide hover:bg-[#e6ad00] transition-colors active:scale-95"
                             >
                                 Reset Semua Filter
                             </button>

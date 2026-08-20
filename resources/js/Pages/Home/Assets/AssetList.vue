@@ -53,7 +53,7 @@ onMounted(async () => {
         if (navigator.geolocation) {
             const { requestLocationPermission } = useLocationPermission();
             const allowed = await requestLocationPermission();
-            
+
             if (!allowed) {
                 isLocating.value = false;
                 localSections.value.splice(nearbyIndex, 1);
@@ -292,7 +292,7 @@ const getCategoryImage = (categoryName) => {
                 v-else
                 class="flex flex-col items-center pt-10 pb-32 px-4 w-full text-center"
             >
-                <EmptyStateIcon class="w-48 h-48 object-contain mb-6" />
+                <EmptyStateIcon class="w-48 h-48 object-contain" />
 
                 <template v-if="props.emptyStateType === 'no-data'">
                     <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada aset yang tersedia</h2>

@@ -260,7 +260,7 @@ const initials = computed(() => {
                         <div v-else key="mobile-search" class="w-full py-1 flex items-center gap-2">
                             <div class="relative w-full flex items-center">
                                 <!-- Ikon Kaca Pembesar -->
-                                <Search class="absolute left-4 text-[#6C757D] text-xs" />
+                                <Search class="absolute left-4 text-[#6C757D] w-4 h-4 z-10" />
 
                                 <!-- Fake Input Search -->
                                 <div
@@ -736,7 +736,7 @@ const initials = computed(() => {
                             isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
                         ]"
                     >
-                        Kotak Masuk
+                        Pesan
                         <span
                             class="absolute bottom-0 left-0 w-full h-[3px] bg-[#FFC000] transition-all duration-300"
                             :class="isInbox ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0'"
@@ -865,7 +865,7 @@ const initials = computed(() => {
 
                                     <Link :href="route('hubungi-kami')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
                                         <Headset class="text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
-                                        <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pelayanan Pelanggan</span>
+                                        <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Hubungi Kami</span>
                                     </Link>
 
                                     <div class="h-px bg-gray-100 my-2"></div>

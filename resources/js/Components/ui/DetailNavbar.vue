@@ -46,6 +46,10 @@ const props = defineProps({
         type: Boolean,
         default: false
     },
+    title: {
+        type: String,
+        default: ''
+    },
     mobileBackOnly: {
         type: Boolean,
         default: false
@@ -199,6 +203,8 @@ onUnmounted(() => {
                         <ArrowLeft class="text-[#0A2540]" />
                     </button>
 
+                    <h1 v-if="title" class="text-lg font-bold text-[#0A2540]">{{ title }}</h1>
+
                     <!-- Desktop Scroll Menu -->
                     <div v-if="showSections" class="hidden md:flex gap-8 transition-all duration-300 h-full">
                         <a v-for="section in sections" :key="section.id" :href="`#${section.id}`"
@@ -217,6 +223,7 @@ onUnmounted(() => {
                     <button v-if="showFavorite" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors" @click="$emit('favorite')">
                         <Heart class="transition-colors" :class="isFavorited ? 'text-pink-500 fill-pink-500' : 'text-[#0A2540]'" />
                     </button>
+                    <slot name="actions"></slot>
                 </div>
             </slot>
         </div>

@@ -197,7 +197,7 @@ class HomeController extends Controller
                 ->limit(3)
                 ->pluck('title');
             $placeholders = $placeholders->merge($bookings);
-            
+
             // 5. Aset yang di-review User
             $reviews = asset::whereHas('reviews', fn($q) => $q->where('reviews.user_id', $userId))
                 ->limit(3)
@@ -208,7 +208,7 @@ class HomeController extends Controller
         // Jika tidak ada data sama sekali, beri fallback
         if ($placeholders->isEmpty()) {
             return [
-                "Cari aset untuk wujudkan rencanamu..."
+                "Mau sewa apa hari ini?"
             ];
         }
 
@@ -242,12 +242,12 @@ class HomeController extends Controller
             $asset->isFavorite = (bool) $favorite;
             $asset->favorite_id = $favorite?->id;
             unset($asset->favorites);
-            
+
             // Map location names so cards display correctly
             $asset->city_name = $asset->city->name ?? '';
             $asset->district_name = $asset->district->name ?? '';
             $asset->province_name = $asset->province->name ?? '';
-            
+
             return $asset;
         };
 
@@ -304,7 +304,7 @@ class HomeController extends Controller
         // 4. Karena anda menyukai (Perlu login)
         if (auth()->check()) {
             $userId = auth()->id();
-            
+
             $favTypes = favorite::where('favorites.user_id', $userId)
                 ->join('assets', 'assets.id', '=', 'favorites.asset_id')
                 ->join('asset_types', 'asset_types.id', '=', 'assets.asset_type_id')
@@ -313,7 +313,7 @@ class HomeController extends Controller
                 ->orderByDesc('count')
                 ->limit(3)
                 ->get();
-                
+
             $favoritedAssetIds = favorite::where('user_id', $userId)->pluck('asset_id');
 
             foreach ($favTypes as $favType) {
@@ -560,16 +560,16 @@ class HomeController extends Controller
             $asset->isFavorite = (bool) $favorite;
             $asset->favorite_id = $favorite?->id;
             unset($asset->favorites);
-            
+
             $asset->city_name = $asset->city->name ?? '';
             $asset->district_name = $asset->district->name ?? '';
             $asset->province_name = $asset->province->name ?? '';
-            
+
             if ($asset->type && $asset->type->allow_units && $asset->units && $asset->units->isNotEmpty()) {
                 $minPrice = PHP_FLOAT_MAX;
                 $cheapestUnitQty = 0;
                 $cheapestUnitRentalUnit = null;
-                
+
                 foreach($asset->units as $unit) {
                     if ($unit->pricings && $unit->pricings->isNotEmpty()) {
                         $cheapestPricing = $unit->pricings->sortBy('price')->first();
@@ -581,7 +581,7 @@ class HomeController extends Controller
                         }
                     }
                 }
-                
+
                 if ($minPrice !== PHP_FLOAT_MAX) {
                     $asset->cheapest_unit_price = $minPrice;
                     $asset->cheapest_unit_quantity = $cheapestUnitQty;
@@ -589,7 +589,7 @@ class HomeController extends Controller
                 }
             }
             unset($asset->units);
-            
+
             return $asset;
         });
 
@@ -804,17 +804,17 @@ class HomeController extends Controller
             $asset->isFavorite = (bool) $favorite;
             $asset->favorite_id = $favorite?->id;
             unset($asset->favorites);
-            
+
             // Map location names so cards display correctly
             $asset->city_name = $asset->city->name ?? '';
             $asset->district_name = $asset->district->name ?? '';
             $asset->province_name = $asset->province->name ?? '';
-            
+
             return $asset;
         };
 
         $sections = $this->buildDynamicSections($page, $perPage, $mapAsset);
-        
+
         return response()->json($sections);
     }
 
@@ -831,9 +831,9 @@ class HomeController extends Controller
             ->join('cities', 'assets.city_code', '=', 'cities.code')
             ->join('provinces', 'assets.province_code', '=', 'provinces.code')
             ->select(
-                'asset_types.id as type_id', 
-                'asset_types.name as type_name', 
-                'cities.code as city_code', 
+                'asset_types.id as type_id',
+                'asset_types.name as type_name',
+                'cities.code as city_code',
                 'cities.name as city_name',
                 'provinces.code as province_code',
                 'provinces.name as province_name',
@@ -841,9 +841,9 @@ class HomeController extends Controller
                 \DB::raw('COUNT(assets.id) as total_assets')
             )
             ->groupBy(
-                'asset_types.id', 
-                'asset_types.name', 
-                'cities.code', 
+                'asset_types.id',
+                'asset_types.name',
+                'cities.code',
                 'cities.name',
                 'provinces.code',
                 'provinces.name',

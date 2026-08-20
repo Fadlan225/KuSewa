@@ -5,6 +5,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { useNotifications } from '@/Composables/useNotifications';
 import { Loader2, RefreshCw } from 'lucide-vue-next';
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
+import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
 
 const { notifications, unreadCount, isLoading, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
 
@@ -24,7 +25,7 @@ const switchFilter = async (filter) => {
 const getNotifMeta = (notif) => {
     let meta = { type: 'Sistem', status: 'info' };
     if (!notif.type) return meta;
-    
+
     if (notif.type.includes('Booking')) {
         meta.type = 'Booking';
         meta.status = notif.type.includes('Cancelled') ? 'error' : 'success';
@@ -43,12 +44,12 @@ const getNotifMeta = (notif) => {
 const filteredNotifications = computed(() => {
     return notifications.value.filter(notif => {
         if (activeFilter.value === 'Belum Dibaca') return !notif.read_at;
-        
+
         if (activeFilter.value !== 'Semua') {
             const meta = getNotifMeta(notif);
             return meta.type === activeFilter.value;
         }
-        
+
         return true;
     });
 });
@@ -57,14 +58,14 @@ const getDateGroup = (dateString) => {
     if (!dateString) return 'Lainnya';
     const now = new Date();
     const date = new Date(dateString);
-    
+
     // Normalize to midnight for accurate day difference
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-    
+
     const diffMs = today - target;
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 0) return '(Hari Ini)';
     if (diffDays === 1) return '(Kemarin)';
     if (diffDays < 7) return '(Minggu Lalu)';
@@ -107,40 +108,40 @@ const getStatusColor = (status) => {
 </script>
 
 <template>
-  <AppLayout>
-    <div class="min-h-screen bg-[#F8F9FA] font-sans text-gray-700 py-8 px-4 md:px-8">
+  <AppLayout hide-navbar>
+    <DetailNavbar
+      :showSections="false"
+      :showShare="false"
+      :showFavorite="false"
+      :showBackButton="true"
+      title="Notifikasi"
+      backUrl="/"
+    >
+      <template #actions>
+        <button
+          @click="fetchNotifications()"
+          class="p-2 rounded-full text-gray-500 hover:text-[#0A2540] hover:bg-gray-100 transition"
+          title="Refresh"
+        >
+          <RefreshCw class="w-5 h-5" :class="isLoading ? 'animate-spin' : ''" />
+        </button>
+        <button
+          v-if="unreadCount > 0"
+          @click="markAllAsRead"
+          class="hidden md:block text-sm font-medium text-blue-600 hover:text-[#0A2540] transition-colors ml-2"
+        >
+          Tandai semua sudah dibaca
+        </button>
+      </template>
+    </DetailNavbar>
+    <div class="min-h-screen bg-[#F8F9FA] font-sans text-gray-700 py-6 px-4 md:px-8">
       <div class="max-w-3xl mx-auto">
-        
-        <!-- HEADER -->
+
+        <!-- FILTERS & ACTIONS (MOBILE) -->
         <header class="mb-6">
-          <div class="flex items-center justify-between gap-4 mb-6">
-            <div class="flex items-center gap-3">
-              <h1 class="text-2xl font-bold text-[#0A2540]">Notifikasi</h1>
-              <span v-if="unreadCount > 0" class="bg-[#FFC000] text-[#0A2540] text-xs font-bold px-2 py-1 rounded-full">
-                {{ unreadCount }} Baru
-              </span>
-            </div>
-            
-            <div class="flex items-center gap-2 md:gap-4">
-              <button
-                @click="fetchNotifications()"
-                class="p-2 rounded-full text-gray-500 hover:text-[#0A2540] hover:bg-gray-100 transition"
-                title="Refresh"
-              >
-                <RefreshCw class="w-5 h-5" :class="isLoading ? 'animate-spin' : ''" />
-              </button>
-              <button 
-                v-if="unreadCount > 0"
-                @click="markAllAsRead" 
-                class="hidden md:block text-sm font-medium text-blue-600 hover:text-[#0A2540] transition-colors"
-              >
-                Tandai semua sudah dibaca
-              </button>
-            </div>
-          </div>
           <div class="mb-4 md:hidden" v-if="unreadCount > 0">
-              <button 
-                @click="markAllAsRead" 
+              <button
+                @click="markAllAsRead"
                 class="text-sm font-medium text-blue-600 hover:text-[#0A2540] transition-colors"
               >
                 Tandai semua sudah dibaca
@@ -149,19 +150,19 @@ const getStatusColor = (status) => {
 
           <!-- FILTERS -->
           <div class="flex overflow-x-auto gap-2 pb-2 hide-scrollbar">
-            <button 
-              v-for="filter in filters" 
+            <button
+              v-for="filter in filters"
               :key="filter"
               @click="switchFilter(filter)"
               class="relative whitespace-nowrap px-4 py-1.5 rounded-md text-sm font-medium transition-all"
-              :class="activeFilter === filter 
-                ? 'bg-[#FFC000] text-[#0A2540] shadow-sm font-bold' 
+              :class="activeFilter === filter
+                ? 'bg-[#FFC000] text-[#0A2540] shadow-sm font-bold'
                 : 'bg-white text-gray-500 border border-gray-200 hover:bg-gray-50'"
             >
               {{ filter }}
               <!-- Notification Badge Count for 'Belum Dibaca' -->
-              <span 
-                v-if="filter === 'Belum Dibaca' && unreadCount > 0" 
+              <span
+                v-if="filter === 'Belum Dibaca' && unreadCount > 0"
                 class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[16px] text-center"
               >
                 {{ unreadCount }}
@@ -181,13 +182,13 @@ const getStatusColor = (status) => {
               <EmptyStateIcon />
           </div>
           <h3 class="text-lg font-bold text-[#0A2540] mb-2">Kotak notifikasi masih kosong</h3>
-          <p class="text-gray-500 max-w-sm">Kami akan memberi tahu Anda tentang booking, pembayaran, dan aktivitas penting lainnya.</p>
+          <p class="text-gray-500 max-w-sm">Dapatkan kabar terbaru tentang booking dan pembayaran Anda.</p>
         </div>
 
         <!-- TIMELINE LIST -->
         <div v-else class="space-y-8">
           <div v-for="(notifs, dateGroup) in groupedNotifications" :key="dateGroup">
-            
+
             <!-- Date Header -->
             <div class="flex items-center gap-4 mb-4">
               <h2 class="text-sm font-bold text-gray-500 uppercase tracking-wider">{{ dateGroup }}</h2>
@@ -196,11 +197,11 @@ const getStatusColor = (status) => {
 
             <!-- Notification Cards -->
             <div class="flex flex-col gap-3">
-              <component 
+              <component
                 :is="notif.data?.action_url ? Link : 'div'"
                 :href="notif.data?.action_url || undefined"
                 @click="handleClick(notif)"
-                v-for="notif in notifs" 
+                v-for="notif in notifs"
                 :key="notif.id"
                 :class="[
                   'relative flex flex-col md:flex-row gap-4 p-4 md:p-5 rounded-2xl border transition-all duration-300',
@@ -238,7 +239,7 @@ const getStatusColor = (status) => {
 
                 <!-- Action Button -->
                 <div v-if="notif.data?.action_url && !notif.read_at" class="mt-3 md:mt-0 flex shrink-0 items-center">
-                  <button 
+                  <button
                     class="w-full md:w-auto px-5 py-2.5 rounded-lg text-sm font-bold transition-transform active:scale-95 border border-gray-200 text-[#0A2540] hover:bg-gray-100"
                   >
                     Lihat Detail

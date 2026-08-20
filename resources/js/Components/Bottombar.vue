@@ -1,5 +1,5 @@
 <script setup>
-import { Home, ClipboardList, Heart, Inbox, User } from 'lucide-vue-next';
+import { Home, Search, History, Heart, MessageSquareMore, User } from 'lucide-vue-next';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, inject } from 'vue';
 
@@ -8,11 +8,17 @@ const page = usePage();
 
 // Fungsi helper untuk mengecek apakah URL saat ini cocok dengan menu
 const isActive = (url) => {
-    return computed(() => page.url === url || page.url.startsWith(url + '/'));
+    return computed(() => {
+        const path = page.url.split('?')[0];
+        return path === url || path.startsWith(url + '/');
+    });
 };
 
 // Khusus untuk Beranda agar tidak bentrok dengan prefix URL lain
-const isHomeActive = computed(() => page.url === '/');
+const isHomeActive = computed(() => {
+    const path = page.url.split('?')[0];
+    return path === '/';
+});
 
 // Menggabungkan logika untuk menu profil/login
 const isAuthActive = computed(() => isActive('/profile').value || isActive('/login').value);
@@ -48,13 +54,30 @@ const openAuthModal = inject('openAuthModal', () => { console.log('AuthModal not
                 </transition>
             </Link>
 
+            <!-- Item Navigasi Cari -->
+            <Link :href="route('assets.search')"
+                class="relative flex flex-col items-center justify-center gap-1.5 h-full w-20 transition-colors duration-300"
+                :class="isActive('/search').value ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
+
+                <Search class="text-xl relative z-10" />
+                <span class="text-[10px] font-bold relative z-10">Cari</span>
+
+                <!-- Efek Aktif: Garis Solid & Gradien Ultra-Halus Ke Atas -->
+                <transition enter-active-class="transition opacity-0 duration-300" enter-to-class="opacity-100">
+                    <div v-if="isActive('/search').value" class="absolute inset-x-0 bottom-0 top-1 flex flex-col items-center">
+                        <div class="w-full h-full rounded-t-lg" style="background: linear-gradient(to top, rgba(255, 192, 0, 0.03), transparent)"></div>
+                        <div class="w-full h-1 bg-[#FFC000] rounded-t-full shadow-[0_0_10px_rgba(255,192,0,0.5)]"></div>
+                    </div>
+                </transition>
+            </Link>
+
             <!-- Item Navigasi Aktivitas -->
             <Link :href="route('aktivitas.hub')"
                 v-if="page.props.auth.user"
                 class="relative flex flex-col items-center justify-center gap-1.5 h-full w-20 transition-colors duration-300"
                 :class="isActive('/aktivitas').value ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
 
-                <ClipboardList class="text-xl relative z-10" />
+                <History class="text-xl relative z-10" />
                 <span class="text-[10px] font-bold relative z-10">Aktivitas</span>
 
                 <transition enter-active-class="transition opacity-0 duration-300" enter-to-class="opacity-100">
@@ -72,13 +95,13 @@ const openAuthModal = inject('openAuthModal', () => { console.log('AuthModal not
                 :class="isActive('/chat').value ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
 
                 <div class="relative flex flex-col items-center z-10">
-                    <Inbox class="text-xl" />
+                    <MessageSquareMore class="text-xl" />
                     <!-- Notification Badge -->
                     <span v-if="page.props.auth.unreadCount > 0" class="absolute -top-1 -right-3 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold px-1 min-w-[15px] h-[15px] rounded-full">
                         {{ page.props.auth.unreadCount > 99 ? '99+' : page.props.auth.unreadCount }}
                     </span>
                 </div>
-                <span class="text-[10px] font-bold relative z-10">Kotak Masuk</span>
+                <span class="text-[10px] font-bold relative z-10">Pesan</span>
 
                 <transition enter-active-class="transition opacity-0 duration-300" enter-to-class="opacity-100">
                     <div v-if="isActive('/chat').value" class="absolute inset-x-0 bottom-0 top-1 flex flex-col items-center">
