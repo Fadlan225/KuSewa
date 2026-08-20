@@ -207,13 +207,13 @@ const initials = computed(() => {
                                         : 'text-[#0A2540] hover:bg-gray-100'
                                 ]"
                             >
-                                <img
+                                <!-- <img
                                     src="https://flagcdn.com/id.svg"
                                     alt="Indonesia Flag"
                                     class="w-4 h-4 rounded-full object-cover border border-white/20"
                                 />
                                 <span class="font-semibold text-xs">ID</span>
-                                <ChevronDown class="text-[8px] ml-0.5" />
+                                <ChevronDown class="text-[8px] ml-0.5" /> -->
                             </div>
                         </div>
 
@@ -309,7 +309,7 @@ const initials = computed(() => {
                                 desktopNavActiveMenu === 'keyword' && isCurrentlyTransparent ? 'bg-white' : ''
                             ]"
                         >
-                            <AnimatedPlaceholder    
+                            <AnimatedPlaceholder
                                 :placeholders="page.props.dynamicPlaceholders"
                                 :isFocused="desktopNavActiveMenu === 'keyword'"
                                 :hasValue="!!keywordQuery"

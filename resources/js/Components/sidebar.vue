@@ -1,6 +1,6 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { User, Settings, Headset, LogOut, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-vue-next';
+import { User, Settings, Headset, LogOut, ChevronRight, ChevronLeft, ChevronDown, Home } from 'lucide-vue-next';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 
@@ -72,19 +72,24 @@ const handleLogout = () => {
 
 <template>
     <aside :class="[isCollapsed ? 'w-20' : 'w-60', 'h-full max-h-screen bg-white border-r border-slate-200/80 flex flex-col p-3 md:p-4 shrink-0 transition-all duration-300 relative z-40']">
-        <!-- Toggle Collapse Button -->
-        <button @click="toggleCollapse" class="absolute -right-3 top-8 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center text-slate-500 hover:text-[#0A2540] shadow-sm z-50 hidden lg:flex cursor-pointer transition-transform duration-300 focus:outline-none">
-            <component :is="isCollapsed ? ChevronRight : ChevronLeft" class="text-[10px] w-3 h-3" />
-        </button>
-
         <!-- Brand Logo -->
         <div class="flex items-center px-2 py-1 mb-6 shrink-0 transition-all duration-300" :class="isCollapsed ? 'justify-center' : 'justify-start'">
-            <Link :href="route('Home') || '/'" class="flex items-center gap-2 transition-transform hover:scale-[1.02] duration-200 overflow-hidden">
-                <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain shrink-0" />
-                <span v-if="!isCollapsed" class="font-black text-lg tracking-tight text-[#0A2540] mt-0.5 whitespace-nowrap transition-opacity duration-300">
-                    kitasewa<span class="text-[#FFC000]">.id</span>
-                </span>
-            </Link>
+            <div class="flex items-center gap-2 overflow-hidden">
+                <!-- Logo acts as collapse toggle on desktop -->
+                <img @click="toggleCollapse" src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain shrink-0 cursor-pointer transition-transform hover:scale-110 hidden lg:block" title="Sembunyikan/Tampilkan Menu" />
+                
+                <!-- Logo acts as home link on mobile -->
+                <Link :href="route('Home') || '/'" class="lg:hidden shrink-0">
+                    <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain" />
+                </Link>
+
+                <!-- Brand Name acts as home link -->
+                <Link v-if="!isCollapsed" :href="route('Home') || '/'" class="transition-transform hover:scale-[1.02] duration-200">
+                    <span class="font-black text-lg tracking-tight text-[#0A2540] mt-0.5 whitespace-nowrap transition-opacity duration-300">
+                        kitasewa<span class="text-[#FFC000]">.id</span>
+                    </span>
+                </Link>
+            </div>
         </div>
 
             <!-- Profile Switcher -->
@@ -119,7 +124,13 @@ const handleLogout = () => {
                     leave-from-class="transform opacity-100 scale-100"
                     leave-to-class="transform opacity-0 scale-95"
                 >
-                    <div v-if="showProfileMenu" class="absolute z-50 top-full mt-2 w-full rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg text-xs origin-top">
+                    <div v-if="showProfileMenu" :class="[
+                        'absolute z-50 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg text-xs',
+                        isCollapsed ? 'left-full top-0 ml-3 w-48 origin-top-left' : 'top-full mt-2 w-full origin-top'
+                    ]">
+                        <a :href="route('Home') || '/'" target="_blank" rel="noopener noreferrer" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+                            <Home class="w-4 text-center text-slate-400" /> Halaman Utama
+                        </a>
                         <Link :href="route('profile.edit')" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
                             <User class="w-4 text-center text-slate-400" /> Profil Saya
                         </Link>

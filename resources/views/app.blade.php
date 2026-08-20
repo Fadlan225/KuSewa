@@ -13,8 +13,8 @@
         <link rel="icon" type="image/svg+xml" href="{{ asset('kitasewa-logo.png') }}">
         <meta property="og:title" content="KitaSewa | Platform Penyewaan Aset Tak Bergerak">
         <meta property="og:description" content="Lahan kosong, baliho strategis, apartemen premium, dan ruang komersial dalam satu platform.">
-        <meta property="og:image" content="{{ asset('logo.png') }}">
-        {{-- <meta property="og:url" content="https://kitasewa.com/"> --}}
+        <meta property="og:image" content="{{ asset('kitasewa-logo.png') }}">
+        <meta property="og:url" content="https://kitasewa.web.id/">
         <meta property="og:type" content="website">
 
         <!-- Scripts -->
