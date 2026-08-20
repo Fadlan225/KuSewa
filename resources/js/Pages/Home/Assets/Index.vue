@@ -4,9 +4,9 @@ import { Map, Search, ChevronDown, Check } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { router, usePage, Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue';
-import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
-import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
+import HorizontalAssetCard from '@/Components/ui/HorizontalAssetCard.vue';
+import AssetCardSkeleton from '@/Components/ui/AssetCardSkeleton.vue';
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 import axios from 'axios';
 
 const page = usePage();
@@ -24,7 +24,7 @@ const props = defineProps({
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import MobileSearchSheet from '@/Pages/Home/Search/MobileSearchSheet.vue';
 import KeywordSearchSheet from '@/Pages/Home/Search/KeywordSearchSheet.vue';
-import StickySubNavSearch from '@/Components/UI/StickySubNavSearch.vue';
+import StickySubNavSearch from '@/Components/ui/StickySubNavSearch.vue';
 
 const {
     keywordQuery,

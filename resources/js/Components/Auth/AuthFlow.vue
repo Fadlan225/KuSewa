@@ -8,7 +8,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import InputLabel from '@/Components/InputLabel.vue';
 import InputError from '@/Components/InputError.vue';
-import LocationSelect from '@/Components/UI/LocationSelect.vue';
+import LocationSelect from '@/Components/ui/LocationSelect.vue';
 
 import { inject, watch } from 'vue';
 import { useAuthFeedbackStore } from '@/Stores/AuthFeedbackStore';

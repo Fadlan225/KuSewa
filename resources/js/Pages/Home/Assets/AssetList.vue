@@ -4,9 +4,9 @@ import { Layers, ArrowDown } from 'lucide-vue-next';
 import { computed, ref, onMounted } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import axios from 'axios';
-import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
-import LazyAssetCard from '@/Components/UI/LazyAssetCard.vue';
-import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
+import AssetCardSkeleton from '@/Components/ui/AssetCardSkeleton.vue';
+import LazyAssetCard from '@/Components/ui/LazyAssetCard.vue';
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
     categories: {

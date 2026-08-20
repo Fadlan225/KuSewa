@@ -1,7 +1,7 @@
 <script setup>
 import { CloudUpload, X, Images, Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
-import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
+import SearchableSelect from '@/Components/ui/SearchableSelect.vue';
 
 const props = defineProps({
     form: Object,

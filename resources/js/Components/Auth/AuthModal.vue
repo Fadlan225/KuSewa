@@ -1,7 +1,7 @@
 <script setup>
 import { X } from 'lucide-vue-next';
 import { useAuthModalStore } from '@/Stores/AuthModalStore';
-import BottomSheet from '@/Components/UI/BottomSheet.vue';
+import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import AuthFlow from './AuthFlow.vue';
 import { storeToRefs } from 'pinia';
 

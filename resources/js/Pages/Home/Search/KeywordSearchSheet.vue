@@ -4,8 +4,8 @@ import { Search, XCircle, Loader2, History, X, Flame, TrendingUp } from 'lucide-
 import { ref, computed, watch, nextTick } from 'vue';
 import { usePage, router } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
-import BottomSheet from '@/Components/UI/BottomSheet.vue';
-import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
+import BottomSheet from '@/Components/ui/BottomSheet.vue';
+import AnimatedPlaceholder from '@/Components/ui/AnimatedPlaceholder.vue';
 
 const page = usePage();
 

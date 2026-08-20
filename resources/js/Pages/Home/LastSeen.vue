@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import axios from 'axios';
-import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
   initialViews: {

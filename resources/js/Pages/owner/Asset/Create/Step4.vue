@@ -1,9 +1,9 @@
 <script setup>
 import { Trash2 } from 'lucide-vue-next';
 import { computed } from 'vue';
-import CustomSelect from '@/Components/UI/CustomSelect.vue';
-import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
-import TagInput from '@/Components/UI/TagInput.vue';
+import CustomSelect from '@/Components/ui/CustomSelect.vue';
+import SearchableSelect from '@/Components/ui/SearchableSelect.vue';
+import TagInput from '@/Components/ui/TagInput.vue';
 
 const props = defineProps({
     form: Object,

@@ -1,7 +1,7 @@
 <script setup>
 import { FileEdit, Clock, XCircle, CheckCircle, Power, Image, ChevronRight } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import AssetCardSkeleton from '@/Components/UI/AssetCardSkeleton.vue';
+import AssetCardSkeleton from '@/Components/ui/AssetCardSkeleton.vue';
 import { router } from '@inertiajs/vue3';
 
 const props = defineProps({

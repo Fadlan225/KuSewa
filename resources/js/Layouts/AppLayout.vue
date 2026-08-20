@@ -4,7 +4,7 @@ import { ref, provide } from 'vue';
 import Navbar from '@/Components/Navbar.vue';
 import Bottombar from '@/Components/Bottombar.vue';
 import GlobalLoading from "@/Components/GlobalLoading.vue";
-import FloatingChat from '@/Components/UI/FloatingChat.vue';
+import FloatingChat from '@/Components/ui/FloatingChat.vue';
 import AuthModal from '@/Components/Auth/AuthModal.vue';
 import AuthFeedbackModal from '@/Components/Auth/AuthFeedbackModal.vue';
 import { useAuthModalStore } from '@/Stores/AuthModalStore';

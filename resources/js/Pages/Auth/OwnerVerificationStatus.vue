@@ -2,7 +2,7 @@
 import { History, Check, AlertTriangle } from 'lucide-vue-next';
 import { Head, Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
+import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
 
 const props = defineProps({
     status: {

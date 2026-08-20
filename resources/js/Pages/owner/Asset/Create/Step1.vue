@@ -1,6 +1,6 @@
 <script setup>
 import { computed, watch, ref } from 'vue';
-import CustomSelect from '@/Components/UI/CustomSelect.vue';
+import CustomSelect from '@/Components/ui/CustomSelect.vue';
 
 const props = defineProps({
     form: Object,

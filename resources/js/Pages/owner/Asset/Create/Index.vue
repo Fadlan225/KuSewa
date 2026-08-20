@@ -3,7 +3,7 @@ import { Send, History } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
+import DetailBottomBar from '@/Components/ui/DetailBottomBar.vue';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import Step1 from './Step1.vue';

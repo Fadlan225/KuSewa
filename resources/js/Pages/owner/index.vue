@@ -4,10 +4,10 @@ import { DoorOpen, Percent, CalendarCheck, Wallet, BarChart, Map, TrendingUp, Li
 import { computed, ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Card, CardHeader, CardTitle, CardContent } from '@/Components/UI/card';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from '@/Components/UI/select';
+import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from '@/Components/ui/select';
 import { VisXYContainer, VisAxis, VisStackedBar, VisCrosshair, VisTooltip, VisLine } from '@unovis/vue';
-import { ChartCrosshair, ChartTooltip } from '@/Components/UI/chart';
+import { ChartCrosshair, ChartTooltip } from '@/Components/ui/chart';
 
 const props = defineProps({
     stats: { type: Object, default: () => ({}) },

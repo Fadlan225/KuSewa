@@ -209,8 +209,8 @@ import { Landmark, Copy, Check } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { router } from '@inertiajs/vue3'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import DetailNavbar from '@/Components/UI/DetailNavbar.vue'
-import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue'
+import DetailNavbar from '@/Components/ui/DetailNavbar.vue'
+import DetailBottomBar from '@/Components/ui/DetailBottomBar.vue'
 
 const props = defineProps({
   payment: {

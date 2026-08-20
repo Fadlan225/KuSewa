@@ -2,7 +2,7 @@
 import { Loader2, Camera, CheckCircle, Chrome } from 'lucide-vue-next';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, nextTick } from 'vue';
-import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
+import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
 import DeleteUserForm from './Partials/DeleteUserForm.vue';

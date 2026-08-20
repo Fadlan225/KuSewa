@@ -4,7 +4,7 @@ import { Search, Check, ChevronDown } from 'lucide-vue-next';
 import { usePage } from '@inertiajs/vue3';
 import { ref, computed, watch, onMounted } from 'vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
-import CircularMonthSlider from '@/Components/UI/CircularMonthSlider.vue';
+import CircularMonthSlider from '@/Components/ui/CircularMonthSlider.vue';
 
 const page = usePage();
 
@@ -166,7 +166,7 @@ const handleApply = () => {
     performSearch();
 };
 
-import BottomSheet from '@/Components/UI/BottomSheet.vue';
+import BottomSheet from '@/Components/ui/BottomSheet.vue';
 </script>
 
 <template>

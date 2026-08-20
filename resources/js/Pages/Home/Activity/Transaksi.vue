@@ -4,7 +4,7 @@ import { Check, ChevronDown, AlertTriangle, Image, Loader2, ChevronLeft } from '
 import { ref, computed, onMounted } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
   bookings: {

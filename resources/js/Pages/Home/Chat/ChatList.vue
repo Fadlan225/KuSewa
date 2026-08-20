@@ -76,7 +76,7 @@
 <script setup>
 import { computed } from 'vue';
 import { Search, CheckCheck, Image, FileText } from 'lucide-vue-next';
-import NoChatIcon from '@/Components/UI/Icons/NoChatIcon.vue';
+import NoChatIcon from '@/Components/ui/Icons/NoChatIcon.vue';
 
 const props = defineProps({
   chatList: {

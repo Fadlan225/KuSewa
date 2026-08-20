@@ -2,7 +2,7 @@
 import { ChevronDown, Loader2 } from 'lucide-vue-next';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, watch, onMounted } from 'vue';
-import LocationSelect from '@/Components/UI/LocationSelect.vue';
+import LocationSelect from '@/Components/ui/LocationSelect.vue';
 
 const props = defineProps({
     mustVerifyEmail: {

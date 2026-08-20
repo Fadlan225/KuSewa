@@ -3,7 +3,7 @@ import AppIcon from '@/Components/AppIcon.vue';
 import { Search, Locate } from 'lucide-vue-next';
 import { computed, watch, ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import L from 'leaflet';
-import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
+import SearchableSelect from '@/Components/ui/SearchableSelect.vue';
 
 const props = defineProps({ form: Object, currentStep: Number });
 const form = props.form;

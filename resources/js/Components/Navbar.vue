@@ -5,9 +5,9 @@ import { ref, onMounted, onUnmounted, computed, watch, inject } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
-import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
-import StickySubNavSearch from '@/Components/UI/StickySubNavSearch.vue';
-import NoImageIcon from '@/Components/UI/Icons/NoImageIcon.vue';
+import AnimatedPlaceholder from '@/Components/ui/AnimatedPlaceholder.vue';
+import StickySubNavSearch from '@/Components/ui/StickySubNavSearch.vue';
+import NoImageIcon from '@/Components/ui/Icons/NoImageIcon.vue';
 
 const isHome = computed(() => route().current('Home'));
 const isBantuan = computed(() => route().current('Bantuan.*'));

@@ -2,7 +2,7 @@
 import { FolderPlus, Eye, Trash2, Loader2, Plus, Image, AlertTriangle } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
-import ImageViewerModal from '@/Components/UI/ImageViewerModal.vue';
+import ImageViewerModal from '@/Components/ui/ImageViewerModal.vue';
 
 const props = defineProps({
     asset: Object,

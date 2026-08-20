@@ -3,14 +3,14 @@ import { Loader2, Download, X, Clock, CalendarCheck, Copy, Calendar, MessageCirc
 import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
-import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
-import Toast from '@/Components/UI/Toast.vue';
+import DetailBottomBar from '@/Components/ui/DetailBottomBar.vue';
+import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
+import Toast from '@/Components/ui/Toast.vue';
 import JsBarcode from 'jsbarcode';
 import QRCode from 'qrcode';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
-import NoImageIcon from '@/Components/UI/Icons/NoImageIcon.vue';
+import NoImageIcon from '@/Components/ui/Icons/NoImageIcon.vue';
 
 const props = defineProps({
     booking: {

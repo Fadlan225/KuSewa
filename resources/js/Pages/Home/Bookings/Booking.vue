@@ -2,8 +2,8 @@
 import AppIcon from '@/Components/AppIcon.vue';
 import { AlertCircle, X, Lock, AlertTriangle } from 'lucide-vue-next';
 import AppLayout from '@/Layouts/AppLayout.vue'
-import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue'
-import DetailNavbar from '@/Components/UI/DetailNavbar.vue'
+import DetailBottomBar from '@/Components/ui/DetailBottomBar.vue'
+import DetailNavbar from '@/Components/ui/DetailNavbar.vue'
 import { computed, watch, ref } from 'vue'
 import { usePage, useForm } from '@inertiajs/vue3'
 import flatPickr from 'vue-flatpickr-component'

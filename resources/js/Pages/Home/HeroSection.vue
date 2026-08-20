@@ -1,8 +1,8 @@
 <script setup>
 import { Search, Sliders } from 'lucide-vue-next';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
-import DesktopSearchBar from '@/Components/UI/DesktopSearchBar.vue';
-import AnimatedPlaceholder from '@/Components/UI/AnimatedPlaceholder.vue';
+import DesktopSearchBar from '@/Components/ui/DesktopSearchBar.vue';
+import AnimatedPlaceholder from '@/Components/ui/AnimatedPlaceholder.vue';
 import { usePage } from '@inertiajs/vue3';
 
 const page = usePage();

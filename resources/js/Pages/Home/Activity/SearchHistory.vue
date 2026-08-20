@@ -2,7 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Search, Clock, Trash2, ChevronLeft } from 'lucide-vue-next';
-import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 import { ref } from 'vue';
 import axios from 'axios';
 

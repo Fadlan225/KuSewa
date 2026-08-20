@@ -5,9 +5,9 @@ import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import OwnerAssetCard from '@/Components/owner/OwnerAssetCard.vue';
 import OwnerHorizontalAssetCard from '@/Components/owner/OwnerHorizontalAssetCard.vue';
-import { Card, CardContent } from '@/Components/UI/card';
-import CustomSelect from '@/Components/UI/CustomSelect.vue';
-import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
+import { Card, CardContent } from '@/Components/ui/card';
+import CustomSelect from '@/Components/ui/CustomSelect.vue';
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const page = usePage();
 

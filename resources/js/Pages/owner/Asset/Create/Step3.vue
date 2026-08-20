@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
-import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
-import TagInput from '@/Components/UI/TagInput.vue';
+import SearchableSelect from '@/Components/ui/SearchableSelect.vue';
+import TagInput from '@/Components/ui/TagInput.vue';
 
 const props = defineProps({
     form: Object,

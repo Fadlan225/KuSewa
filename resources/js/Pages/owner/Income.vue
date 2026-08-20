@@ -4,8 +4,8 @@ import { Receipt, Building, Calculator, DoorOpen, Calendar } from 'lucide-vue-ne
 import { ref, computed, onMounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
-import { Card, CardHeader, CardTitle, CardContent } from '@/Components/UI/card';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from '@/Components/UI/select';
+import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from '@/Components/ui/select';
 import { VisXYContainer, VisAxis, VisStackedBar, VisCrosshair, VisTooltip, VisLine } from '@unovis/vue';
 
 const props = defineProps({

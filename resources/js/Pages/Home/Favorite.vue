@@ -4,8 +4,8 @@ import { Search, Check, ChevronDown, ChevronLeft } from 'lucide-vue-next';
 import { ref, computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Head, router } from '@inertiajs/vue3';
-import HorizontalAssetCard from '@/Components/UI/HorizontalAssetCard.vue'
-import EmptyStateIcon from '@/Components/UI/Icons/EmptyStateIcon.vue';
+import HorizontalAssetCard from '@/Components/ui/HorizontalAssetCard.vue'
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 const props = defineProps({
     initialFavorites: {

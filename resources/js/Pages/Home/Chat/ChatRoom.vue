@@ -428,12 +428,12 @@
 <script setup>
 import { MoreVertical, ArrowLeft, Image, Lock, Ban, FileText, Download, AlertCircle, X, Paperclip, Camera, Send, Info, Reply, Copy, Pen, Trash2 } from 'lucide-vue-next';
 import { ref, watch, nextTick, computed, onMounted, onUnmounted } from 'vue';
-import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
-import FilePreviewModal from '@/Components/UI/FilePreviewModal.vue';
-import WebcamCaptureModal from '@/Components/UI/WebcamCaptureModal.vue';
-import ImageViewerModal from '@/Components/UI/ImageViewerModal.vue';
-import Toast from '@/Components/UI/Toast.vue';
-import NoChatIcon from '@/Components/UI/Icons/NoChatIcon.vue';
+import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
+import FilePreviewModal from '@/Components/ui/FilePreviewModal.vue';
+import WebcamCaptureModal from '@/Components/ui/WebcamCaptureModal.vue';
+import ImageViewerModal from '@/Components/ui/ImageViewerModal.vue';
+import Toast from '@/Components/ui/Toast.vue';
+import NoChatIcon from '@/Components/ui/Icons/NoChatIcon.vue';
 
 const props = defineProps({
   isMobileChatOpen: {

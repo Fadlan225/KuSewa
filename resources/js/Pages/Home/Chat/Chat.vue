@@ -91,7 +91,7 @@ import Navbar from '@/Components/Navbar.vue';
 import Bottombar from '@/Components/Bottombar.vue';
 import ChatList from './ChatList.vue';
 import ChatRoom from './ChatRoom.vue';
-import MessageInfoModal from '@/Components/UI/MessageInfoModal.vue';
+import MessageInfoModal from '@/Components/ui/MessageInfoModal.vue';
 
 const isMobileChatOpen = ref(false);
 const activeChatId = ref(null);

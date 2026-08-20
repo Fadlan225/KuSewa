@@ -2,7 +2,7 @@
 import { Image, Pen, X, Trash2, Plus, Loader2 } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
-import BottomSheet from '@/Components/UI/BottomSheet.vue';
+import BottomSheet from '@/Components/ui/BottomSheet.vue';
 
 const props = defineProps({
     asset: Object,

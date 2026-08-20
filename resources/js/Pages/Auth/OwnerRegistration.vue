@@ -3,9 +3,9 @@ import { ref, onMounted, watch } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
-import DetailNavbar from '@/Components/UI/DetailNavbar.vue';
-import DetailBottomBar from '@/Components/UI/DetailBottomBar.vue';
-import SearchableSelect from '@/Components/UI/SearchableSelect.vue';
+import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
+import DetailBottomBar from '@/Components/ui/DetailBottomBar.vue';
+import SearchableSelect from '@/Components/ui/SearchableSelect.vue';
 
 const props = defineProps({
     initialUser: Object,
