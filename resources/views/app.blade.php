@@ -14,13 +14,13 @@
 
         <!-- Standard Meta -->
         <meta name="title" content="KitaSewa | Temukan Aset, Wujudkan Rencana">
-        <meta name="description" content="Butuh tempat untuk tinggal, usaha, event, atau promosi? Temukan berbagai aset sewaan di KitaSewa dan wujudkan rencanamu dengan lebih mudah.">
+        <meta name="description" content="Butuh tempat untuk mewujudkan rencana? Temukan aset yang tepat di KitaSewa.">
 
         <!-- Open Graph / WhatsApp -->
         <meta property="og:type" content="website">
         <meta property="og:url" content="https://kitasewa.web.id/">
         <meta property="og:title" content="KitaSewa | Temukan Aset, Wujudkan Rencana">
-        <meta property="og:description" content="Butuh tempat untuk tinggal, usaha, event, atau promosi? Temukan berbagai aset sewaan di KitaSewa dan wujudkan rencanamu dengan lebih mudah.">
+        <meta property="og:description" content="Butuh tempat untuk mewujudkan rencana? Temukan aset yang tepat di KitaSewa.">
         <meta property="og:image" content="https://kitasewa.web.id/OG-image.jpg">
         <meta property="og:image:secure_url" content="https://kitasewa.web.id/OG-image.jpg">
         <meta property="og:image:type" content="image/jpeg">
@@ -28,7 +28,7 @@
         <!-- Twitter -->
         <meta name="twitter:card" content="summary_large_image">
         <meta name="twitter:title" content="KitaSewa | Temukan Aset, Wujudkan Rencana">
-        <meta name="twitter:description" content="Butuh tempat untuk tinggal, usaha, event, atau promosi? Temukan berbagai aset sewaan di KitaSewa dan wujudkan rencanamu dengan lebih mudah.">
+        <meta name="twitter:description" content="Butuh tempat untuk mewujudkan rencana? Temukan aset yang tepat di KitaSewa.">
         <meta name="twitter:image" content="https://kitasewa.web.id/OG-image.jpg">
 
         <!-- Scripts -->
