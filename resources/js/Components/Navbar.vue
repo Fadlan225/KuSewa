@@ -242,7 +242,7 @@ const initials = computed(() => {
                             <!-- Mobile Notification Button -->
                             <Link
                                 v-if="page.props.auth.user"
-                                :href="route('notifications.index')"
+                                :href="route('notifications.page')"
                                 class="relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
                                 :class="isCurrentlyTransparent ? 'text-white hover:bg-white/10' : 'text-[#0A2540] hover:bg-gray-100'"
                             >
@@ -300,7 +300,7 @@ const initials = computed(() => {
                             <!-- Notification Button -->
                             <Link
                                 v-if="page.props.auth.user"
-                                :href="route('notifications.index')"
+                                :href="route('notifications.page')"
                                 class="relative w-9 h-9 flex-shrink-0 bg-white border border-gray-200/80 rounded-full flex items-center justify-center text-[#0A2540] active:scale-95 transition-transform shadow-sm"
                             >
                                 <Bell class="text-sm" />
