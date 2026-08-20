@@ -177,4 +177,27 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     Route::patch('/validasi-aset/{id}/reject', fn() => back())->name('validasi-aset.reject');
 });
 
+// =============================================
+// Notification & Push Subscription Routes
+// =============================================
+Route::middleware(['auth', 'web'])->group(function () {
+    // Notifikasi in-app
+    Route::prefix('api/notifications')->group(function () {
+        Route::get('/', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notifications.index');
+        Route::get('/unread-count', [\App\Http\Controllers\NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+        Route::post('/mark-all-as-read', [\App\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all');
+        Route::post('/{id}/mark-as-read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.mark-one');
+        Route::delete('/{id}', [\App\Http\Controllers\NotificationController::class, 'destroy'])->name('notifications.destroy');
+    });
+
+    // Web Push Subscriptions
+    Route::post('/api/push-subscriptions', [\App\Http\Controllers\PushSubscriptionController::class, 'subscribe'])->name('push.subscribe');
+    Route::delete('/api/push-subscriptions', [\App\Http\Controllers\PushSubscriptionController::class, 'unsubscribe'])->name('push.unsubscribe');
+
+    // Halaman notifikasi
+    Route::get('/notifications', fn() => inertia('Notifications/Index'))->name('notifications.page');
+
+
+});
+
 require __DIR__ . '/auth.php';

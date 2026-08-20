@@ -20,6 +20,9 @@ import { useHomeSearch } from '@/Composables/useHomeSearch';
 import StickySubNavSearch from '@/Components/ui/StickySubNavSearch.vue';
 import Navbar from '@/Components/Navbar.vue';
 import MobileSearchSheet from '@/Pages/Home/Search/MobileSearchSheet.vue';
+import LokasiSearchSheet from '@/Pages/Home/Search/LokasiSearchSheet.vue';
+import KeywordSearchSheet from '@/Pages/Home/Search/KeywordSearchSheet.vue';
+import LazyAssetCard from '@/Components/ui/LazyAssetCard.vue';
 
 const props = defineProps({
     asset: {
@@ -41,6 +44,10 @@ const props = defineProps({
     nearbyPlaces: {
         type: Object,
         default: () => ({})
+    },
+    similarAssets: {
+        type: Array,
+        default: () => []
     }
 });
 
@@ -160,6 +167,7 @@ import FasilitasModal from './Fasilitas.vue';
 const assetFacilities = computed(() => props.asset.facilities || []);
 
 const showFasilitasModal = ref(false);
+const showPricingModal = ref(false);
 const showFullDescription = ref(false);
 
 const topFacilities = computed(() => {
@@ -590,8 +598,19 @@ const startChat = () => {
     });
 };
 
-// Calendar Touch Gestures
+// Scroll logic for Detail Navbar animation
+const showDetailNav = ref(false);
+const handleWindowScroll = () => {
+    showDetailNav.value = window.scrollY > 400;
+};
 
+onMounted(() => {
+    window.addEventListener('scroll', handleWindowScroll);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('scroll', handleWindowScroll);
+});
 
 </script>
 
@@ -601,20 +620,31 @@ const startChat = () => {
     <AppLayout :hideNavbar="true" :hideBottombar="true">
 
     <MobileSearchSheet />
+    <LokasiSearchSheet />
+    <KeywordSearchSheet />
 
     <!-- NATURAL SCROLLING MAIN NAVBAR -->
     <Navbar class="hidden md:block !absolute top-0 left-0 w-full z-[80] !transition-none" />
 
-    <!-- UNIFIED STICKY HEADER (Filters Top, Nav Bottom) -->
-    <div class="md:mt-16 sticky top-0 z-[70] w-full flex flex-col bg-white shadow-sm border-b border-gray-100">
-        <!-- TOP: SEARCH FILTER NAVBAR -->
-        <div class="hidden md:block">
+    <!-- STICKY CONTAINER FOR SUB NAV & DETAIL NAV -->
+    <div class="hidden md:block sticky top-0 left-0 w-full z-[75] mt-[64px]">
+        
+        <!-- FILTER PENCARIAN -->
+        <div class="w-full bg-white shadow-sm border-b border-gray-100 relative z-20">
             <StickySubNavSearch class="!shadow-none !border-b-0 !static !bg-transparent !py-2" />
         </div>
 
-        <!-- BOTTOM: CUSTOM STICKY NAVBAR -->
-        <DetailNavbar :isFavorited="asset.isFavorite" @favorite="handleFavorite" :showBackButton="true" :mobileBackOnly="true" class="!shadow-none !border-b-0 !static !bg-transparent" />
+        <!-- FLOATING DETAIL NAVBAR (Slides Down on Scroll from under Filter) -->
+        <div class="absolute w-full left-0 top-full overflow-hidden pointer-events-none z-10">
+            <div class="transition-transform duration-300 ease-out shadow-md bg-white pointer-events-auto"
+                 :class="showDetailNav ? 'translate-y-0' : '-translate-y-full'">
+                <DetailNavbar :isFavorited="asset.isFavorite" @favorite="handleFavorite" :showBackButton="true" :mobileBackOnly="true" class="!shadow-none !border-b-0" />
+            </div>
+        </div>
+    </div>
 
+    <!-- UNIFIED STICKY HEADER (Mobile Only) -->
+    <div class="md:hidden sticky top-0 z-[70] w-full flex flex-col bg-white shadow-sm border-b border-gray-100 mt-[64px]">
         <!-- MOBILE SUB NAVBAR (Badges for Schedule and Price) -->
         <div class="flex md:hidden items-center gap-2 px-4 pb-3 overflow-x-auto hide-scrollbar">
             <div @click="openMobileSearch('jenis')" class="bg-gray-100 text-[#0A2540] text-[10px] font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 whitespace-nowrap cursor-pointer hover:bg-gray-200 transition flex-shrink-0">
@@ -639,61 +669,64 @@ const startChat = () => {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 text-[#0A2540] font-sans pb-32 lg:pb-10">
 
         <!-- HERO GALLERY AND MODAL -->
-        <section id="foto" class="scroll-mt-32 md:scroll-mt-40">
+        <section id="foto" class="scroll-mt-32 md:scroll-mt-[180px]">
             <AssetGallery :images="asset.images" />
         </section>
 
         <!-- TITLE & HEADER -->
         <div class="mb-6 mt-6 min-w-0">
-            <h1 class="text-xl sm:text-3xl font-extrabold text-[#0A2540] mb-3 truncate" :title="asset.title">{{ asset.title }}</h1>
+            <h1 class="text-2xl sm:text-[32px] font-extrabold text-[#222222] mb-2 tracking-tight leading-tight" :title="asset.title">{{ asset.title }}</h1>
 
-            <div class="flex flex-col gap-2">
+            <div class="flex flex-col gap-2.5">
                 <!-- Rating & Favorit -->
-                <div class="flex items-center gap-4 text-sm mt-1">
+                <div class="flex items-center gap-4 mt-1">
                     <div class="flex items-center gap-1.5">
-                        <div class="flex items-center gap-0.5 text-xs">
-                            <Star v-for="n in 5" :key="n" class="" :class="n <= Math.round(parseFloat(asset.reviews_avg_rating || 0)) ? 'text-[#FFC000]' : 'text-gray-300'" />
+                        <div class="flex items-center gap-0.5">
+                            <Star v-for="n in 5" :key="n" class="w-4 h-4" :class="n <= Math.round(parseFloat(asset.reviews_avg_rating || 0)) ? 'text-[#FFC000] fill-[#FFC000]' : 'text-gray-300 fill-gray-300'" />
                         </div>
-                        <span class="text-[#0A2540] font-bold">{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
-                        <span class="text-gray-500">({{ asset.reviews_count || 0 }} ulasan)</span>
+                        <span class="text-[#222222] font-bold text-[14px]">{{ parseFloat(asset.reviews_avg_rating || 0).toFixed(1) }}</span>
+                        <span class="text-gray-500 text-[14px]">({{ asset.reviews_count || 0 }} ulasan)</span>
                     </div>
-                    <div class="flex items-center gap-1.5">
-                        <Heart class="text-red-500" />
+                    <div class="flex items-center gap-1.5 text-[14px]">
+                        <Heart class="text-red-500 w-4 h-4" />
                         <span class="text-gray-500">{{ asset.favorites_count || 0 }} favorit</span>
                     </div>
                 </div>
 
                 <!-- Lokasi -->
-                <div class="flex items-start gap-2 text-sm text-gray-500">
-                    <MapPin class="mt-0.5 text-gray-400" />
-                    <span class="leading-relaxed">{{ asset.city?.name }}, {{ asset.province?.name }}</span>
+                <div class="flex items-start gap-2 text-[14px] text-gray-600">
+                    <MapPin class="mt-0.5 text-gray-400 w-4 h-4" />
+                    <span class="leading-relaxed font-medium">{{ asset.city?.name }}, {{ asset.province?.name }}</span>
                 </div>
             </div>
         </div>
 
         <!-- CONTENT LAYOUT (Kiri: Detail, Kanan: Booking Card) -->
-        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-12">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
 
             <!-- KIRI (Detail) -->
-            <div class="lg:col-span-3 space-y-10 min-w-0 overflow-hidden">
+            <div class="lg:col-span-2 space-y-10 min-w-0 overflow-hidden">
 
-                <AssetSpecifications :detail="asset.detail" />
+                <!-- Informasi Umum Wrapper -->
+                <div id="informasi" class="scroll-mt-32 md:scroll-mt-40">
+                    <AssetSpecifications :detail="asset.detail" />
 
-                <!-- Deskripsi -->
-                <div class="py-6 border-b border-gray-200">
-                    <h3 class="text-lg font-bold mb-4">Tentang Aset Ini</h3>
-                    <div class="text-gray-600 leading-relaxed whitespace-pre-line text-left relative">
-                        <div :class="{ 'line-clamp-4': !showFullDescription, 'overflow-hidden': !showFullDescription }">
-                            {{ asset.description }}
+                    <!-- Deskripsi -->
+                    <div class="py-10 md:py-12 border-b border-gray-100">
+                        <h3 class="text-[22px] font-bold text-[#222222] mb-4">Tentang Aset Ini</h3>
+                        <div class="text-[15px] text-gray-700 leading-8 whitespace-pre-line text-left relative">
+                            <div :class="{ 'line-clamp-4': !showFullDescription, 'overflow-hidden': !showFullDescription }">
+                                {{ asset.description }}
+                            </div>
                         </div>
+                        <button v-if="asset.description && asset.description.length > 200" @click="showFullDescription = !showFullDescription" class="mt-3 text-black font-semibold hover:text-gray-700 underline underline-offset-2">
+                            {{ showFullDescription ? 'Tampilkan lebih sedikit' : 'Lihat selengkapnya >' }}
+                        </button>
                     </div>
-                    <button v-if="asset.description && asset.description.length > 200" @click="showFullDescription = !showFullDescription" class="mt-2 text-black font-semibold underline hover:text-gray-700">
-                        {{ showFullDescription ? 'Tampilkan lebih sedikit' : 'Lihat selengkapnya >' }}
-                    </button>
                 </div>
 
                 <!-- Fasilitas Utama -->
-                <div id="fasilitas" v-if="assetFacilities.length > 0" class="py-8 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
+                <div id="fasilitas" v-if="assetFacilities.length > 0" class="py-10 md:py-12 border-b border-gray-100 scroll-mt-32 md:scroll-mt-40">
                     <h3 class="text-[22px] font-semibold text-[#222222] mb-6">Fasilitas yang ditawarkan</h3>
 
                     <!-- Grid Top Facilities -->
@@ -713,8 +746,8 @@ const startChat = () => {
                 <FasilitasModal :show="showFasilitasModal" :facilitiesGrouped="facilitiesGrouped" @close="showFasilitasModal = false" />
 
             <!-- SEKSI PEMILIHAN UNIT (Jika ada units) -->
-            <div v-if="asset.units && asset.units.length > 0" id="pilihan-unit" class="py-2 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
-                <h3 class="text-lg font-bold mb-2">Unit</h3>
+            <div v-if="asset.units && asset.units.length > 0" id="pilihan-unit" class="py-10 md:py-12 border-b border-gray-100 scroll-mt-32 md:scroll-mt-40">
+                <h3 class="text-[22px] font-bold text-[#222222] mb-6">Pilihan Unit</h3>
                 <AssetUnitList
                     :units="showAllUnits ? asset.units : asset.units.slice(0, 3)"
                     :rentalUnitLabel="rentalUnitLabel(activeScheduleMode)"
@@ -727,26 +760,26 @@ const startChat = () => {
                 <button
                     v-if="asset.units.length > 3 && !showAllUnits"
                     @click="showAllUnits = true"
-                    class="w-full mt-3 py-2 border-2 border-gray-100 hover:border-gray-200 hover:bg-gray-50 text-[#0A2540] font-bold rounded-lg transition-colors text-sm"
+                    class="w-full mt-5 py-3 border border-gray-300 hover:border-gray-400 hover:bg-gray-50 text-[#222222] font-bold rounded-lg transition-colors text-[15px]"
                 >
                     Lihat {{ asset.units.length - 3 }} Unit Lainnya
                 </button>
             </div>
 
             <!-- Lokasi Map -->
-            <div id="lokasi" class="py-6 border-b border-gray-200 scroll-mt-32 md:scroll-mt-40">
-                <h3 class="text-lg font-bold mb-4">Lokasi</h3>
-                <p class="text-gray-600 mb-4">{{ [asset.address, asset.village?.name, asset.district?.name, asset.city?.name, asset.province?.name, 'Indonesia'].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
+            <div id="lokasi" class="py-10 md:py-12 border-b border-gray-100 scroll-mt-32 md:scroll-mt-40">
+                <h3 class="text-[22px] font-bold text-[#222222] mb-4">Lokasi dan lingkungan sekitar</h3>
+                <p class="text-[15px] text-gray-700 mb-6 font-medium">{{ [asset.address, asset.village?.name, asset.district?.name, asset.city?.name, asset.province?.name, 'Indonesia'].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
                 <div class="w-full h-72 bg-gray-200 rounded-xl overflow-hidden relative mb-6">
-                    <iframe 
+                    <iframe
                         v-if="asset.latitude && asset.longitude"
-                        width="100%" 
-                        height="100%" 
-                        frameborder="0" 
-                        scrolling="no" 
-                        marginheight="0" 
-                        marginwidth="0" 
-                        :src="`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(asset.longitude)-0.02}%2C${parseFloat(asset.latitude)-0.01}%2C${parseFloat(asset.longitude)+0.02}%2C${parseFloat(asset.latitude)+0.01}&amp;layer=mapnik&amp;marker=${asset.latitude}%2C${asset.longitude}`" 
+                        width="100%"
+                        height="100%"
+                        frameborder="0"
+                        scrolling="no"
+                        marginheight="0"
+                        marginwidth="0"
+                        :src="`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(asset.longitude)-0.02}%2C${parseFloat(asset.latitude)-0.01}%2C${parseFloat(asset.longitude)+0.02}%2C${parseFloat(asset.latitude)+0.01}&amp;layer=mapnik&amp;marker=${asset.latitude}%2C${asset.longitude}`"
                         style="border: 0;"
                     ></iframe>
                     <div v-else class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 p-4 shadow-lg">
@@ -757,7 +790,7 @@ const startChat = () => {
 
                 <!-- Info Lokasi Sekitar -->
                 <div v-if="Object.keys(nearbyPlaces).length > 0" class="mt-8">
-                    <h4 class="text-[17px] font-bold text-gray-900 mb-4">Info Lokasi di Sekitar</h4>
+                    <h4 class="text-[18px] font-bold text-[#222222] mb-5">Jarak ke fasilitas publik</h4>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
                         <div v-for="(places, category) in nearbyPlaces" :key="category" class="flex flex-col gap-2.5 min-w-0">
                             <h5 class="text-[15px] font-semibold text-gray-800">{{ categoryLabels[category] || category }}</h5>
@@ -775,62 +808,63 @@ const startChat = () => {
                 </div>
             </div>
 
-            <AssetHostProfile :assetId="asset.id" :ownerProfile="asset.owner_profile" />
+            <!-- Kebijakan Wrapper -->
+            <div id="kebijakan" class="scroll-mt-32 md:scroll-mt-40">
+                <!-- Kebijakan -->
+                <AssetPolicy :policies="asset.policies" />
 
-            <!-- Kebijakan -->
-            <AssetPolicy :policies="asset.policies" />
-
-            <AssetFaq :faqs="asset.faqs ?? []" :assetType="asset.type?.name" />
+                <AssetFaq :faqs="asset.faqs ?? []" :assetType="asset.type?.name" />
+            </div>
 
             </div>
             <!-- KANAN (Booking & Contact Cards) -->
             <div class="lg:col-span-1 lg:row-span-2 order-2 lg:order-2">
-                <div class="sticky top-32 md:top-40 flex flex-col gap-3">
+                <div class="sticky top-32 md:top-40 flex flex-col gap-0">
                     <!-- Booking Card -->
-                    <div class="bg-white shadow-lg shadow-gray-200/50 rounded-xl p-4 border border-gray-100">
+                    <div class="bg-white shadow-lg shadow-gray-200/50 rounded-t-lg p-5 md:p-6 border border-gray-100 border-b-0 relative z-10">
 
                         <!-- Date & Duration Box -->
-                        <div class="border border-gray-200 rounded-lg overflow-hidden mb-3">
+                        <div class="border border-gray-200 rounded-lg overflow-hidden mb-4">
                             <div class="flex border-b border-gray-200">
                                 <!-- Mulai -->
-                                <div class="flex-1 px-2.5 py-2 border-r border-gray-200 bg-white">
-                                    <p class="text-[9px] uppercase font-bold text-gray-400 mb-0.5">Mulai Sewa</p>
-                                    <p class="text-[12px] font-bold text-[#0A2540]">{{ startDate ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih Tanggal' }}</p>
-                                    <p class="text-[10px] text-gray-400 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ startTime }}</p>
+                                <div class="flex-1 px-3.5 py-3 border-r border-gray-200 bg-white">
+                                    <p class="text-[10px] md:text-xs uppercase font-bold text-gray-400 mb-1">Mulai Sewa</p>
+                                    <p class="text-[13px] md:text-[15px] font-bold text-[#0A2540]">{{ startDate ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Pilih Tanggal' }}</p>
+                                    <p class="text-[11px] md:text-[13px] text-gray-400 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ startTime }}</p>
                                 </div>
                                 <!-- Selesai -->
-                                <div class="flex-1 px-2.5 py-2 bg-white">
-                                    <p class="text-[9px] uppercase font-bold text-gray-400 mb-0.5">Selesai Sewa</p>
-                                    <p class="text-[12px] font-bold text-[#0A2540]">{{ (activeScheduleMode === 'hour' && startDate) ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (endDate ? endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-') }}</p>
-                                    <p class="text-[10px] text-gray-400 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ endTime }}</p>
+                                <div class="flex-1 px-3.5 py-3 bg-white">
+                                    <p class="text-[10px] md:text-xs uppercase font-bold text-gray-400 mb-1">Selesai Sewa</p>
+                                    <p class="text-[13px] md:text-[15px] font-bold text-[#0A2540]">{{ (activeScheduleMode === 'hour' && startDate) ? startDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : (endDate ? endDate.toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-') }}</p>
+                                    <p class="text-[11px] md:text-[13px] text-gray-400 mt-0.5" v-if="activeScheduleMode === 'hour'">{{ endTime }}</p>
                                 </div>
                             </div>
-                            <div class="px-2.5 py-2 bg-gray-50 flex justify-between items-center border-b border-gray-200">
-                                <span class="text-[11px] font-semibold text-gray-500">Durasi Sewa</span>
-                                <span class="text-[12px] font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(activeScheduleMode) }}</span>
+                            <div class="px-3.5 py-3 bg-gray-50 flex justify-between items-center border-b border-gray-200">
+                                <span class="text-[12px] md:text-[14px] font-semibold text-gray-500">Durasi Sewa</span>
+                                <span class="text-[13px] md:text-[15px] font-bold" :class="durationCount === 0 ? 'text-red-500' : 'text-[#0A2540]'">{{ durationCount || 0 }} {{ rentalUnitLabel(activeScheduleMode) }}</span>
                             </div>
-                            <div v-if="selectedUnitName" class="px-2.5 py-1.5 bg-[#FFC000]/10 flex justify-between items-center">
-                                <span class="text-[11px] font-semibold text-[#0A2540]">Unit Terpilih</span>
-                                <span class="text-[12px] font-extrabold text-[#0A2540] truncate max-w-[130px]">{{ selectedUnitName }}</span>
+                            <div v-if="selectedUnitName" class="px-3.5 py-2.5 bg-[#FFC000]/10 flex justify-between items-center">
+                                <span class="text-[12px] md:text-[14px] font-semibold text-[#0A2540]">Unit Terpilih</span>
+                                <span class="text-[13px] md:text-[15px] font-extrabold text-[#0A2540] truncate max-w-[130px] md:max-w-[150px]">{{ selectedUnitName }}</span>
                             </div>
                         </div>
 
                         <!-- BUG 8 FIX: Pesan jika tidak ada pricing -->
-                        <div v-if="!lowestPrice && (!asset.units || asset.units.length === 0)" class="text-center text-amber-600 text-[10px] font-bold mb-3 bg-amber-50 rounded-lg px-2.5 py-2 border border-amber-200">
-                            <AlertTriangle class="mr-1" />
+                        <div v-if="!lowestPrice && (!asset.units || asset.units.length === 0)" class="text-center text-amber-600 text-[12px] md:text-sm font-bold mb-4 bg-amber-50 rounded-lg px-3.5 py-3 border border-amber-200">
+                            <AlertTriangle class="mr-1 inline w-4 h-4" />
                             Pemilik belum menetapkan harga.
                         </div>
 
                         <!-- K5: Pemilih Paket Harga (hanya untuk single asset tanpa unit) -->
-                        <div v-if="!asset.units?.length && asset.pricings?.length > 0" class="mb-3">
-                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-wider mb-1.5">Pilih Paket Sewa</p>
-                            <div class="space-y-1">
+                        <div v-if="!asset.units?.length && asset.pricings?.length > 0" class="mb-4">
+                            <p class="text-[10px] md:text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5">Pilih Paket Sewa</p>
+                            <div class="space-y-2">
                                 <button
-                                    v-for="p in asset.pricings"
+                                    v-for="p in asset.pricings.slice(0, 3)"
                                     :key="p.id"
                                     type="button"
                                     @click="form.pricing_id = p.id"
-                                    class="w-full flex justify-between items-center px-2.5 py-2 rounded-lg border-2 text-[12px] transition-all"
+                                    class="w-full flex justify-between items-center px-3.5 py-3 rounded-lg border-2 text-[13px] md:text-[15px] transition-all"
                                     :class="form.pricing_id === p.id
                                         ? 'border-[#0A2540] bg-[#0A2540]/5 shadow-sm'
                                         : 'border-gray-100 hover:border-gray-200 bg-white'"
@@ -843,27 +877,74 @@ const startChat = () => {
                                     </span>
                                 </button>
                             </div>
+                            <div class="relative mt-3" v-if="asset.pricings.length > 3">
+                                <button
+                                    @click="showPricingModal = !showPricingModal"
+                                    class="text-[12px] md:text-sm font-bold text-[#FFC000] hover:text-[#e6ad00] underline"
+                                >
+                                    Lihat harga sewa lainnya
+                                </button>
+
+                                <!-- Layar penutup kasat mata untuk menutup popover saat di-klik di luar -->
+                                <div v-if="showPricingModal" class="fixed inset-0 z-40" @click="showPricingModal = false"></div>
+
+                                <transition
+                                    enter-active-class="transition ease-out duration-200 origin-right"
+                                    enter-from-class="opacity-0 scale-95 translate-x-4"
+                                    enter-to-class="opacity-100 scale-100 translate-x-0"
+                                    leave-active-class="transition ease-in duration-150 origin-right"
+                                    leave-from-class="opacity-100 scale-100 translate-x-0"
+                                    leave-to-class="opacity-0 scale-95 translate-x-4"
+                                >
+                                    <div v-if="showPricingModal" class="absolute right-full bottom-0 mr-4 w-[280px] md:w-[320px] bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.2)] border border-gray-100 z-50 overflow-hidden flex flex-col">
+                                        <div class="p-3 md:p-4 overflow-y-auto space-y-2 max-h-[40vh] bg-white">
+                                            <button
+                                                v-for="p in asset.pricings"
+                                                :key="p.id"
+                                                type="button"
+                                                @click="form.pricing_id = p.id; showPricingModal = false"
+                                                class="w-full flex justify-between items-center px-3 py-2.5 rounded-lg border-2 text-[13px] md:text-[14px] transition-all"
+                                                :class="form.pricing_id === p.id
+                                                    ? 'border-[#0A2540] bg-[#0A2540]/5 shadow-sm'
+                                                    : 'border-transparent hover:border-gray-200 hover:bg-gray-50 bg-white'"
+                                            >
+                                                <span class="font-medium" :class="form.pricing_id === p.id ? 'text-[#0A2540] font-bold' : 'text-gray-600'">
+                                                    {{ p.duration }} {{ rentalUnitLabel(p.rental_unit) }}
+                                                </span>
+                                                <span class="font-bold" :class="form.pricing_id === p.id ? 'text-[#F97316]' : 'text-[#0A2540]'">
+                                                    {{ formatRupiah(p.price) }}
+                                                </span>
+                                            </button>
+                                        </div>
+                                        <div class="px-4 py-2 border-t border-gray-100 flex justify-end bg-gray-50/80">
+                                            <button @click="showPricingModal = false" class="font-bold text-[#FFC000] hover:text-[#e6ad00] text-[12px] md:text-[13px]">
+                                                Tutup
+                                            </button>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
                         </div>
 
                         <button
                             v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
                             @click="scrollToUnit"
-                            class="w-full py-2.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[13px] mb-3">
+                            class="w-full py-3 md:py-3.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[14px] md:text-[15px] mb-4">
                             Pilih Unit
                         </button>
                         <button
                             v-else
                             @click="submitBooking"
                             :disabled="asset.status !== 'approved' || !lowestPrice || !startDate || durationCount === 0"
-                            class="w-full py-2.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[13px] disabled:opacity-50 disabled:cursor-not-allowed mb-3">
+                            class="w-full py-3 md:py-3.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[14px] md:text-[15px] disabled:opacity-50 disabled:cursor-not-allowed mb-4">
                             Booking Sekarang
                         </button>
 
-                        <p v-if="asset.status !== 'approved'" class="text-center text-red-500 text-[10px] font-bold mb-2 mt-[-5px]">Aset ini sedang tidak tersedia.</p>
+                        <p v-if="asset.status !== 'approved'" class="text-center text-red-500 text-xs font-bold mb-3 mt-[-10px]">Aset ini sedang tidak tersedia.</p>
 
 
                         <!-- Breakdown -->
-                        <div class="space-y-1.5 text-[12px]">
+                        <div class="space-y-2.5 text-[13px] md:text-[15px]">
                             <div class="flex justify-between text-gray-500">
                                 <span>Subtotal</span>
                                 <span class="font-semibold text-gray-700">{{ formatRupiah(subtotal) }}</span>
@@ -873,8 +954,8 @@ const startChat = () => {
                                 <span v-else>Layanan ({{ serviceFee?.value ?? (typeof serviceFee === 'number' ? serviceFee : 5) }}%)</span>
                                 <span class="font-semibold text-gray-700">{{ formatRupiah(feeAmount) }}</span>
                             </div>
-                            <hr class="border-gray-100 my-1">
-                            <div class="flex justify-between font-extrabold text-[14px] text-[#0A2540]">
+                            <hr class="border-gray-100 my-2">
+                            <div class="flex justify-between font-extrabold text-[16px] md:text-lg text-[#0A2540]">
                                 <span>Total</span>
                                 <span>{{ formatRupiah(totalAmount) }}</span>
                             </div>
@@ -882,12 +963,12 @@ const startChat = () => {
                     </div>
 
                     <!-- Hubungi Pemilik Card (DESKTOP ONLY) -->
-                    <div v-if="asset.owner_profile" class="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                        <h3 class="text-[13px] font-bold text-[#0A2540] mb-2">Hubungi Pemilik</h3>
-                        <div class="flex items-center gap-2 border-b border-gray-400 pb-1.5 focus-within:border-[#FFC000] transition-colors">
-                            <MessageSquareMore class="text-lg text-[#FFC000]" />
-                            <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu..." class="w-full bg-transparent border-none outline-none text-[12px] text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
-                            <button @click="startChat" class="text-[#FFC000] font-bold text-[12px] hover:text-[#e6ad00] transition-colors whitespace-nowrap">
+                    <div v-if="asset.owner_profile" class="hidden lg:block bg-white rounded-b-lg shadow-lg shadow-gray-200/50 border border-gray-100 p-5 md:p-6 border-t border-gray-100 relative z-0">
+                        <h3 class="text-[14px] md:text-[16px] font-bold text-[#0A2540] mb-3">Hubungi Pemilik</h3>
+                        <div class="flex items-center gap-3 border-b border-gray-400 pb-2 focus-within:border-[#FFC000] transition-colors">
+                            <MessageSquareMore class="text-xl md:text-2xl text-[#FFC000]" />
+                            <input v-model="chatMessage" @keyup.enter="startChat" type="text" placeholder="Tanya sesuatu..." class="w-full bg-transparent border-none outline-none text-[13px] md:text-[15px] text-gray-700 placeholder-gray-400 focus:ring-0 p-0" />
+                            <button @click="startChat" class="text-[#FFC000] font-bold text-[13px] md:text-[15px] hover:text-[#e6ad00] transition-colors whitespace-nowrap">
                                 Kirim
                             </button>
                         </div>
@@ -918,6 +999,33 @@ const startChat = () => {
                         />
 
                     </div>
+                </div>
+
+                <!-- Pemilik Aset -->
+                <div id="pemilik" class="scroll-mt-32 md:scroll-mt-40">
+                    <AssetHostProfile :assetId="asset.id" :ownerProfile="asset.owner_profile" />
+                </div>
+            </div>
+
+            <!-- Kamu mungkin juga suka (Rekomendasi) -->
+            <div v-if="similarAssets && similarAssets.length > 0" class="lg:col-span-3 order-4 mt-8 mb-8 pt-8 border-t border-gray-100 overflow-hidden">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold text-[#222222]">Kamu mungkin juga suka</h2>
+                    <Link :href="route('assets.search', { location: asset.city?.name, 'type[]': asset.type?.name })" class="px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-[#222222] hover:bg-gray-50 transition-colors hidden md:block">
+                        Lihat semua
+                    </Link>
+                </div>
+
+                <div class="flex overflow-x-auto gap-4 pb-6 snap-x hide-scrollbar">
+                    <div v-for="simAsset in similarAssets" :key="simAsset.id" class="w-[240px] md:w-[260px] shrink-0 snap-start">
+                        <LazyAssetCard :asset="simAsset" />
+                    </div>
+                </div>
+
+                <div class="mt-2 md:hidden">
+                    <Link :href="route('assets.search', { location: asset.city?.name, 'type[]': asset.type?.name })" class="block w-full text-center px-4 py-3 border border-gray-200 rounded-lg text-sm font-bold text-[#222222] hover:bg-gray-50 transition-colors">
+                        Lihat semua
+                    </Link>
                 </div>
             </div>
         </div>

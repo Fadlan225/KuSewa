@@ -1,6 +1,6 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { ChevronDown, Search, X, Sliders, Bell, Loader2, History, Flame, ChevronRight, ChevronLeft, Check, HelpCircle, Headset, User, Shield, PieChart, LogOut } from 'lucide-vue-next';
+import { ChevronDown, Search, X, Sliders, Bell, Loader2, History, Flame, ChevronRight, ChevronLeft, Check, HelpCircle, Headset, User, Shield, PieChart, LogOut, Smartphone, Building, Megaphone } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed, watch, inject } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
@@ -8,6 +8,8 @@ import { useHomeSearch } from '@/Composables/useHomeSearch';
 import AnimatedPlaceholder from '@/Components/ui/AnimatedPlaceholder.vue';
 import StickySubNavSearch from '@/Components/ui/StickySubNavSearch.vue';
 import NoImageIcon from '@/Components/ui/Icons/NoImageIcon.vue';
+import NotificationDropdown from '@/Components/ui/NotificationDropdown.vue';
+import { useNotifications } from '@/Composables/useNotifications';
 
 const isHome = computed(() => route().current('Home'));
 const isBantuan = computed(() => route().current('Bantuan.*'));
@@ -105,6 +107,9 @@ watch(() => page.url, () => {
 
 const isMobileMenuOpen = ref(false);
 const desktopNavActiveMenu = ref(null);
+const isNotifDropdownOpen = ref(false);
+
+const { unreadCount, init: initNotifications } = useNotifications();
 
 let lastScrollY = typeof window !== 'undefined' ? window.scrollY : 0;
 
@@ -135,6 +140,9 @@ const applySuggestion = (text) => {
 onMounted(() => {
     window.addEventListener('scroll', handleScroll);
     handleScroll();
+    if (page.props.auth.user) {
+        initNotifications();
+    }
 });
 
 onUnmounted(() => {
@@ -155,22 +163,55 @@ const initials = computed(() => {
 });
 </script>
 <template>
-    <nav
-        :class="[
-            'fixed top-0 left-0 w-full z-[100] transition-all duration-300',
-            isCurrentlyTransparent
+    <nav class="fixed top-0 left-0 w-full z-[100] transition-all duration-300">
+
+        <!-- Top Mini Nav (Desktop Only) -->
+        <div class="hidden lg:block w-full border-b transition-colors duration-300"
+             :class="isCurrentlyTransparent ? 'bg-transparent border-white/20 text-white' : 'bg-slate-50 border-slate-200 text-slate-500'">
+            <div class="max-w-7xl mx-auto px-6 lg:px-8">
+                <div class="flex justify-between items-center h-8 text-[11px] font-medium tracking-wide">
+                    <!-- Kiri -->
+                    <div class="flex items-center gap-5">
+                        <Link :href="route('assets.search')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
+                            <Building class="w-3.5 h-3.5" />
+                            Sewa Aset
+                        </Link>
+                    </div>
+
+                    <!-- Kanan -->
+                    <div class="flex items-center gap-5">
+                        <button v-if="!page.props.auth.user" @click="openAuthModal()" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
+                            <Megaphone class="w-3.5 h-3.5" />
+                            Promosikan Aset Anda
+                        </button>
+                        <Link v-else-if="page.props.auth.user.role === 'owner'" :href="route('owner.dashboard')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
+                            <Megaphone class="w-3.5 h-3.5" />
+                            Dashboard Owner
+                        </Link>
+                        <Link v-else :href="route('owner.register')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
+                            <Megaphone class="w-3.5 h-3.5" />
+                            Promosikan Aset Anda
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Navbar Wrapper (Selalu di atas segalanya agar tidak ikut gelap oleh backdrop) -->
+        <div
+            class="relative w-full z-50 transition-all duration-300"
+            :class="isCurrentlyTransparent
                 ? 'bg-transparent shadow-none border-transparent'
-                : (isHome ? 'bg-white shadow-sm lg:shadow-none border-b border-[#6C757D]/10 lg:border-b-0' : 'bg-white shadow-sm border-b border-[#6C757D]/10')
-        ]"
-    >
-        <div class="w-full max-w-7xl mx-auto px-6 lg:px-8 transition-all duration-300">
-            <div class="flex justify-between items-center h-16">
+                : 'bg-white border-b border-gray-200'"
+        >
+            <div class="w-full max-w-7xl mx-auto px-6 lg:px-8 transition-all duration-300">
+                <div class="flex justify-between items-center h-16">
 
                 <!-- ==================== AREA MOBILE: LOGO VS SEARCH BAR ==================== -->
                 <div class="flex md:hidden w-full items-center">
                     <Transition
                         mode="out-in"
-                        enter-active-class="transition duration-200 ease-out"
+                        enter-active-class="transition duration-2   00 ease-out"
                         enter-from-class="opacity-0 scale-95"
                         enter-to-class="opacity-100 scale-100"
                         leave-active-class="transition duration-150 ease-in"
@@ -198,23 +239,21 @@ const initials = computed(() => {
                                 </span>
                             </Link>
 
-                            <!-- Mobile Language Selector -->
-                            <div
-                                class="flex items-center gap-1.5 cursor-pointer transition px-2 py-1 rounded-lg"
-                                :class="[
-                                    isCurrentlyTransparent
-                                        ? 'text-white hover:bg-white/10'
-                                        : 'text-[#0A2540] hover:bg-gray-100'
-                                ]"
+                            <!-- Mobile Notification Button -->
+                            <Link
+                                v-if="page.props.auth.user"
+                                :href="route('notifications.index')"
+                                class="relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 active:scale-95"
+                                :class="isCurrentlyTransparent ? 'text-white hover:bg-white/10' : 'text-[#0A2540] hover:bg-gray-100'"
                             >
-                                <!-- <img
-                                    src="https://flagcdn.com/id.svg"
-                                    alt="Indonesia Flag"
-                                    class="w-4 h-4 rounded-full object-cover border border-white/20"
-                                />
-                                <span class="font-semibold text-xs">ID</span>
-                                <ChevronDown class="text-[8px] ml-0.5" /> -->
-                            </div>
+                                <Bell class="w-5 h-5" />
+                                <span
+                                    v-if="unreadCount > 0"
+                                    class="absolute -top-0.5 -right-0.5 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full px-1 shadow"
+                                >
+                                    {{ unreadCount > 99 ? '99+' : unreadCount }}
+                                </span>
+                            </Link>
                         </div>
 
                         <!-- KONDISI 2: Sudah di-scroll -> Tampilkan Mini Search Bar -->
@@ -259,9 +298,19 @@ const initials = computed(() => {
                             </div>
 
                             <!-- Notification Button -->
-                            <button class="w-9 h-9 flex-shrink-0 bg-white border border-gray-200/80 rounded-full flex items-center justify-center text-[#0A2540] active:scale-95 transition-transform shadow-sm">
+                            <Link
+                                v-if="page.props.auth.user"
+                                :href="route('notifications.index')"
+                                class="relative w-9 h-9 flex-shrink-0 bg-white border border-gray-200/80 rounded-full flex items-center justify-center text-[#0A2540] active:scale-95 transition-transform shadow-sm"
+                            >
                                 <Bell class="text-sm" />
-                            </button>
+                                <span
+                                    v-if="unreadCount > 0"
+                                    class="absolute -top-1 -right-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full px-1 shadow"
+                                >
+                                    {{ unreadCount > 99 ? '99+' : unreadCount }}
+                                </span>
+                            </Link>
                         </div>
                     </Transition>
                 </div>
@@ -296,7 +345,16 @@ const initials = computed(() => {
                         :class="isScrolled && isHome ? 'opacity-0 pointer-events-none' : 'opacity-100'"
                     >
                         <!-- Wrapper luar yang bentuknya persis seperti input -->
-                        <div v-if="desktopNavActiveMenu" @click="desktopNavActiveMenu = null" class="fixed inset-0 z-40"></div>
+                        <Transition
+                            enter-active-class="transition-opacity duration-300 ease-out"
+                            enter-from-class="opacity-0"
+                            enter-to-class="opacity-100"
+                            leave-active-class="transition-opacity duration-200 ease-in"
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0"
+                        >
+                            <div v-if="desktopNavActiveMenu" @click="desktopNavActiveMenu = null" class="fixed inset-0 -z-10 bg-black/50 backdrop-blur-sm"></div>
+                        </Transition>
 
                         <!-- Search Bar -->
                         <div
@@ -615,41 +673,40 @@ const initials = computed(() => {
                 </div>
 
                 <!-- Bagian Kanan: Menu Links & Actions -->
-                <div class="hidden md:flex items-center gap-4">
+                <div class="hidden md:flex items-center gap-4 h-full">
                     <!-- Desktop Menu Links -->
-                    <div class="flex items-center space-x-7">
+                    <div class="flex items-center space-x-7 h-full">
 
                     <Link
                         :href="route('Home')"
                         :class="[
-                            'relative text-sm transition-colors duration-300',
+                            'relative h-full flex items-center text-sm transition-colors duration-300 group',
                             isHome ? 'font-bold' : 'font-semibold',
                             isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
                         ]"
                     >
                         Beranda
-
                         <span
-                            v-if="isHome"
-                            class="absolute -bottom-2 left-0 w-full h-[3px] bg-[#FFC000] rounded-full"
+                            class="absolute bottom-0 left-0 w-full h-[3px] bg-[#FFC000] transition-all duration-300"
+                            :class="isHome ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0'"
                         ></span>
                     </Link>
 
                     <!-- Bantuan -->
                     <Link
                         v-if="!page.props.auth.user"
-                        href="#"
+                        :href="route('bantuan')"
                         :class="[
-                            'relative text-sm transition-colors duration-300',
+                            'relative h-full flex items-center text-sm transition-colors duration-300 group',
                             isBantuan ? 'font-bold' : 'font-semibold',
                             isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
                         ]"
                     >
+                        Pusat Bantuan
                         <span
-                            v-if="isBantuan"
-                            class="absolute -bottom-2 left-0 w-full h-[3px] bg-[#FFC000] rounded-full"
+                            class="absolute bottom-0 left-0 w-full h-[3px] bg-[#FFC000] transition-all duration-300"
+                            :class="isBantuan ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0'"
                         ></span>
-                        Bantuan
                     </Link>
 
                     <!-- Aktivitas -->
@@ -657,16 +714,16 @@ const initials = computed(() => {
                         v-if="page.props.auth.user"
                         :href="route('aktivitas.hub')"
                         :class="[
-                            'relative text-sm transition-colors duration-300',
+                            'relative h-full flex items-center text-sm transition-colors duration-300 group',
                             isActivity ? 'font-bold' : 'font-semibold',
                             isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
                         ]"
                     >
-                        <span
-                            v-if="isActivity"
-                            class="absolute -bottom-2 left-0 w-full h-[3px] bg-[#FFC000] rounded-full"
-                        ></span>
                         Aktivitas
+                        <span
+                            class="absolute bottom-0 left-0 w-full h-[3px] bg-[#FFC000] transition-all duration-300"
+                            :class="isActivity ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0'"
+                        ></span>
                     </Link>
 
                     <!-- Kotak Masuk -->
@@ -674,16 +731,16 @@ const initials = computed(() => {
                         v-if="page.props.auth.user"
                         href="/chat"
                         :class="[
-                            'relative text-sm transition-colors duration-300 flex items-center gap-1.5',
+                            'relative h-full flex items-center text-sm transition-colors duration-300 gap-1.5 group',
                             isInbox ? 'font-bold' : 'font-semibold',
                             isCurrentlyTransparent ? 'text-white hover:text-white/80' : 'text-[#0A2540] hover:text-[#0A2540]/80'
                         ]"
                     >
-                        <span
-                            v-if="isInbox"
-                            class="absolute -bottom-2 left-0 w-full h-[3px] bg-[#FFC000] rounded-full"
-                        ></span>
                         Kotak Masuk
+                        <span
+                            class="absolute bottom-0 left-0 w-full h-[3px] bg-[#FFC000] transition-all duration-300"
+                            :class="isInbox ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0'"
+                        ></span>
 
                         <!-- Notification Badge -->
                         <span v-if="page.props.auth.unreadCount > 0" class="flex items-center justify-center bg-red-500 text-white text-[10px] font-bold px-1.5 min-w-[18px] h-[18px] rounded-full">
@@ -692,7 +749,7 @@ const initials = computed(() => {
                     </Link>
                     </div>
                     <!-- Language Selector Desktop -->
-                    <div
+                    <!-- <div
                         class="flex items-center gap-2 cursor-pointer transition-all duration-300 px-3 py-1.5 rounded-lg border border-transparent"
                         v-if="!page.props.auth.user"
                         :class="[
@@ -708,10 +765,50 @@ const initials = computed(() => {
                         />
                         <span class="font-semibold text-xs">ID</span>
                         <ChevronDown class="text-[10px] ml-0.5" />
-                    </div>
+                    </div> -->
 
                     <!-- Desktop User Actions -->
-                    <div class="relative flex items-center">
+                    <div class="relative flex items-center gap-2">
+
+                        <!-- Bell Notification Icon (Hanya untuk user login) -->
+                        <div v-if="page.props.auth.user" class="relative">
+                            <button
+                                @click="isNotifDropdownOpen = !isNotifDropdownOpen; isUserMenuOpen = false;"
+                                class="relative w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 hover:scale-105 focus:outline-none"
+                                :class="isCurrentlyTransparent ? 'text-white hover:bg-white/10' : 'text-[#0A2540] hover:bg-gray-100'"
+                                title="Notifikasi"
+                            >
+                                <Bell class="w-5 h-5" />
+                                <!-- Badge Unread Count -->
+                                <span
+                                    v-if="unreadCount > 0"
+                                    class="absolute -top-0.5 -right-0.5 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full px-1 shadow"
+                                >
+                                    {{ unreadCount > 99 ? '99+' : unreadCount }}
+                                </span>
+                            </button>
+
+                            <!-- Backdrop untuk tutup dropdown -->
+                            <div v-if="isNotifDropdownOpen" @click="isNotifDropdownOpen = false" class="fixed inset-0 z-40"></div>
+
+                            <!-- Dropdown Notifikasi -->
+                            <Transition
+                                enter-active-class="transition duration-200 ease-out"
+                                enter-from-class="transform scale-95 opacity-0 -translate-y-2"
+                                enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                                leave-active-class="transition duration-150 ease-in"
+                                leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                                leave-to-class="transform scale-95 opacity-0 -translate-y-2"
+                            >
+                                <div
+                                    v-if="isNotifDropdownOpen"
+                                    class="absolute top-[130%] right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 origin-top-right overflow-hidden"
+                                >
+                                    <NotificationDropdown @close="isNotifDropdownOpen = false" />
+                                </div>
+                            </Transition>
+                        </div>
+
                         <template v-if="page.props.auth.user">
                             <!-- Trigger Button -->
                             <button
@@ -904,7 +1001,7 @@ const initials = computed(() => {
                         <template v-else>
                             <button
                                 @click="openAuthModal()"
-                                class="ml-1 px-5 py-2 bg-primary hover:bg-[#e6ad00] text-white text-xs font-bold rounded-full transition-all shadow-sm"
+                                class="ml-1 px-5 py-2 bg-primary hover:bg-[#e6ad00] text-secondary text-xs font-bold rounded transition-all shadow-sm"
                             >
                                 Masuk
                             </button>
@@ -912,17 +1009,20 @@ const initials = computed(() => {
                     </div>
                 </div>
             </div>
+        </div>
+        </div>
 
-            <!-- Sub Navbar Filter (Sticky) -->
+        <!-- Sub Navbar Filter (Sticky) -->
+        <div class="hidden md:block absolute w-full left-0 -z-10 top-full pointer-events-none">
             <Transition
-                enter-active-class="transition-opacity duration-300 ease-out"
-                enter-from-class="opacity-0"
-                enter-to-class="opacity-100"
-                leave-active-class="transition-opacity duration-200 ease-in"
-                leave-from-class="opacity-100"
-                leave-to-class="opacity-0"
+                enter-active-class="transition-transform duration-300 ease-out"
+                enter-from-class="-translate-y-full"
+                enter-to-class="translate-y-0"
+                leave-active-class="transition-transform duration-200 ease-in"
+                leave-from-class="translate-y-0"
+                leave-to-class="-translate-y-full"
             >
-                <div v-if="isScrolled && isHome" class="hidden md:block w-full relative z-40 bg-white">
+                <div v-if="isScrolled && isHome" class="w-full bg-white shadow-sm border-b border-[#6C757D]/10 pointer-events-auto pb-2">
                     <StickySubNavSearch />
                 </div>
             </Transition>

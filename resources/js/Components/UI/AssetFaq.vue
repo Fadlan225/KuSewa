@@ -21,22 +21,21 @@ const toggleFaq = (index) => {
 </script>
 
 <template>
-    <div class="py-10 border-b border-gray-200">
-        <h2 class="text-2xl font-extrabold text-[#0A2540] mb-6">Pertanyaan yang Sering Diajukan (FAQ)</h2>
+    <div class="py-10 md:py-12 border-b border-gray-100">
+        <h3 class="text-[22px] font-bold text-[#222222] mb-5">Pertanyaan yang Sering Diajukan</h3>
         
         <div v-if="faqs.length > 0" class="space-y-4">
             <div 
                 v-for="(faq, index) in faqs" 
                 :key="index"
                 class="border border-gray-200 rounded-xl overflow-hidden transition-all duration-300"
-                :class="{'ring-1 ring-[#FFC000] border-[#FFC000]': openIndex === index}"
             >
                 <button 
                     @click="toggleFaq(index)"
                     class="w-full flex items-center justify-between p-5 text-left bg-white hover:bg-gray-50 transition-colors"
                 >
-                    <span class="font-bold text-[#0A2540] pr-4 text-[15px]">{{ faq.question }}</span>
-                    <ChevronDown class="text-gray-400 transition-transform duration-300"
+                    <span class="font-semibold text-[#222222] pr-4 text-[15px]">{{ faq.question }}</span>
+                    <ChevronDown class="text-gray-400 transition-transform duration-300 shrink-0 w-5 h-5"
                         :class="{'rotate-180': openIndex === index}" />
                 </button>
                 

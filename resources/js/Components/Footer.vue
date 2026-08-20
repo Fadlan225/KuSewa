@@ -4,7 +4,7 @@ import { Link } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <footer class="w-full bg-white border-t border-gray-200 py-12 font-sans">
+    <footer class="w-full bg-white border-t border-gray-200 pt-12 pb-28 md:pb-12 font-sans">
         <div class="max-w-7xl mx-auto px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10">
                 <!-- Bagian Paling Kiri: Logo & Tagline -->
@@ -16,7 +16,7 @@ import { Link } from '@inertiajs/vue3';
                         </span>
                     </Link>
                     <p class="text-sm text-gray-500 leading-relaxed max-w-sm">
-                        Platform penyewaan aset terpercaya. Temukan berbagai aset kantor, hunian, dan lahan terbaik sesuai kebutuhan Anda dengan mudah dan aman.
+                        Butuh tempat untuk mewujudkan rencana? Temukan berbagai aset sewaan di KitaSewa, dari tempat tinggal, usaha, hingga kebutuhan event dan promosi.
                     </p>
                 </div>
 
@@ -94,7 +94,7 @@ import { Link } from '@inertiajs/vue3';
             <!-- Bottom Copyright -->
             <div class="mt-12 pt-8 border-t border-gray-200 flex flex-col items-center justify-center gap-4 text-center">
                 <p class="text-sm text-gray-500">
-                    &copy; {{ new Date().getFullYear() }} Kitasewa.id. All rights reserved
+                    &copy; {{ new Date().getFullYear() }} Kitasewa.id. Hak cipta dilindungi undang-undang
                 </p>
             </div>
         </div>

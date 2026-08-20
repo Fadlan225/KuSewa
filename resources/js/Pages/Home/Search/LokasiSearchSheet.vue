@@ -19,32 +19,33 @@ const {
 <template>
     <div>
         <!-- LOKASI FULL SCREEN (Taller Bottom Sheet) -->
-        <Transition
-            enter-active-class="transition-opacity duration-300"
-            enter-from-class="opacity-0"
-            enter-to-class="opacity-100"
-            leave-active-class="transition-opacity duration-300"
-            leave-from-class="opacity-100"
-            leave-to-class="opacity-0"
-        >
-            <div v-if="isLokasiFullScreen" @click="closeLokasiFullScreen" class="fixed inset-0 bg-black/60 z-[105] md:hidden"></div>
-        </Transition>
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition-opacity duration-300 ease-out"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-200 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div v-if="isLokasiFullScreen" @click="closeLokasiFullScreen" class="fixed inset-0 bg-black/60 z-[10005] md:hidden"></div>
+            </Transition>
 
-        <Transition
-            enter-active-class="transition-transform duration-300 ease-out"
-            enter-from-class="translate-y-full"
-            enter-to-class="translate-y-0"
-            leave-active-class="transition-transform duration-200 ease-in"
-            leave-from-class="translate-y-0"
-            leave-to-class="translate-y-full"
-        >
-            <div v-if="isLokasiFullScreen" class="fixed inset-x-0 bottom-0 z-[110] flex items-end justify-center md:hidden pointer-events-none">
-                <div
-                    class="relative w-full h-[90vh] bg-[#F8F9FA] flex flex-col rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] pointer-events-auto"
-                    :style="{ transform: lokasiSheetTransform, transition: touchStartLokasiY === 0 ? 'transform 0.2s ease-out' : 'none' }"
-                >
-                    <!-- Drag Handle -->
+            <Transition
+                enter-active-class="transition-transform duration-300 ease-out"
+                enter-from-class="translate-y-full"
+                enter-to-class="translate-y-0"
+                leave-active-class="transition-transform duration-200 ease-in"
+                leave-from-class="translate-y-0"
+                leave-to-class="translate-y-full"
+            >
+                <div v-if="isLokasiFullScreen" class="fixed inset-x-0 bottom-0 z-[10010] flex items-end justify-center md:hidden pointer-events-none">
                     <div
+                        class="relative w-full h-[90vh] bg-[#F8F9FA] flex flex-col rounded-t-[32px] shadow-[0_-10px_40px_rgba(0,0,0,0.15)] pointer-events-auto"
+                        :style="{ transform: lokasiSheetTransform, transition: touchStartLokasiY === 0 ? 'transform 0.2s ease-out' : 'none' }"
+                    >
+                        <!-- Drag Handle -->
+                        <div
                         class="w-full flex justify-center pt-5 pb-5 cursor-grab active:cursor-grabbing touch-none"
                         @touchstart="onTouchStartLokasi"
                         @touchmove.prevent="onTouchMoveLokasi"
@@ -95,5 +96,6 @@ const {
                 </div>
             </div>
         </Transition>
+        </Teleport>
     </div>
 </template>

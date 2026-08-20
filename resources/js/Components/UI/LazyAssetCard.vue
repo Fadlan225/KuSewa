@@ -248,7 +248,7 @@ const periodLabel = {
     <!-- Container kartu -->
     <div
         ref="elRef"
-        class="flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col bg-white rounded-md shadow-sm border border-slate-200/60 hover:border-[#FFC000] hover:shadow-md transition-all duration-300"
+        class="relative z-0 flex-none w-[150px] sm:w-[180px] md:w-[200px] lg:w-[220px] snap-start flex flex-col bg-white rounded-md shadow-sm border border-slate-200/60 hover:border-[#FFC000] hover:shadow-md transition-all duration-300"
     >
         <!-- Skeleton sebelum masuk viewport -->
         <AssetCardSkeleton v-if="!isIntersecting" />

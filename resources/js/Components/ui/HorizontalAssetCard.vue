@@ -255,7 +255,7 @@ const availabilityText = computed(() => {
 <template>
     <div
         ref="elRef"
-        class="bg-white rounded-md shadow-sm border border-slate-200/60 hover:shadow-md hover:border-[#FFC000] transition-all flex flex-row overflow-hidden group p-2.5 md:p-3 items-center gap-3 md:gap-4 select-none [-webkit-touch-callout:none] w-full cursor-pointer"
+        class="relative z-0 bg-white rounded-md shadow-sm border border-slate-200/60 hover:shadow-md hover:border-[#FFC000] transition-all flex flex-row overflow-hidden group p-2.5 md:p-3 items-center gap-3 md:gap-4 select-none [-webkit-touch-callout:none] w-full cursor-pointer"
         @click="navigateToAsset"
     >
         <!-- Skeleton sebelum masuk viewport -->

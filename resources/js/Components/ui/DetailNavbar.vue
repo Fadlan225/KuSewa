@@ -13,10 +13,13 @@ const props = defineProps({
     sections: {
         type: Array,
         default: () => [
-            { id: 'foto', label: 'Foto' },
-            { id: 'fasilitas', label: 'Fasilitas' },
+            { id: 'foto', label: 'Foto Aset' },
+            { id: 'informasi', label: 'Informasi Umum' },
+            { id: 'fasilitas', label: 'Fasilitas Aset' },
             { id: 'lokasi', label: 'Lokasi' },
+            { id: 'kebijakan', label: 'Kebijakan' },
             { id: 'ulasan', label: 'Ulasan' },
+            { id: 'pemilik', label: 'Pemilik Aset' },
         ]
     },
     isFavorited: {
@@ -56,8 +59,8 @@ const goBack = () => {
         router.visit(props.backUrl);
         return;
     }
-    
-    if (window.history.length > 2) { 
+
+    if (window.history.length > 2) {
         window.history.back();
     } else {
         router.visit(props.backUrl);
@@ -140,7 +143,7 @@ const scrollToSection = (id) => {
     const el = document.getElementById(id);
     if (el) {
         // Offset for sticky headers: Navbar (~64px) + StickySubNavSearch (~60px) + some padding
-        const yOffset = -140; 
+        const yOffset = -140;
         const y = el.getBoundingClientRect().top + window.pageYOffset + yOffset;
         window.scrollTo({ top: y, behavior: 'smooth' });
     }
@@ -166,10 +169,12 @@ onMounted(() => {
             });
         }, observerOptions);
 
-        props.sections.forEach(section => {
-            const el = document.getElementById(section.id);
-            if (el) observer.observe(el);
-        });
+        setTimeout(() => {
+            props.sections.forEach(section => {
+                const el = document.getElementById(section.id);
+                if (el) observer.observe(el);
+            });
+        }, 100);
 
         onUnmounted(() => observer.disconnect());
     }
@@ -185,17 +190,21 @@ onUnmounted(() => {
     <nav class="sticky top-0 z-[60] bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-12 md:h-16 flex items-center justify-between w-full">
             <slot name="content">
-                <div class="flex items-center gap-6">
-                    <button v-if="showBackButton" @click="goBack" class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-gray-100 transition-colors" :class="mobileBackOnly ? 'md:hidden' : ''">
+                <div class="flex items-center gap-8 h-full">
+                    <!-- Tombol Kembali -->
+                    <button v-if="showBackButton || mobileBackOnly"
+                            @click="goBack"
+                            class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 transition-colors"
+                            :class="mobileBackOnly ? 'md:hidden' : ''">
                         <ArrowLeft class="text-[#0A2540]" />
                     </button>
 
                     <!-- Desktop Scroll Menu -->
-                    <div v-if="showSections" class="hidden md:flex gap-6 transition-all duration-300">
-                        <a v-for="section in sections" :key="section.id" :href="`#${section.id}`" 
+                    <div v-if="showSections" class="hidden md:flex gap-8 transition-all duration-300 h-full">
+                        <a v-for="section in sections" :key="section.id" :href="`#${section.id}`"
                            @click.prevent="scrollToSection(section.id)"
-                           class="text-sm transition-all duration-200 border-b-2 py-1"
-                           :class="activeSection === section.id ? 'font-extrabold text-[#0A2540] border-[#FFC000]' : 'font-bold text-gray-500 hover:text-[#0A2540] border-transparent'">
+                           class="text-[15px] transition-all duration-200 h-full flex items-center border-b-[4px]"
+                           :class="activeSection === section.id ? 'font-bold text-[#d4a000] border-[#FFC000]' : 'font-medium text-gray-600 hover:text-[#0A2540] border-transparent'">
                             {{ section.label }}
                         </a>
                     </div>

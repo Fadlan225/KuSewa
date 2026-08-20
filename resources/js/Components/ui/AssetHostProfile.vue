@@ -45,9 +45,9 @@ const startChat = () => {
 </script>
 
 <template>
-    <div>
-        <!-- Info Host (Desktop & Mobile sama saja) -->
-        <div class="flex items-center gap-4 pb-8 border-b border-gray-200">
+    <div class="py-10 md:py-12 scroll-mt-32 md:scroll-mt-40">
+        <!-- HEADER DESKTOP & MOBILE -->
+        <div class="flex items-center gap-4 pb-10 md:pb-12 border-b border-gray-100">
             <div class="w-14 h-14 rounded-full overflow-hidden shrink-0">
                 <img
                     v-if="ownerProfile?.user?.profile_photo"
@@ -82,8 +82,8 @@ const startChat = () => {
             </div>
         </div>
 
-        <!-- Hubungi Pemilik Card (MOBILE ONLY) -->
-        <div v-if="ownerProfile" class="block lg:hidden mt-6 pb-8 border-b border-gray-200">
+        <!-- Hubungi Pemilik        <!-- DESKRIPSI MOBILE -->
+        <div v-if="ownerProfile" class="block lg:hidden mt-6 pb-10 md:pb-12 border-b border-gray-100">
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
                 <h3 class="text-lg font-bold text-[#0A2540] mb-4">Hubungi Pemilik</h3>
                 <div class="flex items-center gap-3 border-b-2 border-gray-800 pb-2 focus-within:border-[#FFC000] transition-colors">

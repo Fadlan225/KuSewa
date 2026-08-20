@@ -10,6 +10,7 @@ class asset_type extends Model
         'category_id',
         'name',
         'allow_units',
+        'payment_countdown_minutes',
     ];
 
     public function category()

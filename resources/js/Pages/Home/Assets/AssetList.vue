@@ -8,6 +8,10 @@ import AssetCardSkeleton from '@/Components/ui/AssetCardSkeleton.vue';
 import LazyAssetCard from '@/Components/ui/LazyAssetCard.vue';
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
+const refreshPage = () => {
+    window.location.reload();
+};
+
 const props = defineProps({
     categories: {
         type: Array,
@@ -37,7 +41,9 @@ const emit = defineEmits(['goHome', 'resetFilter', 'clearSearch']);
 const localSections = ref([]);
 const isLocating = ref(true);
 
-onMounted(() => {
+import { useLocationPermission } from '@/Composables/useLocationPermission';
+
+onMounted(async () => {
     // Inisialisasi localSections dengan data dari props
     localSections.value = [...props.sections];
 
@@ -45,6 +51,15 @@ onMounted(() => {
     const nearbyIndex = localSections.value.findIndex(s => s.id === 'nearby');
     if (nearbyIndex !== -1) {
         if (navigator.geolocation) {
+            const { requestLocationPermission } = useLocationPermission();
+            const allowed = await requestLocationPermission();
+            
+            if (!allowed) {
+                isLocating.value = false;
+                localSections.value.splice(nearbyIndex, 1);
+                return;
+            }
+
             navigator.geolocation.getCurrentPosition(
                 async (position) => {
                     localStorage.removeItem('location_denied');
@@ -280,13 +295,13 @@ const getCategoryImage = (categoryName) => {
                 <EmptyStateIcon class="w-48 h-48 object-contain mb-6" />
 
                 <template v-if="props.emptyStateType === 'no-data'">
-                    <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum Ada Aset</h2>
-                    <p class="text-sm text-[#6C757D] mb-6">Aset sedang disiapkan.</p>
+                    <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada aset yang tersedia</h2>
+                    <p class="text-sm text-[#6C757D] mb-6 max-w-sm">Aset yang kamu cari mungkin sedang disewa. Coba lagi nanti untuk melihat ketersediaannya.</p>
                     <button
-                        @click="$emit('goHome')"
+                        @click="refreshPage"
                         class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors"
                     >
-                        Ke Beranda
+                        Segarkan
                     </button>
                 </template>
 

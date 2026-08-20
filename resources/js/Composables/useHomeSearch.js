@@ -1,5 +1,6 @@
 import { ref, computed, nextTick, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
+import { useLocationPermission } from '@/Composables/useLocationPermission';
 
 // Global singleton state for Home Page Search
 // We keep them outside the function so they are shared across all components
@@ -744,9 +745,17 @@ export function useHomeSearch() {
     const page = usePage();
 
     const hasFetchedLocation = ref(false);
+    
+    // Import location modal hook
+    const { requestLocationPermission } = useLocationPermission();
 
-    const initUserLocation = (force = false) => {
+    const initUserLocation = async (force = false) => {
         if ((!hasFetchedLocation.value || force) && typeof window !== 'undefined' && navigator.geolocation) {
+            
+            // Tanyakan via modal jika browser belum pernah diberi izin sebelumnya
+            const allowed = await requestLocationPermission(force);
+            if (!allowed) return;
+
             hasFetchedLocation.value = true;
             navigator.geolocation.getCurrentPosition(async (position) => {
                 try {

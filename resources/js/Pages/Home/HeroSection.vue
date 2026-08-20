@@ -30,11 +30,11 @@ const {
                 <!-- Teks Judul & Subjudul -->
                 <div class="max-w-3xl text-center md:text-left">
                     <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight">
-                        Semua Kebutuhan <span class="text-[#FFC000]">Sewa, </span><br class="hidden sm:block">
-                        <span class="text-[#FFC000]">Dalam</span> Satu Platform
+                        Temukan <span class="text-[#FFC000]">Aset,</span> <br>
+                        <span class="text-[#FFC000]">Wujudkan</span> Rencana
                     </h1>
-                    <p class="mt-2 sm:mt-4 text-xs sm:text-sm md:text-base lg:text-lg text-white/90 font-medium max-w-xl leading-relaxed mx-auto md:mx-0">
-                        Temukan lahan, gedung, gudang, baliho, hunian, dan berbagai aset lainnya dengan mudah.
+                    <p class="mt-3 sm:mt-4 text-xs sm:text-sm md:text-base text-white/80 font-normal max-w-xl leading-relaxed mx-auto md:mx-0 tracking-wide">
+                        Butuh tempat untuk mewujudkan rencana? Temukan aset yang tepat di KitaSewa.
                     </p>
                 </div>
 
@@ -53,7 +53,7 @@ const {
                             class="w-full bg-white text-xs font-medium rounded-full pl-10 pr-12 py-3.5 shadow-lg hover:shadow-xl active:scale-[0.98] transition-all cursor-pointer flex items-center relative overflow-hidden group"
                             style="min-height: 44px;"
                         >
-                            <span v-if="keywordQuery" class="truncate text-[#0A2540] relative z-10">{{ keywordQuery }}</span>
+                              <span v-if="keywordQuery" class="truncate text-[#0A2540] relative z-10">{{ keywordQuery }}</span>
                             <AnimatedPlaceholder
                                 v-else
                                 :placeholders="page.props.dynamicPlaceholders"

@@ -99,7 +99,16 @@ onUnmounted(() => {
 <template>
     <div class="hidden md:flex flex-col w-full max-w-[850px] relative z-[70]">
         <!-- Overlay untuk menutup modal jika di klik di luar -->
-        <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/5 transition-opacity"></div>
+        <Transition
+            enter-active-class="transition-opacity duration-300 ease-out"
+            enter-from-class="opacity-0"
+            enter-to-class="opacity-100"
+            leave-active-class="transition-opacity duration-200 ease-in"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"></div>
+        </Transition>
 
         <!-- Container untuk Card Utama & Tombol Search (Desain Kapsul) -->
         <div class="bg-white rounded-full p-1.5 shadow-lg border border-gray-200/80 flex flex-row items-center justify-between w-full relative z-50 transition-all duration-300">

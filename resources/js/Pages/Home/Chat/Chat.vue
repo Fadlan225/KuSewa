@@ -1,16 +1,11 @@
 <template>
-  <Head title="Kotak Masuk" />
-  <!-- Main Layout -->
-  <div class="fixed inset-0 flex flex-col bg-[#F0F2F5] font-sans overflow-hidden">
-    <!-- Navbar Component for Top (Hidden on mobile if chat is open) -->
-    <div :class="{'hidden md:block': isMobileChatOpen}">
-      <Navbar class="z-20 shrink-0" />
-    </div>
-
-    <!-- Main Content wrapper, adjusting padding for Navbar/Bottombar depending on state -->
+  <AppLayout :hideNavbar="isMobileChatOpen" :hideBottombar="isMobileChatOpen">
+    <Head title="Kotak Masuk" />
+    
+    <!-- Main Content wrapper -->
     <div
-        class="flex flex-1 overflow-hidden relative max-w-[1600px] mx-auto w-full transition-all"
-        :class="isMobileChatOpen ? 'pt-0 pb-0' : 'pt-16 md:pt-20 pb-20 md:pb-0'"
+        class="flex overflow-hidden relative max-w-[1600px] mx-auto w-full transition-all bg-[#F0F2F5] h-[100dvh] md:h-[calc(100dvh-64px)]"
+        :class="isMobileChatOpen ? 'pt-0 pb-0' : 'pb-16 md:pb-0'"
     >
       <!-- 1. Sidebar Chat (Daftar Chat) -->
       <ChatList
@@ -74,11 +69,7 @@
 
     </div>
 
-    <!-- Bottombar Component for Mobile Bottom Navigation -->
-    <div :class="{'hidden md:block': isMobileChatOpen}">
-      <Bottombar />
-    </div>
-  </div>
+  </AppLayout>
 </template>
 
 <script setup>
@@ -87,8 +78,7 @@ import { ref, onMounted, computed, nextTick, watch } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { Head, Link } from '@inertiajs/vue3';
-import Navbar from '@/Components/Navbar.vue';
-import Bottombar from '@/Components/Bottombar.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
 import ChatList from './ChatList.vue';
 import ChatRoom from './ChatRoom.vue';
 import MessageInfoModal from '@/Components/ui/MessageInfoModal.vue';

@@ -59,8 +59,8 @@ const getSpecKeys = computed(() => Object.keys(specification.value));
 </script>
 
 <template>
-    <div v-if="getSpecKeys.length > 0" class="py-6 border-b border-gray-200">
-        <h3 class="text-lg font-bold mb-4">Informasi Umum</h3>
+    <div v-if="getSpecKeys.length > 0" class="py-10 md:py-12 border-b border-gray-100">
+        <h3 class="text-[22px] font-bold text-[#222222] mb-6">Spesifikasi Aset</h3>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-y-6 gap-x-4">
             <div v-for="key in getSpecKeys" :key="key" class="flex flex-col">
                 <span class="text-gray-500 text-sm mb-1">{{ formatSpecKey(key) }}</span>

@@ -101,7 +101,22 @@ onUnmounted(() => {
 
 <template>
     <!-- Full Width Sticky Wrapper -->
-    <div class="w-full bg-white  border-b border-[#6C757D]/10 py-3 relative z-[70]">
+    <div class="w-full bg-white border-b border-[#6C757D]/10 py-3 relative z-[70]">
+        
+        <!-- Overlay for closing the modal on outside click -->
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition-opacity duration-300 ease-out"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-200 ease-in"
+                leave-from-class="opacity-100"
+                leave-to-class="opacity-0"
+            >
+                <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm cursor-default"></div>
+            </Transition>
+        </Teleport>
+
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             <!-- MOBILE VIEW: Search Bar like Image 3 -->
@@ -129,8 +144,6 @@ onUnmounted(() => {
 
             <!-- DESKTOP VIEW: The original pill search bar -->
             <div class="hidden lg:flex flex-col w-full relative mx-auto">
-        <!-- Overlay untuk menutup modal jika di klik di luar -->
-        <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-40 bg-black/5 transition-opacity"></div>
 
         <!-- Card Utama (Slim & Compact) -->
         <div class="flex flex-row items-center justify-between w-full transition-all duration-300 relative z-50 gap-3">
@@ -189,8 +202,6 @@ onUnmounted(() => {
 
         </div>
 
-        <!-- Overlay for closing the modal on outside click -->
-        <div v-if="desktopActiveMenu" @click="desktopActiveMenu = null" class="fixed inset-0 z-30 cursor-default"></div>
 
         <!-- DESKTOP MODAL DROPDOWN -->
         <Transition

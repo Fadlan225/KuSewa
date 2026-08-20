@@ -273,7 +273,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
         <KeywordSearchSheet :search-history="props.searchHistory" :trending="props.trending" />
 
         <!-- DESKTOP STICKY SUB-NAV SEARCH -->
-        <div class="lg:sticky lg:top-[64px] z-[60] w-full">
+        <div class="lg:sticky lg:top-[96px] z-[60] w-full">
             <StickySubNavSearch />
         </div>
 
@@ -282,7 +282,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
                 <!-- SIDEBAR KIRI (DESKTOP) -->
-                <div class="hidden lg:block lg:col-span-3 space-y-6 lg:sticky lg:top-[140px] h-fit max-h-[calc(100vh-160px)] overflow-y-auto hide-scrollbar pb-6 pr-4 border-r border-gray-100 shadow-[4px_0_15px_-5px_rgba(0,0,0,0.05)]">
+                <div class="hidden lg:block lg:col-span-3 space-y-6 lg:sticky lg:top-[172px] h-fit max-h-[calc(100vh-160px)] overflow-y-auto hide-scrollbar pb-6 pr-4 border-r border-gray-100 shadow-[4px_0_15px_-5px_rgba(0,0,0,0.05)]">
 
                     <!-- Dummy Map -->
                     <div class="bg-white rounded-2xl p-4 flex flex-col items-center justify-center text-center shadow-sm overflow-hidden relative">
@@ -368,24 +368,21 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                 <!-- CONTENT KANAN -->
                 <div class="col-span-1 lg:col-span-9">
                     <!-- HEADER HASIL & SORTING -->
-                    <div class="flex flex-row items-center justify-between mb-6 gap-4">
-                        <div class="flex-1 min-w-0">
-                            <h1 class="text-lg sm:text-2xl font-extrabold text-[#0A2540] truncate">{{ searchQuery || 'Semua Lokasi' }}</h1>
-                            <p class="text-[11px] sm:text-sm text-[#6C757D] mt-0.5">{{ props.assets?.total ?? assetData.length }} Aset ditemukan</p>
+                    <div class="flex flex-row items-center justify-between gap-4 lg:sticky lg:top-[170px] z-30 bg-[#F8F9FA] pt-3 pb-3 border-b border-gray-200/60 -mt-3 mb-4">
+                        <div class="flex flex-col min-w-0">
+                            <h1 class="text-base sm:text-[17px] font-bold text-[#1D1D1F] leading-tight truncate">{{ searchQuery || 'Semua Lokasi' }}</h1>
+                            <p class="text-[11px] sm:text-xs font-medium text-[#6C757D] mt-0.5">{{ props.assets?.total ?? assetData.length }} properti ditemukan</p>
                         </div>
 
-                        <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                            <span class="text-xs font-bold text-[#6C757D] hidden sm:inline">Urutkan:</span>
-                            <div class="relative w-36 sm:w-48 z-40">
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <span class="text-[11px] sm:text-xs font-medium text-[#6C757D] hidden sm:inline">Urutkan:</span>
+                            <div class="relative z-40">
                                 <button
                                     @click="isSortOpenDesktop = !isSortOpenDesktop"
-                                    class="w-full flex items-center justify-between rounded-xl bg-slate-100/80 hover:bg-slate-200/60 border-0 px-3 py-2 text-xs font-medium text-[#1D1D1F] transition-colors"
+                                    class="flex items-center gap-1.5 rounded-full bg-[#FFF9E6] hover:bg-[#FFF4CC] border border-[#FFC000]/30 px-3 py-1.5 text-[11px] sm:text-xs font-bold text-[#0A2540] transition-colors"
                                 >
-                                    <div class="flex items-center gap-2">
-                                        <AppIcon iconClass="text-slate-500 w-3 text-center" :class="sortOptions.find(o => o.value === sortOption)?.icon" />
-                                        {{ sortOptions.find(o => o.value === sortOption)?.label || 'Urutkan' }}
-                                    </div>
-                                    <ChevronDown class="text-slate-400 text-[10px] transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''" />
+                                    {{ sortOptions.find(o => o.value === sortOption)?.label || 'Populer' }}
+                                    <ChevronDown class="text-[#0A2540] w-3.5 h-3.5 transition-transform" :class="isSortOpenDesktop ? 'rotate-180' : ''" />
                                 </button>
 
                                 <Transition

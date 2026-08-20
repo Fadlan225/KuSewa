@@ -9,7 +9,7 @@ defineProps({
 </script>
 
 <template>
-    <div class="py-10 border-b border-gray-200">
+    <div class="py-10 md:py-12 border-b border-gray-100">
         <h3 class="text-2xl font-extrabold text-[#0A2540] mb-6">Kebijakan & Informasi Lainnya</h3>
         
         <div v-if="policies && policies.length > 0" class="flex flex-col w-full border border-gray-100 rounded-xl overflow-hidden">

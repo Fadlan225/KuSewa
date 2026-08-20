@@ -5,7 +5,6 @@ import { ref, watch, defineAsyncComponent } from 'vue';
 
 import HeroSection from './HeroSection.vue';
 import AssetList from './Assets/AssetList.vue';
-import Footer from '@/Components/Footer.vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 
 // ── Lazy load bottom sheets: JS tidak di-parse sampai pertama kali dibuka ──
@@ -47,8 +46,6 @@ const props = defineProps({
         <main class="w-full max-w-7xl mx-auto pb-24">
             <AssetList :sections="props.sections" :categories="props.allCategories" />
         </main>
-
-        <Footer />
     </AppLayout>
 </template>
 

@@ -208,11 +208,7 @@ class HomeController extends Controller
         // Jika tidak ada data sama sekali, beri fallback
         if ($placeholders->isEmpty()) {
             return [
-                "Rumah Asri Balikpapan",
-                "Gudang Logistik Samarinda",
-                "Apartemen Premium",
-                "Ruang Kantor Strategis",
-                "Lahan Kosong Siap Bangun"
+                "Cari aset untuk wujudkan rencanamu..."
             ];
         }
 

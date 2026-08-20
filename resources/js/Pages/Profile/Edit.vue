@@ -133,7 +133,7 @@ const accountMenuItems = [
 ];
 
 const settingsMenuItems = [
-    { label: 'Bahasa', icon: 'fa-solid fa-globe', route: '#' },
+    // { label: 'Bahasa', icon: 'fa-solid fa-globe', route: '#' },
     { label: 'Notifikasi', icon: 'fa-regular fa-bell', route: '#' },
 ];
 

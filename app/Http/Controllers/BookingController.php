@@ -283,7 +283,7 @@ class BookingController extends Controller
                     'booking_id' => $booking->id,
                     'payment_method' => $validated['payment_method'],
                     'payment_status' => 'pending',
-                    'expires_at' => now()->addHours(24),
+                    'expires_at' => now()->addMinutes($asset->type->payment_countdown_minutes ?? 1440),
                 ]);
 
                 return $payment;

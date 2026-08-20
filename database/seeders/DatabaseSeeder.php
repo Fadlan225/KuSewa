@@ -24,17 +24,18 @@ class DatabaseSeeder extends Seeder
             AssetTypeFacilitySeeder::class, // 184 Aturan fasilitas per asset type
 
             // ── Users & Profiles ───────────────────────────────────────────
-            UsersSeeder::class,             // 1 admin + 5 owner + 5 customer
-            OwnerProfileSeeder::class,      // 5 profil owner (verified)
-            BankAccountSeeder::class,       // 25 Rekening bank owner
+            AdminSeeder::class,             // 1 akun admin khusus
+            // UsersSeeder::class,             // 1 admin + 5 owner + 5 customer
+            // OwnerProfileSeeder::class,      // 5 profil owner (verified)
+            // BankAccountSeeder::class,       // 25 Rekening bank owner
 
             // ── Assets & Images ────────────────────────────────────────────
-            AssetSeeder::class,             
-            AssetUnitSeeder::class,         
-            AssetFacilitySeeder::class,     
-            GaleryCategorySeeder::class,    
-            AssetImageSeeder::class,        
-            AssetPricingSeeder::class,      
+            // AssetSeeder::class,
+            // AssetUnitSeeder::class,
+            // AssetFacilitySeeder::class,
+            // GaleryCategorySeeder::class,
+            // AssetImageSeeder::class,
+            // AssetPricingSeeder::class,
 
             // // ── Transactions ───────────────────────────────────────────────
             // BookingSeeder::class,           // 600 booking (10/20/60/10%)

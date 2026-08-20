@@ -175,12 +175,34 @@ class AssetController extends Controller
         // Fetch nearby places (do not sync from OSM on page load to prevent blocking)
         $nearbyPlaces = \App\Services\OpenStreetMapService::getNearbyPlaces($asset->latitude, $asset->longitude, $asset->id, 3000, false);
 
+        // Fetch similar assets (recommendations)
+        $similarAssets = \App\Models\asset::where('status', 'approved')
+            ->where('id', '!=', $asset->id)
+            ->where('asset_type_id', $asset->asset_type_id)
+            ->where('city_code', $asset->city_code)
+            ->with([
+                'thumbnailImages' => function($q) {
+                    $q->select('id', 'asset_id', 'image')->orderBy('is_thumbnail', 'desc')->limit(3);
+                },
+                'city:code,name', 
+                'province:code,name', 
+                'district:code,name',
+                'type:id,name,allow_units,category_id',
+                'defaultPricing:id,asset_id,price,rental_unit'
+            ])
+            ->withAvg('reviews', 'rating')
+            ->withCount('reviews')
+            ->inRandomOrder()
+            ->take(8)
+            ->get();
+
         return inertia('Home/Assets/Show', [
-            'asset'       => $asset,
-            'serviceFee'  => $serviceFee,
-            'bookedDates' => $bookedDates,
-            'assetView'   => $assetView,
-            'nearbyPlaces'=> $nearbyPlaces,
+            'asset'         => $asset,
+            'serviceFee'    => $serviceFee,
+            'bookedDates'   => $bookedDates,
+            'assetView'     => $assetView,
+            'nearbyPlaces'  => $nearbyPlaces,
+            'similarAssets' => $similarAssets,
             'allCategories' => \App\Models\asset_category::select(['id', 'name', 'icon'])
                                 ->with(['types:id,category_id,name,allow_units'])
                                 ->get(),
