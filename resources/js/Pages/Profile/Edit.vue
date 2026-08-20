@@ -411,7 +411,7 @@ const requestLocationPermission = () => {
                 <div class="bg-white rounded-2xl max-w-sm w-full p-6 sm:p-8 shadow-xl transform transition-all duration-300 text-center">
                     <h2 class="text-xl font-bold text-gray-900">Yakin ingin keluar dari akun?</h2>
                     <p class="mt-2 text-sm text-gray-600">
-                        Kamu tetap bisa menjelajahi KuSewa, tetapi perlu login kembali untuk melakukan booking atau mengelola aset.
+                        Kamu tetap bisa menjelajahi KitaSewa, tetapi perlu login kembali untuk melakukan booking atau mengelola aset.
                     </p>
 
                     <div class="mt-8 flex flex-col gap-3">

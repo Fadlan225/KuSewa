@@ -149,7 +149,7 @@ const bookingSubMenu = computed(() => [
         :subMenu="bookingSubMenu"
         subMenuParentRouteName="owner.bookings*"
     >
-        <Head title="Detail Pesanan - kusewa.id" />
+        <Head title="Detail Pesanan - kitasewa.id" />
 
         <div class="max-w-3xl mx-auto space-y-5 mt-2">
 

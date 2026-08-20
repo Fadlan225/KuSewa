@@ -363,7 +363,7 @@ const handleGoogleLogin = () => {
 
             <!-- STEP: EMAIL -->
             <div v-if="step === 'email'" class="animate-fade-in">
-                <h3 class="text-xl font-extrabold mb-2">Selamat Datang di KuSewa</h3>
+                <h3 class="text-xl font-extrabold mb-2">Selamat Datang di KitaSewa</h3>
                 <p class="text-sm text-[#6C757D] mb-6">Masukkan email Anda untuk masuk atau mendaftar.</p>
 
                 <div class="space-y-4">

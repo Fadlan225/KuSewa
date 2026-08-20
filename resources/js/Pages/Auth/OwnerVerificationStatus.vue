@@ -13,7 +13,7 @@ const props = defineProps({
 </script>
 
 <template>
-    <Head title="Status Verifikasi Owner - kusewa.id" />
+    <Head title="Status Verifikasi Owner - kitasewa.id" />
 
     <AppLayout hideNavbar hideBottombar>
         <DetailNavbar :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />

@@ -27,9 +27,9 @@ provide('initialAuthData', initialAuthData);
             
             <!-- Absolute Top Left Logo for Desktop -->
             <Link :href="route('Home')" class="absolute top-10 left-6 lg:left-8 items-center gap-2.5 hidden md:flex z-50">
-                <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-9 w-auto brightness-0 invert" />
+                <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-9 w-auto brightness-0 invert" />
                 <span class="font-bold text-2xl text-white">
-                    kusewa<span class="text-[#FFC000]">.id</span>
+                    kitasewa<span class="text-[#FFC000]">.id</span>
                 </span>
             </Link>
 
@@ -83,14 +83,14 @@ provide('initialAuthData', initialAuthData);
                     <!-- Back Button (Desktop) -->
                     <Link :href="route('Home')" class="hidden md:flex items-center gap-2 text-white hover:text-[#FFC000] font-medium text-sm mb-4 transition-colors w-fit">
                         <ArrowLeft class="" />
-                        Ke Halaman Utama KuSewa
+                        Ke Halaman Utama KitaSewa
                     </Link>
 
                     <div class="md:hidden text-center mb-8">
                         <Link :href="route('Home')" class="inline-flex items-center gap-2">
-                            <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-8 w-auto brightness-0 invert" />
+                            <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-8 w-auto brightness-0 invert" />
                             <span class="font-bold text-xl text-white">
-                                kusewa<span class="text-[#FFC000]">.id</span>
+                                kitasewa<span class="text-[#FFC000]">.id</span>
                             </span>
                         </Link>
                     </div>

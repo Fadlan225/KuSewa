@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Cache;
 class OpenStreetMapService
 {
     /**
-     * Map OSM tags to KuSewa categories
+     * Map OSM tags to KitaSewa categories
      */
     protected static $categoryMapping = [
         'health' => [
@@ -161,7 +161,7 @@ class OpenStreetMapService
 
         try {
             $response = Http::timeout(30)
-                ->withHeaders(['User-Agent' => 'KuSewa/1.0'])
+                ->withHeaders(['User-Agent' => 'KitaSewa/1.0'])
                 ->get($overpassUrl, [
                     'data' => $overpassQuery
                 ]);
@@ -229,7 +229,7 @@ class OpenStreetMapService
     }
 
     /**
-     * Determine KuSewa category based on OSM tags
+     * Determine KitaSewa category based on OSM tags
      */
     protected static function determineCategory($tags)
     {

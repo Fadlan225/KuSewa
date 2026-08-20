@@ -200,7 +200,7 @@ const showUnlinkGoogleModal = ref(false);
             <div class="p-5 sm:p-6 border border-gray-200/80 rounded-2xl shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] bg-white transition-all hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]">
                 <div class="mb-4">
                     <h3 class="text-lg font-bold text-[#1D1D1F]">Akun yang Terhubung</h3>
-                    <p class="text-[13px] text-gray-500 mt-1">Masuk lebih mudah dengan menghubungkan akun sosial Anda ke KuSewa.</p>
+                    <p class="text-[13px] text-gray-500 mt-1">Masuk lebih mudah dengan menghubungkan akun sosial Anda ke KitaSewa.</p>
                 </div>
 
                 <div class="border-t border-gray-100 pt-4 flex items-center justify-between">

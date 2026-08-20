@@ -266,7 +266,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
 
 <template>
     <AppLayout>
-        <Head :title="searchTitle + ' - KuSewa'" />
+        <Head :title="searchTitle + ' - KitaSewa'" />
 
         <!-- Mobile Search Sheet Component -->
         <MobileSearchSheet />

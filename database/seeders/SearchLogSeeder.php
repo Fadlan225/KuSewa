@@ -47,7 +47,7 @@ class SearchLogSeeder extends Seeder
         \DB::statement('SET FOREIGN_KEY_CHECKS=1');
 
         $customers = DB::table('users')
-            ->where('email', 'like', 'customer%@kusewa.com')
+            ->where('email', 'like', 'customer%@kitasewa.com')
             ->orderBy('id')
             ->get();
 

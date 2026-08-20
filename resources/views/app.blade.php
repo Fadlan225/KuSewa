@@ -10,11 +10,11 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <link rel="icon" type="image/svg+xml" href="{{ asset('kusewa-logo.png') }}">
-        <meta property="og:title" content="KuSewa | Platform Penyewaan Aset Tak Bergerak">
+        <link rel="icon" type="image/svg+xml" href="{{ asset('kitasewa-logo.png') }}">
+        <meta property="og:title" content="KitaSewa | Platform Penyewaan Aset Tak Bergerak">
         <meta property="og:description" content="Lahan kosong, baliho strategis, apartemen premium, dan ruang komersial dalam satu platform.">
         <meta property="og:image" content="{{ asset('logo.png') }}">
-        {{-- <meta property="og:url" content="https://kusewa.com/"> --}}
+        {{-- <meta property="og:url" content="https://kitasewa.com/"> --}}
         <meta property="og:type" content="website">
 
         <!-- Scripts -->

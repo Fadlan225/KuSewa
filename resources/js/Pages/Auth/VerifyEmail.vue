@@ -28,9 +28,9 @@ provide('initialAuthData', initialAuthData);
                 <div class="flex-1 text-left max-w-lg hidden md:block">
                     <!-- Logo -->
                     <Link :href="route('Home')" class="flex items-center gap-2.5 mb-10 group">
-                        <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-9 w-auto brightness-0 invert group-hover:scale-105 transition-transform" />
+                        <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-9 w-auto brightness-0 invert group-hover:scale-105 transition-transform" />
                         <span class="font-bold text-2xl text-white">
-                            kusewa<span class="text-[#FFC000]">.id</span>
+                            kitasewa<span class="text-[#FFC000]">.id</span>
                         </span>
                     </Link>
 
@@ -47,14 +47,14 @@ provide('initialAuthData', initialAuthData);
                     <!-- Back Button (Desktop) -->
                     <Link :href="route('Home')" class="hidden md:flex items-center gap-2 text-white hover:text-[#FFC000] font-medium text-sm mb-4 transition-colors w-fit">
                         <ArrowLeft class="" />
-                        Ke Halaman Utama KuSewa
+                        Ke Halaman Utama KitaSewa
                     </Link>
 
                     <div class="md:hidden text-center mb-8">
                         <Link :href="route('Home')" class="inline-flex items-center gap-2">
-                            <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-8 w-auto brightness-0 invert" />
+                            <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-8 w-auto brightness-0 invert" />
                             <span class="font-bold text-xl text-white">
-                                kusewa<span class="text-[#FFC000]">.id</span>
+                                kitasewa<span class="text-[#FFC000]">.id</span>
                             </span>
                         </Link>
                     </div>

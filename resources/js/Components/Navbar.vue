@@ -181,7 +181,7 @@ const initials = computed(() => {
                         <div v-if="!isScrolled" key="mobile-logo" class="flex justify-between items-center w-full">
                             <Link :href="route('Home')" class="flex items-center gap-2">
                                 <img
-                                    src="/kusewa-logo.png"
+                                    src="/kitasewa-logo.png"
                                     alt="logo"
                                     :class="[
                                         'h-8 w-auto object-contain transition-all duration-300',
@@ -194,7 +194,7 @@ const initials = computed(() => {
                                         isCurrentlyTransparent ? 'text-white' : 'text-[#0A2540]'
                                     ]"
                                 >
-                                    kusewa<span class="text-[#FFC000]">.id</span>
+                                    kitasewa<span class="text-[#FFC000]">.id</span>
                                 </span>
                             </Link>
 
@@ -273,7 +273,7 @@ const initials = computed(() => {
                     <!-- Logo Desktop -->
                     <Link :href="route('Home')" class="flex items-center gap-2">
                         <img
-                            src="/kusewa-logo.png"
+                            src="/kitasewa-logo.png"
                             alt="logo"
                             :class="[
                                 'h-8 w-auto object-contain transition-all duration-300',
@@ -286,7 +286,7 @@ const initials = computed(() => {
                                 isCurrentlyTransparent ? 'text-white' : 'text-[#0A2540]'
                             ]"
                         >
-                            kusewa<span class="text-[#FFC000]">.id</span>
+                            kitasewa<span class="text-[#FFC000]">.id</span>
                         </span>
                     </Link>
 

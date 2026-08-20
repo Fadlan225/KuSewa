@@ -292,8 +292,8 @@ const copyCode = async () => {
 
                             <!-- Logo Badge -->
                             <div class="absolute top-5 right-5 flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/20 shadow-sm">
-                                <span class="font-extrabold text-white text-xs tracking-tighter">kusewa</span>
-                                <img src="/kusewa-logo.png" alt="Logo" class="h-4 w-auto object-contain drop-shadow-md">
+                                <span class="font-extrabold text-white text-xs tracking-tighter">kitasewa</span>
+                                <img src="/kitasewa-logo.png" alt="Logo" class="h-4 w-auto object-contain drop-shadow-md">
                             </div>
                         </div>
 

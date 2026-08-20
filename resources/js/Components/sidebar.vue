@@ -80,9 +80,9 @@ const handleLogout = () => {
         <!-- Brand Logo -->
         <div class="flex items-center px-2 py-1 mb-6 shrink-0 transition-all duration-300" :class="isCollapsed ? 'justify-center' : 'justify-start'">
             <Link :href="route('Home') || '/'" class="flex items-center gap-2 transition-transform hover:scale-[1.02] duration-200 overflow-hidden">
-                <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-6 w-auto object-contain shrink-0" />
+                <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain shrink-0" />
                 <span v-if="!isCollapsed" class="font-black text-lg tracking-tight text-[#0A2540] mt-0.5 whitespace-nowrap transition-opacity duration-300">
-                    kusewa<span class="text-[#FFC000]">.id</span>
+                    kitasewa<span class="text-[#FFC000]">.id</span>
                 </span>
             </Link>
         </div>

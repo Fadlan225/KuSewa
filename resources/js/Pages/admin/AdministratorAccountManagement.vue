@@ -156,7 +156,7 @@ const addAdmin = () => {
                     </div>
                     <div class="grid grid-cols-1 gap-4">
                         <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Email</label>
-                        <input v-model="form.email" type="email" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20" placeholder="admin@kusewa.id" />
+                        <input v-model="form.email" type="email" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20" placeholder="admin@kitasewa.id" />
                         <p v-if="form.errors.email" class="mt-2 text-[10px] text-rose-600">{{ form.errors.email }}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-4">

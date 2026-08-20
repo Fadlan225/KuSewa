@@ -202,7 +202,7 @@ const currentErrors = () => {
 </script>
 
 <template>
-    <Head title="Pendaftaran Owner - kusewa.id" />
+    <Head title="Pendaftaran Owner - kitasewa.id" />
 
     <AppLayout hideNavbar hideBottombar>
         <DetailNavbar :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />

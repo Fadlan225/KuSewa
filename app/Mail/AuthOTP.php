@@ -40,7 +40,7 @@ class AuthOTP extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Kode Verifikasi KuSewa Anda',
+            subject: 'Kode Verifikasi KitaSewa Anda',
         );
     }
 

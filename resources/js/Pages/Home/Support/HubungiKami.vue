@@ -33,12 +33,12 @@ const submitMasalah = () => {
 </script>
 
 <template>
-    <Head title="Hubungi Kami - KuSewa" />
+    <Head title="Hubungi Kami - KitaSewa" />
     <AppLayout>
         
         <div class="bg-[var(--color-secondary)] pt-12 pb-24 px-4 sm:px-6 lg:px-8 text-center relative">
             <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Hubungi Kami</h1>
-            <p class="text-white/80 max-w-2xl mx-auto">Ada pertanyaan atau butuh bantuan terkait KuSewa? Jangan ragu untuk menghubungi kami melalui informasi di bawah atau mengisi form yang tersedia.</p>
+            <p class="text-white/80 max-w-2xl mx-auto">Ada pertanyaan atau butuh bantuan terkait KitaSewa? Jangan ragu untuk menghubungi kami melalui informasi di bawah atau mengisi form yang tersedia.</p>
         </div>
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-12 relative z-10 pb-20">
@@ -56,8 +56,8 @@ const submitMasalah = () => {
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-gray-900">Email</h4>
-                                    <p class="text-gray-500 text-sm mt-1">support@kusewa.com</p>
-                                    <p class="text-gray-500 text-sm">admin@kusewa.com</p>
+                                    <p class="text-gray-500 text-sm mt-1">support@kitasewa.com</p>
+                                    <p class="text-gray-500 text-sm">admin@kitasewa.com</p>
                                 </div>
                             </div>
                             
@@ -91,7 +91,7 @@ const submitMasalah = () => {
                                 <div>
                                     <h4 class="font-semibold text-gray-900">Kantor Pusat</h4>
                                     <p class="text-gray-500 text-sm mt-1 leading-relaxed">
-                                        Gedung KuSewa Lt. 3<br>
+                                        Gedung KitaSewa Lt. 3<br>
                                         Jl. Jend. Sudirman No. 123<br>
                                         Jakarta Pusat, 10220
                                     </p>
@@ -135,7 +135,7 @@ const submitMasalah = () => {
                             <form v-if="activeTab === 'admin'" @submit.prevent="submitAdmin" class="space-y-5 animate-fade-in">
                                 <div class="bg-blue-50 border border-blue-100 text-blue-800 rounded-lg p-4 mb-6 flex gap-3 text-sm">
                                     <Info class="mt-0.5" />
-                                    <p>Gunakan form ini untuk pertanyaan umum, penawaran kerjasama, atau informasi layanan KuSewa.</p>
+                                    <p>Gunakan form ini untuk pertanyaan umum, penawaran kerjasama, atau informasi layanan KitaSewa.</p>
                                 </div>
                                 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">

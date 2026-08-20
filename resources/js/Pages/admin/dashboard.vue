@@ -9,7 +9,7 @@ const props = defineProps({
         default: () => ({
             name: 'Super Admin',
             role: 'Administrator Utama',
-            email: 'admin@kusewa.id'
+            email: 'admin@kitasewa.id'
         })
     },
     stats: {
@@ -36,9 +36,9 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
 </script>
 
 <template>
-    <Head title="Admin Dashboard - kusewa.id" />
+    <Head title="Admin Dashboard - kitasewa.id" />
 
-    <DashboardLayout role="Admin" title="Panel Kontrol Administrator" description="Pantau seluruh aktivitas platform, verifikasi aset, dan pengguna kusewa.id">
+    <DashboardLayout role="Admin" title="Panel Kontrol Administrator" description="Pantau seluruh aktivitas platform, verifikasi aset, dan pengguna kitasewa.id">
         <template #header-actions>
             <button class="bg-[#0A2540] hover:bg-slate-800 active:scale-95 text-white font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
                 <Download class="text-xs text-[#FFC000]" />
@@ -268,7 +268,7 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                         </div>
 
                         <div class="pt-4 mt-4 border-t border-slate-100 text-[11px] flex items-center justify-between text-slate-400">
-                            <span>kusewa.id Security Engine</span>
+                            <span>kitasewa.id Security Engine</span>
                             <span class="font-bold text-emerald-600">Secure Protocol Active</span>
                         </div>
                     </div>

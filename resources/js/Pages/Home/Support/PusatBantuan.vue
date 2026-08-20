@@ -24,8 +24,8 @@ const faqs = ref([
         isOpen: false
     },
     {
-        question: 'Berapa biaya admin untuk transaksi di KuSewa?',
-        answer: 'KuSewa membebankan biaya admin yang sangat terjangkau per transaksi. Rincian biaya admin akan selalu ditampilkan sebelum Anda melakukan konfirmasi pembayaran.',
+        question: 'Berapa biaya admin untuk transaksi di KitaSewa?',
+        answer: 'KitaSewa membebankan biaya admin yang sangat terjangkau per transaksi. Rincian biaya admin akan selalu ditampilkan sebelum Anda melakukan konfirmasi pembayaran.',
         isOpen: false
     }
 ]);
@@ -36,7 +36,7 @@ const toggleFaq = (index) => {
 </script>
 
 <template>
-    <Head title="Pusat Bantuan - KuSewa" />
+    <Head title="Pusat Bantuan - KitaSewa" />
     <AppLayout>
         <!-- Hero Section / Search -->
         <div class="bg-[var(--color-secondary)] pt-12 pb-20 px-4 sm:px-6 lg:px-8 text-center relative overflow-hidden">
@@ -46,7 +46,7 @@ const toggleFaq = (index) => {
             
             <div class="relative z-10 max-w-3xl mx-auto">
                 <h1 class="text-3xl md:text-4xl font-bold text-white mb-4">Hai, Ada yang bisa kami bantu?</h1>
-                <p class="text-white/80 text-sm md:text-base mb-8">Temukan jawaban, panduan, dan solusi untuk pengalaman terbaik Anda di KuSewa.</p>
+                <p class="text-white/80 text-sm md:text-base mb-8">Temukan jawaban, panduan, dan solusi untuk pengalaman terbaik Anda di KitaSewa.</p>
                 
                 <div class="relative max-w-2xl mx-auto">
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

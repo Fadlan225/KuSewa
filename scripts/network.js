@@ -58,7 +58,7 @@ const { name: adapterName, address: localIP } = getLocalIP();
 
 console.log('');
 console.log('╔══════════════════════════════════════════════════════════╗');
-console.log('║              KuSewa  —  Network Dev Mode                ║');
+console.log('║              KitaSewa  —  Network Dev Mode                ║');
 console.log('╠══════════════════════════════════════════════════════════╣');
 console.log(`║  Adapter   : ${adapterName.padEnd(44)}║`);
 console.log(`║  IP Laptop : ${localIP.padEnd(44)}║`);

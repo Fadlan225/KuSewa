@@ -8,7 +8,7 @@
     <!-- Empty State -->
     <div v-if="!activeChatId" class="flex-1 flex flex-col items-center justify-center bg-[#F0F2F5] text-center p-6">
         <NoChatIcon class="w-64 h-64 mb-6 opacity-80" />
-        <h2 class="text-2xl font-bold text-gray-700 mb-2">KuSewa Web</h2>
+        <h2 class="text-2xl font-bold text-gray-700 mb-2">KitaSewa Web</h2>
         <p class="text-gray-500 max-w-sm">Pilih pesan di samping untuk mulai berdiskusi atau hubungi pemilik aset.</p>
     </div>
 

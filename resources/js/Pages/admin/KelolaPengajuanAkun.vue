@@ -38,7 +38,7 @@ const applicants = ref([
     { 
         id: 3, 
         name: 'Rian Pratama', 
-        email: 'rian.pratama@kusewa.id', 
+        email: 'rian.pratama@kitasewa.id', 
         roleTarget: 'Administrator', 
         nik: '6471034567890003', 
         phone: '081122334455', 

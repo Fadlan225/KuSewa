@@ -42,9 +42,9 @@ watch(() => page.url, () => {
         ============================== -->
         <header class="lg:hidden sticky top-0 z-40 w-full bg-white border-b border-slate-200/80 px-4 h-[60px] flex items-center justify-between shadow-sm">
             <Link :href="route('Home') || '/'" class="flex items-center gap-2 transition-transform hover:scale-[1.02] duration-200">
-                <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-6 w-auto object-contain" />
+                <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain" />
                 <span class="font-black text-xl tracking-tight text-[#0A2540] mt-0.5">
-                    kusewa<span class="text-[#FFC000]">.id</span>
+                    kitasewa<span class="text-[#FFC000]">.id</span>
                 </span>
             </Link>
             <button

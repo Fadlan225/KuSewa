@@ -223,7 +223,7 @@ const unitChartSlices = computed(() => {
     transition: fill 0.2s ease, opacity 0.2s ease;
 }
 .unovis-chart-container rect:hover {
-    fill: #FFC000 !important; /* Kuning KuSewa saat hover */
+    fill: #FFC000 !important; /* Kuning KitaSewa saat hover */
     opacity: 1 !important;
 }
 </style>
@@ -233,7 +233,7 @@ const unitChartSlices = computed(() => {
 
     <DashboardLayout
         title="Dashboard"
-        description="Ringkasan operasional aset & sewa Anda di kusewa"
+        description="Ringkasan operasional aset & sewa Anda di kitasewa"
         role="Owner"
     >
 

@@ -31,7 +31,7 @@ class BookingSeeder extends Seeder
             ->get();
 
         $customers = DB::table('users')
-            ->where('email', 'like', 'customer%@kusewa.com')
+            ->where('email', 'like', 'customer%@kitasewa.com')
             ->orderBy('id')
             ->get();
 

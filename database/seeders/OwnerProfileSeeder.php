@@ -11,23 +11,23 @@ class OwnerProfileSeeder extends Seeder
     public function run(): void
     {
         $ownerData = [
-            'budisantoso15@kusewa.com' => [
+            'budisantoso15@kitasewa.com' => [
                 'national_id' => '6471011508850001',
                 'address' => 'Jl. Pahlawan No. 10, Samarinda',
             ],
-            'sitirahma02@kusewa.com' => [
+            'sitirahma02@kitasewa.com' => [
                 'national_id' => '6471014212900001',
                 'address' => 'Jl. Sudirman No. 25, Balikpapan',
             ],
-            'agusprasetyo25@kusewa.com' => [
+            'agusprasetyo25@kitasewa.com' => [
                 'national_id' => '6471012503880001',
                 'address' => 'Jl. Antasari No. 8, Bontang',
             ],
-            'dewilestari10@kusewa.com' => [
+            'dewilestari10@kitasewa.com' => [
                 'national_id' => '6471015007920001',
                 'address' => 'Jl. Hasanuddin No. 15, Tenggarong',
             ],
-            'ekowahyudi18@kusewa.com' => [
+            'ekowahyudi18@kitasewa.com' => [
                 'national_id' => '6471011811800001',
                 'address' => 'Jl. Gajah Mada No. 2, Berau',
             ],

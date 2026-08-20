@@ -573,7 +573,7 @@ const filterTime = ref('daily');
                     </div>
                     <div class="mt-6 bg-[#0A2540] text-white p-5 rounded-2xl">
                         <p class="font-bold">Butuh bantuan langsung?</p>
-                        <p class="text-sm text-slate-300 mt-1">Hubungi tim dukungan kusewa melalui email support@kusewa.id.</p>
+                        <p class="text-sm text-slate-300 mt-1">Hubungi tim dukungan kitasewa melalui email support@kitasewa.id.</p>
                     </div>
                 </section>
         </div>

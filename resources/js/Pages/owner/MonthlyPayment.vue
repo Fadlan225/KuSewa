@@ -69,7 +69,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
 </script>
 
 <template>
-    <Head title="Biaya Layanan Bulanan - kusewa.id" />
+    <Head title="Biaya Layanan Bulanan - kitasewa.id" />
 
     <DashboardLayout
         title="Biaya Layanan Bulanan"
@@ -184,7 +184,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                     </div>
                     <div>
                         <p class="text-sm font-bold text-blue-800">Bukti Pembayaran Sedang Diverifikasi</p>
-                        <p class="text-xs text-blue-600 mt-1">Tim KuSewa akan memverifikasi pembayaran Anda dalam 1×24 jam kerja. Jika ada kendala, hubungi kami via menu Bantuan.</p>
+                        <p class="text-xs text-blue-600 mt-1">Tim KitaSewa akan memverifikasi pembayaran Anda dalam 1×24 jam kerja. Jika ada kendala, hubungi kami via menu Bantuan.</p>
                     </div>
                 </div>
 
@@ -204,7 +204,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                             <h3 class="text-sm font-black text-[#0A2540]">Apa itu Biaya Layanan?</h3>
                         </div>
                         <p class="text-xs text-slate-500 leading-relaxed">
-                            Biaya layanan adalah kontribusi Anda sebagai Pemilik Aset kepada platform KuSewa atas setiap transaksi sewa yang berhasil diselesaikan. Dana ini digunakan untuk menjaga keberlanjutan platform, meningkatkan promosi aset Anda, dan memastikan pengalaman terbaik bagi penyewa.
+                            Biaya layanan adalah kontribusi Anda sebagai Pemilik Aset kepada platform KitaSewa atas setiap transaksi sewa yang berhasil diselesaikan. Dana ini digunakan untuk menjaga keberlanjutan platform, meningkatkan promosi aset Anda, dan memastikan pengalaman terbaik bagi penyewa.
                         </p>
                     </div>
 
@@ -227,7 +227,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                             </div>
                             <div class="space-y-1 pt-3">
                                 <p class="text-xs font-bold text-slate-700">Bagaimana cara membayar nanti?</p>
-                                <p class="text-xs text-slate-500 leading-relaxed">Anda dapat membayar melalui QRIS, Virtual Account BCA/Mandiri, atau Transfer Bank Manual. Setelah transfer, upload bukti pembayaran dan tim KuSewa akan memverifikasi dalam <strong class="text-slate-700">1×24 jam kerja</strong>.</p>
+                                <p class="text-xs text-slate-500 leading-relaxed">Anda dapat membayar melalui QRIS, Virtual Account BCA/Mandiri, atau Transfer Bank Manual. Setelah transfer, upload bukti pembayaran dan tim KitaSewa akan memverifikasi dalam <strong class="text-slate-700">1×24 jam kerja</strong>.</p>
                             </div>
                             <div class="space-y-1 pt-3">
                                 <p class="text-xs font-bold text-slate-700">Apakah angka ini bisa berubah?</p>
@@ -247,7 +247,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                         <p class="text-xs text-white/70 leading-relaxed">Jika ada pertanyaan mengenai tagihan atau pembayaran, tim kami siap membantu Anda.</p>
                         <a :href="route('owner.help')" class="inline-flex items-center gap-2 text-xs font-bold bg-white/10 hover:bg-white/20 transition px-4 py-2.5 rounded-xl">
                             <ArrowRight class="" />
-                            Hubungi Tim KuSewa
+                            Hubungi Tim KitaSewa
                         </a>
                     </div>
                 </template>
@@ -259,7 +259,7 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                 <div v-if="selectedMethod === 'qris'" class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm text-center space-y-4">
                     <span class="text-xs font-bold text-slate-800 block">Scan QRIS Untuk Membayar</span>
                     <div class="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200 inline-block">
-                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=kusewa-monthly-bill" alt="QRIS Kusewa" class="w-40 h-40 mx-auto" />
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=kitasewa-monthly-bill" alt="QRIS Kitasewa" class="w-40 h-40 mx-auto" />
                     </div>
                     <p class="text-[11px] text-slate-400">Mendukung BCA, Mandiri, BRI, GoPay, ShopeePay, OVO, Dana, DLL.</p>
                 </div>

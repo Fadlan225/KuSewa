@@ -10,9 +10,9 @@ import { Link } from '@inertiajs/vue3';
                 <!-- Bagian Paling Kiri: Logo & Tagline -->
                 <div class="lg:col-span-2 pr-0 lg:pr-8">
                     <Link :href="route('Home')" class="flex items-center gap-2 mb-4">
-                        <img src="/kusewa-logo.png" alt="KuSewa Logo" class="h-8 w-auto object-contain" />
+                        <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-8 w-auto object-contain" />
                         <span class="font-bold text-lg text-[#0A2540]">
-                            kusewa<span class="text-[#FFC000]">.id</span>
+                            kitasewa<span class="text-[#FFC000]">.id</span>
                         </span>
                     </Link>
                     <p class="text-sm text-gray-500 leading-relaxed max-w-sm">
@@ -20,9 +20,9 @@ import { Link } from '@inertiajs/vue3';
                     </p>
                 </div>
 
-                <!-- Kolom 2: KUSEWA.ID -->
+                <!-- Kolom 2: KITASEWA.ID -->
                 <div>
-                    <h3 class="font-bold text-[#0A2540] text-sm uppercase tracking-wider mb-5">Kusewa.id</h3>
+                    <h3 class="font-bold text-[#0A2540] text-sm uppercase tracking-wider mb-5">Kitasewa.id</h3>
                     <ul class="flex flex-col space-y-4">
                         <li>
                             <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Tentang Kami</Link>
@@ -76,7 +76,7 @@ import { Link } from '@inertiajs/vue3';
                             </a>
                         </li>
                         <li>
-                            <a href="mailto:cs@kusewa.id" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
+                            <a href="mailto:cs@kitasewa.id" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
                                 <Mail class="w-4 text-center text-lg" />
                                 Email
                             </a>
@@ -94,7 +94,7 @@ import { Link } from '@inertiajs/vue3';
             <!-- Bottom Copyright -->
             <div class="mt-12 pt-8 border-t border-gray-200 flex flex-col items-center justify-center gap-4 text-center">
                 <p class="text-sm text-gray-500">
-                    &copy; {{ new Date().getFullYear() }} Kusewa.id. All rights reserved
+                    &copy; {{ new Date().getFullYear() }} Kitasewa.id. All rights reserved
                 </p>
             </div>
         </div>

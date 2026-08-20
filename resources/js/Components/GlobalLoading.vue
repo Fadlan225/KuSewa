@@ -17,18 +17,18 @@ import { loadingState } from '@/Stores/loading';
                         class="absolute inset-0 rounded-full border-4 border-gray-200 border-t-[#FFC000] animate-spin"
                     ></div>
 
-                    <!-- Logo Kusewa Tengah -->
+                    <!-- Logo Kitasewa Tengah -->
                     <!-- Sesuaikan atribut src dengan lokasi file logo Anda (misal: /images/logo.png) -->
                     <img
-                        src="/kusewa-logo.png"
-                        alt="Logo Kusewa"
+                        src="/kitasewa-logo.png"
+                        alt="Logo Kitasewa"
                         class="w-6 h-6 object-contain z-10"
                     />
                 </div>
 
                 <!-- Teks -->
                 <p class="text-sm font-bold text-[#0A2540] tracking-widest uppercase">
-                    Kusewa
+                    Kitasewa
                 </p>
 
             </div>

@@ -4,7 +4,7 @@ import { Head } from '@inertiajs/vue3'
 
 <template>
 
-    <Head title="KuSewa" />
+    <Head title="KitaSewa" />
 
     <div class="min-h-screen bg-background flex items-center justify-center">
 

@@ -7,7 +7,7 @@ import { Head } from '@inertiajs/vue3';
 
 <template>
     <div class="min-h-screen bg-[#F8F9FA] font-sans text-[#000000]">
-        <Head title="KuSewa" />
+        <Head title="KitaSewa" />
         <Navbar />
 
         <!-- Page Heading -->
