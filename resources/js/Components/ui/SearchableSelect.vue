@@ -26,8 +26,12 @@
       v-if="isOpen"
       class="absolute z-[100] w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
     >
+      <div class="px-4 py-2 bg-slate-50 border-b border-slate-100 text-[11px] text-slate-500 font-medium sticky top-0 z-10 flex items-center gap-1.5 shadow-sm">
+        <i class="fa-solid fa-info-circle"></i> Cari dan pilih dari daftar di bawah
+      </div>
+      
       <div v-if="filteredOptions.length === 0" class="px-4 py-3 text-sm text-gray-500">
-        Tidak ditemukan data kota yang cocok.
+        Tidak ditemukan data yang cocok.
       </div>
       
       <ul v-else class="py-1">

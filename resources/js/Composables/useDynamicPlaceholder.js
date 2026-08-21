@@ -2,10 +2,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 
 export function useDynamicPlaceholder(placeholders = [], intervalMs = 3000) {
     const defaultPlaceholders = [
-        "Mau sewa apa hari ini?",
-        "Cari Gudang Logistik",
-        "Ruang Kantor Strategis",
-        "Lahan Kosong Siap Bangun"
+        "Mau sewa apa hari ini?"
     ];
 
     const actualPlaceholders = placeholders && placeholders.length > 0 

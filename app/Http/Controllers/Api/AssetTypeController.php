@@ -77,7 +77,7 @@ class AssetTypeController extends Controller
         $categoryName = $type && $type->category ? strtolower($type->category->name) : '';
 
         // --- HUNIAN: kos-kosan, apartemen, rusun ---
-        if (in_array($typeName, ['kos-kosan', 'apartemen', 'rusun / condominium'])) {
+        if (in_array($typeName, ['kos', 'apartemen', 'rusun / condominium'])) {
             return [
                 ['key' => 'floor',       'label' => 'Jumlah Lantai',      'type' => 'number', 'required' => false],
                 ['key' => 'building_area','label' => 'Luas Bangunan (m²)','type' => 'number', 'required' => false],
@@ -87,9 +87,9 @@ class AssetTypeController extends Controller
         }
 
         // --- HUNIAN: hotel ---
-        if ($typeName === 'hotel') {
+        if (in_array($typeName, ['hotel', 'resort'])) {
             return [
-                ['key' => 'stars',        'label' => 'Bintang Hotel',     'type' => 'select', 'required' => false, 'options' => ['1','2','3','4','5']],
+                ['key' => 'stars',        'label' => 'Bintang Hotel / Resort','type' => 'select', 'required' => false, 'options' => ['1','2','3','4','5']],
                 ['key' => 'floor',        'label' => 'Jumlah Lantai',     'type' => 'number', 'required' => false],
                 ['key' => 'building_area','label' => 'Luas Bangunan (m²)','type' => 'number', 'required' => false],
                 ['key' => 'land_area',    'label' => 'Luas Tanah (m²)',   'type' => 'number', 'required' => false],
@@ -117,22 +117,31 @@ class AssetTypeController extends Controller
         }
 
         // --- KOMERSIAL: ruko, kios, kantor, gedung, food court ---
-        if (in_array($typeName, ['ruko (rumah toko)', 'kios / lapak pasar', 'kantor / workspace', 'gedung komersial', 'food court / booth'])) {
+        if (in_array($typeName, ['ruko', 'kios / lapak pasar', 'kantor / workspace', 'gedung', 'food court / booth'])) {
             $fields = [
                 ['key' => 'building_area','label' => 'Luas Bangunan (m²)','type' => 'number','required' => false],
                 ['key' => 'floor',        'label' => 'Jumlah Lantai',     'type' => 'number','required' => false],
                 ['key' => 'electricity',  'label' => 'Daya Listrik (VA)', 'type' => 'select','required' => false,'options' => ['900','1300','2200','3500','4400','11000']],
                 ['key' => 'bathroom',     'label' => 'Kamar Mandi Dalam', 'type' => 'radio', 'required' => false,'options' => ['Ya','Tidak']],
             ];
-            if (in_array($typeName, ['kantor / workspace', 'gedung komersial'])) {
+            if (in_array($typeName, ['kantor / workspace', 'gedung'])) {
                 $fields[] = ['key' => 'capacity',     'label' => 'Kapasitas Orang',  'type' => 'number','required' => false];
                 $fields[] = ['key' => 'ceiling_height','label' => 'Tinggi Plafon (m)','type' => 'number','required' => false];
             }
             return $fields;
         }
 
+        // --- RUANG ACARA / LAINNYA ---
+        if (in_array($typeName, ['aula', 'ruang meeting', 'studio'])) {
+            return [
+                ['key' => 'capacity',     'label' => 'Kapasitas Maksimal', 'type' => 'number', 'required' => false],
+                ['key' => 'building_area','label' => 'Luas Ruangan (m²)',  'type' => 'number', 'required' => false],
+                ['key' => 'floor',        'label' => 'Berada di Lantai',   'type' => 'number', 'required' => false],
+            ];
+        }
+
         // --- PENYIMPANAN & INDUSTRI ---
-        if (in_array($typeName, ['gudang logistik', 'pabrik / manufaktur', 'cold storage'])) {
+        if (in_array($typeName, ['gudang', 'pabrik / manufaktur', 'cold storage'])) {
             return [
                 ['key' => 'land_area',      'label' => 'Luas Tanah (m²)',         'type' => 'number','required' => false],
                 ['key' => 'building_area',  'label' => 'Luas Bangunan (m²)',       'type' => 'number','required' => false],
@@ -142,7 +151,7 @@ class AssetTypeController extends Controller
         }
 
         // --- TANAH & LAHAN ---
-        if (in_array($typeName, ['lahan / tanah kosong', 'lahan pertanian / perkebunan'])) {
+        if (in_array($typeName, ['lahan', 'lahan pertanian / perkebunan'])) {
             return [
                 ['key' => 'land_area',   'label' => 'Luas Tanah (m²)',        'type' => 'number','required' => true],
                 ['key' => 'certificate', 'label' => 'Sertifikat Kepemilikan', 'type' => 'select','required' => false,'options' => ['SHM','HGB','AJB','Girik','Lainnya']],
@@ -151,7 +160,7 @@ class AssetTypeController extends Controller
         }
 
         // --- MEDIA IKLAN ---
-        if (in_array($typeName, ['baliho / reklame', 'billboard / videotron', 'neon box / titik toko'])) {
+        if (in_array($typeName, ['baliho', 'billboard / videotron', 'neon box / titik toko'])) {
             return [
                 ['key' => 'display_type', 'label' => 'Jenis Tampilan',    'type' => 'select','required' => true,'options' => ['Konvensional','Elektronik']],
                 ['key' => 'dimension',    'label' => 'Dimensi (m)',        'type' => 'text',  'required' => false],
@@ -174,7 +183,7 @@ class AssetTypeController extends Controller
         $type = asset_type::find($typeId);
         $typeName = $type ? strtolower($type->name) : '';
 
-        if (in_array($typeName, ['kos-kosan', 'hotel', 'apartemen', 'rusun / condominium', 'guest house'])) {
+        if (in_array($typeName, ['kos', 'hotel', 'resort', 'apartemen', 'rusun / condominium', 'guest house'])) {
             return [
                 ['key' => 'room_size', 'label' => 'Ukuran Unit (m²)', 'type' => 'number', 'required' => true],
                 ['key' => 'bed_type',  'label' => 'Tipe Kasur',         'type' => 'select', 'required' => false, 'options' => ['Single','Double','Queen','King','Twin']],

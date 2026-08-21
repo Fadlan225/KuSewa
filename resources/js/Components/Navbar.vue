@@ -708,11 +708,11 @@ const initials = computed(() => {
                             :class="isBantuan ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-1 group-hover:opacity-100 group-hover:translate-y-0'"
                         ></span>
                     </Link>
-
+                    
                     <!-- Aktivitas -->
                     <Link
                         v-if="page.props.auth.user"
-                        :href="route('aktivitas.hub')"
+                        :href="route('profile.edit', { tab: 'transaksi' })"
                         :class="[
                             'relative h-full flex items-center text-sm transition-colors duration-300 group',
                             isActivity ? 'font-bold' : 'font-semibold',

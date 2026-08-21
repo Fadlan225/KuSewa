@@ -83,9 +83,18 @@ const requestLocationPermission = () => {
         <div class="bg-white p-6 shadow-md rounded-2xl">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg sm:text-xl font-bold text-[#0A2540]">Pesanan Saya</h2>
+                <!-- Mobile Link -->
                 <Link
                     :href="route('aktivitas.hub')"
-                    class="text-xs sm:text-sm font-semibold text-[#466080] hover:text-[#0A2540] transition-colors flex items-center space-x-1"
+                    class="md:hidden text-xs sm:text-sm font-semibold text-[#466080] hover:text-[#0A2540] transition-colors flex items-center space-x-1"
+                >
+                    <span>Lihat Riwayat Pesanan</span>
+                    <ChevronRight class="text-[10px] ml-1 text-[#6C757D]" />
+                </Link>
+                <!-- Desktop Link -->
+                <Link
+                    :href="route('profile.edit', { tab: 'transaksi' })"
+                    class="hidden md:flex text-xs sm:text-sm font-semibold text-[#466080] hover:text-[#0A2540] transition-colors items-center space-x-1"
                 >
                     <span>Lihat Riwayat Pesanan</span>
                     <ChevronRight class="text-[10px] ml-1 text-[#6C757D]" />
@@ -94,7 +103,14 @@ const requestLocationPermission = () => {
 
             <div class="grid grid-cols-3 gap-4 sm:gap-6 text-center">
                 <!-- Booking -->
-                <Link :href="route('aktivitas.transaksi', { status: 'Berlangsung' })" class="flex flex-col items-center group cursor-pointer">
+                <Link :href="route('aktivitas.transaksi', { status: 'Berlangsung' })" class="md:hidden flex flex-col items-center group cursor-pointer">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-[#FFC000]/10 transition-colors duration-200">
+                        <ClipboardList class="text-2xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
+                        <span v-if="bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ bookings_count }}</span>
+                    </div>
+                    <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Booking</p>
+                </Link>
+                <Link :href="route('profile.edit', { tab: 'transaksi', status: 'Berlangsung' })" class="hidden md:flex flex-col items-center group cursor-pointer">
                     <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-[#FFC000]/10 transition-colors duration-200">
                         <ClipboardList class="text-2xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                         <span v-if="bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ bookings_count }}</span>
@@ -103,7 +119,14 @@ const requestLocationPermission = () => {
                 </Link>
 
                 <!-- Belum Bayar -->
-                <Link :href="route('aktivitas.transaksi', { status: 'Belum Bayar' })" class="flex flex-col items-center group cursor-pointer">
+                <Link :href="route('aktivitas.transaksi', { status: 'Belum Bayar' })" class="md:hidden flex flex-col items-center group cursor-pointer">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-red-50 transition-colors duration-200">
+                        <Wallet class="text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors" />
+                        <span v-if="unpaid_bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ unpaid_bookings_count }}</span>
+                    </div>
+                    <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-red-500 transition-colors">Belum Bayar</p>
+                </Link>
+                <Link :href="route('profile.edit', { tab: 'transaksi', status: 'Belum Bayar' })" class="hidden md:flex flex-col items-center group cursor-pointer">
                     <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-red-50 transition-colors duration-200">
                         <Wallet class="text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors" />
                         <span v-if="unpaid_bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ unpaid_bookings_count }}</span>
@@ -112,7 +135,14 @@ const requestLocationPermission = () => {
                 </Link>
 
                 <!-- Aset Favorit -->
-                <Link :href="route('favorites.index')" class="flex flex-col items-center group cursor-pointer">
+                <Link :href="route('favorites.index')" class="md:hidden flex flex-col items-center group cursor-pointer">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-pink-50 transition-colors duration-200">
+                        <Heart class="text-2xl text-[#0A2540] group-hover:text-pink-500 transition-colors" />
+                        <span v-if="favorite_assets_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ favorite_assets_count }}</span>
+                    </div>
+                    <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-pink-500 transition-colors">Aset Favorit</p>
+                </Link>
+                <Link :href="route('profile.edit', { tab: 'favorit' })" class="hidden md:flex flex-col items-center group cursor-pointer">
                     <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-pink-50 transition-colors duration-200">
                         <Heart class="text-2xl text-[#0A2540] group-hover:text-pink-500 transition-colors" />
                         <span v-if="favorite_assets_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ favorite_assets_count }}</span>

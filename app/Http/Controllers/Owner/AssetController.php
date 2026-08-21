@@ -193,6 +193,8 @@ class AssetController extends Controller
             $thumbnail = null;
             if ($asset->thumbnailImages->isNotEmpty()) {
                 $thumbnail = $asset->thumbnailImages->first()->image ?? $asset->thumbnailImages->first()->path ?? $asset->thumbnailImages->first()->url ?? null;
+            } elseif ($vStatus === 'draft' && !empty($asset->draft_payload['thumbnail'])) {
+                $thumbnail = $asset->draft_payload['thumbnail'];
             }
 
             if ($thumbnail && !str_starts_with($thumbnail, 'http')) {
@@ -803,7 +805,11 @@ class AssetController extends Controller
 
         $ownerProfile = $request->user()->ownerProfile;
         if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
-            abort(403, 'Anda tidak berhak menonaktifkan aset ini.');
+            abort(403, 'Anda tidak berhak menghapus aset ini.');
+        }
+
+        if (!in_array($asset->status, ['draft', 'pending', 'rejected'])) {
+            return redirect()->back()->with('error', 'Aset yang sudah disetujui atau nonaktif tidak dapat dihapus.');
         }
 
         // Check for active bookings
@@ -812,12 +818,12 @@ class AssetController extends Controller
             ->exists();
 
         if ($hasActiveBookings) {
-            return redirect()->back()->with('error', 'Tidak dapat menonaktifkan aset karena terdapat penyewaan yang sedang aktif atau menunggu konfirmasi.');
+            return redirect()->back()->with('error', 'Tidak dapat menghapus aset karena terdapat penyewaan yang sedang aktif atau menunggu konfirmasi.');
         }
 
-        $asset->update(['status' => 'inactive']);
+        $asset->delete();
 
-        return redirect()->route('owner.asset.index')->with('success', 'Aset berhasil dinonaktifkan.');
+        return redirect()->route('owner.asset.index')->with('success', 'Aset berhasil dihapus permanen.');
     }
 
     /**

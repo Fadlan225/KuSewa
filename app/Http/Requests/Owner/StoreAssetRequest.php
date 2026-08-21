@@ -42,13 +42,13 @@ class StoreAssetRequest extends FormRequest
             'address'            => ['required', 'string', 'max:500'],
             'latitude'           => ['required', 'numeric', 'between:-90,90'],
             'longitude'          => ['required', 'numeric', 'between:-180,180'],
-            'thumbnail'          => ['nullable', 'image', 'max:5120'],
+            'thumbnail'          => ['nullable'],
 
             // --- Step 3: Foto ---
             'photos'             => ['nullable', 'array'],
             'photos.*.gallery_category_id' => ['required_with:photos', 'integer', 'exists:galery_categories,id'],
             'photos.*.files'     => ['required_with:photos', 'array', 'min:1'],
-            'photos.*.files.*'   => ['image', 'max:5120'], // max 5MB per foto
+            'photos.*.files.*'   => ['nullable'], // max 5MB per foto
         ];
 
         if ($allowUnits) {
@@ -64,13 +64,13 @@ class StoreAssetRequest extends FormRequest
             $rules['units.*.facility_ids']   = ['nullable', 'array'];
             $rules['units.*.facility_ids.*'] = ['integer', 'exists:facilities,id'];
             // Thumbnail Unit
-            $rules['units.*.thumbnail'] = ['nullable', 'image', 'max:5120'];
+            $rules['units.*.thumbnail'] = ['nullable'];
 
             // Foto Unit
             $rules['units.*.photos']             = ['nullable', 'array'];
             $rules['units.*.photos.*.gallery_category_id'] = ['required_with:units.*.photos', 'integer', 'exists:galery_categories,id'];
             $rules['units.*.photos.*.files']     = ['required_with:units.*.photos', 'array', 'min:1'];
-            $rules['units.*.photos.*.files.*']   = ['image', 'max:5120'];
+            $rules['units.*.photos.*.files.*']   = ['nullable'];
         } else {
             // Aset tanpa unit — harga langsung di aset
             $rules['pricings'] = ['required', 'array', 'min:1'];
@@ -106,13 +106,9 @@ class StoreAssetRequest extends FormRequest
             'longitude.required'       => 'Titik lokasi di peta wajib ditentukan.',
             'pricings.required'        => 'Harga sewa wajib diisi.',
             'pricings.*.price.min'     => 'Harga sewa tidak boleh negatif.',
-            'thumbnail.image'          => 'Thumbnail harus berupa gambar (JPG, PNG, WebP).',
             'thumbnail.max'            => 'Ukuran thumbnail maksimal 5MB.',
-            'units.*.thumbnail.image'  => 'Thumbnail unit harus berupa gambar (JPG, PNG, WebP).',
             'units.*.thumbnail.max'    => 'Ukuran thumbnail unit maksimal 5MB.',
             'photos.*.files.required_with'=> 'Anda telah menambahkan kategori foto aset, tetapi belum ada file yang dipilih (Atau total upload melebihi batas sistem).',
-            'photos.*.files.*.image'   => 'File foto harus berupa gambar (JPG, PNG, WebP).',
-            'photos.*.files.*.max'     => 'Ukuran foto maksimal 5MB per file.',
             'units.required'           => 'Tambahkan minimal 1 tipe unit.',
             'units.*.name.required'    => 'Nama tipe unit wajib diisi.',
             'units.*.quantity.required'=> 'Jumlah unit wajib diisi.',

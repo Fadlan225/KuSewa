@@ -22,6 +22,7 @@
         "vue": "^3.4.0"
     },
     "dependencies": {
+        "@headlessui/vue": "^1.7.23",
         "@lucide/vue": "^1.31.0",
         "@unovis/ts": "^1.6.7",
         "@unovis/vue": "^1.6.7",

@@ -51,7 +51,7 @@ const handleEscape = (e) => {
 onMounted(() => {
     document.addEventListener('click', closeProfileMenu);
     document.addEventListener('keydown', handleEscape);
-    
+
     const stored = localStorage.getItem('sidebar_collapsed');
     if (stored === 'true') {
         isCollapsed.value = true;
@@ -77,7 +77,7 @@ const handleLogout = () => {
             <div class="flex items-center gap-2 overflow-hidden">
                 <!-- Logo acts as collapse toggle on desktop -->
                 <img @click="toggleCollapse" src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain shrink-0 cursor-pointer transition-transform hover:scale-110 hidden lg:block" title="Sembunyikan/Tampilkan Menu" />
-                
+
                 <!-- Logo acts as home link on mobile -->
                 <Link :href="route('Home') || '/'" class="lg:hidden shrink-0">
                     <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain" />
@@ -134,12 +134,6 @@ const handleLogout = () => {
                         <Link :href="route('profile.edit')" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
                             <User class="w-4 text-center text-slate-400" /> Profil Saya
                         </Link>
-                        <Link v-if="role === 'Owner'" href="#" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
-                            <Settings class="w-4 text-center text-slate-400" /> Pengaturan Akun
-                        </Link>
-                        <Link v-if="role === 'Owner'" href="#" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
-                            <Headset class="w-4 text-center text-slate-400" /> Bantuan
-                        </Link>
 
                         <div class="h-px bg-slate-100 my-1"></div>
 
@@ -168,7 +162,8 @@ const handleLogout = () => {
                             :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200', isCollapsed ? 'justify-center' : 'justify-between']"
                         >
                             <div class="flex items-center gap-3">
-                                <component :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']" />
+                                <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-4 text-center" />
+                                <component v-else :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']" />
                                 <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                             </div>
 
@@ -199,7 +194,8 @@ const handleLogout = () => {
                                 ]"
                             >
                                 <div class="flex items-center" :class="isCollapsed ? 'justify-center' : 'gap-2'">
-                                    <component :is="sub.icon" :class="[sub.active ? 'text-[#0A2540]' : 'text-slate-400', isCollapsed ? 'w-4 text-sm' : 'w-3.5 text-center text-[11px]']" />
+                                    <AppIcon v-if="typeof sub.icon === 'string'" :iconClass="sub.icon" :class="isCollapsed ? 'w-4 text-sm' : 'w-3.5 text-center text-[11px]'" />
+                                    <component v-else :is="sub.icon" :class="[sub.active ? 'text-[#0A2540]' : 'text-slate-400', isCollapsed ? 'w-4 text-sm' : 'w-3.5 text-center text-[11px]']" />
                                     <span v-if="!isCollapsed" class="text-[11px] whitespace-nowrap">{{ sub.label }}</span>
                                 </div>
                                 <span v-if="!isCollapsed && sub.badge" class="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full shrink-0">
@@ -230,7 +226,8 @@ const handleLogout = () => {
                         :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200', isCollapsed ? 'justify-center' : 'justify-between']"
                     >
                         <div class="flex items-center gap-3">
-                            <component :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']" />
+                            <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-4 text-center" />
+                            <component v-else :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']" />
                             <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                         </div>
                         <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">
