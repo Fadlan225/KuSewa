@@ -17,6 +17,7 @@ class owner_profile extends Model
         'address',
         'ktp_photo',
         'status',
+        'rejection_reason',
         'verification_at'
     ];
 

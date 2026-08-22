@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use App\Models\asset;
 use App\Models\booking;
 use App\Models\asset_units;
+use App\Models\AssetView;
 
 class DashboardController extends Controller
 {
@@ -85,6 +86,20 @@ class DashboardController extends Controller
             ->whereDate('created_at', $today)
             ->count();
 
+        // 1. Pesanan Baru (Perlu Konfirmasi)
+        $pesananBaru = booking::whereIn('asset_id', $assetIds)
+            ->where('booking_status', 'pending')
+            ->count();
+
+        // 2. Penyewa Aktif (Sama dengan booking berjalan saat ini)
+        $penyewaAktif = $totalTersewa;
+
+        // 3. Aset Tayang (Live)
+        $asetTayang = $assetsWithUnits->where('status', 'approved')->count();
+
+        // 4. Total Kunjungan (Menghitung dari tabel asset_views)
+        $totalKunjungan = AssetView::whereIn('asset_id', $assetIds)->sum('view_count');
+
         // Pendapatan Bulan Ini
         $pendapatanBulanIni = booking::whereIn('asset_id', $assetIds)
             ->where('booking_status', 'completed')
@@ -158,12 +173,11 @@ class DashboardController extends Controller
             })
             ->toArray();
 
-        $statusUnitData = [
-            ['name' => 'Siap Disewakan', 'value' => max(0, $totalUnit - $totalTersewa - $totalInactive - $totalPending - $totalRejected), 'fill' => '#10B981'], // Emerald
-            ['name' => 'Disewa', 'value' => $totalTersewa, 'fill' => '#F59E0B'], // Amber
-            ['name' => 'Menunggu Verifikasi', 'value' => $totalPending, 'fill' => '#3B82F6'], // Blue
-            ['name' => 'Ditolak', 'value' => $totalRejected, 'fill' => '#EF4444'], // Red
-            ['name' => 'Tidak Aktif', 'value' => $totalInactive, 'fill' => '#94A3B8'], // Slate/Gray
+        $statusAssetData = [
+            ['name' => 'Aktif', 'value' => $assetsWithUnits->where('status', 'approved')->count()],
+            ['name' => 'Menunggu Validasi', 'value' => $assetsWithUnits->where('status', 'pending')->count()],
+            ['name' => 'Draf', 'value' => $assetsWithUnits->where('status', 'draft')->count()],
+            ['name' => 'Nonaktif', 'value' => $assetsWithUnits->whereIn('status', ['inactive', 'rejected'])->count()],
         ];
 
         $stats = [
@@ -175,9 +189,13 @@ class DashboardController extends Controller
             'bookingBaruHariIni' => $bookingBaruHariIni,
             'pendapatanBulanIni' => $pendapatanBulanIni,
             'pendapatanBulanLalu' => $pendapatanBulanLalu,
+            'pesananBaru' => $pesananBaru,
+            'penyewaAktif' => $penyewaAktif,
+            'asetTayang' => $asetTayang,
+            'totalKunjungan' => $totalKunjungan,
             'chartData' => $chartData,
             'kotaData' => $kotaData,
-            'statusUnitData' => $statusUnitData,
+            'statusAssetData' => $statusAssetData,
         ];
 
         return Inertia::render('owner/index', [
@@ -196,6 +214,10 @@ class DashboardController extends Controller
             'bookingBaruHariIni' => 0,
             'pendapatanBulanIni' => 0,
             'pendapatanBulanLalu' => 0,
+            'pesananBaru' => 0,
+            'penyewaAktif' => 0,
+            'asetTayang' => 0,
+            'totalKunjungan' => 0,
             'chartData' => [
                 '7days' => [],
                 '30days' => [],
@@ -203,12 +225,11 @@ class DashboardController extends Controller
                 '1year' => [],
             ],
             'kotaData' => [],
-            'statusUnitData' => [
-                ['name' => 'Siap Disewakan', 'value' => 0, 'fill' => 'var(--color-available)'],
-                ['name' => 'Disewa', 'value' => 0, 'fill' => 'var(--color-booked)'],
-                ['name' => 'Menunggu Verifikasi', 'value' => 0, 'fill' => '#F59E0B'],
-                ['name' => 'Ditolak', 'value' => 0, 'fill' => '#EF4444'],
-                ['name' => 'Tidak Aktif', 'value' => 0, 'fill' => 'var(--color-inactive)'],
+            'statusAssetData' => [
+                ['name' => 'Aktif', 'value' => 0],
+                ['name' => 'Menunggu Validasi', 'value' => 0],
+                ['name' => 'Draf', 'value' => 0],
+                ['name' => 'Nonaktif', 'value' => 0],
             ],
         ];
     }

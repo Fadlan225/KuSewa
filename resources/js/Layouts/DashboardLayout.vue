@@ -3,6 +3,7 @@ import { ref, watch, computed } from 'vue';
 import Sidebar from '@/Components/sidebar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { X, Menu } from 'lucide-vue-next';
+import Topbar from '@/Components/Topbar.vue';
 
 import { getOwnerMenu, getAdminMenu } from '@/Config/menus';
 
@@ -90,29 +91,13 @@ watch(() => page.url, () => {
              MAIN CONTENT
         ============================== -->
         <main class="flex-1 min-w-0 flex flex-col min-h-[calc(100vh-60px)] lg:min-h-screen">
+            <!-- TOPBAR COMPONENT -->
+            <Topbar :title="title" :description="description" :breadcrumbs="breadcrumbs">
+                <slot name="action" />
+            </Topbar>
+
             <div class="p-4 md:p-6 lg:p-6 xl:p-8 w-full max-w-[1400px] mx-auto flex-1 flex flex-col">
 
-                <!-- DASHBOARD HEADER -->
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                    <div>
-                        <!-- BREADCRUMBS -->
-                        <nav v-if="breadcrumbs && breadcrumbs.length" class="flex text-[10px] text-slate-400 font-medium mb-1.5 space-x-1.5">
-                            <template v-for="(bc, idx) in breadcrumbs" :key="idx">
-                                <Link v-if="bc.route" :href="bc.route" class="hover:text-[#0A2540] transition-colors">{{ bc.label }}</Link>
-                                <span v-else class="text-slate-600">{{ bc.label }}</span>
-                                <span v-if="idx < breadcrumbs.length - 1" class="text-slate-300">/</span>
-                            </template>
-                        </nav>
-
-                        <h1 class="text-2xl font-black text-slate-900">{{ title }}</h1>
-                        <p v-if="description" class="text-xs text-slate-400 mt-1">{{ description }}</p>
-                    </div>
-
-                    <!-- Action Button Slot -->
-                    <div>
-                        <slot name="action" />
-                    </div>
-                </div>
 
                 <!-- PAGE CONTENT SLOT -->
                 <div class="flex-1">

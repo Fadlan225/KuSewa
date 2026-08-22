@@ -8,6 +8,7 @@ import { useHomeSearch } from '@/Composables/useHomeSearch';
 import AnimatedPlaceholder from '@/Components/ui/AnimatedPlaceholder.vue';
 import StickySubNavSearch from '@/Components/ui/StickySubNavSearch.vue';
 import NoImageIcon from '@/Components/ui/Icons/NoImageIcon.vue';
+import UserAvatar from '@/Components/ui/Icons/UserAvatar.vue';
 import NotificationDropdown from '@/Components/ui/NotificationDropdown.vue';
 import { useNotifications } from '@/Composables/useNotifications';
 
@@ -184,9 +185,13 @@ const initials = computed(() => {
                             <Megaphone class="w-3.5 h-3.5" />
                             Promosikan Aset Anda
                         </button>
-                        <Link v-else-if="page.props.auth.user.role === 'owner'" :href="route('owner.dashboard')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
+                        <Link v-else-if="isVerifiedOwner || isAdmin" :href="route('owner.dashboard')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
                             <Megaphone class="w-3.5 h-3.5" />
                             Dashboard Owner
+                        </Link>
+                        <Link v-else-if="isPendingOwner" :href="route('owner.verification')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
+                            <Megaphone class="w-3.5 h-3.5" />
+                            Lihat Status Pengajuan
                         </Link>
                         <Link v-else :href="route('owner.register')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
                             <Megaphone class="w-3.5 h-3.5" />
@@ -829,9 +834,9 @@ const initials = computed(() => {
                                 />
                                 <div
                                     v-else
-                                    class="w-full h-full bg-[#0A2540] text-white flex items-center justify-center font-bold text-sm"
+                                    class="w-full h-full bg-[#f8f9fa] flex items-center justify-center font-bold text-sm"
                                 >
-                                    {{ initials }}
+                                    <UserAvatar :user="page.props.auth.user" />
                                 </div>
                             </button>
 

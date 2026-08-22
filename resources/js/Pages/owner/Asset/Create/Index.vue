@@ -15,6 +15,7 @@ import Step4 from './Step4.vue';
 import Step5 from './Step5.vue';
 import Step6 from './Step6.vue';
 import Step7 from './Step7.vue';
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 // Fix bug ikon marker default Leaflet yang tidak muncul di build Vite
 delete L.Icon.Default.prototype._getIconUrl;
@@ -291,11 +292,15 @@ const isCurrentStepValid = computed(() => {
             return true;
         case 'Step4': // Tipe Unit (Only for Kos)
             if (allowUnits.value) {
-                return form.units.every(u => u.name && u.total_units > 0 && u.bedrooms >= 0 && u.bathrooms >= 0 && u.size);
+                return form.units.every(u => u.name?.trim() && Number(u.quantity) > 0);
             }
             return true;
         case 'Step5': // Harga Sewa (Kos: Step 5, Non-Kos: Step 4)
-            return form.pricings.every(p => p.price > 0 && p.duration > 0 && p.rental_unit);
+            if (allowUnits.value) {
+                return form.units.every(u => u.pricings && u.pricings.every(p => Number(p.price) > 0 && Number(p.duration) > 0 && p.rental_unit));
+            } else {
+                return form.pricings && form.pricings.every(p => Number(p.price) > 0 && Number(p.duration) > 0 && p.rental_unit);
+            }
         case 'Step6': // Galeri
             return !!form.thumbnail;
         case 'Step7':
@@ -478,10 +483,64 @@ const validationErrors = ref({});
 const showValidationAlert = ref(false);
 const isSavingDraft = ref(false);
 
+const preparePayload = (data, isKos) => {
+    const payload = JSON.parse(JSON.stringify(data));
+
+    // Bersihkan data yang tidak perlu sebelum dikirim
+    if (payload.units) {
+        payload.units = payload.units.map(unit => {
+            const u = { ...unit };
+            delete u._id;
+            delete u.thumbnail_preview;
+            if (u.pricings) u.pricings.forEach(p => delete p._id);
+            if (u.photos) {
+                // Hanya simpan grup foto yang memiliki file terpilih
+                u.photos = u.photos.filter(p => p.files && p.files.length > 0);
+                u.photos.forEach(p => {
+                    delete p._id;
+                    delete p.previews;
+                });
+            }
+            return u;
+        });
+    }
+
+    if (payload.photos) {
+        // Hanya simpan grup foto utama yang memiliki file terpilih
+        payload.photos = payload.photos.filter(p => p.files && p.files.length > 0);
+        payload.photos.forEach(p => {
+            delete p._id;
+            delete p.previews;
+        });
+    }
+    
+    if (payload.pricings) {
+        payload.pricings.forEach(p => delete p._id);
+    }
+    delete payload.thumbnail_preview;
+
+    // Bersihkan FAQ dan Policy kosong
+    if (payload.faqs) {
+        payload.faqs = payload.faqs.filter(f => f.question?.trim() && f.answer?.trim());
+    }
+    if (payload.policies) {
+        payload.policies = payload.policies.filter(p => p.title?.trim());
+    }
+
+    if (isKos) {
+        delete payload.price;
+        delete payload.facility_ids;
+    } else {
+        delete payload.units;
+    }
+
+    return payload;
+};
+
 const saveDraft = async () => {
     try {
         isSavingDraft.value = true;
-        const payload = JSON.parse(JSON.stringify(form.data())); // Remove Vue reactiveness, only use form fields
+        const payload = preparePayload(form.data(), allowUnits.value);
         const res = await axios.post(route('owner.asset.auto-save'), payload);
         const data = res.data;
         if (data.draft_id && !form.draft_id) {
@@ -626,60 +685,7 @@ const submitProperty = async () => {
     isSubmittingFinal.value = true;
 
     form.transform((data) => {
-        const payload = JSON.parse(JSON.stringify(data));
-
-        // Bersihkan data yang tidak perlu sebelum dikirim
-        if (payload.units) {
-            payload.units.forEach(u => {
-                delete u._id;
-                delete u.thumbnail_preview;
-                if (u.pricings) u.pricings.forEach(p => delete p._id);
-                if (u.photos) u.photos.forEach(p => {
-                    delete p._id;
-                    delete p.previews;
-                });
-            });
-        }
-
-        if (payload.photos) {
-            payload.photos.forEach(p => {
-                delete p._id;
-                delete p.previews;
-            });
-        }
-        if (payload.pricings) {
-            payload.pricings.forEach(p => delete p._id);
-        }
-        delete payload.thumbnail_preview;
-
-        // Bersihkan FAQ dan Policy kosong
-        if (payload.faqs) {
-            payload.faqs = payload.faqs.filter(f => f.question?.trim() && f.answer?.trim());
-        }
-        if (payload.policies) {
-            payload.policies = payload.policies.filter(p => p.title?.trim());
-        }
-
-        if (allowUnits.value) {
-            delete payload.price;
-            delete payload.facility_ids;
-
-            // Hapus grup foto unit yang tidak ada filenya, dan bersihkan thumbnail_preview
-            if (payload.units) {
-                payload.units = payload.units.map(unit => {
-                    const u = {
-                        ...unit,
-                        photos: unit.photos ? unit.photos.filter(p => p.files && p.files.length > 0) : []
-                    };
-                    delete u.thumbnail_preview;
-                    return u;
-                });
-            }
-        } else {
-            delete payload.units;
-        }
-
-        return payload;
+        return preparePayload(data, allowUnits.value);
     }).post(route('owner.asset.store'), {
         forceFormData: true,
         preserveScroll: true,
@@ -902,14 +908,8 @@ const closeModalAndRedirect = () => {
             >
                 <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
                     <div class="bg-white rounded-xl p-6 sm:p-8 max-w-md w-full text-center shadow-2xl border border-slate-100 space-y-5 relative overflow-hidden">
-                        <div class="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#0A2540] via-[#FFC000] to-[#0A2540]"></div>
-
-                        <div class="w-16 h-16 rounded-xl bg-amber-50 text-[#FFC000] flex items-center justify-center mx-auto text-2xl relative shadow-inner">
-                            <Send class="text-[#0A2540]" />
-                            <span class="absolute -top-1 -right-1 flex h-4 w-4">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
-                            </span>
+                        <div class="w-48 h-auto mx-auto flex items-center justify-center">
+                            <EmptyStateIcon class="w-full h-auto" />
                         </div>
 
                         <div class="space-y-2">
@@ -927,8 +927,8 @@ const closeModalAndRedirect = () => {
                             </div>
                         </div>
 
-                        <button type="button" @click="closeModalAndRedirect" class="w-full bg-[#0A2540] text-white font-semibold text-sm py-3.5 rounded-md hover:bg-[#123e6b] transition cursor-pointer">
-                            Kembali ke Halaman Properti
+                        <button type="button" @click="closeModalAndRedirect" class="w-full bg-[#FFC000] text-[#0A2540] font-bold text-sm py-3.5 rounded-md hover:brightness-95 transition shadow-sm cursor-pointer">
+                            Kembali ke Halaman Aset & Unit
                         </button>
                     </div>
                 </div>

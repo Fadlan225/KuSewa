@@ -1,9 +1,14 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { DoorOpen, Percent, CalendarCheck, Wallet, BarChart, Map, TrendingUp, LineChart } from 'lucide-vue-next';
+import { DoorOpen, Percent, CalendarCheck, Wallet, BarChart, Map, TrendingUp, LineChart, HelpCircle, Users, CheckCircle, Eye, BellRing } from 'lucide-vue-next';
 import { computed, ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import AssetIllustration from '@/Components/ui/Icons/AssetIllustration.vue';
+import IncomeEmptyIllustration from '@/Components/ui/Icons/IncomeEmptyIllustration.vue';
+import SpreadEmptyIllustration from '@/Components/ui/Icons/SpreadEmptyIllustration.vue';
+import BookingEmptyIllustration from '@/Components/ui/Icons/BookingEmptyIllustration.vue';
+import AssetStatusEmptyIllustration from '@/Components/ui/Icons/AssetStatusEmptyIllustration.vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from '@/Components/ui/select';
 import { VisXYContainer, VisAxis, VisStackedBar, VisCrosshair, VisTooltip, VisLine } from '@unovis/vue';
@@ -38,7 +43,12 @@ const kotaList = computed(() => {
             name: key.replace(/^(KOTA|KABUPATEN)\s+/i, ''),
             count: data[key]
         }))
-        .sort((a, b) => b.count - a.count);
+        .sort((a, b) => {
+            if (b.count !== a.count) {
+                return b.count - a.count; // Sort by count descending
+            }
+            return a.name.localeCompare(b.name); // Then alphabetically ascending
+        });
 });
 
 const maxKotaCount = computed(() => {
@@ -178,20 +188,22 @@ const tooltipTemplateBooking = (d) => `
     </div>
 `;
 
-// UNIT STATUS SETUP
-const unitColorMap = {
-    'var(--color-available)': '#10b981',
-    'var(--color-booked)': '#f59e0b',
-    'var(--color-inactive)': '#ef4444'
+// ASSET STATUS SETUP
+const assetColorMap = {
+    'Aktif': '#10b981',
+    'Menunggu Validasi': '#f59e0b',
+    'Draf': '#94a3b8',
+    'Nonaktif': '#ef4444'
 };
 
-const unitChartTotal = computed(() => {
-    return (props.stats?.statusUnitData || []).reduce((acc, curr) => acc + curr.value, 0);
+const assetChartTotal = computed(() => {
+    const data = props.stats?.statusAssetData || [];
+    return data.reduce((acc, curr) => acc + curr.value, 0);
 });
 
-const unitChartSlices = computed(() => {
-    const data = props.stats?.statusUnitData || [];
-    const total = unitChartTotal.value;
+const assetChartSlices = computed(() => {
+    const data = props.stats?.statusAssetData || [];
+    const total = assetChartTotal.value;
     if (total === 0) return [];
 
     let currentOffset = 0;
@@ -204,7 +216,7 @@ const unitChartSlices = computed(() => {
         const slice = {
             name: item.name,
             value: item.value,
-            color: unitColorMap[item.fill] || item.fill || '#cbd5e1',
+            color: assetColorMap[item.name] || item.fill || '#cbd5e1',
             dash: length,
             gap: gap,
             offset: currentOffset,
@@ -237,69 +249,98 @@ const unitChartSlices = computed(() => {
         role="Owner"
     >
 
+        <!-- ONBOARDING BANNER -->
+        <div v-if="props.stats?.totalUnit === 0" class="bg-white border border-[#E5E7EB] rounded-md mb-6 flex flex-col md:flex-row items-center justify-between p-6 md:p-8 overflow-hidden relative shadow-sm gap-6">
+            <div class="flex-1 relative z-10">
+                <h2 class="text-2xl font-black text-[#0A2540] mb-2 tracking-tight">Mulai sewakan aset Anda</h2>
+                <p class="text-sm text-slate-600 mb-6 max-w-md xl:max-w-lg font-medium leading-relaxed">Tambahkan aset pertama Anda dan lengkapi informasi agar siap ditemukan oleh calon penyewa.</p>
+                <Link :href="route('owner.asset.create')" class="inline-flex items-center justify-center bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] font-bold text-sm px-5 py-2.5 rounded transition-colors shadow-sm">
+                    <span class="mr-2 text-lg font-black leading-none">+</span> Daftarkan Aset
+                </Link>
+            </div>
+            <div class="hidden md:block w-48 lg:w-56 xl:w-72 shrink-0 pointer-events-none">
+                <AssetIllustration class="w-full h-auto drop-shadow-sm" />
+            </div>
+        </div>
+
         <!-- STATS OVERVIEW - Clean Panel Design -->
-        <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
+        <div v-else class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
             <div class="grid grid-cols-2 xl:grid-cols-4 border-slate-100">
-                <!-- Total Unit -->
+                <!-- Pesanan Baru -->
                 <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
-                    <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                        <DoorOpen class="text-slate-400 mt-0.5" /> <span>Total Unit</span>
-                    </p>
-                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.totalUnit ?? 0 }}</p>
-                </div>
-
-                <!-- Keterisian -->
-                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
-                    <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                        <Percent class="text-slate-400 mt-0.5" /> <span>Keterisian</span>
-                    </p>
-                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.tingkatKeterisian ?? 0 }}%</p>
-                </div>
-
-                <!-- Booking Bln Ini -->
-                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
-                    <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                        <CalendarCheck class="text-slate-400 mt-0.5" /> <span>Booking Bulan Ini</span>
-                    </p>
-                    <div class="flex items-end gap-3">
-                        <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.bookingBulanIni ?? 0 }}</p>
-                        <span v-if="(props.stats?.bookingBaruHariIni ?? 0) > 0" class="text-xs font-semibold text-emerald-600 mb-1.5">
-                            +{{ props.stats?.bookingBaruHariIni }} hari ini
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Income Bln Ini -->
-                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
-                    <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                        <Wallet class="text-slate-400 mt-0.5" /> <span>Pendapatan Bulan Ini</span>
-                    </p>
-                    <div class="flex items-end gap-3">
-                        <p class="text-2xl lg:text-3xl font-black text-[#0A2540] truncate" :title="formatCurrency(props.stats?.pendapatanBulanIni)">
-                            Rp {{ formatCompactCurrency(props.stats?.pendapatanBulanIni) }}
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                            <BellRing class="text-slate-400 w-3.5 h-3.5" /> <span>Pesanan Baru</span>
                         </p>
+                        <div class="group relative cursor-help">
+                            <HelpCircle class="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 transition-colors" />
+                            <div class="absolute bottom-full left-[-10px] sm:left-0 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] leading-relaxed rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg text-left font-medium">
+                                Jumlah pesanan sewa yang baru masuk dan butuh persetujuan Anda segera.
+                                <div class="absolute top-full left-[14px] sm:left-3 border-4 border-transparent border-t-slate-800"></div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="flex items-center gap-1.5 text-xs font-medium mt-1"
-                         :class="{
-                            'text-emerald-600': pendapatanPersentase > 0,
-                            'text-rose-600': pendapatanPersentase < 0,
-                            'text-slate-400': pendapatanPersentase === 0
-                         }">
-                        <AppIcon iconClass="fa-solid shrink-0 text-[10px]" :class="{
-                            'fa-arrow-up': pendapatanPersentase > 0,
-                            'fa-arrow-down': pendapatanPersentase < 0,
-                        }" />
-                        <span>{{ pendapatanPersentase > 0 ? '+' : '' }}{{ Math.round(pendapatanPersentase) }}% dari bulan lalu</span>
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.pesananBaru ?? 0 }}</p>
+                </div>
+
+                <!-- Penyewa Aktif -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                            <Users class="text-slate-400 w-3.5 h-3.5" /> <span>Penyewa Aktif</span>
+                        </p>
+                        <div class="group relative cursor-help">
+                            <HelpCircle class="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 transition-colors" />
+                            <div class="absolute bottom-full right-[-10px] sm:right-0 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] leading-relaxed rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg text-left font-medium">
+                                Jumlah penyewa yang saat ini sedang dalam masa sewa (aktif) di seluruh aset Anda.
+                                <div class="absolute top-full right-[14px] sm:right-3 border-4 border-transparent border-t-slate-800"></div>
+                            </div>
+                        </div>
                     </div>
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.penyewaAktif ?? 0 }}</p>
+                </div>
+
+                <!-- Aset Tayang -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                            <CheckCircle class="text-slate-400 w-3.5 h-3.5" /> <span>Aset Tayang</span>
+                        </p>
+                        <div class="group relative cursor-help">
+                            <HelpCircle class="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 transition-colors" />
+                            <div class="absolute bottom-full left-[-10px] sm:left-0 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] leading-relaxed rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg text-left font-medium">
+                                Total aset Anda yang sudah aktif dan kini tampil di halaman pencarian untuk dilihat calon penyewa.
+                                <div class="absolute top-full left-[14px] sm:left-3 border-4 border-transparent border-t-slate-800"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.asetTayang ?? 0 }}</p>
+                </div>
+
+                <!-- Total Kunjungan -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                            <Eye class="text-slate-400 w-3.5 h-3.5" /> <span>Kunjungan Profil</span>
+                        </p>
+                        <div class="group relative cursor-help">
+                            <HelpCircle class="w-3.5 h-3.5 text-slate-300 hover:text-slate-500 transition-colors" />
+                            <div class="absolute bottom-full right-[-10px] sm:right-0 mb-2 w-48 p-2 bg-slate-800 text-white text-[10px] leading-relaxed rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 shadow-lg text-left font-medium">
+                                Total seberapa sering calon penyewa melihat seluruh aset Anda.
+                                <div class="absolute top-full right-[14px] sm:right-3 border-4 border-transparent border-t-slate-800"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ props.stats?.totalKunjungan ?? 0 }}</p>
                 </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
 
             <!-- PENDAPATAN CHART -->
-            <Card class="lg:col-span-2 bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-2">
-                <CardHeader class="relative z-50 flex flex-col items-stretch p-4 sm:flex-row pb-6">
+            <Card class="xl:col-span-2 bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-2">
+                <CardHeader class="relative z-20 flex flex-col items-stretch p-4 sm:flex-row pb-6">
                     <div class="flex flex-1 flex-col justify-center gap-1 text-left">
                         <div class="flex items-center justify-between">
                             <div>
@@ -341,15 +382,14 @@ const unitChartSlices = computed(() => {
                         </VisXYContainer>
                     </div>
 
-                    <!-- Empty State -->
-                    <div v-else class="w-full h-full min-h-[300px] flex flex-col items-center justify-center text-slate-400">
-                        <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                            <BarChart class="text-2xl text-slate-300" />
+                    <div v-else class="w-full h-full min-h-[300px] flex flex-col items-center justify-center text-slate-400 pt-6 pb-2">
+                        <div class="w-32 h-auto mb-4 opacity-60 pointer-events-none">
+                            <IncomeEmptyIllustration class="w-full h-auto drop-shadow-sm" />
                         </div>
-                        <p class="text-sm font-semibold text-slate-500 mb-1">Belum ada data pendapatan.</p>
-                        <p class="text-xs text-slate-400 mb-4">Tunggu hingga ada penyewa yang menyelesaikan pemesanan.</p>
-                        <Link :href="route('owner.asset.index')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded-xl text-xs font-bold transition-all">
-                            Lihat Properti
+                        <p class="text-base font-black text-[#0A2540] tracking-tight mb-1">Aset Anda siap menghasilkan</p>
+                        <p class="text-sm text-slate-500 mb-5 text-center font-medium max-w-[280px]">Dapatkan penyewa pertama dan mulai lihat pendapatan Anda di sini.</p>
+                        <Link :href="route('owner.asset.index')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all">
+                            Lihat Aset
                         </Link>
                     </div>
                 </CardContent>
@@ -358,7 +398,7 @@ const unitChartSlices = computed(() => {
             <!-- PERSEBARAN ASSET -->
             <Card class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4">
-                    <CardTitle class="text-sm font-bold text-slate-800">Persebaran Asset</CardTitle>
+                    <CardTitle class="text-sm font-bold text-slate-800">Persebaran Aset</CardTitle>
                     <p class="text-xs text-slate-500 mt-1">Menampilkan persebaran aset berdasarkan kota.</p>
                 </CardHeader>
                 <CardContent class="p-5 flex-1">
@@ -383,9 +423,15 @@ const unitChartSlices = computed(() => {
                             </span>
                         </div>
                     </div>
-                    <div v-else class="h-full flex flex-col items-center justify-center text-slate-400 space-y-2 mt-10">
-                        <Map class="text-2xl" />
-                        <p class="text-xs italic">Belum ada data persebaran</p>
+                    <div v-else class="h-full w-full min-h-[220px] flex flex-col items-center justify-center text-slate-400 pt-6 pb-2">
+                        <div class="w-32 h-auto mb-4 opacity-60 pointer-events-none">
+                            <SpreadEmptyIllustration class="w-full h-auto drop-shadow-sm" />
+                        </div>
+                        <p class="text-base font-black text-[#0A2540] tracking-tight mb-1">Mulai tampilkan aset Anda</p>
+                        <p class="text-sm text-slate-500 mb-5 text-center font-medium max-w-[240px]">Daftarkan aset dan biarkan calon penyewa menemukannya.</p>
+                        <Link :href="route('owner.asset.create')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all">
+                            Daftarkan Aset
+                        </Link>
                     </div>
                 </CardContent>
 
@@ -399,9 +445,9 @@ const unitChartSlices = computed(() => {
             </Card>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
             <!-- BOOKING TREND CHART -->
-            <Card class="lg:col-span-2 bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-0 sm:p-0">
+            <Card class="xl:col-span-2 bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-0 sm:p-0">
                 <CardHeader class="flex flex-col items-stretch border-b border-gray-200 p-0 sm:flex-row">
                     <div class="flex flex-1 flex-col justify-center gap-1 px-6 py-5 text-left">
                         <CardTitle class="text-base font-black text-slate-800 tracking-tight">Tren Pemesanan</CardTitle>
@@ -432,7 +478,7 @@ const unitChartSlices = computed(() => {
                     </div>
                 </CardHeader>
                 <CardContent class="p-4 sm:p-6 pb-2">
-                    <div class="w-full h-[250px]" v-if="bookingChartData.length">
+                    <div class="w-full h-[250px]" v-if="bookingChartData.length > 0 && totalBookingSelectedPeriod > 0">
                         <VisXYContainer :data="bookingChartData" :duration="1000" height="250" :padding="{ top: 10, right: 10, left: 0, bottom: 0 }">
                             <VisLine :x="x" :y="bookingY" color="#0A2540" :lineWidth="3" />
                             <VisAxis type="x" :tickFormat="tickFormatXBooking" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400" />
@@ -442,56 +488,73 @@ const unitChartSlices = computed(() => {
                         </VisXYContainer>
                     </div>
                     <!-- Empty State -->
-                    <div v-else class="w-full h-full min-h-[250px] flex flex-col items-center justify-center text-slate-400">
-                        <div class="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center mb-4">
-                            <LineChart class="text-2xl text-slate-300" />
+                    <div v-else class="w-full h-full min-h-[250px] flex flex-col items-center justify-center text-slate-400 py-6">
+                        <div class="w-32 h-auto mb-4 opacity-60 pointer-events-none">
+                            <BookingEmptyIllustration class="w-full h-auto drop-shadow-sm" />
                         </div>
-                        <p class="text-sm font-semibold text-slate-500 mb-1">Belum ada data pemesanan.</p>
+                        <p class="text-base font-black text-[#0A2540] tracking-tight mb-1">Siap menerima booking pertama?</p>
+                        <p class="text-sm text-slate-500 mb-5 text-center font-medium max-w-[280px]">Pastikan aset Anda aktif dan menarik bagi penyewa.</p>
+                        <Link :href="route('owner.bookings')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all">
+                            Lihat Pemesanan
+                        </Link>
                     </div>
                 </CardContent>
             </Card>
 
-            <!-- STATUS UNIT CHART -->
+            <!-- STATUS ASET CHART -->
             <Card class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4">
-                    <CardTitle class="text-sm font-bold text-slate-800">Status Unit</CardTitle>
-                    <p class="text-xs text-slate-500 mt-1">Status ketersediaan properti saat ini.</p>
+                    <CardTitle class="text-sm font-bold text-slate-800">Status Aset</CardTitle>
+                    <p class="text-xs text-slate-500 mt-1">Ringkasan status seluruh aset Anda.</p>
                 </CardHeader>
                 <CardContent class="p-5 flex-1 flex flex-col items-center justify-center">
-                    <!-- SVG Donut Chart -->
-                    <div class="relative w-44 h-44 mb-2">
-                        <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
-                            <!-- Background Circle for empty state -->
-                            <circle v-if="unitChartTotal === 0" cx="50" cy="50" r="40" fill="transparent" stroke="#f1f5f9" stroke-width="20" />
+                    <template v-if="assetChartTotal > 0">
+                        <!-- SVG Donut Chart -->
+                        <div class="relative w-44 h-44 mb-2">
+                            <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
+                                <!-- Background Circle for empty state -->
+                                <circle v-if="assetChartTotal === 0" cx="50" cy="50" r="40" fill="transparent" stroke="#f1f5f9" stroke-width="20" />
 
-                            <circle v-for="slice in unitChartSlices" :key="slice.name"
-                                    cx="50" cy="50" r="40"
-                                    fill="transparent"
-                                    :stroke="slice.color"
-                                    :stroke-width="20"
-                                    :stroke-dasharray="`${slice.dash} ${slice.gap}`"
-                                    :stroke-dashoffset="slice.offset"
-                                    class="transition-all duration-1000 ease-out"
-                            />
-                        </svg>
-                        <!-- Center Label -->
-                        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span class="text-3xl font-black text-slate-800 leading-none">{{ unitChartTotal }}</span>
-                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Total Unit</span>
-                        </div>
-                    </div>
-                    <!-- Legend -->
-                    <div class="w-full mt-6 space-y-3 px-2">
-                        <div v-for="item in unitChartSlices" :key="item.name" class="flex items-center justify-between text-sm">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-3.5 h-3.5 rounded-full shadow-sm" :style="{ backgroundColor: item.color }"></span>
-                                <span class="text-slate-600 font-medium">{{ item.name }}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-slate-400 text-xs">{{ item.percentage }}%</span>
-                                <span class="font-bold text-slate-800 w-6 text-right">{{ item.value }}</span>
+                                <circle v-for="slice in assetChartSlices" :key="slice.name"
+                                        cx="50" cy="50" r="40"
+                                        fill="transparent"
+                                        :stroke="slice.color"
+                                        :stroke-width="20"
+                                        :stroke-dasharray="`${slice.dash} ${slice.gap}`"
+                                        :stroke-dashoffset="slice.offset"
+                                        class="transition-all duration-1000 ease-out"
+                                />
+                            </svg>
+                            <!-- Center Label -->
+                            <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                <span class="text-3xl font-black text-slate-800 leading-none">{{ assetChartTotal }}</span>
+                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-1">Total Aset</span>
                             </div>
                         </div>
+                        <!-- Legend -->
+                        <div class="w-full mt-6 space-y-3 px-2">
+                            <div v-for="item in assetChartSlices" :key="item.name" class="flex items-center justify-between text-sm">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="w-3.5 h-3.5 rounded-full shadow-sm" :style="{ backgroundColor: item.color }"></span>
+                                    <span class="text-slate-600 font-medium">{{ item.name }}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-slate-400 text-xs">{{ item.percentage }}%</span>
+                                    <span class="font-bold text-slate-800 w-6 text-right">{{ item.value }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <!-- Empty State -->
+                    <div v-else class="w-full h-full min-h-[250px] flex flex-col items-center justify-center text-slate-400 py-6">
+                        <div class="w-32 h-auto mb-4 opacity-60 pointer-events-none">
+                            <AssetStatusEmptyIllustration class="w-full h-auto drop-shadow-sm" />
+                        </div>
+                        <p class="text-base font-black text-[#0A2540] tracking-tight mb-1">Belum ada aset</p>
+                        <p class="text-sm text-slate-500 mb-5 text-center font-medium max-w-[280px]">Daftarkan aset pertama Anda dan mulai sewakan di KitaSewa.</p>
+                        <Link :href="route('owner.asset.create')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all">
+                            Daftarkan Aset
+                        </Link>
                     </div>
                 </CardContent>
             </Card>

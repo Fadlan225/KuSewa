@@ -1,10 +1,12 @@
 <script setup>
-import { Loader2, Camera } from 'lucide-vue-next';
+import { Loader2, Camera, Trash2, X, Image as ImageIcon } from 'lucide-vue-next';
 import { Head, router } from '@inertiajs/vue3';
 import { ref, computed, nextTick } from 'vue';
 import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
 import SettingsForms from './Partials/SettingsForms.vue';
+import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import ProfileLayout from '@/Layouts/ProfileLayout.vue';
+import UserAvatar from '@/Components/ui/Icons/UserAvatar.vue';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 
@@ -27,7 +29,9 @@ const initials = computed(() => {
 
 // Photo upload state (for Mobile Only)
 const photoInput = ref(null);
+const cameraInput = ref(null);
 const uploadingPhoto = ref(false);
+const showPhotoMenu = ref(false);
 
 const showCropModal = ref(false);
 const imageToCrop = ref(null);
@@ -36,6 +40,18 @@ let cropperInstance = null;
 const originalFile = ref(null);
 
 const selectNewPhoto = () => {
+    showPhotoMenu.value = true;
+};
+
+const selectCamera = () => {
+    showPhotoMenu.value = false;
+    if (cameraInput.value) {
+        cameraInput.value.click();
+    }
+};
+
+const selectGallery = () => {
+    showPhotoMenu.value = false;
     if (photoInput.value) {
         photoInput.value.click();
     }
@@ -108,6 +124,24 @@ const submitCroppedImage = () => {
         cropperInstance.destroy();
     }, originalFile.value.type);
 };
+
+const deletePhoto = () => {
+    showPhotoMenu.value = false;
+    uploadingPhoto.value = true;
+    router.delete(route('profile.photo.destroy'), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            if (photoInput.value) photoInput.value.value = null;
+        },
+        onError: () => {
+            alert('Gagal menghapus foto profil.');
+        },
+        onFinish: () => {
+            uploadingPhoto.value = false;
+        }
+    });
+};
 </script>
 
 <template>
@@ -125,31 +159,32 @@ const submitCroppedImage = () => {
                         <img
                             :src="user.avatar"
                             alt="Foto Profil"
-                            class="w-24 h-24 rounded-full border-4 border-white shadow-sm object-cover transition-opacity duration-200 group-hover:opacity-80"
+                            class="w-24 h-24 rounded-full shadow-sm object-cover transition-opacity duration-200 group-hover:opacity-80"
                         />
                     </template>
                     <div
                         v-else
-                        class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#0A2540] to-[#466080] text-white flex items-center justify-center font-bold text-3xl border-4 border-white shadow-sm select-none transition-opacity duration-200 group-hover:opacity-80"
+                        class="w-24 h-24 rounded-full bg-[#f8f9fa] flex items-center justify-center shadow-sm select-none transition-opacity duration-200 group-hover:opacity-80 overflow-hidden"
                     >
-                        {{ initials }}
+                        <UserAvatar :user="user" />
                     </div>
 
                     <!-- Loading overlay -->
-                    <div v-if="uploadingPhoto" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
+                    <div v-if="uploadingPhoto" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center z-20">
                         <Loader2 class="text-white text-xl animate-spin" />
                     </div>
 
                     <!-- Camera icon hover -->
-                    <div v-else class="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-md border border-gray-100 flex items-center justify-center text-primary hover:scale-110 transition-transform">
-                        <Camera class="text-xs" />
+                    <div v-if="!uploadingPhoto" class="absolute -bottom-2 -right-2 bg-[#FFC000] w-8 h-8 rounded-full shadow-md flex items-center justify-center text-white hover:scale-110 transition-transform z-10" title="Ubah Foto">
+                        <Camera class="w-4 h-4" />
                     </div>
                 </div>
                 <input type="file" class="hidden" ref="photoInput" @change="handleFileChange" accept="image/*">
+                <input type="file" class="hidden" ref="cameraInput" @change="handleFileChange" accept="image/*" capture="user">
             </div>
 
             <!-- Forms -->
-            <SettingsForms 
+            <SettingsForms
                 :must-verify-email="mustVerifyEmail"
                 :status="status"
                 :user="user"
@@ -157,7 +192,31 @@ const submitCroppedImage = () => {
                 :bank_account="bank_account"
             />
         </main>
-        
+
+        <!-- Mobile Photo Menu Bottom Sheet -->
+        <BottomSheet v-model="showPhotoMenu" title="Foto profil" heightClass="h-auto pb-6">
+            <div class="flex flex-col mt-2 px-5">
+                <button @click="selectCamera" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                        <Camera class="w-6 h-6" />
+                    </div>
+                    <span class="text-base font-medium text-gray-800">Kamera</span>
+                </button>
+                <button @click="selectGallery" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                        <ImageIcon class="w-6 h-6" />
+                    </div>
+                    <span class="text-base font-medium text-gray-800">Galeri</span>
+                </button>
+                <button v-if="user.avatar" @click="deletePhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                        <Trash2 class="w-6 h-6" />
+                    </div>
+                    <span class="text-base font-medium text-gray-800">Hapus Foto Profil</span>
+                </button>
+            </div>
+        </BottomSheet>
+
         <!-- Mobile Crop Modal -->
         <Teleport to="body" v-if="showCropModal">
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 overflow-hidden">
@@ -194,7 +253,7 @@ const submitCroppedImage = () => {
         <ProfileLayout>
             <div class="bg-white p-6 shadow-md rounded-2xl">
                 <!-- Forms -->
-                <SettingsForms 
+                <SettingsForms
                     :must-verify-email="mustVerifyEmail"
                     :status="status"
                     :user="user"

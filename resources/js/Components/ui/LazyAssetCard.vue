@@ -2,6 +2,7 @@
 import { Image, Heart, MapPin, ChevronRight } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed, inject } from 'vue';
 import AssetCardSkeleton from './AssetCardSkeleton.vue';
+import NoImageIllustration from '@/Components/ui/Icons/NoImageIllustration.vue';
 import { usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -283,9 +284,8 @@ const periodLabel = {
                 </div>
 
                 <!-- 0 Image / Error -->
-                <div v-if="!img1 || asset.imageError" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gray-100 text-gray-300 z-0">
-                    <Image class="text-3xl mb-1" />
-                    <span class="text-[10px] font-medium">No Image</span>
+                <div v-if="!img1 || asset.imageError" class="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-slate-100 z-0 p-4">
+                    <NoImageIllustration class="w-full h-full object-contain opacity-50 mix-blend-multiply" />
                 </div>
 
                 <!-- 1 Image Layout -->

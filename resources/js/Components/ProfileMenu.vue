@@ -3,10 +3,16 @@ import { Link } from '@inertiajs/vue3';
 import { ChevronRight, Briefcase } from 'lucide-vue-next';
 import AppIcon from '@/Components/AppIcon.vue';
 import { ref } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
     user: Object
 });
+
+const page = usePage();
+const getOwnerStatus = () => {
+    return page.props.owner_profile?.status || page.props.auth.user?.owner_profile?.status;
+};
 
 const accountMenuItems = [
     {
@@ -15,6 +21,14 @@ const accountMenuItems = [
         routeDesktop: route('profile.edit', { tab: 'profil' }),
         routeMobile: route('profile.settings'),
         isActive: () => route().current('profile.settings') || (route().current('profile.edit') && (!route().params.tab || route().params.tab === 'profil'))
+    },
+    {
+        label: 'Profil Bisnis',
+        icon: 'fa-solid fa-city',
+        routeDesktop: route('profile.edit', { tab: 'bisnis' }),
+        routeMobile: route('profile.bisnis'),
+        isActive: () => route().current('profile.bisnis') || (route().current('profile.edit') && route().params.tab === 'bisnis'),
+        show: () => getOwnerStatus() === 'verified'
     },
     {
         label: 'Keamanan',
@@ -33,7 +47,7 @@ const accountMenuItems = [
 
 const activityMenuItems = [
     {
-        label: 'Pesanan',
+        label: 'Pesanan Saya',
         icon: 'fa-solid fa-clipboard-list',
         routeDesktop: route('profile.edit', { tab: 'transaksi' }),
         isActive: () => route().current('profile.edit') && route().params.tab === 'transaksi'
@@ -98,7 +112,7 @@ const checkIsActive = (item) => {
             <template v-for="(item, index) in accountMenuItems" :key="index">
                 <!-- Desktop Link (jika routeDesktop ada) -->
                 <Link
-                    v-if="item.routeDesktop"
+                    v-if="item.routeDesktop && (item.show === undefined || item.show())"
                     :href="item.routeDesktop"
                     :class="[
                         'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
@@ -115,7 +129,7 @@ const checkIsActive = (item) => {
 
                 <!-- Mobile Link (jika routeMobile ada) -->
                 <Link
-                    v-if="item.routeMobile"
+                    v-if="item.routeMobile && (item.show === undefined || item.show())"
                     :href="item.routeMobile"
                     class="flex md:hidden items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative hover:bg-[#F8F9FA]"
                 >
@@ -128,7 +142,7 @@ const checkIsActive = (item) => {
 
                 <!-- General Link (jika hanya ada route biasa) -->
                 <Link
-                    v-if="!item.routeDesktop && !item.routeMobile"
+                    v-if="!item.routeDesktop && !item.routeMobile && (item.show === undefined || item.show())"
                     :href="item.route"
                     :class="[
                         'flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',

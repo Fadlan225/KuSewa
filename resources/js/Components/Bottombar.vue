@@ -2,6 +2,7 @@
 import { Home, Search, History, Heart, MessageSquareMore, User } from 'lucide-vue-next';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, inject } from 'vue';
+import UserAvatar from '@/Components/ui/Icons/UserAvatar.vue';
 
 // Mengambil data page saat ini untuk mengecek route aktif
 const page = usePage();
@@ -118,8 +119,14 @@ const openAuthModal = inject('openAuthModal', () => { console.log('AuthModal not
                 class="relative flex flex-col items-center justify-center gap-1.5 h-full w-20 transition-colors duration-300"
                 :class="isAuthActive ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
 
-                <User class="text-xl relative z-10" />
-                <span class="text-[10px] font-bold relative z-10">
+                <template v-if="isLoggedIn">
+                    <img v-if="page.props.auth.user.avatar" :src="page.props.auth.user.avatar" alt="Profil" class="w-[22px] h-[22px] rounded-full object-cover relative z-10 border border-gray-200" />
+                    <div v-else class="w-[22px] h-[22px] rounded-full bg-[#f8f9fa] flex items-center justify-center overflow-hidden relative z-10 border border-gray-200">
+                        <UserAvatar :user="page.props.auth.user" />
+                    </div>
+                </template>
+                <User v-else class="text-xl relative z-10" />
+                <span class="text-[10px] font-bold relative z-10 mt-0.5">
                     {{ isLoggedIn ? 'Profil' : 'Masuk' }}
                 </span>
 

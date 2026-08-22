@@ -1,13 +1,13 @@
-import { 
-    Home, Building, Receipt, CreditCard, Wallet, 
-    Gauge, List, Flag, Shield, Users, UserPlus, 
-    CheckSquare, Layers, Scale, Tags, Bell, Laptop, Database 
+import {
+    Home, Building, Receipt, CreditCard, Wallet,
+    Gauge, List, Flag, Shield, Users, UserPlus,
+    CheckSquare, Layers, Scale, Tags, Bell, Laptop, Database
 } from 'lucide-vue-next';
 
 export const getOwnerMenu = (sidebarCounts) => [
     { label: 'Dashboard', route: route('owner.dashboard'), routeName: 'owner.dashboard', icon: Home },
     {
-        label: 'Aset & Unit',
+        label: 'Aset Saya',
         route: route('owner.asset.index'),
         routeName: 'owner.asset.*',
         icon: Building,

@@ -4,6 +4,7 @@ import { Receipt, Clock, Wallet, ChevronDown, Image, User, Calendar, Search, Fil
 import { computed, ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import BookingEmptyIllustration from '@/Components/ui/Icons/BookingEmptyIllustration.vue';
 // ========== PROPS ==========
 const props = defineProps({
     type:            { type: String },
@@ -168,7 +169,7 @@ const filterTime = ref('daily');
                             <!-- Total Pesanan -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                    <Receipt class="text-blue-500 mt-0.5" /> <span>Total Pesanan</span>
+                                    <Receipt class="text-slate-400 w-3.5 h-3.5 mt-0.5" /> <span>Total Pesanan</span>
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.all || 0 }}</p>
                             </div>
@@ -176,7 +177,7 @@ const filterTime = ref('daily');
                             <!-- Menunggu Konfirmasi -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                    <Clock class="text-amber-500 mt-0.5" /> <span>Menunggu Konfirmasi</span>
+                                    <Clock class="text-slate-400 w-3.5 h-3.5 mt-0.5" /> <span>Menunggu Konfirmasi</span>
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.pending || 0 }}</p>
                             </div>
@@ -184,7 +185,7 @@ const filterTime = ref('daily');
                             <!-- Menunggu Pembayaran -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                    <Wallet class="text-rose-500 mt-0.5" /> <span>Menunggu Pembayaran</span>
+                                    <Wallet class="text-slate-400 w-3.5 h-3.5 mt-0.5" /> <span>Menunggu Pembayaran</span>
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.confirmed || 0 }}</p>
                             </div>
@@ -192,7 +193,7 @@ const filterTime = ref('daily');
                             <!-- Verifikasi Pembayaran -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                    <Receipt class="text-emerald-500 mt-0.5" /> <span>Verifikasi Pembayaran</span>
+                                    <Receipt class="text-slate-400 w-3.5 h-3.5 mt-0.5" /> <span>Verifikasi Pembayaran</span>
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.active || 0 }}</p>
                             </div>
@@ -200,21 +201,21 @@ const filterTime = ref('daily');
                     </div>
 
                     <!-- Filter Status -->
-                    <div class="flex flex-wrap items-center gap-2 p-3 bg-white border border-slate-200 rounded-xl overflow-x-auto hide-scrollbar">
+                    <div class="flex flex-wrap items-center gap-2 p-3 bg-white border border-slate-200 rounded-lg overflow-x-auto hide-scrollbar">
                         <button
                             v-for="status in statusOptions"
                             :key="status.value"
                             @click="applyFilter(status.value)"
                             :class="[
-                                'px-3 py-1.5 rounded-lg text-xs font-bold transition whitespace-nowrap',
+                                'px-3 py-1.5 rounded text-xs font-bold transition whitespace-nowrap flex items-center gap-1.5',
                                 filterStatus === status.value
-                                    ? 'bg-[#0A2540] text-white shadow-sm'
+                                    ? 'bg-[#FFC000] text-[#0A2540] shadow-sm'
                                     : 'bg-transparent text-slate-500 hover:bg-slate-50'
                             ]"
                         >
-                            {{ status.label }}
-                            <span :class="filterStatus === status.value ? 'text-white/80' : 'text-slate-400'" class="ml-1">
-                                ({{ bookingCounts[status.value] }})
+                            <span>{{ status.label }}</span>
+                            <span v-if="bookingCounts[status.value] > 0" class="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black leading-none min-w-[18px] text-center">
+                                {{ bookingCounts[status.value] > 99 ? '99+' : bookingCounts[status.value] }}
                             </span>
                         </button>
                     </div>
@@ -324,12 +325,34 @@ const filterTime = ref('daily');
                         </button>
                     </div>
 
-                    <!-- Ringkasan -->
-                    <div class="flex items-center justify-between">
-                        <h2 class="font-bold text-slate-800">Daftar Pesanan</h2>
-                        <span class="text-[11px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded-lg">
-                            {{ filteredBookings.length }} ditampilkan dari {{ paginationMeta.total }} total
-                        </span>
+                    <!-- Ringkasan & Pagination -->
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <h2 class="font-bold text-slate-800">Daftar Pesanan</h2>
+                            <span class="text-[11px] text-slate-400 bg-slate-100 px-2.5 py-1 rounded">
+                                {{ filteredBookings.length }} dari {{ paginationMeta.total }}
+                            </span>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div v-if="paginationLinks.length > 3" class="flex items-center gap-1">
+                            <template v-for="(link, idx) in paginationLinks" :key="idx">
+                                <Link
+                                    v-if="link.url"
+                                    :href="link.url"
+                                    v-html="link.label.replace(/&laquo; Previous|Previous/g, '&laquo;').replace(/Next &raquo;|Next/g, '&raquo;')"
+                                    :class="[
+                                        'text-[11px] font-bold px-2 py-1.5 rounded transition min-w-[28px] text-center inline-flex items-center justify-center',
+                                        link.active ? 'bg-[#FFC000] text-[#0A2540] shadow-sm' : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-700',
+                                    ]"
+                                />
+                                <span
+                                    v-else
+                                    v-html="link.label.replace(/&laquo; Previous|Previous/g, '&laquo;').replace(/Next &raquo;|Next/g, '&raquo;')"
+                                    class="text-[11px] font-bold px-2 py-1.5 rounded transition min-w-[28px] text-center inline-flex items-center justify-center bg-slate-50 border border-slate-100 text-slate-300 cursor-not-allowed"
+                                ></span>
+                            </template>
+                        </div>
                     </div>
 
                     <!-- Card List — grouped by date -->
@@ -401,13 +424,13 @@ const filterTime = ref('daily');
                                         <div class="mt-auto flex items-center gap-2">
                                             <div
                                                 v-if="booking.status === 'pending'"
-                                                class="bg-[#FFC000] text-[#0A2540] text-[9px] md:text-xs font-bold px-3 py-1.5 md:px-4 md:py-1.5 rounded-full hover:bg-[#e6ad00] transition shadow-sm z-30 flex items-center gap-1"
+                                                class="bg-[#FFC000] text-[#0A2540] text-[9px] md:text-xs font-bold px-3 py-1.5 md:px-4 md:py-1.5 rounded hover:bg-[#e6ad00] transition shadow-sm z-30 flex items-center gap-1"
                                             >
                                                 <Search class="text-[10px]" /> Tinjau
                                             </div>
                                             <div
                                                 v-else
-                                                class="bg-[#0A2540] text-white text-[9px] md:text-xs font-bold px-3 py-1.5 md:px-4 md:py-1.5 rounded-full hover:bg-[#1a365d] transition shadow-sm z-30"
+                                                class="bg-[#0A2540] text-white text-[9px] md:text-xs font-bold px-3 py-1.5 md:px-4 md:py-1.5 rounded hover:bg-[#1a365d] transition shadow-sm z-30"
                                             >
                                                 Lihat Detail
                                             </div>
@@ -419,32 +442,22 @@ const filterTime = ref('daily');
                     </div>
 
                     <!-- Empty -->
-                    <div v-if="!filteredBookings.length && !bookingItems.length" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
-                        <Receipt class="text-3xl text-slate-200" />
-                        <p class="mt-3 font-bold text-slate-700">Belum ada pesanan</p>
-                        <p class="mt-1 text-sm text-slate-400">Pesanan dari aset Anda akan tampil di halaman ini.</p>
+                    <div v-if="!filteredBookings.length && !bookingItems.length" class="bg-white rounded-xl border border-slate-200 p-12 flex flex-col items-center justify-center text-center">
+                        <BookingEmptyIllustration class="w-40 md:w-48 h-auto opacity-70" />
+                        <p class="mt-6 font-bold text-lg text-slate-800">Belum ada pesanan</p>
+                        <p class="mt-2 text-sm text-slate-500 max-w-md">Tingkatkan peluang mendapatkan pemesanan dengan memastikan informasi dan ketersediaan aset selalu diperbarui.</p>
+                        <Link :href="route('owner.asset.index')" class="mt-6 px-6 py-2.5 bg-[#FFC000] text-[#0A2540] text-sm font-bold rounded shadow-sm hover:bg-[#e6ad00] transition">
+                            Kelola Aset
+                        </Link>
                     </div>
-                    <div v-else-if="!filteredBookings.length" class="bg-white rounded-2xl border border-slate-200 p-12 text-center">
+                    <div v-else-if="!filteredBookings.length" class="bg-white rounded-xl border border-slate-200 p-12 text-center">
                         <Filter class="text-3xl text-slate-200" />
                         <p class="mt-3 font-bold text-slate-700">Tidak ada pesanan dengan filter ini</p>
-                        <button @click="filterKategori = 'all'; filterJenis = 'all'; applyFilter('all')" class="mt-3 px-4 py-2 bg-[#0A2540] text-white text-xs font-bold rounded-lg hover:bg-[#081d33] transition">
+                        <button @click="filterKategori = 'all'; filterJenis = 'all'; applyFilter('all')" class="mt-3 px-4 py-2 bg-[#0A2540] text-white text-xs font-bold rounded hover:bg-[#081d33] transition">
                             Lihat Semua Pesanan
                         </button>
                     </div>
 
-                    <!-- Pagination -->
-                    <div v-if="paginationLinks.length > 0" class="flex items-center justify-center gap-1 pt-2">
-                        <Link
-                            v-for="link in paginationLinks"
-                            :key="link.label"
-                            :href="link.url"
-                            v-html="link.label"
-                            :class="[
-                                'text-xs font-bold px-3 py-1.5 rounded-lg transition',
-                                link.active ? 'bg-[#0A2540] text-white' : 'text-slate-500 hover:bg-slate-100',
-                            ]"
-                        />
-                    </div>
                 </section>
 
                 <!-- ==================== FINANCE ==================== -->
@@ -458,7 +471,7 @@ const filterTime = ref('daily');
                             :class="[
                                 'px-4 py-1.5 rounded-lg text-xs font-bold transition',
                                 filterTime === opt
-                                    ? 'bg-[#0A2540] text-white'
+                                    ? 'bg-[#FFC000] text-[#0A2540] shadow-sm'
                                     : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
                             ]"
                         >
@@ -467,7 +480,7 @@ const filterTime = ref('daily');
                     </div>
 
                     <!-- Grafik pendapatan -->
-                    <div class="bg-white border border-slate-200 rounded-2xl p-5">
+                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                         <h2 class="font-bold text-slate-800">Grafik Pendapatan</h2>
                         <div class="h-[250px] mt-3 relative unovis-chart-container">
                             <VisXYContainer v-if="unovisChartData.length" :data="unovisChartData" :padding="{ top: 20, right: 10, left: 20, bottom: 0 }">
@@ -485,22 +498,22 @@ const filterTime = ref('daily');
 
                     <!-- Ringkasan 3 kartu -->
                     <section class="grid md:grid-cols-3 gap-4">
-                        <div class="bg-[#0A2540] text-white p-5 rounded-2xl">
+                        <div class="bg-[#0A2540] text-white p-5 rounded-xl shadow-sm">
                             <p class="text-xs text-slate-300">Pendapatan Tercatat</p>
                             <p class="mt-2 text-2xl font-black">{{ formatCurrency(income) }}</p>
                         </div>
-                        <div class="bg-white border border-slate-200 p-5 rounded-2xl">
+                        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
                             <p class="text-xs text-slate-400">Biaya Layanan</p>
                             <p class="mt-2 text-2xl font-black text-slate-800">{{ formatCurrency(fees) }}</p>
                         </div>
-                        <div class="bg-white border border-slate-200 p-5 rounded-2xl">
+                        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
                             <p class="text-xs text-slate-400">Pendapatan Bersih</p>
                             <p class="mt-2 text-2xl font-black text-emerald-600">{{ formatCurrency(income - fees) }}</p>
                         </div>
                     </section>
 
                     <!-- Daftar transaksi terbaru -->
-                    <section class="bg-white border border-slate-200 rounded-2xl p-5">
+                    <section class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
                         <h2 class="font-bold text-slate-800">Transaksi Terbaru</h2>
                         <div v-if="transactions.length" class="mt-4 divide-y divide-slate-100">
                             <div v-for="transaction in transactions" :key="transaction.code" class="py-3 flex justify-between gap-4">
@@ -516,8 +529,8 @@ const filterTime = ref('daily');
                 </template>
 
                 <!-- ==================== VERIFICATION ==================== -->
-                <section v-else-if="type === 'verification'" class="max-w-3xl bg-white border border-slate-200 rounded-2xl p-6">
-                    <div class="flex items-center justify-between bg-amber-50 rounded-xl p-4">
+                <section v-else-if="type === 'verification'" class="max-w-3xl bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between bg-amber-50 rounded p-4 border border-amber-100">
                         <div>
                             <p class="text-xs text-amber-700">Status verifikasi</p>
                             <p class="font-black text-amber-900">{{ statusLabel }}</p>
@@ -525,7 +538,7 @@ const filterTime = ref('daily');
                         <Shield class="text-xl text-amber-500" />
                     </div>
                     <div class="mt-6 space-y-3">
-                        <div v-for="document in documents" :key="document.name" class="flex items-center justify-between p-4 border border-slate-100 rounded-xl">
+                        <div v-for="document in documents" :key="document.name" class="flex items-center justify-between p-4 border border-slate-200 rounded-lg bg-slate-50">
                             <span class="font-semibold text-sm">{{ document.name }}</span>
                             <span :class="document.complete ? 'text-emerald-600' : 'text-amber-600'" class="text-xs font-bold">
                                 <AppIcon :iconClass="document.complete ? 'fa-circle-check' : 'fa-clock'" class="fa-solid mr-1" />
@@ -536,43 +549,43 @@ const filterTime = ref('daily');
                 </section>
 
                 <!-- ==================== SETTINGS ==================== -->
-                <section v-else-if="type === 'settings'" class="max-w-3xl bg-white border border-slate-200 rounded-2xl p-6">
+                <section v-else-if="type === 'settings'" class="max-w-3xl bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
                     <h2 class="font-bold text-slate-800">Informasi Akun</h2>
                     <div class="mt-5 grid sm:grid-cols-2 gap-4">
                         <label class="text-xs font-bold">Nama
-                            <input :value="user.name" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500">
+                            <input :value="user.name" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded text-slate-500">
                         </label>
                         <label class="text-xs font-bold">Email
-                            <input :value="user.email" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500">
+                            <input :value="user.email" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded text-slate-500">
                         </label>
                         <label class="text-xs font-bold">Nomor telepon
-                            <input :value="user.phone || '-'" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500">
+                            <input :value="user.phone || '-'" disabled class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded text-slate-500">
                         </label>
                         <!-- Tambahan field Tempat, Tanggal Lahir -->
                         <label class="text-xs font-bold">Tempat, Tanggal Lahir
                             <input
                                 :value="user.birth_place && user.birth_date ? `${user.birth_place}, ${user.birth_date}` : '-'"
                                 disabled
-                                class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-500"
+                                class="mt-1 w-full p-3 bg-slate-50 border border-slate-200 rounded text-slate-500"
                             >
                         </label>
                     </div>
-                    <Link :href="route('profile.edit')" class="inline-flex mt-5 bg-[#0A2540] text-white text-xs font-bold px-4 py-2.5 rounded-xl">
+                    <Link :href="route('profile.edit')" class="inline-flex mt-5 bg-[#0A2540] text-white text-xs font-bold px-4 py-2.5 rounded hover:bg-[#1a365d] transition">
                         Ubah profil & kata sandi
                     </Link>
                 </section>
 
                 <!-- ==================== HELP ==================== -->
                 <section v-else-if="type === 'help'" class="max-w-3xl space-y-3">
-                    <div v-for="(faq, index) in faqs" :key="faq.question" class="bg-white border border-slate-200 rounded-xl">
+                    <div v-for="(faq, index) in faqs" :key="faq.question" class="bg-white border border-slate-200 rounded-lg shadow-sm">
                         <button @click="activeFaq = activeFaq === index ? null : index" class="w-full p-4 text-left flex items-center justify-between font-bold text-sm">
                             <span>{{ faq.question }}</span>
                             <AppIcon :iconClass="activeFaq === index ? 'fa-minus' : 'fa-plus'" class="fa-solid text-slate-400" />
                         </button>
                         <p v-if="activeFaq === index" class="px-4 pb-4 text-sm text-slate-500 leading-relaxed">{{ faq.answer }}</p>
                     </div>
-                    <div class="mt-6 bg-[#0A2540] text-white p-5 rounded-2xl">
-                        <p class="font-bold">Butuh bantuan langsung?</p>
+                    <div class="mt-6 bg-[#0A2540] text-white p-5 rounded-xl shadow-sm">
+                        <p class="font-bold text-[#FFC000]">Butuh bantuan langsung?</p>
                         <p class="text-sm text-slate-300 mt-1">Hubungi tim dukungan kitasewa melalui email support@kitasewa.id.</p>
                     </div>
                 </section>

@@ -2,6 +2,7 @@
 import { MessageCircle, MessageSquareMore } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
+import UserAvatar from '@/Components/ui/Icons/UserAvatar.vue';
 
 const props = defineProps({
     assetId: {
@@ -50,15 +51,15 @@ const startChat = () => {
         <div class="flex items-center gap-4 pb-10 md:pb-12 border-b border-gray-100">
             <div class="w-14 h-14 rounded-full overflow-hidden shrink-0">
                 <img
-                    v-if="ownerProfile?.user?.profile_photo"
-                    :src="ownerProfile.user.profile_photo"
+                    v-if="ownerProfile?.user?.avatar"
+                    :src="ownerProfile.user.avatar"
                     class="w-full h-full object-cover"
                 />
                 <div
                     v-else
-                    class="w-full h-full flex items-center justify-center bg-[#0A2540] text-white font-bold text-lg uppercase tracking-wider"
+                    class="w-full h-full flex items-center justify-center bg-[#f8f9fa] overflow-hidden"
                 >
-                    {{ ownerProfile?.user?.name ? ownerProfile.user.name.substring(0, 2) : 'AN' }}
+                    <UserAvatar :user="ownerProfile?.user" />
                 </div>
             </div>
 

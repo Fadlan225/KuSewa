@@ -19,6 +19,15 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasPushSubscriptions;
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'avatar',
+    ];
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>
@@ -29,6 +38,19 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    /**
+     * Get the resolved URL for the user's avatar.
+     */
+    public function getAvatarAttribute()
+    {
+        $photo = $this->profile_photo;
+        if (!$photo) return null;
+        if (str_starts_with($photo, 'http') || str_starts_with($photo, '/storage/')) {
+            return $photo;
+        }
+        return '/storage/' . $photo;
     }
 
     public function ownerProfile()

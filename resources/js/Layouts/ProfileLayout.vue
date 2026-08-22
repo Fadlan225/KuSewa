@@ -1,9 +1,11 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
 import ProfileMenu from '@/Components/ProfileMenu.vue';
-import { Loader2, Camera, Medal, AlertTriangle, ChevronRight, ClipboardList, Wallet, Heart, Briefcase } from 'lucide-vue-next';
+import { Loader2, Camera, Medal, AlertTriangle, ChevronRight, ClipboardList, Wallet, Heart, Briefcase, Trash2, X, Image as ImageIcon } from 'lucide-vue-next';
 import { ref, computed, nextTick } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import UserAvatar from '@/Components/ui/Icons/UserAvatar.vue';
+import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
@@ -18,7 +20,9 @@ const imageError = ref(false);
 
 // Photo upload state
 const photoInput = ref(null);
+const cameraInput = ref(null);
 const uploadingPhoto = ref(false);
+const showPhotoMenu = ref(false);
 
 const showCropModal = ref(false);
 const imageToCrop = ref(null);
@@ -27,7 +31,21 @@ let cropperInstance = null;
 const originalFile = ref(null);
 
 const selectNewPhoto = () => {
-    photoInput.value.click();
+    showPhotoMenu.value = true;
+};
+
+const selectCamera = () => {
+    showPhotoMenu.value = false;
+    if (cameraInput.value) {
+        cameraInput.value.click();
+    }
+};
+
+const selectGallery = () => {
+    showPhotoMenu.value = false;
+    if (photoInput.value) {
+        photoInput.value.click();
+    }
 };
 
 const handleFileChange = (e) => {
@@ -99,6 +117,25 @@ const submitCroppedImage = () => {
     }, originalFile.value.type);
 };
 
+const deletePhoto = () => {
+    showPhotoMenu.value = false;
+    uploadingPhoto.value = true;
+    router.delete(route('profile.photo.destroy'), {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            imageError.value = false;
+            if (photoInput.value) photoInput.value.value = null;
+        },
+        onError: () => {
+            alert('Gagal menghapus foto profil.');
+        },
+        onFinish: () => {
+            uploadingPhoto.value = false;
+        }
+    });
+};
+
 // Generate initials from user's name
 const initials = computed(() => {
     const name = user.value?.name ?? '';
@@ -153,27 +190,28 @@ const requestLocationPermission = () => {
                             :src="user.avatar"
                             @error="imageError = true"
                             alt="Foto Profil"
-                            class="w-24 h-24 sm:w-20 sm:h-20 rounded-full border-2 border-dashed border-[#FFC000] object-cover shadow-sm transition-opacity duration-200 group-hover:opacity-80"
+                            class="w-24 h-24 sm:w-20 sm:h-20 rounded-full object-cover shadow-sm transition-opacity duration-200 group-hover:opacity-80"
                         />
                     </template>
                     <div
                         v-else
-                        class="w-24 h-24 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-[#0A2540] to-[#466080] text-white flex items-center justify-center font-bold text-2xl sm:text-xl border-2 border-dashed border-[#FFC000] shadow-sm select-none transition-opacity duration-200 group-hover:opacity-80"
+                        class="w-24 h-24 sm:w-20 sm:h-20 rounded-full bg-[#f8f9fa] flex items-center justify-center shadow-sm select-none transition-opacity duration-200 group-hover:opacity-80 overflow-hidden"
                     >
-                        {{ initials }}
+                        <UserAvatar :user="user" />
                     </div>
 
                     <!-- Loading overlay -->
-                    <div v-if="uploadingPhoto" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center">
+                    <div v-if="uploadingPhoto" class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center z-20">
                         <Loader2 class="text-white text-xl animate-spin" />
                     </div>
 
                     <!-- Camera icon hover -->
-                    <div v-else class="absolute -bottom-0 -right-0 bg-white p-1.5 rounded-full shadow-lg border border-gray-100 flex items-center justify-center text-[#FFC000] hover:scale-110 transition-transform">
-                        <Camera class="text-xs" />
+                    <div v-if="!uploadingPhoto" class="absolute -bottom-2 -right-2 bg-[#FFC000] w-8 h-8 sm:w-9 sm:h-9 rounded-full shadow-md flex items-center justify-center text-white hover:scale-110 transition-transform z-10" title="Ubah Foto">
+                        <Camera class="w-4 h-4 sm:w-5 sm:h-5" />
                     </div>
                 </div>
                 <input type="file" class="hidden" ref="photoInput" @change="handleFileChange" accept="image/*">
+                <input type="file" class="hidden" ref="cameraInput" @change="handleFileChange" accept="image/*" capture="user">
 
                 <!-- Informasi Profil -->
                 <div class="flex-grow text-center w-full">
@@ -182,12 +220,14 @@ const requestLocationPermission = () => {
                     </h1>
 
                     <!-- Badge status keanggotaan -->
-                    <div class="flex justify-center mt-4">
-                        <div class="flex items-center space-x-2 bg-[#F8F9FA] px-3.5 py-1.5 rounded-full text-xs border border-gray-100">
-                            <Medal class="text-[#FFC000]" />
-                            <span class="text-[#000000] font-medium">
-                                Penyewa Aktif <span class="mx-1.5 text-gray-300">|</span> Total Aset Disewa: <strong>{{ total_assets_rented }}</strong>
-                            </span>
+                    <div class="flex justify-center mt-4 w-full px-2">
+                        <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 bg-[#F8F9FA] px-4 py-2 rounded-xl text-xs border border-gray-100 text-[#000000] font-medium text-center">
+                            <div class="flex items-center gap-1.5">
+                                <Medal class="text-[#FFC000] w-4 h-4 shrink-0" />
+                                <span class="whitespace-nowrap">Penyewa Aktif</span>
+                            </div>
+                            <span class="text-gray-300 hidden min-[380px]:inline">|</span>
+                            <span class="whitespace-nowrap">Total Aset Disewa: <strong>{{ total_assets_rented }}</strong></span>
                         </div>
                     </div>
                 </div>
@@ -202,6 +242,77 @@ const requestLocationPermission = () => {
                 <slot />
             </div>
         </div>
+        
+        <!-- Mobile Photo Menu Bottom Sheet -->
+        <BottomSheet v-model="showPhotoMenu" title="Foto profil" heightClass="h-auto pb-6">
+            <div class="flex flex-col mt-2 px-5">
+                <button @click="selectCamera" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                        <Camera class="w-6 h-6" />
+                    </div>
+                    <span class="text-base font-medium text-gray-800">Kamera</span>
+                </button>
+                <button @click="selectGallery" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                        <ImageIcon class="w-6 h-6" />
+                    </div>
+                    <span class="text-base font-medium text-gray-800">Galeri</span>
+                </button>
+                <button v-if="user.avatar" @click="deletePhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                        <Trash2 class="w-6 h-6" />
+                    </div>
+                    <span class="text-base font-medium text-gray-800">Hapus Foto Profil</span>
+                </button>
+            </div>
+        </BottomSheet>
+
+        <!-- Desktop Photo Menu Modal -->
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition-opacity duration-300"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-300"
+                leave-from-class="opacity-100"
+            >
+                <div v-if="showPhotoMenu" class="fixed inset-0 z-[150] hidden md:flex items-center justify-center bg-black/50 transition-opacity" @click.self="showPhotoMenu = false">
+                    <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl transition-transform">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-10">
+                                <button @click="showPhotoMenu = false" class="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-full hover:bg-gray-100">
+                                    <X class="w-6 h-6" />
+                                </button>
+                            </div>
+                            <h3 class="text-lg font-bold text-gray-900">Foto profil</h3>
+                            <div class="w-10 flex justify-end"></div>
+                        </div>
+                        
+                        <div class="flex flex-col mt-2">
+                            <button @click="selectCamera" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                                <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                                    <Camera class="w-6 h-6" />
+                                </div>
+                                <span class="text-base font-medium text-gray-800">Kamera</span>
+                            </button>
+                            <button @click="selectGallery" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                                <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                                    <ImageIcon class="w-6 h-6" />
+                                </div>
+                                <span class="text-base font-medium text-gray-800">Galeri</span>
+                            </button>
+                            <button v-if="user.avatar" @click="deletePhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                                <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                                    <Trash2 class="w-6 h-6" />
+                                </div>
+                                <span class="text-base font-medium text-gray-800">Hapus Foto Profil</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
+        </Teleport>
+
         <!-- Crop Modal -->
         <Teleport to="body" v-if="showCropModal">
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 overflow-hidden">

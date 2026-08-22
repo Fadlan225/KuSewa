@@ -46,6 +46,8 @@ class OwnerRegistrationController extends Controller
                 'village_code' => $ownerProfile->village_code,
                 'postal_code' => $ownerProfile->postal_code,
                 'address' => $ownerProfile->address,
+                'has_ktp_photo' => !empty($ownerProfile->ktp_photo),
+                'ktp_photo_url' => $ownerProfile->ktp_photo ? Storage::url($ownerProfile->ktp_photo) : null,
             ] : null,
             // Jika sudah ada status, tapi form ini bisa jadi draft.
         ]);
@@ -76,7 +78,7 @@ class OwnerRegistrationController extends Controller
             );
         }
 
-        return back()->with('success', 'Data diri berhasil disimpan.');
+        return back();
     }
 
     /**
@@ -91,7 +93,7 @@ class OwnerRegistrationController extends Controller
             $request->validated()
         );
 
-        return back()->with('success', 'Alamat berhasil disimpan.');
+        return back();
     }
 
     /**
@@ -101,16 +103,20 @@ class OwnerRegistrationController extends Controller
     {
         $user = auth()->user();
         
+        $data = [
+            'status' => 'pending',
+            'verification_at' => null,
+        ];
+
         // Handle upload
-        $path = $request->file('ktp_photo')->store('public/owner/ktp');
+        if ($request->hasFile('ktp_photo')) {
+            $path = $request->file('ktp_photo')->store('public/owner/ktp');
+            $data['ktp_photo'] = $path;
+        }
         
         $ownerProfile = owner_profile::updateOrCreate(
             ['user_id' => $user->id],
-            [
-                'ktp_photo' => $path,
-                'status' => 'pending',
-                'verification_at' => null,
-            ]
+            $data
         );
 
         // Jangan pakai alert/toast seperti di instruksi, langsung redirect
@@ -131,6 +137,8 @@ class OwnerRegistrationController extends Controller
 
         return Inertia::render('Auth/OwnerVerificationStatus', [
             'status' => $ownerProfile->status,
+            'createdAt' => $ownerProfile->created_at ? $ownerProfile->created_at->translatedFormat('d F Y') : null,
+            'rejectionReason' => $ownerProfile->rejection_reason,
         ]);
     }
 }

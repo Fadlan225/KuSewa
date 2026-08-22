@@ -1,6 +1,7 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { User, Settings, Headset, LogOut, ChevronRight, ChevronLeft, ChevronDown, Home } from 'lucide-vue-next';
+import { User, Settings, Headset, LogOut, ChevronRight, ChevronLeft, ChevronDown, Home, PanelLeftClose, PanelLeftOpen } from 'lucide-vue-next';
+import UserAvatar from '@/Components/ui/Icons/UserAvatar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 
@@ -73,19 +74,25 @@ const handleLogout = () => {
 <template>
     <aside :class="[isCollapsed ? 'w-20' : 'w-60', 'h-full max-h-screen bg-white border-r border-slate-200/80 flex flex-col p-3 md:p-4 shrink-0 transition-all duration-300 relative z-40']">
         <!-- Brand Logo -->
-        <div class="flex items-center px-2 py-1 mb-6 shrink-0 transition-all duration-300" :class="isCollapsed ? 'justify-center' : 'justify-start'">
+        <div class="flex items-center px-2 py-1 mb-6 shrink-0 transition-all duration-300 group cursor-pointer relative" :class="isCollapsed ? 'justify-center' : 'justify-between'" @click="toggleCollapse" title="Sembunyikan/Tampilkan Menu">
             <div class="flex items-center gap-2 overflow-hidden">
-                <!-- Logo acts as collapse toggle on desktop -->
-                <img @click="toggleCollapse" src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain shrink-0 cursor-pointer transition-transform hover:scale-110 hidden lg:block" title="Sembunyikan/Tampilkan Menu" />
+                <!-- Logo with Hover Icon (Desktop) -->
+                <div class="relative w-6 h-6 shrink-0 hidden lg:flex items-center justify-center">
+                    <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain transition-opacity duration-200 group-hover:opacity-0" />
+                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <PanelLeftClose v-if="!isCollapsed" class="w-5 h-5 text-slate-600" />
+                        <PanelLeftOpen v-else class="w-5 h-5 text-slate-600" />
+                    </div>
+                </div>
 
                 <!-- Logo acts as home link on mobile -->
-                <Link :href="route('Home') || '/'" class="lg:hidden shrink-0">
+                <Link :href="route('Home') || '/'" class="lg:hidden shrink-0" @click.stop>
                     <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain" />
                 </Link>
 
                 <!-- Brand Name acts as home link -->
-                <Link v-if="!isCollapsed" :href="route('Home') || '/'" class="transition-transform hover:scale-[1.02] duration-200">
-                    <span class="font-black text-lg tracking-tight text-[#0A2540] mt-0.5 whitespace-nowrap transition-opacity duration-300">
+                <Link v-if="!isCollapsed" :href="route('Home') || '/'" class="transition-transform hover:scale-[1.02] duration-200" @click.stop>
+                    <span class="font-black text-lg tracking-tight text-[#0A2540] mt-0.5 whitespace-nowrap transition-opacity duration-300 group-hover:text-slate-600">
                         kitasewa<span class="text-[#FFC000]">.id</span>
                     </span>
                 </Link>
@@ -101,11 +108,11 @@ const handleLogout = () => {
                             v-if="user.profile_photo_url || user.avatar"
                             :src="user.profile_photo_url || user.avatar"
                             :alt="user.name"
-                            class="w-8 h-8 rounded-lg object-cover bg-slate-200 shrink-0 border border-slate-200"
+                            class="w-8 h-8 rounded-full object-cover shrink-0"
                         />
                         <!-- Fallback ke inisial huruf pertama -->
-                        <div v-else class="w-8 h-8 rounded-lg bg-[#0A2540] text-[#FFC000] flex items-center justify-center font-black text-xs uppercase shrink-0">
-                            {{ user.name.charAt(0) }}
+                        <div v-else class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+                            <UserAvatar :user="user" />
                         </div>
                         <div v-if="!isCollapsed" class="min-w-0 text-left flex-1 whitespace-nowrap">
                             <h4 class="text-xs font-bold text-slate-800 truncate">{{ user.name }}</h4>

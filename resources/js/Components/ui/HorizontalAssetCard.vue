@@ -2,6 +2,7 @@
 import { Image, Heart, Star } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted, inject } from 'vue';
 import AssetCardSkeleton from './AssetCardSkeleton.vue';
+import NoImageIllustration from '@/Components/ui/Icons/NoImageIllustration.vue';
 import { usePage, router } from '@inertiajs/vue3';
 
 const props = defineProps({
@@ -288,8 +289,8 @@ const availabilityText = computed(() => {
                     @touchstart.passive.stop="onTouchStart"
                     @touchend.stop="onTouchEnd"
                 >
-                    <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
-                        <Image class="text-xl" />
+                    <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-100 p-2">
+                        <NoImageIllustration class="w-full h-full object-contain opacity-50 mix-blend-multiply" />
                     </div>
                     <img v-else :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" loading="lazy" />
 

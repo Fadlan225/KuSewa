@@ -52,7 +52,9 @@ Route::get('/bantuan', function () {
 Route::get('/hubungi-kami', function () {
     return Inertia::render('Home/Support/HubungiKami');
 })->name('hubungi-kami');
-
+Route::get('/promosikan-properti', function () {
+    return Inertia::render('Auth/ownerlanding');
+})->name('owner.landing');
 
 Route::middleware('auth')->prefix('owner')->group(function () {
     Route::get('/register', [OwnerRegistrationController::class, 'index'])->name('owner.register');
@@ -66,6 +68,7 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::post('asset/upload-temp', [OwnerAssetController::class, 'uploadTemp'])->name('asset.upload-temp');
+    Route::get('asset/preview-nearby', [OwnerAssetController::class, 'previewNearby'])->name('asset.preview-nearby');
     Route::post('asset/auto-save', [OwnerAssetController::class, 'autoSaveDraft'])->name('asset.auto-save');
     Route::get('asset/draft/{id}', [OwnerAssetController::class, 'editDraft'])->name('asset.edit-draft');
     Route::resource('asset', OwnerAssetController::class)->names('asset');
@@ -150,12 +153,14 @@ Route::middleware('auth')->group(function () {
     // ==========================
     // Profile
     // ==========================
-    Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
-    Route::get('/profile/security', [ProfileController::class, 'security'])->name('profile.security');
-    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
+    Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
+    Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
+    Route::get('/profile/bisnis', [ProfileController::class, 'bisnis'])->name('profile.bisnis');
+    Route::get('/profile/security', [ProfileController::class, 'security'])->name('profile.security');
 });
 
 Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {

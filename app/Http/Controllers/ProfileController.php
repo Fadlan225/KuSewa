@@ -133,6 +133,57 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the user's business form (Mobile only).
+     */
+    public function bisnis(Request $request): Response
+    {
+        $user = $request->user()->load(['ownerProfile.bankAccounts']);
+
+        $ownerProfile = null;
+        $bankAccount = null;
+
+        if ($user->ownerProfile) {
+            $ownerProfile = $user->ownerProfile;
+            $bankAccount = $ownerProfile->bankAccounts->first();
+        }
+
+        $photo = $user->profile_photo;
+        $avatarUrl = null;
+        if ($photo) {
+            $avatarUrl = (filter_var($photo, FILTER_VALIDATE_URL)) ? $photo : asset('storage/' . $photo);
+        }
+
+        return Inertia::render('Profile/Bisnis', [
+            'mustVerifyEmail' => $request->user() instanceof MustVerifyEmail,
+            'status' => session('status'),
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'date_of_birth' => $user->date_of_birth,
+                'place_of_birth_code' => $user->place_of_birth_code,
+                'gender' => $user->gender,
+                'avatar' => $avatarUrl,
+                'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
+                'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+            ],
+            'owner_profile' => $ownerProfile ? [
+                'national_id' => $ownerProfile->national_id,
+                'address' => $ownerProfile->address,
+                'place_of_birth' => $ownerProfile->place_of_birth,
+                'date_of_birth' => $ownerProfile->date_of_birth,
+                'status' => $ownerProfile->status,
+            ] : null,
+            'bank_account' => $bankAccount ? [
+                'bank_name' => $bankAccount->bank_name,
+                'account_number' => $bankAccount->account_number,
+                'account_holder' => $bankAccount->account_holder,
+            ] : null,
+        ]);
+    }
+
+    /**
      * Display the user's profile form.
      */
     public function edit(Request $request): Response
@@ -345,6 +396,23 @@ class ProfileController extends Controller
         }
 
         return \Illuminate\Support\Facades\Redirect::back()->with('status', 'photo-updated');
+    }
+
+    /**
+     * Delete the user's profile photo.
+     */
+    public function destroyPhoto(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->profile_photo && !filter_var($user->profile_photo, FILTER_VALIDATE_URL)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_photo);
+        }
+
+        $user->profile_photo = null;
+        $user->save();
+
+        return \Illuminate\Support\Facades\Redirect::back()->with('status', 'photo-deleted');
     }
 
     /**

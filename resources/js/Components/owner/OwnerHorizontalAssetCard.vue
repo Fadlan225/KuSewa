@@ -4,6 +4,9 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { onClickOutside } from '@vueuse/core';
 import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
+import AssetIllustration from '@/Components/ui/Icons/AssetIllustration.vue';
+import TrashIllustration from '@/Components/ui/Icons/TrashIllustration.vue';
+import NoImageIllustration from '@/Components/ui/Icons/NoImageIllustration.vue';
 
 const props = defineProps({
     asset: { type: Object, required: true },
@@ -26,6 +29,7 @@ onClickOutside(menuRef, () => {
 });
 
 const showConfirmModal = ref(false);
+const showToggleModal = ref(false);
 
 const openDeleteConfirm = () => {
     showConfirmModal.value = true;
@@ -34,6 +38,17 @@ const openDeleteConfirm = () => {
 const deleteAsset = () => {
     showConfirmModal.value = false;
     router.delete(route('owner.asset.destroy', props.asset.id), {
+        preserveScroll: true
+    });
+};
+
+const openToggleConfirm = () => {
+    showToggleModal.value = true;
+};
+
+const toggleStatus = () => {
+    showToggleModal.value = false;
+    router.patch(route('owner.asset.toggle-status', props.asset.id), {}, {
         preserveScroll: true
     });
 };
@@ -89,7 +104,7 @@ const availabilityText = computed(() => {
 <template>
     <div
         ref="elRef"
-        :class="['bg-white rounded-md shadow-sm border border-slate-200/60 hover:shadow-md hover:border-[#FFC000] transition-all flex flex-row group p-2.5 md:p-3 items-center gap-3 md:gap-4 select-none [-webkit-touch-callout:none] w-full cursor-pointer relative', (isMenuOpen || isInfoModalOpen) ? 'z-40 border-[#FFC000]' : 'z-10']"
+        :class="['bg-white rounded-md shadow-sm border border-slate-200/60 hover:shadow-md hover:border-[#FFC000] transition-all flex flex-row group p-2.5 md:p-3 items-center gap-3 md:gap-4 select-none [-webkit-touch-callout:none] w-full cursor-pointer relative', (isMenuOpen || isInfoModalOpen) ? 'z-[60] border-[#FFC000]' : 'z-10']"
         @click="navigateToAsset"
     >
         <div v-if="!isIntersecting" class="flex flex-row w-full animate-pulse items-center gap-3 md:gap-4">
@@ -132,8 +147,8 @@ const availabilityText = computed(() => {
                 </div>
 
                 <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-md overflow-hidden bg-slate-100">
-                    <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-100 text-slate-300">
-                        <Image class="text-xl" />
+                    <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-100 p-2">
+                        <NoImageIllustration class="w-full h-full object-contain opacity-50 mix-blend-multiply" />
                     </div>
                     <img v-else :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" loading="lazy" />
                     
@@ -192,33 +207,51 @@ const availabilityText = computed(() => {
                             leave-from-class="transform scale-100 opacity-100"
                             leave-to-class="transform scale-95 opacity-0"
                         >
-                            <div v-if="isMenuOpen" class="absolute right-0 bottom-full mb-2 w-48 origin-bottom-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none z-50">
+                            <div v-if="isMenuOpen" class="absolute right-0 bottom-full mb-2 w-max min-w-[200px] max-w-[280px] origin-bottom-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none z-50">
                                 <div class="px-1 py-1">
                                     <!-- Option for Draft -->
                                     <button
                                         v-if="asset.verification_status === 'draft'"
                                         @click="navigateToAsset"
-                                        class="text-gray-900 hover:bg-[#FFC000]/20 hover:text-[#997300] group flex w-full items-center rounded-md px-2 py-2 text-xs font-medium transition-colors"
+                                        class="text-gray-900 hover:bg-[#FFC000]/20 hover:text-[#997300] group flex w-full items-start rounded-md px-2 py-2 text-xs font-medium transition-colors text-left"
                                     >
-                                        <Edit3 class="mr-2 h-4 w-4 text-[#FFC000] group-hover:text-[#997300]" aria-hidden="true" />
-                                        Lengkapi Data {{ asset.type || categoryName }}
+                                        <Edit3 class="mr-2 h-4 w-4 shrink-0 mt-0.5 text-[#FFC000] group-hover:text-[#997300]" aria-hidden="true" />
+                                        <span class="leading-relaxed">Lengkapi Data {{ asset.type || categoryName }}</span>
                                     </button>
                                     <!-- Info Menu -->
                                     <button
                                         @click="isInfoModalOpen = true; isMenuOpen = false"
-                                        class="text-gray-900 hover:bg-slate-50 hover:text-slate-700 group flex w-full items-center rounded-md px-2 py-2 text-xs font-medium transition-colors"
+                                        class="text-gray-900 hover:bg-slate-50 hover:text-slate-700 group flex w-full items-start rounded-md px-2 py-2 text-xs font-medium transition-colors text-left"
                                     >
-                                        <Info class="mr-2 h-4 w-4 text-slate-500" aria-hidden="true" />
-                                        Info Aset
+                                        <Info class="mr-2 h-4 w-4 shrink-0 mt-0.5 text-slate-500" aria-hidden="true" />
+                                        <span class="leading-relaxed">Info Aset</span>
                                     </button>
                                     <!-- Hapus Menu -->
                                     <button
                                         v-if="['draft', 'pending', 'rejected'].includes(asset.verification_status)"
                                         @click="openDeleteConfirm(); isMenuOpen = false"
-                                        class="text-rose-600 hover:bg-rose-50 hover:text-rose-700 group flex w-full items-center rounded-md px-2 py-2 text-xs font-medium transition-colors"
+                                        class="text-rose-600 hover:bg-rose-50 hover:text-rose-700 group flex w-full items-start rounded-md px-2 py-2 text-xs font-medium transition-colors text-left"
                                     >
-                                        <Trash2 class="mr-2 h-4 w-4 text-rose-500" aria-hidden="true" />
-                                        Hapus Aset
+                                        <Trash2 class="mr-2 h-4 w-4 shrink-0 mt-0.5 text-rose-500" aria-hidden="true" />
+                                        <span class="leading-relaxed">Hapus Aset</span>
+                                    </button>
+                                    <!-- Nonaktifkan Menu -->
+                                    <button
+                                        v-if="asset.verification_status === 'approved'"
+                                        @click="openToggleConfirm(); isMenuOpen = false"
+                                        class="text-amber-600 hover:bg-amber-50 hover:text-amber-700 group flex w-full items-start rounded-md px-2 py-2 text-xs font-medium transition-colors text-left"
+                                    >
+                                        <Power class="mr-2 h-4 w-4 shrink-0 mt-0.5 text-amber-500" aria-hidden="true" />
+                                        <span class="leading-relaxed">Nonaktifkan Aset</span>
+                                    </button>
+                                    <!-- Aktifkan Menu -->
+                                    <button
+                                        v-if="asset.verification_status === 'inactive'"
+                                        @click="openToggleConfirm(); isMenuOpen = false"
+                                        class="text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 group flex w-full items-start rounded-md px-2 py-2 text-xs font-medium transition-colors text-left"
+                                    >
+                                        <Power class="mr-2 h-4 w-4 shrink-0 mt-0.5 text-emerald-500" aria-hidden="true" />
+                                        <span class="leading-relaxed">Aktifkan Aset</span>
                                     </button>
                                 </div>
                             </div>
@@ -276,8 +309,14 @@ const availabilityText = computed(() => {
                                         </button>
                                     </div>
                                     <div class="bg-slate-50 p-3 border-t border-slate-200 flex items-center justify-end gap-2 rounded-b-sm">
-                                        <button @click="deleteAsset(); isInfoModalOpen = false" class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 transition rounded-sm">
+                                        <button v-if="['draft', 'pending', 'rejected'].includes(asset.verification_status)" @click="openDeleteConfirm(); isInfoModalOpen = false" class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 transition rounded-sm">
                                             Hapus
+                                        </button>
+                                        <button v-if="asset.verification_status === 'approved'" @click="openToggleConfirm(); isInfoModalOpen = false" class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold text-amber-600 bg-white border border-amber-200 hover:bg-amber-50 transition rounded-sm">
+                                            Nonaktifkan
+                                        </button>
+                                        <button v-if="asset.verification_status === 'inactive'" @click="openToggleConfirm(); isInfoModalOpen = false" class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold text-emerald-600 bg-white border border-emerald-200 hover:bg-emerald-50 transition rounded-sm">
+                                            Aktifkan
                                         </button>
                                         <button v-if="asset.verification_status === 'draft'" @click="navigateToAsset" class="px-3 py-1.5 text-[11px] uppercase tracking-wider font-bold text-[#0A2540] bg-[#FFC000] hover:bg-[#e6ad00] transition rounded-sm shadow-sm">
                                             Lengkapi Data
@@ -299,10 +338,35 @@ const availabilityText = computed(() => {
         </template>
         <ConfirmModal
             :show="showConfirmModal"
-            title="Hapus Aset"
-            message="Apakah Anda yakin ingin menghapus aset ini? Aset yang dihapus tidak akan tampil lagi di daftar."
+            type="primary"
+            title="Hampir selesai, yakin mau hapus?"
+            message="Aset ini masih dalam tahap persiapan. Kalau dihapus, progres yang sudah kamu buat akan hilang."
+            confirmText="Hapus Aset"
+            cancelText="Batal"
             @confirm="deleteAsset"
             @cancel="showConfirmModal = false"
-        />
+        >
+            <template #icon>
+                <div class="mb-3">
+                    <TrashIllustration class="w-32 h-auto mx-auto drop-shadow-sm opacity-90" />
+                </div>
+            </template>
+        </ConfirmModal>
+        <ConfirmModal
+            :show="showToggleModal"
+            type="primary"
+            :title="asset.verification_status === 'approved' ? 'Nonaktifkan aset ini?' : 'Aktifkan aset ini?'"
+            :message="asset.verification_status === 'approved' ? 'Aset Anda tidak akan ditampilkan kepada calon penyewa selama dinonaktifkan. Anda bisa mengaktifkannya kembali kapan saja.' : 'Aset Anda akan kembali ditampilkan kepada calon penyewa. Anda bisa menonaktifkannya kembali kapan saja.'"
+            :confirmText="asset.verification_status === 'approved' ? 'Nonaktifkan Aset' : 'Aktifkan Aset'"
+            cancelText="Batal"
+            @confirm="toggleStatus"
+            @cancel="showToggleModal = false"
+        >
+            <template #icon>
+                <div class="mb-3">
+                    <AssetIllustration class="w-32 h-auto mx-auto drop-shadow-sm opacity-90" />
+                </div>
+            </template>
+        </ConfirmModal>
     </div>
 </template>

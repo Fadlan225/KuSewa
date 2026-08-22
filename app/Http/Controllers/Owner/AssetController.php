@@ -309,7 +309,7 @@ class AssetController extends Controller
         ]);
 
         $path = $request->file('file')->store('uploads/temp', 'public');
-        
+
         return response()->json([
             'path' => $path,
             'url' => asset('storage/' . $path)
@@ -334,12 +334,27 @@ class AssetController extends Controller
             $asset = asset::where('id', $assetId)
                 ->where('owner_profile_id', $ownerProfile->id)
                 ->first();
-            
+
             if ($asset) {
+                $oldLat = $asset->draft_payload['latitude'] ?? null;
+                $oldLon = $asset->draft_payload['longitude'] ?? null;
+
                 $asset->update([
                     'title' => $title,
                     'draft_payload' => $payload,
                 ]);
+
+                if (!empty($payload['latitude']) && !empty($payload['longitude']) && $payload['latitude'] != 0) {
+                    if ($oldLat != $payload['latitude'] || $oldLon != $payload['longitude']) {
+                        \Illuminate\Support\Facades\Cache::forget("osm_sync_asset_{$asset->id}");
+                        \App\Jobs\FetchNearbyPlacesJob::dispatch(
+                            (float) $payload['latitude'],
+                            (float) $payload['longitude'],
+                            $asset->id
+                        );
+                    }
+                }
+
                 return response()->json(['message' => 'Draft updated', 'draft_id' => $asset->id]);
             }
         }
@@ -350,6 +365,7 @@ class AssetController extends Controller
         }
 
         $asset = asset::create([
+            
             'owner_profile_id' => $ownerProfile->id,
             'asset_type_id'    => $request->input('asset_type_id') ?: \App\Models\asset_type::first()->id ?? 1,
             'title'            => $title,
@@ -367,7 +383,32 @@ class AssetController extends Controller
             'longitude'        => '0',
         ]);
 
+        if (!empty($payload['latitude']) && !empty($payload['longitude']) && $payload['latitude'] != 0) {
+            \App\Jobs\FetchNearbyPlacesJob::dispatch(
+                (float) $payload['latitude'],
+                (float) $payload['longitude'],
+                $asset->id
+            );
+        }
+
         return response()->json(['message' => 'Draft created', 'draft_id' => $asset->id]);
+    }
+
+    /**
+     * Preview nearby places for map pin
+     */
+    public function previewNearby(Request $request)
+    {
+        $lat = $request->query('lat');
+        $lon = $request->query('lon');
+        
+        if (!$lat || !$lon || $lat == 0 || $lon == 0) {
+            return response()->json([]);
+        }
+
+        $nearbyPlaces = \App\Services\OpenStreetMapService::getNearbyPlaces((float) $lat, (float) $lon, null, 3000, true);
+        
+        return response()->json($nearbyPlaces);
     }
 
     /**
@@ -390,7 +431,7 @@ class AssetController extends Controller
                 $assetRecord = asset::where('id', $draftId)
                     ->where('owner_profile_id', $ownerProfile->id)
                     ->firstOrFail();
-                
+
                 $assetRecord->update([
                     'asset_type_id'    => $request->asset_type_id,
                     'title'            => $request->title,
@@ -512,10 +553,10 @@ class AssetController extends Controller
 
                     foreach ($unitPhotosInput as $photoIdx => $photoGroup) {
                         $galleryCategoryId = $photoGroup['gallery_category_id'] ?? null;
-                        
+
                         // Coba ambil dari FormData dulu
                         $files = $unitPhotosFiles[$photoIdx]['files'] ?? [];
-                        
+
                         // Jika tidak ada di FormData, coba ambil dari input biasa (kasus URL string dari Temp Upload)
                         if (empty($files) && isset($photoGroup['files'])) {
                             $files = $photoGroup['files'];

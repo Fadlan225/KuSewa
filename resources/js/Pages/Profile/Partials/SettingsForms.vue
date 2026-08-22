@@ -7,8 +7,6 @@ const props = defineProps({
     mustVerifyEmail: Boolean,
     status: String,
     user: Object,
-    owner_profile: { type: Object, default: null },
-    bank_account: { type: Object, default: null },
 });
 </script>
 
@@ -20,8 +18,6 @@ const props = defineProps({
             <UpdateProfileInformationForm
                 :must-verify-email="mustVerifyEmail"
                 :status="status"
-                :owner_profile="owner_profile"
-                :bank_account="bank_account"
             />
         </div>
     </div>

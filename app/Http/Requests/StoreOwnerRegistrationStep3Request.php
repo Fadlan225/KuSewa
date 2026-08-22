@@ -19,8 +19,11 @@ class StoreOwnerRegistrationStep3Request extends FormRequest
      */
     public function rules(): array
     {
+        $user = auth()->user();
+        $hasPhoto = $user->ownerProfile && $user->ownerProfile->ktp_photo;
+
         return [
-            'ktp_photo' => ['required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'], // max 5MB
+            'ktp_photo' => [$hasPhoto ? 'nullable' : 'required', 'image', 'mimes:jpg,jpeg,png', 'max:5120'], // max 5MB
         ];
     }
 }

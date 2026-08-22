@@ -63,13 +63,17 @@ class OpenStreetMapService
      * @param int $radius in meters
      * @return array
      */
-    public static function getNearbyPlaces($lat, $lon, $assetId, $radius = 3000, $syncIfNotCached = true)
+    public static function getNearbyPlaces($lat, $lon, $assetId = null, $radius = 3000, $syncIfNotCached = true)
     {
         if (!$lat || !$lon) {
             return [];
         }
 
-        $cacheKey = "osm_sync_asset_{$assetId}";
+        if ($assetId) {
+            $cacheKey = "osm_sync_asset_{$assetId}";
+        } else {
+            $cacheKey = "osm_sync_coord_" . round($lat, 3) . "_" . round($lon, 3);
+        }
 
         // Check if we need to sync data from OSM
         if (!Cache::has($cacheKey)) {

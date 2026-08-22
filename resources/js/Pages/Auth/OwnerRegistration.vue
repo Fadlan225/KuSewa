@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, onMounted, watch, computed } from 'vue';
 import { Head, Link, useForm, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import AppLayout from '@/Layouts/AppLayout.vue';
@@ -38,7 +38,7 @@ const formStep3 = useForm({
     ktp_photo: null,
 });
 
-const ktpPreview = ref(null);
+const ktpPreview = ref(props.initialProfile?.ktp_photo_url || null);
 
 const provinces = ref([]);
 const cities = ref([]);
@@ -171,26 +171,39 @@ const submit = () => {
     formStep3.post(route('owner.register.step3'));
 };
 
-const steps = [
-    {
-        number: 1,
-        title: 'Data Diri',
-        subtitle: 'Informasi Pribadi',
-        icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>`
-    },
-    {
-        number: 2,
-        title: 'Alamat',
-        subtitle: 'Alamat Domisili',
-        icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>`
-    },
-    {
-        number: 3,
-        title: 'Verifikasi',
-        subtitle: 'Upload KTP',
-        icon: `<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2" /></svg>`
+const mainSteps = computed(() => {
+    return [
+        { id: 1, title: 'Data Diri', internalSteps: [1] },
+        { id: 2, title: 'Alamat', internalSteps: [2] },
+        { id: 3, title: 'Verifikasi', internalSteps: [3] }
+    ];
+});
+
+const currentMainStep = computed(() => {
+    return mainSteps.value.find(ms => ms.internalSteps.includes(currentStep.value)) || mainSteps.value[0];
+});
+
+const isCurrentStepValid = computed(() => {
+    if (currentStep.value === 1) {
+        return formStep1.name && formStep1.email && formStep1.phone && formStep1.gender && formStep1.place_of_birth_code && formStep1.date_of_birth && formStep1.national_id;
     }
-];
+    if (currentStep.value === 2) {
+        return formStep2.province_code && formStep2.city_code && formStep2.district_code && formStep2.village_code && formStep2.postal_code && formStep2.address;
+    }
+    if (currentStep.value === 3) {
+        return !!formStep3.ktp_photo || !!props.initialProfile?.has_ktp_photo;
+    }
+    return false;
+});
+
+const getProgressWidth = (mStep) => {
+    if (currentMainStep.value.id > mStep.id) return '100%';
+    if (currentMainStep.value.id < mStep.id) return '0%';
+
+    const currentIndex = mStep.internalSteps.indexOf(currentStep.value) + 1;
+    const total = mStep.internalSteps.length;
+    return `${(currentIndex / total) * 100}%`;
+};
 
 // Combine errors to easily display them
 const currentErrors = () => {
@@ -205,285 +218,279 @@ const currentErrors = () => {
     <Head title="Pendaftaran Owner - kitasewa.id" />
 
     <AppLayout hideNavbar hideBottombar>
-        <DetailNavbar :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />
+        <DetailNavbar title="Pendaftaran Pemilik Aset" :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />
 
         <!-- Container Utama -->
-        <div class="min-h-screen bg-background font-sans text-text pb-32">
+        <div class="min-h-screen bg-slate-50 font-sans text-[#0A2540] pb-32 pt-[60px]">
+            <div class="max-w-5xl mx-auto pt-4 pb-6 px-4 sm:px-6 lg:px-8 flex flex-col gap-6 lg:gap-8">
 
-            <div class="max-w-6xl mx-auto px-6 lg:px-8 py-10 lg:py-12">
-                <div class="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
+                <!-- MAIN PROGRESS BAR -->
+                <div class="w-full flex items-start justify-between relative">
+                    <template v-for="(mStep, index) in mainSteps" :key="mStep.id">
+                        <div class="flex-1 flex flex-col relative z-10 px-1 sm:px-2 text-center items-center group">
 
-                    <!-- SIDEBAR NAV (Sticky) -->
-                    <div class="w-full lg:w-[260px] shrink-0 lg:sticky lg:top-32 hidden md:block">
-                        <div class="flex flex-col relative before:absolute before:left-5 before:top-4 before:bottom-4 before:w-[2px] before:bg-muted/10 before:-z-10">
-
-                            <div v-for="(step, index) in steps" :key="step.number" class="flex items-start gap-4 mb-8 last:mb-0 relative z-10 transition-colors">
-
-                                <!-- Icon Indicator -->
-                                <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ring-4 ring-background"
-                                     :class="[
-                                        currentStep === step.number ? 'bg-primary text-secondary shadow-md shadow-primary/20' :
-                                        currentStep > step.number ? 'bg-secondary text-white' : 'bg-white border-2 border-muted/30 text-muted'
-                                     ]">
-                                    <svg v-if="currentStep > step.number" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                    <span v-else v-html="step.icon"></span>
+                            <!-- Icon & Title -->
+                            <div class="flex items-center justify-center gap-1.5 sm:gap-2 mb-2 sm:mb-3">
+                                <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[11px] sm:text-[13px] font-bold transition-colors shrink-0 border-[1.5px]"
+                                    :class="[
+                                        currentStep > mStep.internalSteps[mStep.internalSteps.length-1]
+                                            ? 'border-[#FFC000] text-[#FFC000] bg-transparent'
+                                            : currentMainStep.id === mStep.id
+                                            ? 'border-[#FFC000] text-[#FFC000] bg-transparent'
+                                            : 'border-slate-300 text-slate-400 bg-transparent'
+                                    ]">
+                                    <span v-if="currentStep > mStep.internalSteps[mStep.internalSteps.length-1]" class="font-black">✓</span>
+                                    <span v-else>{{ mStep.id }}</span>
                                 </div>
-
-                                <!-- Text Content -->
-                                <div class="mt-0.5">
-                                    <h3 class="text-[15px] transition-colors duration-300"
-                                        :class="currentStep === step.number ? 'font-bold text-secondary' : 'font-semibold text-secondary/80'">
-                                        {{ step.title }}
-                                    </h3>
-                                    <p class="text-[13px] mt-0.5 transition-colors duration-300"
-                                       :class="currentStep === step.number ? 'text-secondary/70' : 'text-muted'">
-                                        {{ step.subtitle }}
-                                    </p>
-                                </div>
+                                <span class="text-[11px] sm:text-[14px] whitespace-nowrap transition-colors tracking-tight"
+                                      :class="currentMainStep.id >= mStep.id ? 'text-[#0A2540] font-bold' : 'text-slate-400 font-medium'">
+                                    {{ mStep.title }}
+                                </span>
                             </div>
 
-                        </div>
-                    </div>
-
-                    <!-- Horizontal Stepper for Mobile -->
-                    <div class="w-full md:hidden mb-6 bg-white p-4 rounded-2xl shadow-sm border border-muted/10 flex justify-between items-center relative">
-                        <div class="absolute top-1/2 left-8 right-8 h-[2px] bg-muted/10 -translate-y-1/2 -z-0"></div>
-                        <div v-for="step in steps" :key="step.number" class="relative z-10 bg-white px-2">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors shadow-sm ring-4 ring-white"
-                                 :class="currentStep === step.number ? 'bg-primary text-secondary' : currentStep > step.number ? 'bg-secondary text-white' : 'bg-background border-2 border-muted/20 text-muted'">
-                                <svg v-if="currentStep > step.number" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                <span v-else>{{ step.number }}</span>
+                            <!-- Continuous Progress Line -->
+                            <div class="w-full h-[3px] mt-auto relative px-1">
+                                <div class="w-full h-full bg-slate-200 relative">
+                                    <div class="h-full bg-[#FFC000] transition-all duration-500 ease-out"
+                                         :style="{ width: getProgressWidth(mStep) }">
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </template>
+                </div>
 
-                    <!-- CONTENT AREA -->
-                    <div class="flex-grow w-full max-w-[720px]">
+                <!-- RIGHT CONTENT AREA (FORM CARD) -->
+                <div class="flex-1 min-w-0">
+                    <div class="bg-white rounded-lg p-6 md:p-8 border border-slate-200/80 shadow-sm space-y-6 relative">
 
                         <!-- TAHAP 1: DATA DIRI -->
-                        <div v-show="currentStep === 1" class="space-y-12 animate-fade-in">
+                        <div v-show="currentStep === 1" class="space-y-8 animate-fade-in">
+                            <div class="border-b border-slate-200 pb-4">
+                                <h2 class="text-2xl font-bold text-[#0A2540]">Informasi Pribadi</h2>
+                                <p class="text-sm text-slate-500 mt-1">Lengkapi identitas pribadi Anda sesuai dengan kartu identitas (KTP) yang sah.</p>
+                            </div>
 
-                            <section class="bg-white rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-muted/10 p-8 sm:p-10">
-                                <div class="mb-8">
-                                    <h2 class="text-[22px] font-semibold text-secondary">Informasi Pribadi</h2>
-                                    <p class="text-[14px] text-muted mt-1.5 leading-relaxed">Lengkapi identitas pribadi Anda sesuai dengan kartu identitas (KTP) yang sah.</p>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                                <!-- Nama Lengkap -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
+                                    <input type="text" v-model="formStep1.name" placeholder="Sesuai KTP" class="w-full h-[48px] border border-slate-300 rounded-md px-4 text-sm text-[#0A2540] placeholder-slate-400 focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all outline-none bg-white" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep1.errors.name }" />
+                                    <p v-if="formStep1.errors.name" class="text-red-500 text-xs mt-1 font-medium">{{ formStep1.errors.name }}</p>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-                                    <!-- Nama Lengkap -->
-                                    <div class="md:col-span-2">
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Nama Lengkap <span class="text-red-500">*</span></label>
-                                        <input type="text" v-model="formStep1.name" placeholder="Sesuai KTP" class="w-full h-[48px] border border-muted/20 rounded-[12px] px-4 text-[14px] text-text placeholder-muted focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all outline-none bg-white" :class="{ 'border-red-500': formStep1.errors.name }" />
-                                        <p v-if="formStep1.errors.name" class="text-red-500 text-xs mt-1">{{ formStep1.errors.name }}</p>
-                                    </div>
-
-                                    <!-- NIK -->
-                                    <div>
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">NIK <span class="text-red-500">*</span></label>
-                                        <input type="text" v-model="formStep1.national_id" maxlength="16" placeholder="16 Digit NIK" class="w-full h-[48px] border border-muted/20 rounded-[12px] px-4 text-[14px] text-text placeholder-muted focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all outline-none bg-white" :class="{ 'border-red-500': formStep1.errors.national_id }" />
-                                        <div class="flex justify-between items-center mt-1.5">
-                                            <p v-if="formStep1.errors.national_id" class="text-red-500 text-xs">{{ formStep1.errors.national_id }}</p>
-                                            <p class="text-[13px] text-muted ml-auto">{{ formStep1.national_id.length }}/16 karakter</p>
-                                        </div>
-                                    </div>
-
-                                    <!-- Email -->
-                                    <div>
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Alamat Email <span class="text-red-500">*</span></label>
-                                        <input type="email" v-model="formStep1.email" placeholder="contoh@email.com" class="w-full h-[48px] border border-muted/20 rounded-[12px] px-4 text-[14px] text-text placeholder-muted focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all outline-none bg-white" :class="{ 'border-red-500': formStep1.errors.email }" />
-                                        <p v-if="formStep1.errors.email" class="text-red-500 text-xs mt-1">{{ formStep1.errors.email }}</p>
-                                    </div>
-
-                                    <!-- No Telepon -->
-                                    <div>
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Nomor HP / WhatsApp <span class="text-red-500">*</span></label>
-                                        <input type="text" v-model="formStep1.phone" placeholder="0812xxxxxxxx" class="w-full h-[48px] border border-muted/20 rounded-[12px] px-4 text-[14px] text-text placeholder-muted focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all outline-none bg-white" :class="{ 'border-red-500': formStep1.errors.phone }" />
-                                        <p v-if="formStep1.errors.phone" class="text-red-500 text-xs mt-1">{{ formStep1.errors.phone }}</p>
-                                    </div>
-
-                                    <!-- Jenis Kelamin -->
-                                    <div>
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Jenis Kelamin <span class="text-red-500">*</span></label>
-                                        <div class="relative">
-                                            <select v-model="formStep1.gender" class="w-full h-[48px] appearance-none border border-muted/20 rounded-[12px] px-4 text-[14px] text-text focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all outline-none bg-white cursor-pointer" :class="{ 'border-red-500': formStep1.errors.gender }">
-                                                <option value="" disabled selected>Pilih salah satu</option>
-                                                <option value="male">Laki-laki</option>
-                                                <option value="female">Perempuan</option>
-                                            </select>
-                                            <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
-                                        </div>
-                                        <p v-if="formStep1.errors.gender" class="text-red-500 text-xs mt-1">{{ formStep1.errors.gender }}</p>
-                                    </div>
-
-                                    <!-- Tempat Lahir -->
-                                    <div>
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Tempat Lahir <span class="text-red-500">*</span></label>
-                                        <SearchableSelect
-                                            v-model="formStep1.place_of_birth_code"
-                                            :options="allCities"
-                                            placeholder="Pilih kota lahir"
-                                            :error="!!formStep1.errors.place_of_birth_code"
-                                        />
-                                        <p v-if="formStep1.errors.place_of_birth_code" class="text-red-500 text-xs mt-1">{{ formStep1.errors.place_of_birth_code }}</p>
-                                    </div>
-
-                                    <!-- Tanggal Lahir -->
-                                    <div>
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Tanggal Lahir <span class="text-red-500">*</span></label>
-                                        <div class="relative">
-                                            <input type="date" v-model="formStep1.date_of_birth" class="w-full h-[48px] appearance-none border border-muted/20 rounded-[12px] px-4 pr-10 text-[14px] text-text focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all outline-none bg-white" :class="{ 'border-red-500': formStep1.errors.date_of_birth }" />
-                                        </div>
-                                        <p v-if="formStep1.errors.date_of_birth" class="text-red-500 text-xs mt-1">{{ formStep1.errors.date_of_birth }}</p>
+                                <!-- NIK -->
+                                <div>
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Nomor Induk Kependudukan <span class="text-red-500">*</span></label>
+                                    <input type="text" v-model="formStep1.national_id" maxlength="16" placeholder="16 Digit NIK" class="w-full h-[48px] border border-slate-300 rounded-md px-4 text-sm text-[#0A2540] placeholder-slate-400 focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all outline-none bg-white" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep1.errors.national_id }" />
+                                    <div class="flex justify-between items-center mt-1.5">
+                                        <p v-if="formStep1.errors.national_id" class="text-red-500 text-xs font-medium">{{ formStep1.errors.national_id }}</p>
+                                        <p class="text-xs text-slate-500 ml-auto font-medium">{{ formStep1.national_id.length }}/16 karakter</p>
                                     </div>
                                 </div>
-                            </section>
+
+                                <!-- Email -->
+                                <div>
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Email <span class="text-red-500">*</span></label>
+                                    <input type="email" v-model="formStep1.email" placeholder="contoh@email.com" class="w-full h-[48px] border border-slate-300 rounded-md px-4 text-sm text-[#0A2540] placeholder-slate-400 focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all outline-none bg-white" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep1.errors.email }" />
+                                    <p v-if="formStep1.errors.email" class="text-red-500 text-xs mt-1 font-medium">{{ formStep1.errors.email }}</p>
+                                </div>
+
+                                <!-- No Telepon -->
+                                <div>
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Nomor HP / WhatsApp <span class="text-red-500">*</span></label>
+                                    <input type="text" v-model="formStep1.phone" placeholder="0812xxxxxxxx" class="w-full h-[48px] border border-slate-300 rounded-md px-4 text-sm text-[#0A2540] placeholder-slate-400 focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all outline-none bg-white" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep1.errors.phone }" />
+                                    <p v-if="formStep1.errors.phone" class="text-red-500 text-xs mt-1 font-medium">{{ formStep1.errors.phone }}</p>
+                                </div>
+
+                                <!-- Jenis Kelamin -->
+                                <div>
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Jenis Kelamin <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <select v-model="formStep1.gender" class="w-full h-[48px] appearance-none border border-slate-300 rounded-md px-4 text-sm text-[#0A2540] focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all outline-none bg-white cursor-pointer" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep1.errors.gender }">
+                                            <option value="" disabled selected>Pilih salah satu</option>
+                                            <option value="male">Laki-laki</option>
+                                            <option value="female">Perempuan</option>
+                                        </select>
+                                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                    </div>
+                                    <p v-if="formStep1.errors.gender" class="text-red-500 text-xs mt-1 font-medium">{{ formStep1.errors.gender }}</p>
+                                </div>
+
+                                <!-- Tempat Lahir -->
+                                <div>
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Tempat Lahir <span class="text-red-500">*</span></label>
+                                    <SearchableSelect
+                                        v-model="formStep1.place_of_birth_code"
+                                        :options="allCities"
+                                        placeholder="Pilih kota lahir"
+                                        :error="!!formStep1.errors.place_of_birth_code"
+                                    />
+                                    <p v-if="formStep1.errors.place_of_birth_code" class="text-red-500 text-xs mt-1 font-medium">{{ formStep1.errors.place_of_birth_code }}</p>
+                                </div>
+
+                                <!-- Tanggal Lahir -->
+                                <div>
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Tanggal Lahir <span class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <input type="date" v-model="formStep1.date_of_birth" class="w-full h-[48px] appearance-none border border-slate-300 rounded-md px-4 pr-10 text-sm text-[#0A2540] focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all outline-none bg-white" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep1.errors.date_of_birth }" />
+                                    </div>
+                                    <p v-if="formStep1.errors.date_of_birth" class="text-red-500 text-xs mt-1 font-medium">{{ formStep1.errors.date_of_birth }}</p>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- TAHAP 2: ALAMAT -->
-                        <div v-show="currentStep === 2" class="space-y-12 animate-fade-in">
-                            <section class="bg-white rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-muted/10 p-8 sm:p-10">
-                                <div class="mb-8">
-                                    <h2 class="text-[22px] font-semibold text-secondary">Alamat Domisili</h2>
-                                    <p class="text-[14px] text-muted mt-1.5 leading-relaxed">Masukkan alamat domisili tempat Anda tinggal saat ini.</p>
+                        <div v-show="currentStep === 2" class="space-y-8 animate-fade-in">
+                            <div class="border-b border-slate-200 pb-4">
+                                <h2 class="text-2xl font-bold text-[#0A2540]">Alamat Domisili</h2>
+                                <p class="text-sm text-slate-500 mt-1">Masukkan alamat domisili tempat Anda tinggal saat ini.</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                                <!-- Provinsi -->
+                                <div>
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Provinsi <span class="text-red-500">*</span></label>
+                                    <SearchableSelect
+                                        v-model="formStep2.province_code"
+                                        :options="provinces"
+                                        placeholder="Pilih Provinsi"
+                                        :error="!!formStep2.errors.province_code"
+                                    />
+                                    <p v-if="formStep2.errors.province_code" class="text-red-500 text-xs mt-1 font-medium">{{ formStep2.errors.province_code }}</p>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
-                                    <!-- Provinsi -->
-                                    <div>
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Provinsi <span class="text-red-500">*</span></label>
-                                        <SearchableSelect
-                                            v-model="formStep2.province_code"
-                                            :options="provinces"
-                                            placeholder="Pilih Provinsi"
-                                            :error="!!formStep2.errors.province_code"
-                                        />
-                                        <p v-if="formStep2.errors.province_code" class="text-red-500 text-xs mt-1">{{ formStep2.errors.province_code }}</p>
-                                    </div>
-
-                                    <!-- Kota -->
-                                    <div v-if="formStep2.province_code" class="animate-fade-in">
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Kota / Kabupaten <span class="text-red-500">*</span></label>
-                                        <SearchableSelect
-                                            v-model="formStep2.city_code"
-                                            :options="cities"
-                                            placeholder="Pilih Kota"
-                                            :error="!!formStep2.errors.city_code"
-                                        />
-                                        <p v-if="formStep2.errors.city_code" class="text-red-500 text-xs mt-1">{{ formStep2.errors.city_code }}</p>
-                                    </div>
-
-                                    <!-- Kecamatan -->
-                                    <div v-if="formStep2.province_code" class="animate-fade-in">
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Kecamatan <span class="text-red-500">*</span></label>
-                                        <SearchableSelect
-                                            v-model="formStep2.district_code"
-                                            :options="districts"
-                                            placeholder="Pilih Kecamatan"
-                                            :error="!!formStep2.errors.district_code"
-                                        />
-                                        <p v-if="formStep2.errors.district_code" class="text-red-500 text-xs mt-1">{{ formStep2.errors.district_code }}</p>
-                                    </div>
-
-                                    <!-- Desa / Kelurahan -->
-                                    <div v-if="formStep2.province_code" class="animate-fade-in">
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Desa / Kelurahan <span class="text-red-500">*</span></label>
-                                        <SearchableSelect
-                                            v-model="formStep2.village_code"
-                                            :options="villages"
-                                            placeholder="Pilih Desa"
-                                            :error="!!formStep2.errors.village_code"
-                                        />
-                                        <p v-if="formStep2.errors.village_code" class="text-red-500 text-xs mt-1">{{ formStep2.errors.village_code }}</p>
-                                    </div>
-
-                                    <div>
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Kode Pos <span class="text-red-500">*</span></label>
-                                        <input type="text" v-model="formStep2.postal_code" maxlength="5" placeholder="Misal: 40111" class="w-full h-[48px] border border-muted/20 rounded-[12px] px-4 text-[14px] text-text placeholder-muted focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all outline-none bg-white" :class="{ 'border-red-500': formStep2.errors.postal_code }" />
-                                        <p v-if="formStep2.errors.postal_code" class="text-red-500 text-xs mt-1">{{ formStep2.errors.postal_code }}</p>
-                                    </div>
-
-                                    <!-- Alamat Lengkap -->
-                                    <div class="md:col-span-2">
-                                        <label class="block text-[14px] font-medium text-secondary mb-2">Alamat Lengkap <span class="text-red-500">*</span></label>
-                                        <textarea v-model="formStep2.address" rows="3" placeholder="Nama Jalan, Blok, No. Rumah, RT/RW..." class="w-full border border-muted/20 rounded-[12px] px-4 py-3 text-[14px] text-text placeholder-muted focus:border-primary focus:ring-4 focus:ring-primary/20 shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all outline-none bg-white resize-none" :class="{ 'border-red-500': formStep2.errors.address }"></textarea>
-                                        <p v-if="formStep2.errors.address" class="text-red-500 text-xs mt-1">{{ formStep2.errors.address }}</p>
-                                        <p v-else class="text-[13px] text-muted mt-1.5">Tambahkan patokan jika perlu untuk memudahkan navigasi.</p>
-                                    </div>
+                                <!-- Kota -->
+                                <div v-if="formStep2.province_code" class="animate-fade-in">
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Kota / Kabupaten <span class="text-red-500">*</span></label>
+                                    <SearchableSelect
+                                        v-model="formStep2.city_code"
+                                        :options="cities"
+                                        placeholder="Pilih Kota"
+                                        :error="!!formStep2.errors.city_code"
+                                    />
+                                    <p v-if="formStep2.errors.city_code" class="text-red-500 text-xs mt-1 font-medium">{{ formStep2.errors.city_code }}</p>
                                 </div>
-                            </section>
+
+                                <!-- Kecamatan -->
+                                <div v-if="formStep2.province_code" class="animate-fade-in">
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Kecamatan <span class="text-red-500">*</span></label>
+                                    <SearchableSelect
+                                        v-model="formStep2.district_code"
+                                        :options="districts"
+                                        placeholder="Pilih Kecamatan"
+                                        :error="!!formStep2.errors.district_code"
+                                    />
+                                    <p v-if="formStep2.errors.district_code" class="text-red-500 text-xs mt-1 font-medium">{{ formStep2.errors.district_code }}</p>
+                                </div>
+
+                                <!-- Desa / Kelurahan -->
+                                <div v-if="formStep2.province_code" class="animate-fade-in">
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Desa / Kelurahan <span class="text-red-500">*</span></label>
+                                    <SearchableSelect
+                                        v-model="formStep2.village_code"
+                                        :options="villages"
+                                        placeholder="Pilih Desa"
+                                        :error="!!formStep2.errors.village_code"
+                                    />
+                                    <p v-if="formStep2.errors.village_code" class="text-red-500 text-xs mt-1 font-medium">{{ formStep2.errors.village_code }}</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Kode Pos <span class="text-red-500">*</span></label>
+                                    <input type="text" v-model="formStep2.postal_code" maxlength="5" placeholder="Misal: 40111" class="w-full h-[48px] border border-slate-300 rounded-md px-4 text-sm text-[#0A2540] placeholder-slate-400 focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all outline-none bg-white" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep2.errors.postal_code }" />
+                                    <p v-if="formStep2.errors.postal_code" class="text-red-500 text-xs mt-1 font-medium">{{ formStep2.errors.postal_code }}</p>
+                                </div>
+
+                                <!-- Alamat Lengkap -->
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-bold text-[#0A2540] mb-2">Alamat Lengkap <span class="text-red-500">*</span></label>
+                                    <textarea v-model="formStep2.address" rows="3" placeholder="Nama Jalan, Blok, No. Rumah, RT/RW..." class="w-full border border-slate-300 rounded-md px-4 py-3 text-sm text-[#0A2540] placeholder-slate-400 focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all outline-none bg-white resize-none" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep2.errors.address }"></textarea>
+                                    <p v-if="formStep2.errors.address" class="text-red-500 text-xs mt-1 font-medium">{{ formStep2.errors.address }}</p>
+                                    <p v-else class="text-xs text-slate-500 mt-1.5 font-medium">Tambahkan patokan jika perlu untuk memudahkan navigasi.</p>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- TAHAP 3: VERIFIKASI IDENTITAS -->
-                        <div v-show="currentStep === 3" class="space-y-12 animate-fade-in">
+                        <div v-show="currentStep === 3" class="space-y-8 animate-fade-in">
+                            <div class="border-b border-slate-200 pb-4">
+                                <h2 class="text-2xl font-bold text-[#0A2540]">Upload Dokumen</h2>
+                                <p class="text-sm text-slate-500 mt-1">Keamanan data Anda terjamin. Kami menggunakan enkripsi kelas enterprise untuk melindungi dokumen Anda.</p>
+                            </div>
 
-                            <section class="bg-white rounded-[20px] shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-muted/10 p-8 sm:p-10">
-                                <div class="mb-8">
-                                    <h2 class="text-[22px] font-semibold text-secondary">Upload Dokumen</h2>
-                                    <p class="text-[14px] text-muted mt-1.5 leading-relaxed">Keamanan data Anda terjamin. Kami menggunakan enkripsi kelas enterprise untuk melindungi dokumen Anda.</p>
-                                </div>
+                            <!-- Upload Area -->
+                            <div>
+                                <label class="block text-sm font-bold text-[#0A2540] mb-3">
+                                    Foto KTP Asli
+                                    <span class="text-red-500">*</span>
+                                </label>
+                                <div class="border-2 border-dashed border-slate-300 rounded-lg p-10 flex flex-col items-center justify-center relative hover:bg-slate-50 hover:border-[#FFC000] transition-all cursor-pointer group min-h-[240px] bg-white" :class="{ 'border-red-500 bg-red-50': formStep3.errors.ktp_photo }">
+                                    <input type="file" accept="image/*" @change="handleFileUpload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
 
-                                <!-- Upload Area -->
-                                <div>
-                                    <label class="block text-[14px] font-medium text-secondary mb-3">Foto KTP Asli <span class="text-red-500">*</span></label>
-                                    <div class="border-2 border-dashed border-muted/20 rounded-[16px] p-10 flex flex-col items-center justify-center relative hover:bg-background hover:border-primary/50 transition-all cursor-pointer group min-h-[240px] bg-white" :class="{ 'border-red-500 bg-red-50': formStep3.errors.ktp_photo }">
-                                        <input type="file" accept="image/*" @change="handleFileUpload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-
-                                        <div v-if="!ktpPreview" class="flex flex-col items-center text-center pointer-events-none">
-                                            <div class="w-14 h-14 rounded-full bg-background border border-muted/10 text-secondary flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300 shadow-sm">
-                                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
-                                            </div>
-                                            <h4 class="text-[15px] font-semibold text-secondary mb-1.5">Pilih file atau seret ke sini</h4>
-                                            <p class="text-[13px] text-muted">Mendukung format JPG, JPEG, PNG (Maks. 5MB)</p>
+                                    <div v-if="!ktpPreview" class="flex flex-col items-center text-center pointer-events-none">
+                                        <div class="w-14 h-14 rounded-full bg-slate-100 border border-slate-200 text-slate-500 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform duration-300">
+                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                                         </div>
-                                        <div v-else class="flex flex-col items-center gap-4 relative z-0">
-                                            <img :src="ktpPreview" class="h-32 object-contain rounded-xl border border-muted/20 shadow-sm" />
-                                            <div class="flex items-center gap-2 text-[13px] font-semibold text-emerald-600 bg-emerald-50 px-4 py-1.5 rounded-full border border-emerald-100">
-                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                                Dokumen Siap Diupload
-                                            </div>
+                                        <h4 class="text-sm font-bold text-[#0A2540] mb-1.5">Pilih file atau seret ke sini</h4>
+                                        <p class="text-xs text-slate-500">Mendukung format JPG, JPEG, PNG (Maks. 5MB)</p>
+                                    </div>
+                                    <div v-else class="flex flex-col items-center gap-4 relative z-0">
+                                        <img :src="ktpPreview" class="h-32 object-contain rounded-md border border-slate-200 shadow-sm" />
+                                        <div class="flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-200">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                            Dokumen {{ formStep3.ktp_photo ? 'Siap Diupload' : 'Tersimpan' }}
                                         </div>
                                     </div>
-                                    <p v-if="formStep3.errors.ktp_photo" class="text-red-500 text-xs mt-2">{{ formStep3.errors.ktp_photo }}</p>
                                 </div>
-                            </section>
-
+                                <p v-if="formStep3.errors.ktp_photo" class="text-red-500 text-xs mt-2 font-medium">{{ formStep3.errors.ktp_photo }}</p>
+                            </div>
                         </div>
 
                     </div>
                 </div>
             </div>
 
-            <!-- STICKY BOTTOM ACTION BAR (Custom for Desktop, but DetailBottomBar can be for mobile) -->
+            <!-- STICKY BOTTOM ACTION BAR (Mobile) -->
             <DetailBottomBar class="md:hidden"
-                :buttonText="currentStep < 3 ? 'Selanjutnya' : 'Selesaikan'"
+                :hideLeftContent="true"
+                :buttonText="currentStep < 3 ? 'Berikutnya' : 'Selesaikan'"
                 @submit="currentStep < 3 ? nextStep() : submit()"
-                :disabled="currentStep === 1 ? formStep1.processing : (currentStep === 2 ? formStep2.processing : formStep3.processing)">
+                :disabled="!isCurrentStepValid || (currentStep === 1 ? formStep1.processing : (currentStep === 2 ? formStep2.processing : formStep3.processing))">
 
                 <template #left-content>
-                    <button type="button" @click="prevStep" class="h-[48px] px-6 rounded-[12px] border border-muted/30 text-secondary font-semibold text-[14px] hover:bg-background transition-colors bg-white shadow-sm flex items-center gap-2" :class="currentStep === 1 ? 'invisible' : ''">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                    <button type="button" @click="prevStep" class="h-[40px] px-4 rounded-md border border-slate-300 text-[#0A2540] font-semibold text-[14px] hover:bg-slate-50 transition-colors bg-white shadow-sm flex items-center gap-2" :class="currentStep === 1 ? 'invisible' : ''">
+                        Sebelumnya
+                    </button>
+                </template>
+                <template #right-content>
+                    <button v-if="currentStep < 3" type="button" @click="nextStep" :disabled="!isCurrentStepValid || (currentStep === 1 ? formStep1.processing : formStep2.processing)" class="h-[40px] px-6 rounded-md bg-[#F2C94C] text-[#0A2540] font-bold text-[14px] shadow-sm transition-colors disabled:bg-slate-100 disabled:text-slate-400 flex items-center justify-center gap-2">
+                        <svg v-if="currentStep === 1 ? formStep1.processing : formStep2.processing" class="animate-spin h-4 w-4 text-[#0A2540]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Berikutnya
+                    </button>
+                    <button v-else type="button" @click="submit" :disabled="!isCurrentStepValid || formStep3.processing" class="h-[40px] px-6 rounded-md bg-[#FFC000] text-[#0A2540] font-bold text-[14px] shadow-sm transition-colors disabled:bg-slate-100 disabled:text-slate-400 flex items-center justify-center gap-2">
+                        <svg v-if="formStep3.processing" class="animate-spin -ml-1 mr-1 h-4 w-4 text-[#0A2540]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Selesaikan
                     </button>
                 </template>
             </DetailBottomBar>
 
-            <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-muted/20 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-40 hidden md:block">
-                <div class="max-w-6xl mx-auto px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- STICKY BOTTOM ACTION BAR (Desktop) -->
+            <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-40 hidden md:block">
+                <div class="w-full px-6 lg:px-10 h-16 flex items-center justify-between">
                     <div>
-                        <button type="button" @click="prevStep" class="h-[48px] px-6 rounded-[12px] border border-muted/30 text-secondary font-semibold text-[14px] hover:bg-background transition-colors bg-white shadow-sm flex items-center gap-2" :class="currentStep === 1 ? 'invisible' : ''">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                            Kembali
+                        <button type="button" @click="prevStep" class="h-[40px] px-6 rounded-md border border-slate-300 text-[#0A2540] font-semibold text-[14px] hover:bg-slate-50 transition-colors bg-white shadow-sm flex items-center gap-2" :class="currentStep === 1 ? 'invisible' : ''">
+                            Sebelumnya
                         </button>
                     </div>
 
                     <div>
-                        <button v-if="currentStep < 3" type="button" @click="nextStep" :disabled="currentStep === 1 ? formStep1.processing : formStep2.processing" class="h-[48px] px-8 rounded-[12px] bg-primary text-secondary font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-                            Selanjutnya
-                            <svg v-if="currentStep === 1 ? formStep1.processing : formStep2.processing" class="animate-spin h-4 w-4 text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                        <button v-if="currentStep < 3" type="button" @click="nextStep" :disabled="!isCurrentStepValid || (currentStep === 1 ? formStep1.processing : formStep2.processing)" class="h-[40px] px-8 rounded-md bg-[#F2C94C] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center gap-2 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                            <svg v-if="currentStep === 1 ? formStep1.processing : formStep2.processing" class="animate-spin -ml-1 mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            Berikutnya
                         </button>
-                        <button v-else type="button" @click="submit" :disabled="formStep3.processing" class="h-[48px] px-8 rounded-[12px] bg-primary text-secondary font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed">
-                            <svg v-if="formStep3.processing" class="animate-spin -ml-1 mr-1 h-4 w-4 text-secondary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        <button v-else type="button" @click="submit" :disabled="!isCurrentStepValid || formStep3.processing" class="h-[40px] px-8 rounded-md bg-[#FFC000] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center gap-2 disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                            <svg v-if="formStep3.processing" class="animate-spin -ml-1 mr-1 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                             {{ formStep3.processing ? 'Memproses...' : 'Selesaikan Pendaftaran' }}
                         </button>
                     </div>

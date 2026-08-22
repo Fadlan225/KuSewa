@@ -11,14 +11,6 @@ const props = defineProps({
     status: {
         type: String,
     },
-    owner_profile: {
-        type: Object,
-        default: null,
-    },
-    bank_account: {
-        type: Object,
-        default: null,
-    },
 });
 
 const user = usePage().props.auth.user;
@@ -36,12 +28,7 @@ const form = useForm({
     phone: user.phone || '',
     gender: user.gender || '',
     date_of_birth: user.date_of_birth || '',
-    national_id: props.owner_profile?.national_id || '',
-    address: props.owner_profile?.address || '',
     place_of_birth_code: user.place_of_birth_code || '',
-    bank_name: props.bank_account?.bank_name || '',
-    account_number: props.bank_account?.account_number || '',
-    account_holder: props.bank_account?.account_holder || '',
 });
 
 onMounted(() => {
@@ -212,79 +199,7 @@ const resetForm = () => {
                 </div>
             </div>
 
-            <!-- Bagian Owner Profile -->
-            <div v-if="isOwner" class="border-t border-gray-100 pt-6 mt-6 space-y-5">
-                <header>
-                    <h3 class="text-base font-bold text-[#1D1D1F]">Data Pemilik Aset (Owner)</h3>
-                    <p class="text-xs text-gray-500 mt-1">Perbarui identitas Anda sebagai pemilik aset.</p>
-                </header>
 
-                <div>
-                    <label for="national_id" class="block text-sm text-[#333333] mb-1.5">NIK (KTP)</label>
-                    <input
-                        id="national_id"
-                        type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
-                        v-model="form.national_id"
-                        maxlength="16"
-                    />
-                    <p v-show="form.errors.national_id" class="mt-1 text-sm text-red-600">{{ form.errors.national_id }}</p>
-                </div>
-
-                <div>
-                    <label for="address" class="block text-sm text-[#333333] mb-1.5">Alamat Lengkap</label>
-                    <textarea
-                        id="address"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
-                        v-model="form.address"
-                        rows="3"
-                    ></textarea>
-                    <p v-show="form.errors.address" class="mt-1 text-sm text-red-600">{{ form.errors.address }}</p>
-                </div>
-
-            </div>
-
-            <!-- Bagian Rekening Bank -->
-            <div v-if="isOwner" class="border-t border-gray-100 pt-6 mt-6 space-y-5">
-                <header>
-                    <h3 class="text-base font-bold text-[#1D1D1F]">Data Rekening Bank</h3>
-                    <p class="text-xs text-gray-500 mt-1">Rekening ini digunakan untuk menerima pembayaran sewa.</p>
-                </header>
-
-                <div>
-                    <label for="bank_name" class="block text-sm text-[#333333] mb-1.5">Nama Bank</label>
-                    <input
-                        id="bank_name"
-                        type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
-                        v-model="form.bank_name"
-                        placeholder="Contoh: BCA, BNI, Mandiri"
-                    />
-                    <p v-show="form.errors.bank_name" class="mt-1 text-sm text-red-600">{{ form.errors.bank_name }}</p>
-                </div>
-
-                <div>
-                    <label for="account_number" class="block text-sm text-[#333333] mb-1.5">Nomor Rekening</label>
-                    <input
-                        id="account_number"
-                        type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
-                        v-model="form.account_number"
-                    />
-                    <p v-show="form.errors.account_number" class="mt-1 text-sm text-red-600">{{ form.errors.account_number }}</p>
-                </div>
-
-                <div>
-                    <label for="account_holder" class="block text-sm text-[#333333] mb-1.5">Atas Nama</label>
-                    <input
-                        id="account_holder"
-                        type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
-                        v-model="form.account_holder"
-                    />
-                    <p v-show="form.errors.account_holder" class="mt-1 text-sm text-red-600">{{ form.errors.account_holder }}</p>
-                </div>
-            </div>
 
             <div v-if="mustVerifyEmail && user.email_verified_at === null">
                 <p class="mt-2 text-sm text-gray-800">

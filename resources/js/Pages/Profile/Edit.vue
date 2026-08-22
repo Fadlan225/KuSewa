@@ -4,6 +4,7 @@ import { AlertTriangle, ClipboardList, Wallet, Heart, ChevronRight } from 'lucid
 import ProfileLayout from '@/Layouts/ProfileLayout.vue';
 import SettingsForms from './Partials/SettingsForms.vue';
 import SecurityForms from './Partials/SecurityForms.vue';
+import BisnisForms from './Partials/BisnisForms.vue';
 import Transaksi from '@/Pages/Home/Activity/Transaksi.vue';
 import SearchHistory from '@/Pages/Home/Activity/SearchHistory.vue';
 import LastSeen from '@/Pages/Home/LastSeen.vue';
@@ -63,7 +64,7 @@ const requestLocationPermission = () => {
             <div class="flex items-start">
                 <div class="flex-shrink-0 mt-0.5">
                     <AlertTriangle class="text-amber-500 text-lg" />
-                </div>
+                </div> 
                 <div class="ml-3">
                     <h3 class="text-sm font-bold text-amber-800">Izin Lokasi Ditolak</h3>
                     <p class="text-sm text-amber-700 mt-1">
@@ -154,45 +155,51 @@ const requestLocationPermission = () => {
 
         <!-- Bagian Settings Forms (Desktop Only) -->
         <div class="hidden md:block">
-            <SettingsForms 
+            <SettingsForms
                 v-if="tab === 'profil'"
+                :must-verify-email="mustVerifyEmail"
+                :status="status"
+                :user="user"
+            />
+            <BisnisForms 
+                v-if="tab === 'bisnis'"
                 :must-verify-email="mustVerifyEmail"
                 :status="status"
                 :user="user"
                 :owner_profile="owner_profile"
                 :bank_account="bank_account"
             />
-            <SecurityForms 
+            <SecurityForms
                 v-if="tab === 'keamanan'"
                 :user="user"
             />
-            
+
             <!-- Aktivitas Components -->
-            <Transaksi 
-                v-if="tab === 'transaksi'" 
-                :isComponent="true" 
-                :bookings="bookings" 
+            <Transaksi
+                v-if="tab === 'transaksi'"
+                :isComponent="true"
+                :bookings="bookings"
             />
-            <LastSeen 
-                v-if="tab === 'terakhir-dilihat'" 
-                :isComponent="true" 
-                :initialViews="lastSeen" 
+            <LastSeen
+                v-if="tab === 'terakhir-dilihat'"
+                :isComponent="true"
+                :initialViews="lastSeen"
             />
-            <SearchHistory 
-                v-if="tab === 'pencarian'" 
-                :isComponent="true" 
-                :searchLogs="searchLogs" 
+            <SearchHistory
+                v-if="tab === 'pencarian'"
+                :isComponent="true"
+                :searchLogs="searchLogs"
             />
-            <MyReviews 
-                v-if="tab === 'ulasan'" 
-                :isComponent="true" 
-                :reviews="reviews" 
+            <MyReviews
+                v-if="tab === 'ulasan'"
+                :isComponent="true"
+                :reviews="reviews"
             />
-            <Favorite 
-                v-if="tab === 'favorit'" 
-                :isComponent="true" 
-                :initialFavorites="initialFavorites" 
-                :categoriesList="categoriesList" 
+            <Favorite
+                v-if="tab === 'favorit'"
+                :isComponent="true"
+                :initialFavorites="initialFavorites"
+                :categoriesList="categoriesList"
             />
         </div>
     </ProfileLayout>
