@@ -80,7 +80,7 @@ class GoogleAuthController extends Controller
             }
             $user->update($updateData);
 
-            Auth::login($user);
+            Auth::login($user, true);
             return redirect()->intended(route('Home', absolute: false))->with('success', 'Login Berhasil via Google!');
         }
 
@@ -101,7 +101,7 @@ class GoogleAuthController extends Controller
             }
             $user->update($updateData);
 
-            Auth::login($user);
+            Auth::login($user, true);
             return redirect()->intended(route('Home', absolute: false))->with('success', 'Login Berhasil via Google!');
         }
 
@@ -137,7 +137,7 @@ class GoogleAuthController extends Controller
             'provider_user_id' => $googleUser->getId(),
         ]);
 
-        Auth::login($newUser);
+        Auth::login($newUser, true);
 
         return redirect()->intended(route('Home', absolute: false))->with('success', 'Pendaftaran Berhasil via Google!');
     }

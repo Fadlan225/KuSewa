@@ -169,7 +169,7 @@ class AuthFlowController extends Controller
         $user = $this->authService->registerUser($request->all());
 
         // Perform login
-        $this->authService->login($user);
+        $this->authService->login($user, true);
 
         // Expire the token to prevent reuse, keeping it in history
         $tokenRecord->update(['expired_at' => \Carbon\Carbon::now()]);
@@ -239,7 +239,7 @@ class AuthFlowController extends Controller
         $this->authService->setPassword($user, $request->password);
 
         // Perform login automatically
-        $this->authService->login($user);
+        $this->authService->login($user, true);
         $request->session()->regenerate();
 
         // Expire the token to prevent reuse, keeping it in history

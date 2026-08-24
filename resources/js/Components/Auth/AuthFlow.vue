@@ -81,7 +81,7 @@ const countdown = ref(0);
 let timer = null;
 
 const startCountdown = () => {
-    countdown.value = 60;
+    countdown.value = 300;
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
         if (countdown.value > 0) {
@@ -91,6 +91,12 @@ const startCountdown = () => {
         }
     }, 1000);
 };
+
+const formattedCountdown = computed(() => {
+    const m = Math.floor(countdown.value / 60);
+    const s = countdown.value % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+});
 
 import { onUnmounted, onMounted } from 'vue';
 
@@ -543,7 +549,7 @@ const handleGoogleLogin = () => {
                         Kirim Ulang
                     </button>
                     <span v-else class="font-bold text-gray-400 ml-1">
-                        Kirim Ulang ({{ countdown }}s)
+                        Kirim Ulang ({{ formattedCountdown }})
                     </span>
                 </p>
 

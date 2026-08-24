@@ -32,7 +32,7 @@ class OTPService
             'magic_token' => $magicToken,
             'ip_address' => $ipAddress,
             'device' => \Illuminate\Support\Str::limit($device ?? 'Unknown Device', 145),
-            'expired_at' => Carbon::now()->addMinutes(1), // valid for 1 min
+            'expired_at' => Carbon::now()->addMinutes(5), // valid for 5 min
         ]);
     }
 
