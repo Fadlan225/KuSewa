@@ -15,7 +15,7 @@
     <!-- Active Chat Room -->
     <template v-else>
       <!-- Chat Header Desktop -->
-      <div class="hidden md:flex h-16 bg-white border-b px-4 items-center justify-between shrink-0 shadow-sm z-10 w-full">
+      <div class="hidden md:flex h-16 bg-white border-b border-gray-200 px-4 items-center justify-between shrink-0 shadow-sm z-10 w-full">
         <div class="flex items-center gap-3 w-full">
           <!-- Avatar -->
           <img v-if="activeChat.avatar" :src="activeChat.avatar" alt="Avatar" class="w-10 h-10 rounded-full object-cover">
@@ -38,27 +38,29 @@
       </div>
 
       <!-- Chat Header Mobile (DetailNavbar) -->
-      <DetailNavbar class="md:hidden shrink-0 z-50">
-          <template #content>
-            <div class="flex items-center gap-3 w-full pr-4 py-2">
-              <button @click="$emit('closeMobile')" class="p-2 -ml-2 text-[#0A2540] hover:text-gray-800 transition-colors">
-                <ArrowLeft class="" />
-              </button>
-              <img v-if="activeChat.avatar" :src="activeChat.avatar" alt="Avatar" class="w-9 h-9 rounded-full object-cover shrink-0">
-              <div v-else class="w-9 h-9 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
-                  {{ activeChat.avatarText }}
+      <div class="md:hidden shrink-0 z-50">
+        <DetailNavbar>
+            <template #content>
+              <div class="flex items-center gap-3 w-full pr-4 py-2">
+                <button @click="$emit('closeMobile')" class="p-2 -ml-2 text-[#0A2540] hover:text-gray-800 transition-colors">
+                  <ArrowLeft class="" />
+                </button>
+                <img v-if="activeChat.avatar" :src="activeChat.avatar" alt="Avatar" class="w-9 h-9 rounded-full object-cover shrink-0">
+                <div v-else class="w-9 h-9 rounded-full bg-slate-800 text-white font-bold flex items-center justify-center text-xs shadow-sm shrink-0">
+                    {{ activeChat.avatarText }}
+                </div>
+                <div class="flex-1 min-w-0 flex flex-col justify-center overflow-hidden">
+                  <h2 v-marquee class="font-semibold text-gray-900 text-[14px] leading-tight flex items-center h-[20px] whitespace-nowrap w-fit">
+                    {{ chatTitle }}
+                  </h2>
+                  <p v-if="activeChat.assetName && !activeChat.isContactOwner" class="text-[11px] text-gray-500 truncate mt-0.5 h-[16px]">
+                    {{ activeChat.assetName }}
+                  </p>
+                </div>
               </div>
-              <div class="flex-1 min-w-0 flex flex-col justify-center overflow-hidden">
-                <h2 v-marquee class="font-semibold text-gray-900 text-[14px] leading-tight flex items-center h-[20px] whitespace-nowrap w-fit">
-                  {{ chatTitle }}
-                </h2>
-                <p v-if="activeChat.assetName && !activeChat.isContactOwner" class="text-[11px] text-gray-500 truncate mt-0.5 h-[16px]">
-                  {{ activeChat.assetName }}
-                </p>
-              </div>
-            </div>
-          </template>
-      </DetailNavbar>
+            </template>
+        </DetailNavbar>
+      </div>
 
       <!-- Chat Messages Container -->
       <div class="flex-1 overflow-y-auto overscroll-contain p-4 md:p-6 flex flex-col gap-2 relative bg-white pb-4 md:pb-6 chat-container" id="chat-container">

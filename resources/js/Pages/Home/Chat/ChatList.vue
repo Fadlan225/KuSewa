@@ -1,7 +1,7 @@
 <template>
   <aside
     :class="[
-      'bg-white border-r border-gray-200/70 flex-col w-full md:w-[350px] lg:w-[400px] shrink-0 transition-all shadow-sm z-10',
+      'bg-white border-r border-gray-200 flex-col w-full md:w-[350px] lg:w-[400px] shrink-0 transition-all shadow-sm z-10',
       isMobileChatOpen ? 'hidden md:flex' : 'flex'
     ]"
   >
@@ -26,7 +26,7 @@
           v-for="chat in displayChats"
         :key="chat.id"
         @click="$emit('selectChat', chat.id)"
-        class="flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-200/70"
+        class="flex items-center gap-3 p-3 cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-200"
         :class="{'bg-gray-100': activeChatId === chat.id}"
       >
         <!-- Avatar -->

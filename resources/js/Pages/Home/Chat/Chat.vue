@@ -1,10 +1,10 @@
 <template>
-  <AppLayout :hideNavbar="isMobileChatOpen" :hideBottombar="isMobileChatOpen">
+  <AppLayout :hideNavbar="shouldHideNavbars" :hideBottombar="shouldHideNavbars" :hideFooter="true">
     <Head title="Kotak Masuk" />
     
     <!-- Main Content wrapper -->
     <div
-        class="flex overflow-hidden relative max-w-[1600px] mx-auto w-full transition-all bg-[#F0F2F5] h-[100dvh] md:h-[calc(100dvh-64px)]"
+        class="flex overflow-hidden relative max-w-[1600px] mx-auto w-full transition-all bg-[#F0F2F5] h-[100dvh] md:h-[calc(100dvh-64px)] lg:h-[calc(100dvh-96px)]"
         :class="isMobileChatOpen ? 'pt-0 pb-0' : 'pb-16 md:pb-0'"
     >
       <!-- 1. Sidebar Chat (Daftar Chat) -->
@@ -39,8 +39,8 @@
       />
 
       <!-- 3. Detail Penyewaan (Hanya Desktop Besar / lg) -->
-      <aside v-if="activeChatId" class="w-1/4 lg:w-[300px] bg-white border-l border-gray-200/70 hidden lg:flex flex-col shrink-0 overflow-y-auto">
-        <div class="bg-[#F0F2F5] h-16 border-b flex items-center px-6 shrink-0">
+      <aside v-if="activeChatId" class="w-1/4 lg:w-[300px] bg-white border-l border-gray-200 hidden lg:flex flex-col shrink-0 overflow-y-auto">
+        <div class="bg-[#F0F2F5] h-16 border-b border-gray-200 flex items-center px-6 shrink-0">
             <h3 class="font-medium text-gray-800 text-[15px]">Info Kontak</h3>
         </div>
         <div class="p-6 flex flex-col items-center border-b border-gray-100">
@@ -82,8 +82,14 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import ChatList from './ChatList.vue';
 import ChatRoom from './ChatRoom.vue';
 import MessageInfoModal from '@/Components/ui/MessageInfoModal.vue';
+import { useWindowSize } from '@vueuse/core';
+
+const page = usePage();
+const { width } = useWindowSize();
+const isMobile = computed(() => width.value < 768);
 
 const isMobileChatOpen = ref(false);
+const shouldHideNavbars = computed(() => isMobileChatOpen.value && isMobile.value);
 const activeChatId = ref(null);
 const newMessage = ref('');
 
@@ -315,7 +321,7 @@ watch(activeChatId, (newId, oldId) => {
     chatChannel = window.Echo.private('chat.' + newId)
       .listen('MessageSent', (e) => {
         // Cek apakah pesan ini dari user lain (bukan milik sendiri)
-        if (e.sender_id !== usePage().props.auth.user.id) {
+        if (e.sender_id !== page.props.auth.user.id) {
           isTyping.value = false;
           if (!messages.value.some(m => m.id === e.id)) {
             messages.value.push({
@@ -359,7 +365,7 @@ watch(activeChatId, (newId, oldId) => {
           }
       })
       .listenForWhisper('typing', (e) => {
-        if (e.userId !== usePage().props.auth.user.id) {
+        if (e.userId !== page.props.auth.user.id) {
           isTyping.value = true;
           clearTimeout(typingTimer);
           typingTimer = setTimeout(() => {
@@ -377,7 +383,7 @@ const handleTyping = () => {
   if (now - lastWhisper > 1000) {
     if (chatChannel) {
       chatChannel.whisper('typing', {
-        userId: usePage().props.auth.user.id
+        userId: page.props.auth.user.id
       });
       lastWhisper = now;
     }
