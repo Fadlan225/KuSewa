@@ -78,6 +78,11 @@ class HandleInertiaRequests extends Middleware
             ];
         });
 
+        $isProfileComplete = false;
+        if ($user && $user->ownerProfile) {
+            $isProfileComplete = $user->ownerProfile->bankAccounts()->exists();
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
@@ -86,6 +91,7 @@ class HandleInertiaRequests extends Middleware
             ],
             'sidebarCounts' => $sidebarCounts,
             'globalPriceRange' => $globalPriceRange,
+            'isProfileComplete' => $isProfileComplete,
             'flash' => [
                 'success' => $request->session()->get('success'),
                 'error' => $request->session()->get('error'),

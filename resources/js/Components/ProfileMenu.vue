@@ -6,7 +6,8 @@ import { ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 
 const props = defineProps({
-    user: Object
+    user: Object,
+    isDashboard: { type: Boolean, default: false }
 });
 
 const page = usePage();
@@ -18,24 +19,24 @@ const accountMenuItems = [
     {
         label: 'Profil Saya',
         icon: 'fa-regular fa-user',
-        routeDesktop: route('profile.edit', { tab: 'profil' }),
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'profil' }) : route('profile.edit', { tab: 'profil' }),
         routeMobile: route('profile.settings'),
-        isActive: () => route().current('profile.settings') || (route().current('profile.edit') && (!route().params.tab || route().params.tab === 'profil'))
+        isActive: () => (props.isDashboard ? (route().current('owner.profile') && (!route().params.tab || route().params.tab === 'profil')) : (route().current('profile.settings') || (route().current('profile.edit') && (!route().params.tab || route().params.tab === 'profil'))))
     },
     {
         label: 'Profil Bisnis',
         icon: 'fa-solid fa-city',
-        routeDesktop: route('profile.edit', { tab: 'bisnis' }),
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'bisnis' }) : route('profile.edit', { tab: 'bisnis' }),
         routeMobile: route('profile.bisnis'),
-        isActive: () => route().current('profile.bisnis') || (route().current('profile.edit') && route().params.tab === 'bisnis'),
+        isActive: () => (props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'bisnis') : (route().current('profile.bisnis') || (route().current('profile.edit') && route().params.tab === 'bisnis'))),
         show: () => getOwnerStatus() === 'verified'
     },
     {
         label: 'Keamanan',
         icon: 'fa-solid fa-shield-halved',
-        routeDesktop: route('profile.edit', { tab: 'keamanan' }),
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'keamanan' }) : route('profile.edit', { tab: 'keamanan' }),
         routeMobile: route('profile.security'),
-        isActive: () => route().current('profile.security') || (route().current('profile.edit') && route().params.tab === 'keamanan')
+        isActive: () => (props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'keamanan') : (route().current('profile.security') || (route().current('profile.edit') && route().params.tab === 'keamanan')))
     },
     {
         label: 'Aktivitas',
@@ -49,32 +50,32 @@ const activityMenuItems = [
     {
         label: 'Pesanan Saya',
         icon: 'fa-solid fa-clipboard-list',
-        routeDesktop: route('profile.edit', { tab: 'transaksi' }),
-        isActive: () => route().current('profile.edit') && route().params.tab === 'transaksi'
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'transaksi' }) : route('profile.edit', { tab: 'transaksi' }),
+        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'transaksi') : (route().current('profile.edit') && route().params.tab === 'transaksi')
     },
     {
         label: 'Terakhir Dilihat',
         icon: 'fa-solid fa-clock-rotate-left',
-        routeDesktop: route('profile.edit', { tab: 'terakhir-dilihat' }),
-        isActive: () => route().current('profile.edit') && route().params.tab === 'terakhir-dilihat'
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'terakhir-dilihat' }) : route('profile.edit', { tab: 'terakhir-dilihat' }),
+        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'terakhir-dilihat') : (route().current('profile.edit') && route().params.tab === 'terakhir-dilihat')
     },
     {
         label: 'Riwayat Pencarian',
         icon: 'fa-solid fa-magnifying-glass',
-        routeDesktop: route('profile.edit', { tab: 'pencarian' }),
-        isActive: () => route().current('profile.edit') && route().params.tab === 'pencarian'
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'pencarian' }) : route('profile.edit', { tab: 'pencarian' }),
+        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'pencarian') : (route().current('profile.edit') && route().params.tab === 'pencarian')
     },
     {
         label: 'Ulasan',
         icon: 'fa-solid fa-star',
-        routeDesktop: route('profile.edit', { tab: 'ulasan' }),
-        isActive: () => route().current('profile.edit') && route().params.tab === 'ulasan'
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'ulasan' }) : route('profile.edit', { tab: 'ulasan' }),
+        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'ulasan') : (route().current('profile.edit') && route().params.tab === 'ulasan')
     },
     {
         label: 'Favorit',
         icon: 'fa-regular fa-heart',
-        routeDesktop: route('profile.edit', { tab: 'favorit' }),
-        isActive: () => route().current('profile.edit') && route().params.tab === 'favorit'
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'favorit' }) : route('profile.edit', { tab: 'favorit' }),
+        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'favorit') : (route().current('profile.edit') && route().params.tab === 'favorit')
     },
 ];
 
@@ -123,6 +124,8 @@ const checkIsActive = (item) => {
                     <div class="flex items-center space-x-4">
                         <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D]' : 'text-[#6C757D] group-hover:text-[#FFC000]']" />
                         <span :class="['text-sm sm:text-base font-semibold transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#0A2540]' : 'text-[#0A2540] group-hover:text-[#FFC000]']">{{ item.label }}</span>
+                        <!-- Red Dot for Profil Bisnis -->
+                        <div v-if="item.label === 'Profil Bisnis' && page.props.isProfileComplete === false" class="w-2 h-2 bg-red-500 rounded-full ml-1"></div>
                     </div>
                     <ChevronRight :class="['text-sm transition-all duration-200', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D] md:translate-x-1' : 'text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]']" />
                 </Link>

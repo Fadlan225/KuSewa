@@ -37,7 +37,8 @@ const activeTab = ref('bisnis');
                 ]"
             >
                 <Landmark class="w-4 h-4 mr-2" />
-                Informasi Rekening
+                <span>Informasi Rekening</span>
+                <div v-if="$page.props.isProfileComplete === false" class="w-2 h-2 bg-red-500 rounded-full ml-1.5 shrink-0 relative -top-1"></div>
             </button>
         </div>
 

@@ -371,7 +371,7 @@ class ProfileController extends Controller
             }
         }
 
-        return Redirect::route('profile.settings');
+        return \Illuminate\Support\Facades\Redirect::back()->with('status', 'profile-updated');
     }
 
     /**

@@ -4,6 +4,7 @@ import ProfileMenu from '@/Components/ProfileMenu.vue';
 import { Loader2, Camera, Medal, AlertTriangle, ChevronRight, ClipboardList, Wallet, Heart, Briefcase, Trash2, X, Image as ImageIcon } from 'lucide-vue-next';
 import { ref, computed, nextTick } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
+import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import UserAvatar from '@/Components/ui/Icons/UserAvatar.vue';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
@@ -11,6 +12,17 @@ import Cropper from 'cropperjs';
 import 'cropperjs/dist/cropper.css';
 
 const page = usePage();
+
+const props = defineProps({
+    isDashboard: {
+        type: Boolean,
+        default: false
+    },
+    title: {
+        type: String,
+        default: 'Profil Saya'
+    }
+});
 
 const user = computed(() => page.props.user || page.props.auth.user);
 const total_assets_rented = computed(() => page.props.total_assets_rented || 0);
@@ -147,13 +159,6 @@ const initials = computed(() => {
 });
 
 const locationDenied = ref(false);
-import { onMounted } from 'vue';
-
-onMounted(() => {
-    if (localStorage.getItem('location_denied') === 'true') {
-        locationDenied.value = true;
-    }
-});
 
 const requestLocationPermission = () => {
     if (navigator.geolocation) {
@@ -173,13 +178,13 @@ const requestLocationPermission = () => {
 </script>
 
 <template>
-    <Head title="Profil Saya" />
+    <Head :title="title" />
 
-    <AppLayout>
-        <div class="max-w-6xl mx-auto pt-6 pb-24 md:pb-8 px-4 sm:px-6 lg:px-8 flex flex-col md:grid md:grid-cols-12 gap-6 md:items-start">
+    <component :is="isDashboard ? DashboardLayout : AppLayout" :title="title">
+        <div :class="['max-w-6xl mx-auto pb-24 md:pb-8 px-4 sm:px-6 lg:px-8 flex flex-col md:grid md:grid-cols-12 gap-6 md:items-start', isDashboard ? 'pt-0' : 'pt-6']">
             
             <!-- LEFT PANEL WRAPPER -->
-            <div :class="[route().current('profile.edit') ? 'contents md:flex md:flex-col md:gap-6' : 'hidden md:flex md:flex-col md:gap-6', 'md:col-span-4 md:col-start-1 md:order-1']">
+            <div :class="[(route().current('profile.edit') || route().current('owner.profile')) ? 'contents md:flex md:flex-col md:gap-6' : 'hidden md:flex md:flex-col md:gap-6', 'md:col-span-4 md:col-start-1 md:order-1']">
                 <!-- Hero Section -->
                 <div class="bg-white p-6 shadow-md rounded-2xl flex flex-col items-center gap-6 relative order-1 md:order-none">
 
@@ -234,11 +239,11 @@ const requestLocationPermission = () => {
             </div>
 
             <!-- Daftar Menu -->
-            <ProfileMenu class="order-3 md:order-none" :user="user" />
+            <ProfileMenu class="order-3 md:order-none" :user="user" :isDashboard="isDashboard" />
             </div>
 
             <!-- MAIN CONTENT SLOT -->
-            <div :class="['md:col-span-8 md:col-start-5 w-full order-2 md:order-2', route().current('profile.edit') ? 'flex flex-col gap-6' : 'block']">
+            <div :class="['md:col-span-8 md:col-start-5 w-full order-2 md:order-2', (route().current('profile.edit') || route().current('owner.profile')) ? 'flex flex-col gap-6' : 'block']">
                 <slot />
             </div>
         </div>
@@ -342,5 +347,5 @@ const requestLocationPermission = () => {
                 </div>
             </div>
         </Teleport>
-    </AppLayout>
+    </component>
 </template>

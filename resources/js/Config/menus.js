@@ -1,10 +1,11 @@
 import {
     Home, Building, Receipt, CreditCard, Wallet,
     Gauge, List, Flag, Shield, Users, UserPlus,
-    CheckSquare, Layers, Scale, Tags, Bell, Laptop, Database
+    CheckSquare, Layers, Scale, Tags, Bell, Laptop, Database,
+    User
 } from 'lucide-vue-next';
 
-export const getOwnerMenu = (sidebarCounts) => [
+export const getOwnerMenu = (sidebarCounts, isProfileComplete = true) => [
     { label: 'Dashboard', route: route('owner.dashboard'), routeName: 'owner.dashboard', icon: Home },
     {
         label: 'Aset Saya',

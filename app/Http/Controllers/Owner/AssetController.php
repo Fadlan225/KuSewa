@@ -265,6 +265,12 @@ class AssetController extends Controller
             return redirect()->route('Home')->with('error', 'Silakan lengkapi profil owner Anda terlebih dahulu.');
         }
 
+        // Cek apakah rekening bank sudah ditambahkan
+        $hasBankAccount = $ownerProfile->bankAccounts()->exists();
+        if (!$hasBankAccount) {
+            return redirect()->route('owner.asset.index')->with('error', 'Lengkapi profil bisnis Anda (termasuk rekening bank) sebelum mendaftarkan aset.');
+        }
+
         // Kategori aset beserta jenis-jenis di dalamnya
         $categories = asset_category::with(['types:id,category_id,name,allow_units'])
             ->get(['id', 'name']);

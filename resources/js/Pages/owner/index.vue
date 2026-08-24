@@ -1,6 +1,6 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { DoorOpen, Percent, CalendarCheck, Wallet, BarChart, Map, TrendingUp, LineChart, HelpCircle, Users, CheckCircle, Eye, BellRing } from 'lucide-vue-next';
+import { DoorOpen, Percent, CalendarCheck, Wallet, BarChart, Map, TrendingUp, LineChart, HelpCircle, Users, CheckCircle, Eye, BellRing, AlertTriangle } from 'lucide-vue-next';
 import { computed, ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -9,14 +9,26 @@ import IncomeEmptyIllustration from '@/Components/ui/Icons/IncomeEmptyIllustrati
 import SpreadEmptyIllustration from '@/Components/ui/Icons/SpreadEmptyIllustration.vue';
 import BookingEmptyIllustration from '@/Components/ui/Icons/BookingEmptyIllustration.vue';
 import AssetStatusEmptyIllustration from '@/Components/ui/Icons/AssetStatusEmptyIllustration.vue';
+import ProfileIncompleteIllustration from '@/Components/ui/Icons/ProfileIncompleteIllustration.vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from '@/Components/ui/select';
 import { VisXYContainer, VisAxis, VisStackedBar, VisCrosshair, VisTooltip, VisLine } from '@unovis/vue';
 import { ChartCrosshair, ChartTooltip } from '@/Components/ui/chart';
 
 const props = defineProps({
-    stats: { type: Object, default: () => ({}) },
+    stats: { type: Object, default: () => ({
+        totalAsset: 0,
+        totalAvailable: 0,
+        totalOccupied: 0,
+        totalPendingVerification: 0,
+        incomeToday: 0
+    }) }
 });
+
+const handleIncompleteProfileClick = (e) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent('show-profile-incomplete-bubble'));
+};
 
 const formatCurrency = (v) => 'Rp ' + Number(v || 0).toLocaleString('id-ID');
 const formatCompactCurrency = (v) => {
@@ -249,8 +261,24 @@ const assetChartSlices = computed(() => {
         role="Owner"
     >
 
+        <!-- PENGINGAT KELENGKAPAN PROFIL (REKENING BANK) -->
+        <div v-if="!$page.props.isProfileComplete" class="bg-white border border-[#E5E7EB] rounded-md mb-6 flex flex-col md:flex-row items-center justify-between p-6 md:p-8 overflow-hidden relative shadow-sm gap-6">
+            <div class="flex-1 relative z-10">
+                <div class="flex items-center gap-2 mb-2">
+                    <h2 class="text-2xl font-black text-[#0A2540] tracking-tight">Satu Langkah Lagi!</h2>
+                </div>
+                <p class="text-sm text-slate-600 mb-6 max-w-md xl:max-w-lg font-medium leading-relaxed">Anda belum menambahkan informasi rekening bank. Silakan lengkapi profil bisnis Anda agar pelanggan dapat mulai memesan aset Anda.</p>
+                <Link :href="route('owner.profile', { tab: 'bisnis' })" class="inline-flex items-center justify-center bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] font-bold text-sm px-5 py-2.5 rounded transition-colors shadow-sm">
+                    Lengkapi Profil Sekarang
+                </Link>
+            </div>
+            <div class="hidden md:block w-48 lg:w-56 xl:w-64 shrink-0 pointer-events-none">
+                <ProfileIncompleteIllustration class="w-full h-auto drop-shadow-sm" />
+            </div>
+        </div>
+
         <!-- ONBOARDING BANNER -->
-        <div v-if="props.stats?.totalUnit === 0" class="bg-white border border-[#E5E7EB] rounded-md mb-6 flex flex-col md:flex-row items-center justify-between p-6 md:p-8 overflow-hidden relative shadow-sm gap-6">
+        <div v-else-if="props.stats?.totalUnit === 0" class="bg-white border border-[#E5E7EB] rounded-md mb-6 flex flex-col md:flex-row items-center justify-between p-6 md:p-8 overflow-hidden relative shadow-sm gap-6">
             <div class="flex-1 relative z-10">
                 <h2 class="text-2xl font-black text-[#0A2540] mb-2 tracking-tight">Mulai sewakan aset Anda</h2>
                 <p class="text-sm text-slate-600 mb-6 max-w-md xl:max-w-lg font-medium leading-relaxed">Tambahkan aset pertama Anda dan lengkapi informasi agar siap ditemukan oleh calon penyewa.</p>
@@ -264,7 +292,7 @@ const assetChartSlices = computed(() => {
         </div>
 
         <!-- STATS OVERVIEW - Clean Panel Design -->
-        <div v-else class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
+        <div v-if="props.stats?.totalUnit > 0" class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
             <div class="grid grid-cols-2 xl:grid-cols-4 border-slate-100">
                 <!-- Pesanan Baru -->
                 <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
@@ -429,9 +457,14 @@ const assetChartSlices = computed(() => {
                         </div>
                         <p class="text-base font-black text-[#0A2540] tracking-tight mb-1">Mulai tampilkan aset Anda</p>
                         <p class="text-sm text-slate-500 mb-5 text-center font-medium max-w-[240px]">Daftarkan aset dan biarkan calon penyewa menemukannya.</p>
-                        <Link :href="route('owner.asset.create')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all">
+                        <component
+                            :is="$page.props.isProfileComplete === false ? 'button' : Link"
+                            :href="$page.props.isProfileComplete === false ? undefined : route('owner.asset.create')"
+                            @click="$page.props.isProfileComplete === false ? handleIncompleteProfileClick($event) : null"
+                            class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all"
+                        >
                             Daftarkan Aset
-                        </Link>
+                        </component>
                     </div>
                 </CardContent>
 
@@ -552,9 +585,14 @@ const assetChartSlices = computed(() => {
                         </div>
                         <p class="text-base font-black text-[#0A2540] tracking-tight mb-1">Belum ada aset</p>
                         <p class="text-sm text-slate-500 mb-5 text-center font-medium max-w-[280px]">Daftarkan aset pertama Anda dan mulai sewakan di KitaSewa.</p>
-                        <Link :href="route('owner.asset.create')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all">
+                        <component
+                            :is="$page.props.isProfileComplete === false ? 'button' : Link"
+                            :href="$page.props.isProfileComplete === false ? undefined : route('owner.asset.create')"
+                            @click="$page.props.isProfileComplete === false ? handleIncompleteProfileClick($event) : null"
+                            class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all"
+                        >
                             Daftarkan Aset
-                        </Link>
+                        </component>
                     </div>
                 </CardContent>
             </Card>

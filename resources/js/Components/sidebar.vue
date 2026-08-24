@@ -103,17 +103,23 @@ const handleLogout = () => {
             <div class="relative mb-6 shrink-0" ref="profileMenuRef">
                 <button @click="toggleProfileMenu" type="button" class="w-full flex items-center p-2 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 transition focus:outline-none" :class="isCollapsed ? 'justify-center' : 'justify-between'">
                     <div class="flex items-center gap-2.5 min-w-0" :class="isCollapsed ? 'justify-center' : ''">
-                        <!-- Cek foto profil atau avatar (sesuai struktur standar Laravel/SaaS) -->
-                        <img
-                            v-if="user.profile_photo_url || user.avatar"
-                            :src="user.profile_photo_url || user.avatar"
-                            :alt="user.name"
-                            class="w-8 h-8 rounded-full object-cover shrink-0"
-                        />
-                        <!-- Fallback ke inisial huruf pertama -->
-                        <div v-else class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
-                            <UserAvatar :user="user" />
+                        <div class="relative shrink-0">
+                            <!-- Cek foto profil atau avatar (sesuai struktur standar Laravel/SaaS) -->
+                            <img
+                                v-if="user.profile_photo_url || user.avatar"
+                                :src="user.profile_photo_url || user.avatar"
+                                :alt="user.name"
+                                class="w-8 h-8 rounded-full object-cover"
+                            />
+                            <!-- Fallback ke inisial huruf pertama -->
+                            <div v-else class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
+                                <UserAvatar :user="user" />
+                            </div>
+                            
+                            <!-- Red Dot Notif Badge -->
+                            <div v-if="role === 'Owner' && $page.props.isProfileComplete === false" class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
                         </div>
+                        
                         <div v-if="!isCollapsed" class="min-w-0 text-left flex-1 whitespace-nowrap">
                             <h4 class="text-xs font-bold text-slate-800 truncate">{{ user.name }}</h4>
                             <p class="text-[10px] text-slate-400 truncate">{{ role }}</p>
@@ -138,8 +144,14 @@ const handleLogout = () => {
                         <a :href="route('Home') || '/'" target="_blank" rel="noopener noreferrer" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
                             <Home class="w-4 text-center text-slate-400" /> Halaman Utama
                         </a>
-                        <Link :href="route('profile.edit')" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
-                            <User class="w-4 text-center text-slate-400" /> Profil Saya
+                        <Link :href="role === 'Owner' ? route('owner.profile') : route('profile.edit')" @click="showProfileMenu = false" class="flex items-center gap-2.5 px-3 py-2 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+                            <div class="relative flex items-center justify-center">
+                                <User class="w-4 text-center text-slate-400" />
+                            </div>
+                            <span class="flex items-center gap-1">
+                                Profil Saya
+                                <div v-if="role === 'Owner' && $page.props.isProfileComplete === false" class="w-1.5 h-1.5 bg-red-500 rounded-full relative -top-1"></div>
+                            </span>
                         </Link>
 
                         <div class="h-px bg-slate-100 my-1"></div>
@@ -166,7 +178,7 @@ const handleLogout = () => {
                         <Link
                             :href="item.route"
                             :title="isCollapsed ? item.label : ''"
-                            :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200', isCollapsed ? 'justify-center' : 'justify-between']"
+                            :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200 w-full', isCollapsed ? 'justify-center' : 'justify-between']"
                         >
                             <div class="flex items-center gap-3">
                                 <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-4 text-center" />
@@ -230,7 +242,7 @@ const handleLogout = () => {
                         v-else
                         :href="item.route"
                         :title="isCollapsed ? item.label : ''"
-                        :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200', isCollapsed ? 'justify-center' : 'justify-between']"
+                        :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200 w-full', isCollapsed ? 'justify-center' : 'justify-between']"
                     >
                         <div class="flex items-center gap-3">
                             <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-4 text-center" />

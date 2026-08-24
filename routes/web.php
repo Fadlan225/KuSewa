@@ -66,6 +66,7 @@ Route::middleware('auth')->prefix('owner')->group(function () {
 
 Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/profile', [\App\Http\Controllers\Owner\OwnerProfileController::class, 'index'])->name('profile');
 
     Route::post('asset/upload-temp', [OwnerAssetController::class, 'uploadTemp'])->name('asset.upload-temp');
     Route::get('asset/preview-nearby', [OwnerAssetController::class, 'previewNearby'])->name('asset.preview-nearby');

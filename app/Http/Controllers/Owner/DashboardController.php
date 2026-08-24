@@ -20,13 +20,16 @@ class DashboardController extends Controller
     {
         $user = $request->user();
 
-        // Pastikan user memiliki owner profile
+        // Pastikan user memiliki owner profile dan rekening bank
         $ownerProfileId = $user->ownerProfile ? $user->ownerProfile->id : null;
+        $hasBankAccount = $user->ownerProfile ? $user->ownerProfile->bankAccounts()->exists() : false;
+        $isProfileComplete = $ownerProfileId && $hasBankAccount;
 
         // Jika belum ada profile, return 0 untuk semuanya
         if (!$ownerProfileId) {
             return Inertia::render('owner/index', [
-                'stats' => $this->getEmptyStats()
+                'stats' => $this->getEmptyStats(),
+                'isProfileComplete' => $isProfileComplete
             ]);
         }
 
@@ -200,6 +203,7 @@ class DashboardController extends Controller
 
         return Inertia::render('owner/index', [
             'stats' => $stats,
+            'isProfileComplete' => $isProfileComplete
         ]);
     }
 

@@ -150,6 +150,11 @@ const previewImage = (item) => {
     return placeholderImage;
 };
 
+const handleIncompleteProfileClick = (e) => {
+    e.preventDefault();
+    window.dispatchEvent(new CustomEvent('show-profile-incomplete-bubble'));
+};
+
 </script>
 
 <template>
@@ -161,13 +166,15 @@ const previewImage = (item) => {
         role="Owner"
     >
         <template #action>
-            <Link
-                href="/owner/asset/create"
+            <component
+                :is="$page.props.isProfileComplete === false ? 'button' : Link"
+                :href="$page.props.isProfileComplete === false ? undefined : '/owner/asset/create'"
+                @click="$page.props.isProfileComplete === false ? handleIncompleteProfileClick($event) : null"
                 class="bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] font-bold px-5 py-2.5 rounded shadow-sm hover:shadow transition flex items-center justify-center gap-2 text-sm w-fit"
             >
                 <Plus class="" />
                 <span>Daftarkan Aset</span>
-            </Link>
+            </component>
         </template>
 
         <div class="space-y-6 mt-6">
@@ -309,12 +316,14 @@ const previewImage = (item) => {
                         Anda belum menambahkan aset apa pun untuk disewakan. Mulai langkah pertama Anda untuk mengelola bisnis sewa bersama kami!
                     </p>
 
-                    <Link
-                        href="/owner/asset/create"
+                    <component
+                        :is="$page.props.isProfileComplete === false ? 'button' : Link"
+                        :href="$page.props.isProfileComplete === false ? undefined : '/owner/asset/create'"
+                        @click="$page.props.isProfileComplete === false ? handleIncompleteProfileClick($event) : null"
                         class="bg-[#FFC000] hover:bg-[#e5ac00] active:scale-95 text-[#0A2540] font-black px-8 py-3.5 rounded text-sm uppercase tracking-wider transition-all shadow-sm inline-block"
                     >
                         Tambahkan Aset Baru
-                    </Link>
+                    </component>
                 </div>
 
                 <!-- PAGINATION -->

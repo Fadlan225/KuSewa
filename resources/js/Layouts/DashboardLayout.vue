@@ -4,6 +4,7 @@ import Sidebar from '@/Components/sidebar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { X, Menu } from 'lucide-vue-next';
 import Topbar from '@/Components/Topbar.vue';
+import ProfileIncompleteModal from '@/Components/ui/ProfileIncompleteModal.vue';
 
 import { getOwnerMenu, getAdminMenu } from '@/Config/menus';
 
@@ -23,7 +24,8 @@ const page = usePage();
 const sidebarCounts = computed(() => page.props.sidebarCounts || {});
 
 // Menu yang dipakai bergantung pada role yang diberikan dari props
-const menu = computed(() => props.role === 'Admin' ? getAdminMenu(sidebarCounts.value) : getOwnerMenu(sidebarCounts.value));
+const isProfileComplete = computed(() => page.props.isProfileComplete);
+const menu = computed(() => props.role === 'Admin' ? getAdminMenu(sidebarCounts.value) : getOwnerMenu(sidebarCounts.value, isProfileComplete.value));
 
 // ==========================================
 // MOBILE SIDEBAR BEHAVIOR
@@ -36,7 +38,9 @@ watch(() => page.url, () => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-[#F8FAFC] text-slate-700 font-sans antialiased flex flex-col lg:flex-row">
+    <div class="min-h-screen bg-slate-100 text-slate-700 font-sans antialiased flex flex-col lg:flex-row">
+
+        <ProfileIncompleteModal />
 
         <!-- ==============================
              MOBILE HEADER
