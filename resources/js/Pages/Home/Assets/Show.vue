@@ -1,4 +1,6 @@
 <script setup>
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Layers, MapPin, Calendar, Coins, Star, Heart, Check, AlertTriangle, MessageSquareMore } from 'lucide-vue-next';
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
@@ -604,8 +606,63 @@ const handleWindowScroll = () => {
     showDetailNav.value = window.scrollY > 400;
 };
 
+const mapContainer = ref(null);
+let mapInstance = null;
+
+const initMap = () => {
+    if (!props.asset.latitude || !props.asset.longitude || !mapContainer.value) return;
+
+    if (mapInstance) {
+        mapInstance.remove();
+        mapInstance = null;
+    }
+
+    const lat = parseFloat(props.asset.latitude);
+    const lng = parseFloat(props.asset.longitude);
+
+    mapInstance = L.map(mapContainer.value, {
+        zoomControl: false,
+    }).setView([lat, lng], 17);
+
+    L.control.zoom({ position: 'bottomright' }).addTo(mapInstance);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(mapInstance);
+
+    const forRentSvgStr = `<svg fill="#0A2540" viewBox="0 0 485 485" class="w-5 h-5">
+        <path d="M485,60H295.969V0H189.031v60H0v278.879h189.031V485h106.938V338.879H485V60z"/>
+    </svg>`;
+
+    const customMarkerIcon = L.divIcon({
+        className: 'custom-leaflet-pin',
+        html: `
+            <div style="position: relative; width: 44px; height: 44px;">
+                <div style="width: 44px; height: 44px; background-color: #FFC000; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 2px 2px 6px rgba(0,0,0,0.3); position: absolute; left: 0; top: 0;"></div>
+                <div style="width: 22px; height: 22px; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 2; display:flex; align-items:center; justify-content:center;">
+                    ${forRentSvgStr}
+                </div>
+            </div>
+            <div style="width: 24px; height: 8px; background: rgba(0,0,0,0.3); border-radius: 50%; filter: blur(2px); position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);"></div>
+            <div class="gps-ping-effect hidden absolute" style="left: 22px; top: 52px; transform: translate(-50%, -50%); z-index: -1; pointer-events: none; width: 100px; height: 100px;">
+                <div class="w-full h-full bg-[#FFC000] rounded-full animate-ping opacity-75"></div>
+            </div>
+        `,
+        iconSize: [44, 52],
+        iconAnchor: [22, 52],
+    });
+
+    L.marker([lat, lng], { icon: customMarkerIcon }).addTo(mapInstance);
+    
+    setTimeout(() => {
+        if (mapInstance) mapInstance.invalidateSize();
+    }, 200);
+};
+
 onMounted(() => {
     window.addEventListener('scroll', handleWindowScroll);
+    initMap();
 });
 
 onUnmounted(() => {
@@ -771,17 +828,11 @@ onUnmounted(() => {
                 <h3 class="text-[22px] font-bold text-[#222222] mb-4">Lokasi dan lingkungan sekitar</h3>
                 <p class="text-[15px] text-gray-700 mb-6 font-medium">{{ [asset.address, asset.village?.name, asset.district?.name, asset.city?.name, asset.province?.name, 'Indonesia'].filter(Boolean).join(', ') }} {{ asset.postal_code || '' }}</p>
                 <div class="w-full h-72 bg-gray-200 rounded-xl overflow-hidden relative mb-6">
-                    <iframe
+                    <div
                         v-if="asset.latitude && asset.longitude"
-                        width="100%"
-                        height="100%"
-                        frameborder="0"
-                        scrolling="no"
-                        marginheight="0"
-                        marginwidth="0"
-                        :src="`https://www.openstreetmap.org/export/embed.html?bbox=${parseFloat(asset.longitude)-0.02}%2C${parseFloat(asset.latitude)-0.01}%2C${parseFloat(asset.longitude)+0.02}%2C${parseFloat(asset.latitude)+0.01}&amp;layer=mapnik&amp;marker=${asset.latitude}%2C${asset.longitude}`"
-                        style="border: 0;"
-                    ></iframe>
+                        ref="mapContainer"
+                        class="w-full h-full z-0"
+                    ></div>
                     <div v-else class="absolute inset-0 flex flex-col items-center justify-center bg-white/90 p-4 shadow-lg">
                         <MapPin class="text-red-500 text-3xl mb-2" />
                         <span class="font-bold">Koordinat lokasi tidak tersedia</span>
