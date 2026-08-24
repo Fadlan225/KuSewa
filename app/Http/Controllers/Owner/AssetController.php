@@ -265,11 +265,8 @@ class AssetController extends Controller
             return redirect()->route('Home')->with('error', 'Silakan lengkapi profil owner Anda terlebih dahulu.');
         }
 
-        // Cek apakah rekening bank sudah ditambahkan
-        $hasBankAccount = $ownerProfile->bankAccounts()->exists();
-        if (!$hasBankAccount) {
-            return redirect()->route('owner.asset.index')->with('error', 'Lengkapi profil bisnis Anda (termasuk rekening bank) sebelum mendaftarkan aset.');
-        }
+        // Note: Pengguna kini bisa mengakses halaman Create meskipun profil bisnis belum lengkap.
+        // Pengecekan rekening dilakukan di metode store() dan via frontend saat menekan tombol submit.
 
         // Kategori aset beserta jenis-jenis di dalamnya
         $categories = asset_category::with(['types:id,category_id,name,allow_units'])
@@ -424,6 +421,12 @@ class AssetController extends Controller
     public function store(StoreAssetRequest $request)
     {
         $ownerProfile = auth()->user()->ownerProfile;
+
+        // Cek apakah rekening bank sudah ditambahkan sebelum mengizinkan submit verifikasi
+        $hasBankAccount = $ownerProfile->bankAccounts()->exists();
+        if (!$hasBankAccount) {
+            return back()->withErrors(['bank_account' => 'Anda harus melengkapi profil bisnis (Rekening Bank) sebelum mengajukan verifikasi aset.']);
+        }
 
         $assetType = asset_type::findOrFail($request->asset_type_id);
         $allowUnits = (bool) $assetType->allow_units;

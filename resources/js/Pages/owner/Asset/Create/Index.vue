@@ -1,7 +1,7 @@
 <script setup>
 import { Send, History } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue';
-import { Head, Link, useForm, router } from '@inertiajs/vue3';
+import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import Toast from '@/Components/ui/Toast.vue';
@@ -31,6 +31,8 @@ const props = defineProps({
     draftData: Object,
     draftId: Number,
 });
+
+const page = usePage();
 
 // --- DATA DINAMIS dari API ---
 const assetTypeDetails = ref(null);
@@ -529,7 +531,6 @@ const preparePayload = (data, isKos) => {
 
     if (isKos) {
         delete payload.price;
-        delete payload.facility_ids;
     } else {
         delete payload.units;
     }
@@ -679,6 +680,11 @@ const submitProperty = async () => {
         return;
     }
 
+    if (page.props.isProfileComplete === false) {
+        window.dispatchEvent(new CustomEvent('show-profile-incomplete-bubble'));
+        return;
+    }
+
     // Auto save draft for the last time before submitting (optional, but good for safety)
     await saveDraft();
 
@@ -709,6 +715,8 @@ const closeModalAndRedirect = () => {
 
 <template>
     <DashboardLayout
+        title="Daftarkan Aset"
+        role="Owner"
         subMenuParentRouteName="owner.asset.*"
     >
         <Head title="Ajukan Aset Baru" />

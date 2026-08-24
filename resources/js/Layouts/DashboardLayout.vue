@@ -7,6 +7,11 @@ import Topbar from '@/Components/Topbar.vue';
 import ProfileIncompleteModal from '@/Components/ui/ProfileIncompleteModal.vue';
 
 import { getOwnerMenu, getAdminMenu } from '@/Config/menus';
+import NotificationToast from '@/Components/ui/NotificationToast.vue';
+import { useNotifications } from '@/Composables/useNotifications';
+
+const { addNewNotification } = useNotifications();
+const toastRef = ref(null);
 
 const props = defineProps({
     title: { type: String, required: true },
@@ -34,6 +39,18 @@ const showMobileMenu = ref(false);
 
 watch(() => page.url, () => {
     showMobileMenu.value = false;
+});
+
+import { onMounted } from 'vue';
+
+onMounted(() => {
+    if (page.props.auth?.user) {
+        window.Echo?.private(`App.Models.User.${page.props.auth.user.id}`)
+            .notification((notification) => {
+                addNewNotification(notification);
+                toastRef.value?.addToast(notification);
+            });
+    }
 });
 </script>
 
@@ -109,5 +126,8 @@ watch(() => page.url, () => {
                 </div>
             </div>
         </main>
+        
+        <!-- Toast Notifikasi Real-time -->
+        <NotificationToast ref="toastRef" />
     </div>
 </template>

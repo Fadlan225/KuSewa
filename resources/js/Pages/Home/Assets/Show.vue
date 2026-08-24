@@ -684,7 +684,7 @@ onUnmounted(() => {
     <Navbar class="hidden md:block !absolute top-0 left-0 w-full z-[80] !transition-none" />
 
     <!-- STICKY CONTAINER FOR SUB NAV & DETAIL NAV -->
-    <div class="hidden md:block sticky top-0 left-0 w-full z-[75] mt-[64px]">
+    <div class="hidden md:block sticky top-0 left-0 w-full z-[75] mt-[64px] lg:mt-[96px]">
         
         <!-- FILTER PENCARIAN -->
         <div class="w-full bg-white shadow-sm border-b border-gray-100 relative z-20">

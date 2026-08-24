@@ -117,12 +117,11 @@ onMounted(async () => {
         }
 
         // Listen notifikasi real-time via Laravel Echo (Reverb/Pusher)
-        // Uncomment baris di bawah setelah Reverb dikonfigurasi di server
-        // window.Echo?.private(`App.Models.User.${page.props.auth.user.id}`)
-        //     .notification((notification) => {
-        //         addNewNotification(notification);
-        //         toastRef.value?.addToast(notification);
-        //     });
+        window.Echo?.private(`App.Models.User.${page.props.auth.user.id}`)
+            .notification((notification) => {
+                addNewNotification(notification);
+                toastRef.value?.addToast(notification);
+            });
     }
 });
 </script>

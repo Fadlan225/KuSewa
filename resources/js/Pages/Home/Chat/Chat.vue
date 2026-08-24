@@ -165,6 +165,10 @@ const sendMessage = async (payload = null) => {
   } else if (payload && payload.file) { // backward compatibility for FloatingChat or single files
     files = [payload.file];
     text = payload.text || '';
+  } else if (payload && payload.text) {
+    // Pesan teks biasa dari ChatRoom (sendSuggestion / handleSend)
+    text = payload.text.trim();
+    newMessage.value = '';
   } else {
     if (!newMessage.value.trim() && !activeChatId.value) return;
     text = newMessage.value.trim();
