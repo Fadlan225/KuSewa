@@ -102,12 +102,18 @@ const fetchChats = async () => {
     const response = await axios.get('/api/chats');
 
     // Pertahankan properti lokal (seperti price dan assetId) agar tidak hilang saat polling
+    let shouldRefreshActiveChat = false;
+    
     const updatedChats = response.data.map(newChat => {
         const existingChat = chatList.value.find(c => c.id === newChat.id);
         if (existingChat) {
             newChat.price = existingChat.price;
             newChat.assetId = existingChat.assetId;
             if (activeChatId.value === newChat.id) {
+                // Jika polling mendeteksi ada pesan baru untuk chat yang sedang dibuka
+                if (newChat.unread > 0 || (newChat.time !== existingChat.time)) {
+                    shouldRefreshActiveChat = true;
+                }
                 newChat.unread = 0;
             }
         }
@@ -115,6 +121,10 @@ const fetchChats = async () => {
     });
 
     chatList.value = updatedChats;
+
+    if (shouldRefreshActiveChat) {
+        fetchMessages(activeChatId.value);
+    }
 
     // Handle URL params for direct room opening
     const urlParams = new URLSearchParams(window.location.search);
