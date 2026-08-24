@@ -54,10 +54,14 @@ defineExpose({ addToast });
                 class="pointer-events-auto w-full md:w-[340px] bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
             >
                 <div class="flex gap-3 p-3.5 items-start">
-                    <!-- Logo -->
+                    <!-- Ikon: chat pakai icon pesan, lainnya pakai logo KitaSewa -->
                     <div class="flex-shrink-0">
-                        <div class="w-9 h-9 rounded-full bg-[#FFC000]/10 flex items-center justify-center">
-                            <img src="/kitasewa-logo.png" alt="KitaSewa" class="w-6 h-6 object-contain" />
+                        <div class="w-9 h-9 rounded-full flex items-center justify-center"
+                            :class="toast.type === 'chat_message' ? 'bg-green-50' : 'bg-[#FFC000]/10'">
+                            <svg v-if="toast.type === 'chat_message'" xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-green-500" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/>
+                            </svg>
+                            <img v-else src="/kitasewa-logo.png" alt="KitaSewa" class="w-6 h-6 object-contain" />
                         </div>
                     </div>
 
@@ -70,9 +74,10 @@ defineExpose({ addToast });
                             v-if="toast.action_url"
                             :href="toast.action_url"
                             @click="dismissToast(toast.id)"
-                            class="text-[10px] text-[#FFC000] font-bold mt-1 inline-block hover:underline"
+                            class="text-[10px] font-bold mt-1 inline-block hover:underline"
+                            :class="toast.type === 'chat_message' ? 'text-green-500' : 'text-[#FFC000]'"
                         >
-                            Lihat Detail →
+                            {{ toast.type === 'chat_message' ? 'Balas →' : 'Lihat Detail →' }}
                         </component>
                     </div>
 

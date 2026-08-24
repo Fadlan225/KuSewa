@@ -7,8 +7,10 @@ use Inertia\Inertia;
 use App\Models\room_chat;
 use App\Models\message;
 use App\Models\owner_profile;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Events\MessageSent;
+use App\Notifications\NewChatMessage;
 
 class ChatController extends Controller
 {
@@ -256,6 +258,33 @@ class ChatController extends Controller
         $endTime = microtime(true);
 
         \Log::info("Broadcast took " . ($endTime - $startTime) . " seconds.");
+
+        // Kirim notifikasi ke penerima (bukan pengirim)
+        $room->loadMissing('ownerProfile');
+        $senderName = Auth::user()->name;
+        $messagePreview = $msg->message_type === 'text'
+            ? mb_substr($msg->message, 0, 60)
+            : ($msg->message_type === 'image' ? '📷 Foto' : '📎 File');
+
+        // Tentukan penerima: jika pengirim adalah user biasa, penerima adalah owner; sebaliknya
+        if ($room->user_id === $userId) {
+            // Pengirim = user biasa → penerima = owner
+            $recipientId = $room->ownerProfile->user_id ?? null;
+        } else {
+            // Pengirim = owner → penerima = user biasa
+            $recipientId = $room->user_id;
+        }
+
+        if ($recipientId && $recipientId !== $userId) {
+            $recipient = User::find($recipientId);
+            if ($recipient) {
+                $recipient->notify(new NewChatMessage(
+                    roomId: (string) $room->id,
+                    senderName: $senderName,
+                    messagePreview: $messagePreview,
+                ));
+            }
+        }
 
         $hasAttachments = count($attachmentsResponse) > 0;
         $text = $msg->message;
