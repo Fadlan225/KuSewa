@@ -1,5 +1,6 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
+import SuccessLoginIcon from '@/Components/ui/SuccessLoginIcon.vue';
 import { storeToRefs } from 'pinia';
 import { useAuthFeedbackStore } from '@/Stores/AuthFeedbackStore';
 
@@ -22,12 +23,14 @@ const { isOpen, type, title, message, autoClose } = storeToRefs(authFeedbackStor
             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" @click="!autoClose ? authFeedbackStore.close() : null"></div>
             
             <!-- Card -->
-            <div class="relative bg-white rounded-[2rem] shadow-2xl shadow-slate-900/20 w-full max-w-sm p-8 text-center flex flex-col items-center">
+            <div class="relative bg-white rounded-xl shadow-2xl shadow-slate-900/20 w-full max-w-sm p-8 text-center flex flex-col items-center">
                 
                 <!-- Ikon Fluffy -->
-                <div class="mb-5 flex justify-center items-center w-28 h-28 rounded-full"
-                     :class="type === 'success' ? 'bg-emerald-50 text-emerald-500' : 'bg-red-50 text-red-500'">
-                    <AppIcon :iconClass="type === 'success' ? 'fa-circle-check animate-bounce-short' : 'fa-circle-xmark animate-shake'"  />
+                <div v-if="type === 'success'" class="mb-5 flex justify-center items-center w-48 h-48 rounded-full">
+                    <SuccessLoginIcon class="animate-bounce-short" />
+                </div>
+                <div v-else class="mb-5 flex justify-center items-center w-28 h-28 rounded-full bg-red-50 text-red-500">
+                    <AppIcon iconClass="fa-circle-xmark animate-shake" />
                 </div>
                 
                 <h3 class="text-2xl font-extrabold text-[#0A2540] mb-2.5">

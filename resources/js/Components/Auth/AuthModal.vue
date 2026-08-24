@@ -41,7 +41,7 @@ const close = () => {
                 <div @click="close" class="absolute inset-0 bg-black/60 transition-opacity"></div>
                 
                 <!-- Modal Content -->
-                <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden z-10">
+                <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col overflow-hidden z-10">
                     
                     <!-- Header -->
                     <div class="px-6 py-4 flex items-center justify-between border-b border-[#6C757D]/10 shrink-0">
