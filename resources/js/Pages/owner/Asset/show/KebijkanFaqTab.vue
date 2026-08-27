@@ -2,6 +2,7 @@
 import { Plus, Loader2, Pen, Trash2, HelpCircle, CheckCircle, FileSignature } from 'lucide-vue-next';
 import { ref, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/Components/ui/card';
 
 const props = defineProps({
     asset: Object,
@@ -110,7 +111,8 @@ const deletePolicy = (policyId) => {
     <div class="animate-in fade-in duration-300 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- ========== FAQ ========== -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 md:p-6 flex flex-col gap-4">
+        <Card class="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <CardContent class="p-5 md:p-6 flex flex-col gap-4">
             <div class="flex items-center justify-between mb-2">
                 <div>
                     <h2 class="font-bold text-slate-800 text-base">FAQ</h2>
@@ -119,7 +121,7 @@ const deletePolicy = (policyId) => {
                 <button
                     v-if="!isAddingFaq"
                     @click="isAddingFaq = true"
-                    class="text-xs font-bold text-white bg-[#0A2540] hover:bg-[#0A2540]/90 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5"
+                    class="text-xs font-bold text-slate-900 bg-[#FFC000] hover:bg-[#FFC000]/90 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5"
                 >
                     <Plus class="" /> Tambah FAQ
                 </button>
@@ -139,7 +141,7 @@ const deletePolicy = (policyId) => {
                 </div>
                 <div class="flex gap-2">
                     <button @click="submitFaq" :disabled="isSavingFaq || !newFaq.question.trim() || !newFaq.answer.trim()"
-                        class="flex-1 px-4 py-2 bg-[#0A2540] text-white text-xs font-bold rounded-lg transition disabled:opacity-50">
+                        class="flex-1 px-4 py-2 bg-[#FFC000] text-slate-900 text-xs font-bold rounded-lg transition disabled:opacity-50">
                         <Loader2 v-if="isSavingFaq" class="mr-1 animate-spin" />
                         Simpan
                     </button>
@@ -181,7 +183,7 @@ const deletePolicy = (policyId) => {
                             class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-0 transition resize-none"></textarea>
                         <div class="flex gap-2">
                             <button @click="submitEditFaq(faq.id)"
-                                class="flex-1 px-3 py-1.5 bg-[#0A2540] text-white text-xs font-bold rounded-lg transition">
+                                class="flex-1 px-3 py-1.5 bg-[#FFC000] text-slate-900 text-xs font-bold rounded-lg transition">
                                 Simpan
                             </button>
                             <button @click="editingFaqId = null"
@@ -200,10 +202,12 @@ const deletePolicy = (policyId) => {
                 <p class="text-sm font-bold text-slate-500">Belum ada FAQ</p>
                 <p class="text-xs text-slate-400 mt-1">Tambahkan pertanyaan umum untuk membantu penyewa</p>
             </div>
-        </div>
+            </CardContent>
+        </Card>
 
         <!-- ========== KEBIJAKAN ========== -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 md:p-6 flex flex-col gap-4">
+        <Card class="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <CardContent class="p-5 md:p-6 flex flex-col gap-4">
             <div class="flex items-center justify-between mb-2">
                 <div>
                     <h2 class="font-bold text-slate-800 text-base">Kebijakan</h2>
@@ -212,7 +216,7 @@ const deletePolicy = (policyId) => {
                 <button
                     v-if="!isAddingPolicy"
                     @click="isAddingPolicy = true"
-                    class="text-xs font-bold text-white bg-[#0A2540] hover:bg-[#0A2540]/90 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5"
+                    class="text-xs font-bold text-slate-900 bg-[#FFC000] hover:bg-[#FFC000]/90 px-3 py-1.5 rounded-lg transition shadow-sm flex items-center gap-1.5"
                 >
                     <Plus class="" /> Tambah Kebijakan
                 </button>
@@ -232,7 +236,7 @@ const deletePolicy = (policyId) => {
                 </div>
                 <div class="flex gap-2">
                     <button @click="submitPolicy" :disabled="isSavingPolicy || !newPolicy.title.trim()"
-                        class="flex-1 px-4 py-2 bg-[#FFC000] text-[#0A2540] text-xs font-bold rounded-lg transition disabled:opacity-50">
+                        class="flex-1 px-4 py-2 bg-[#FFC000] text-slate-900 text-xs font-bold rounded-lg transition disabled:opacity-50">
                         <Loader2 v-if="isSavingPolicy" class="mr-1 animate-spin" />
                         Simpan
                     </button>
@@ -279,7 +283,7 @@ const deletePolicy = (policyId) => {
                             class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-amber-500 focus:ring-0 transition resize-none"></textarea>
                         <div class="flex gap-2">
                             <button @click="submitEditPolicy(policy.id)"
-                                class="flex-1 px-3 py-1.5 bg-[#FFC000] text-[#0A2540] text-xs font-bold rounded-lg transition">
+                                class="flex-1 px-3 py-1.5 bg-[#FFC000] text-slate-900 text-xs font-bold rounded-lg transition">
                                 Simpan
                             </button>
                             <button @click="editingPolicyId = null"
@@ -298,7 +302,8 @@ const deletePolicy = (policyId) => {
                 <p class="text-sm font-bold text-slate-500">Belum ada kebijakan</p>
                 <p class="text-xs text-slate-400 mt-1">Tambahkan aturan agar penyewa tahu ketentuan Anda</p>
             </div>
-        </div>
+            </CardContent>
+        </Card>
 
     </div>
 </template>

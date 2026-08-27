@@ -1,8 +1,8 @@
-﻿<script setup>
+<script setup>
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { Star, ChevronLeft, Calendar } from 'lucide-vue-next';
-import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
+import EmptyReviewsIcon from '@/Components/ui/Icons/EmptyReviewsIcon.vue';
 
 const props = defineProps({
     isComponent: { type: Boolean, default: false },
@@ -62,10 +62,10 @@ const getImageUrl = (imgObj) => {
 
             <!-- Empty State -->
             <div v-if="!reviews.data || reviews.data.length === 0" class="bg-white rounded-[1.5rem] border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
-                <EmptyStateIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
+                <EmptyReviewsIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
                 <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada ulasan</h2>
                 <p class="text-sm text-[#6C757D] mb-6">Anda belum pernah memberikan ulasan untuk penyewaan apa pun.</p>
-                <button @click="router.get(route('aktivitas.transaksi'))" class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors">
+                <button @click="router.get(isComponent ? (route().current('owner.profile') ? route('owner.profile', { tab: 'transaksi' }) : route('profile.edit', { tab: 'transaksi' })) : route('aktivitas.transaksi'))" class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors">
                     Lihat Transaksi
                 </button>
             </div>
@@ -155,5 +155,3 @@ const getImageUrl = (imgObj) => {
         </div>
     </component>
 </template>
-
-

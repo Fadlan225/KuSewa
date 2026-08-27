@@ -153,7 +153,7 @@ const checkAvailability = () => {
 
                         <!-- Button -->
                         <div class="px-1.5 pb-1.5 sm:pb-0 w-full sm:w-auto mt-1 sm:mt-0">
-                            <button @click="checkAvailability" class="w-full sm:w-auto bg-[#0A2540] hover:bg-slate-800 text-white rounded-xl sm:rounded-full px-7 py-2.5 text-sm font-bold transition">
+                            <button @click="checkAvailability" class="w-full sm:w-auto bg-[#FFC000] hover:bg-[#e5ac00] text-slate-900 rounded-xl sm:rounded-full px-7 py-2.5 text-sm font-bold transition">
                                 Cek
                             </button>
                         </div>
@@ -176,7 +176,7 @@ const checkAvailability = () => {
             <div class="flex flex-col md:flex-row gap-8 lg:gap-16 w-full justify-center">
                 <!-- LEFT CALENDAR -->
                 <div class="flex-1 max-w-xs mx-auto w-full">
-                    <h3 class="text-center font-bold text-[#0A2540] text-base mb-6">{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
+                    <h3 class="text-center font-bold text-slate-900 text-base mb-6">{{ monthNames[currentMonth] }} {{ currentYear }}</h3>
                     <div class="grid grid-cols-7 gap-y-4 gap-x-1 mb-4">
                         <div v-for="day in ['Min', 'Sn', 'Sl', 'R', 'Km', 'J', 'Sb']" :key="day" class="text-center text-xs font-bold text-slate-500">
                             {{ day }}
@@ -184,7 +184,7 @@ const checkAvailability = () => {
                     </div>
                     <div class="grid grid-cols-7 gap-y-3 gap-x-1">
                         <div v-for="(day, index) in leftCalendarDays" :key="'l'+index" class="flex items-center justify-center">
-                            <div v-if="day" :class="isDateBooked(day) ? 'text-slate-300 cursor-not-allowed' : 'text-[#0A2540] font-bold hover:bg-slate-100 cursor-pointer'" class="w-8 h-8 flex items-center justify-center rounded-full text-sm transition">
+                            <div v-if="day" :class="isDateBooked(day) ? 'text-slate-300 cursor-not-allowed' : 'text-slate-900 font-bold hover:bg-slate-100 cursor-pointer'" class="w-8 h-8 flex items-center justify-center rounded-full text-sm transition">
                                 {{ day.getDate() }}
                             </div>
                         </div>
@@ -193,7 +193,7 @@ const checkAvailability = () => {
 
                 <!-- RIGHT CALENDAR (Desktop Only or Stacked on Mobile) -->
                 <div class="flex-1 max-w-xs mx-auto w-full hidden md:block">
-                    <h3 class="text-center font-bold text-[#0A2540] text-base mb-6">{{ rightMonthName }} {{ rightYear }}</h3>
+                    <h3 class="text-center font-bold text-slate-900 text-base mb-6">{{ rightMonthName }} {{ rightYear }}</h3>
                     <div class="grid grid-cols-7 gap-y-4 gap-x-1 mb-4">
                         <div v-for="day in ['Min', 'Sn', 'Sl', 'R', 'Km', 'J', 'Sb']" :key="'r'+day" class="text-center text-xs font-bold text-slate-500">
                             {{ day }}
@@ -201,7 +201,7 @@ const checkAvailability = () => {
                     </div>
                     <div class="grid grid-cols-7 gap-y-3 gap-x-1">
                         <div v-for="(day, index) in rightCalendarDays" :key="'r_day'+index" class="flex items-center justify-center">
-                            <div v-if="day" :class="isDateBooked(day) ? 'text-slate-300 cursor-not-allowed' : 'text-[#0A2540] font-bold hover:bg-slate-100 cursor-pointer'" class="w-8 h-8 flex items-center justify-center rounded-full text-sm transition">
+                            <div v-if="day" :class="isDateBooked(day) ? 'text-slate-300 cursor-not-allowed' : 'text-slate-900 font-bold hover:bg-slate-100 cursor-pointer'" class="w-8 h-8 flex items-center justify-center rounded-full text-sm transition">
                                 {{ day.getDate() }}
                             </div>
                         </div>

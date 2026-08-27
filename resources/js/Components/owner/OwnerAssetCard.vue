@@ -106,9 +106,9 @@ const formatRupiah = (value) => {
             <!-- RIBBON BADGE (Placed outside overflow-hidden to allow overhang) -->
             <div class="absolute top-3 -left-1.5 z-20 pointer-events-none flex flex-col gap-1 items-start">
                 <!-- Status Verification Badge -->
-                <div v-if="asset.verification_status === 'draft'" class="relative bg-slate-200 text-slate-700 text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
+                <div v-if="asset.verification_status === 'draft'" class="relative bg-slate-400 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
                     <FileEdit class="mr-1" />Draft
-                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-slate-400 border-l-[6px] border-l-transparent"></div>
+                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-slate-600 border-l-[6px] border-l-transparent"></div>
                 </div>
                 <div v-else-if="asset.verification_status === 'pending'" class="relative bg-[#FFC000] text-[#0A2540] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
                     <Clock class="mr-1" />Menunggu
@@ -118,9 +118,9 @@ const formatRupiah = (value) => {
                     <XCircle class="mr-1" />Ditolak
                     <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-rose-800 border-l-[6px] border-l-transparent"></div>
                 </div>
-                <div v-else-if="asset.verification_status === 'approved'" class="relative bg-[#FFC000] text-[#0A2540] text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
+                <div v-else-if="asset.verification_status === 'approved'" class="relative bg-emerald-500 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
                     <CheckCircle class="mr-1" />Terverifikasi
-                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-[#B38600] border-l-[6px] border-l-transparent"></div>
+                    <div class="absolute left-0 -bottom-1.5 w-0 h-0 border-t-[6px] border-t-emerald-700 border-l-[6px] border-l-transparent"></div>
                 </div>
                 <div v-else-if="asset.verification_status === 'inactive'" class="relative bg-slate-500 text-white text-[9px] sm:text-[10px] font-black px-2.5 py-1 rounded-r-md shadow-sm">
                     <Power class="mr-1" />Nonaktif

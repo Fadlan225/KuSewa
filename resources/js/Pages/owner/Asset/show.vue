@@ -1,18 +1,18 @@
 <script setup>
-import { Loader2, Camera, Clock, CheckCircle, XCircle, Check, Play, Pause, AlertTriangle } from 'lucide-vue-next';
+import { Loader2, Camera, Clock, CheckCircle, XCircle, Check, Play, Pause, AlertTriangle, LineChart, Settings } from 'lucide-vue-next';
 import { ref, computed, watch } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
-import RingkasanTab from './show/RingkasanTab.vue';
+import InformasiDasarTab from './show/InformasiDasarTab.vue';
 import UnitTab from './show/UnitTab.vue';
-import LokasiTab from './show/LokasiTab.vue';
-import FasilitasTab from './show/FasilitasTab.vue';
+import LokasiFasilitasTab from './show/LokasiFasilitasTab.vue';
 import HargaTab from './show/HargaTab.vue';
 import KetersediaanTab from './show/KetersediaanTab.vue';
 import FotoTab from './show/FotoTab.vue';
 import KebijkanFaqTab from './show/KebijkanFaqTab.vue';
-
+import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
+import AssetIllustration from '@/Components/ui/Icons/AssetIllustration.vue';
 const props = defineProps({
     asset: {
         type: Object,
@@ -22,13 +22,30 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    mandatoryCategories: {
+        type: Array,
+        default: () => [],
+    },
     masterFacilityCategories: {
+        type: Array,
+        default: () => [],
+    },
+    nearbyPlaces: {
+        type: Object,
+        default: () => ({}),
+    },
+    chartData: {
+        type: Array,
+        default: () => [],
+    },
+    ratingDistribution: {
         type: Array,
         default: () => [],
     }
 });
 
-const activeTab = ref('ringkasan');
+const activeTab = ref('informasi');
+const isSettingsOpen = ref(false);
 
 const form = useForm({
     title: props.asset.title || '',
@@ -108,7 +125,7 @@ const isTogglingStatus = ref(false);
 
 const proceedToggleStatus = (actionType = null) => {
     if (actionType === 'deactivate' && hasActiveBookings.value) return;
-    
+
     router.patch(route('owner.asset.toggle-status', props.asset.slug || props.asset.id), {}, {
         preserveScroll: true,
         onStart: () => { isTogglingStatus.value = true; },
@@ -191,16 +208,13 @@ const availableUnitsCount = computed(() => {
 
 
 
-// Sub-menu sidebar untuk tab navigasi aset (desktop only)
-const assetSubMenu = computed(() => [
-    { key: 'ringkasan',    label: 'Ringkasan',       icon: 'fa-solid fa-chart-pie',     active: activeTab.value === 'ringkasan',    onClick: () => activeTab.value = 'ringkasan' },
-    { key: 'lokasi',      label: 'Lokasi',           icon: 'fa-solid fa-location-dot',  active: activeTab.value === 'lokasi',       onClick: () => activeTab.value = 'lokasi' },
-    { key: 'fasilitas',   label: 'Fasilitas',        icon: 'fa-solid fa-star',          active: activeTab.value === 'fasilitas',    onClick: () => activeTab.value = 'fasilitas' },
-    ...(props.asset.type?.allow_units ? [{ key: 'unit', label: 'Unit', icon: 'fa-solid fa-door-open', active: activeTab.value === 'unit', onClick: () => activeTab.value = 'unit' }] : []),
-    ...(!props.asset.type?.allow_units ? [{ key: 'harga', label: 'Harga & Aturan', icon: 'fa-solid fa-tag', active: activeTab.value === 'harga', onClick: () => activeTab.value = 'harga' }] : []),
-    { key: 'ketersediaan',label: 'Ketersediaan',     icon: 'fa-solid fa-calendar-check',active: activeTab.value === 'ketersediaan', onClick: () => activeTab.value = 'ketersediaan' },
-    { key: 'foto',        label: 'Foto & Dokumen',   icon: 'fa-solid fa-images',        active: activeTab.value === 'foto',         onClick: () => activeTab.value = 'foto' },
-    { key: 'kebijakan',   label: 'Kebijakan & FAQ',  icon: 'fa-solid fa-shield-halved', active: activeTab.value === 'kebijakan',    onClick: () => activeTab.value = 'kebijakan' },
+// Workspace Navigation Tabs
+const workspaceTabs = computed(() => [
+    { key: 'informasi',    label: 'Informasi Dasar',       active: activeTab.value === 'informasi' },
+    { key: 'lokasi',       label: 'Lokasi & Fasilitas',    active: activeTab.value === 'lokasi' },
+    { key: 'harga',        label: 'Harga & Kebijakan',     active: activeTab.value === 'harga' },
+    ...(props.asset.type?.allow_units ? [{ key: 'unit', label: 'Daftar Unit', active: activeTab.value === 'unit' }] : []),
+    { key: 'foto',         label: 'Foto & Dokumen',        active: activeTab.value === 'foto' },
 ]);
 
 </script>
@@ -210,157 +224,111 @@ const assetSubMenu = computed(() => [
 
     <DashboardLayout
         :title="asset.title"
-        description="Kelola informasi, harga, ketersediaan, dan foto aset Anda."
         role="Owner"
-        :breadcrumbs="[{ label: 'Dashboard', route: route('owner.dashboard') }, { label: 'Aset & Unit', route: route('owner.asset.index') }, { label: asset.title }]"
-        :subMenu="assetSubMenu"
-        subMenuParentRouteName="owner.asset.*"
     >
-        <div class="w-full space-y-6">
+        <!-- ACTION SLOT FOR TOPBAR: Status Toggle -->
+        <template #action>
+            <div class="relative z-40">
+                <button
+                    @click="isSettingsOpen = !isSettingsOpen"
+                    class="p-2.5 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition duration-200 focus:outline-none flex items-center justify-center"
+                    title="Pengaturan Aset"
+                >
+                    <Settings class="w-5 h-5" />
+                </button>
 
-            <!-- COMPACT HEADER SECTION -->
-            <div class="flex flex-col md:flex-row gap-6">
+                <!-- Backdrop for closing -->
+                <div v-if="isSettingsOpen" @click="isSettingsOpen = false" class="fixed inset-0 z-40"></div>
 
-                <!-- Left Image -->
-                <div class="w-full md:w-[320px] aspect-[4/3] shrink-0 bg-slate-100 relative group rounded-xl overflow-hidden shadow-sm">
-                    <img :src="thumbnail" class="w-full h-full object-cover" />
-                    <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                        <input type="file" ref="fileInput" class="hidden" accept="image/png, image/jpeg, image/webp" @change="handleThumbnailUpload" />
-                        <button @click="triggerThumbnailUpload" :disabled="isUploadingThumbnail" class="bg-white text-slate-800 text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition flex items-center gap-2">
-                            <Loader2 v-if="isUploadingThumbnail" class="animate-spin" />
-                            <Camera v-else class="" />
-                            {{ isUploadingThumbnail ? 'Mengunggah...' : 'Ubah Foto Utama' }}
+                <!-- Menu -->
+                <Transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="transform scale-95 opacity-0 -translate-y-2"
+                    enter-to-class="transform scale-100 opacity-100 translate-y-0"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="transform scale-100 opacity-100 translate-y-0"
+                    leave-to-class="transform scale-95 opacity-0 -translate-y-2"
+                >
+                    <div v-if="isSettingsOpen" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 origin-top-right overflow-hidden">
+                        <div class="px-4 py-2 border-b border-slate-50 mb-1">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pengaturan Lanjutan</p>
+                        </div>
+
+                        <button v-if="asset.status === 'inactive'" @click="proceedToggleStatus('activate'); isSettingsOpen = false" class="w-full text-left px-4 py-2 text-sm font-semibold text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition flex items-center gap-2" :disabled="isTogglingStatus">
+                            <Play class="w-4 h-4" />
+                            Aktifkan Aset
+                        </button>
+                        <button v-else @click="confirmDelete(); isSettingsOpen = false" class="w-full text-left px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 hover:text-rose-700 transition flex items-center gap-2" :disabled="isTogglingStatus">
+                            <Pause class="w-4 h-4" />
+                            Nonaktifkan Aset
                         </button>
                     </div>
-                </div>
-
-                <!-- Right Content -->
-                <div class="flex flex-col flex-grow min-w-0">
-                    <!-- Top Info (Title & Actions) -->
-                    <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4 mb-4">
-                        <div class="flex-1 min-w-0">
-                            <!-- Title -->
-                            <div class="flex items-center gap-3 flex-wrap mb-1.5">
-                                <input v-model="form.title" type="text" class="text-2xl font-black text-[#0A2540] border-b-2 border-transparent hover:border-slate-200 focus:border-indigo-600 focus:ring-0 px-0 py-1 w-full max-w-lg bg-transparent transition truncate" placeholder="Nama Properti" />
-
-                                <span v-if="asset.status === 'pending'" class="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><Clock class="" /> Menunggu</span>
-                                <span v-else-if="asset.status === 'approved'" class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><CheckCircle class="" /> Terverifikasi</span>
-                                <span v-else-if="asset.status === 'rejected'" class="bg-rose-100 text-rose-700 text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1"><XCircle class="" /> Ditolak</span>
-                                
-                                <span v-if="form.processing" class="text-xs text-slate-400 flex items-center gap-1"><Loader2 class="animate-spin" /> Menyimpan...</span>
-                                <span v-else-if="form.recentlySuccessful" class="text-xs text-emerald-500 flex items-center gap-1"><Check class="" /> Tersimpan</span>
-                            </div>
-                            <div v-if="form.errors.title" class="text-xs text-rose-500 mt-1 mb-2">{{ form.errors.title }}</div>
-
-                            <!-- Subtitle / Location -->
-                            <div class="text-sm text-slate-500 font-medium mb-1 truncate">
-                                {{ asset.type?.category?.name || 'Kategori' }} &bull; {{ asset.address }}, {{ asset.city?.name }}
-                            </div>
-                            <!-- Asset Code -->
-                            <div class="text-xs text-slate-400 font-medium">
-                                Kode Aset: {{ asset.slug || asset.id }}
-                            </div>
-                        </div>
-
-                        <!-- Right actions -->
-                        <div class="shrink-0 flex items-center gap-2">
-                            <button v-if="asset.status === 'inactive'" @click="proceedToggleStatus('activate')" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm flex items-center gap-2" :disabled="isTogglingStatus">
-                                <Loader2 v-if="isTogglingStatus" class="animate-spin" />
-                                <Play v-else class="" />
-                                Aktifkan
-                            </button>
-                            <button v-else @click="confirmDelete" class="bg-white border border-rose-200 text-rose-500 hover:text-rose-600 hover:bg-rose-50 px-4 py-2 rounded-lg text-sm font-bold transition shadow-sm flex items-center gap-2" :disabled="isTogglingStatus">
-                                <Pause class="" />
-                                Nonaktifkan
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Stats & Price Card -->
-                    <div class="mt-auto bg-white border border-slate-100 rounded-xl shadow-sm flex flex-wrap md:flex-nowrap items-center divide-x divide-slate-100">
-                        <div class="flex-1 py-4 px-4 flex flex-col items-center justify-center text-center">
-                            <span class="text-lg font-black text-blue-600">{{ totalUnitsCount }}</span>
-                            <span class="text-[10px] font-bold text-slate-500 mt-0.5">Total Unit</span>
-                        </div>
-                        <div class="flex-1 py-4 px-4 flex flex-col items-center justify-center text-center">
-                            <span class="text-lg font-black text-rose-500">{{ occupiedUnitsCount }}</span>
-                            <span class="text-[10px] font-bold text-slate-500 mt-0.5">Unit Terisi</span>
-                        </div>
-                        <div class="flex-1 py-4 px-4 flex flex-col items-center justify-center text-center">
-                            <span class="text-lg font-black text-emerald-500">{{ availableUnitsCount }}</span>
-                            <span class="text-[10px] font-bold text-slate-500 mt-0.5">Unit Tersedia</span>
-                        </div>
-                        <div class="w-full md:w-auto md:flex-[1.5] py-4 px-6 flex flex-col items-start bg-slate-50/50">
-                            <span class="text-[10px] text-slate-400 font-medium mb-0.5">Mulai dari</span>
-                            <div class="text-base font-black text-[#F97316]">
-                                {{ lowestPrice ? formatRupiah(lowestPrice.price) : '-' }}
-                                <span v-if="lowestPrice" class="text-[11px] text-slate-400 font-medium">/ {{ lowestPrice.duration }} {{ rentalUnitLabel(lowestPrice.rental_unit) }}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                </Transition>
             </div>
+        </template>
 
-            <!-- TAB MENU -->
-            <div class="bg-white border-b border-slate-200 flex overflow-x-auto hide-scrollbar sticky top-[70px] z-40 px-2 sm:px-6">
-                <button @click="activeTab = 'ringkasan'" :class="activeTab === 'ringkasan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Ringkasan</button>
-                <button @click="activeTab = 'lokasi'" :class="activeTab === 'lokasi' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Lokasi</button>
-                <button @click="activeTab = 'fasilitas'" :class="activeTab === 'fasilitas' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Fasilitas Aset</button>
-                <button v-if="asset.type?.allow_units" @click="activeTab = 'unit'" :class="activeTab === 'unit' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Unit <span class="ml-1 bg-slate-100 text-slate-500 py-0.5 px-1.5 rounded-full text-[10px]">{{ asset.units?.length || 0 }}</span></button>
-                <button v-if="!asset.type?.allow_units" @click="activeTab = 'harga'" :class="activeTab === 'harga' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Harga & Aturan</button>
-                <button @click="activeTab = 'ketersediaan'" :class="activeTab === 'ketersediaan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Ketersediaan</button>
-                <button @click="activeTab = 'foto'" :class="activeTab === 'foto' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Foto & Dokumen</button>
-                <button @click="activeTab = 'kebijakan'" :class="activeTab === 'kebijakan' ? 'border-primary text-primary' : 'border-transparent text-slate-500 hover:text-primary'" class="whitespace-nowrap px-4 py-3 border-b-2 font-bold text-sm transition">Kebijakan & FAQ</button>
+        <template #afterTopbar>
+            <!-- HORIZONTAL TAB NAVIGATION (Workspace style) -->
+            <div class="bg-white border-b border-slate-200 flex overflow-x-auto hide-scrollbar sticky top-[120px] lg:top-[60px] z-20 px-4 md:px-6 lg:px-8 -mt-[1px]">
+                <button
+                    v-for="tab in workspaceTabs"
+                    :key="tab.key"
+                    @click="activeTab = tab.key"
+                    :class="tab.active ? 'border-[#FFC000] text-slate-900 font-extrabold' : 'border-transparent text-slate-500 font-semibold hover:text-slate-800'"
+                    class="whitespace-nowrap px-5 py-3.5 border-b-[3px] text-sm transition-all duration-200"
+                >
+                    {{ tab.label }}
+                </button>
             </div>
+        </template>
 
-                <!-- TAB CONTENTS -->
-                <div class="mt-4">
-                    <RingkasanTab v-if="activeTab === 'ringkasan'" :asset="asset" :form="form" :specItems="specItems" :assetFacilities="assetFacilities" />
-                    <LokasiTab v-if="activeTab === 'lokasi'" :asset="asset" :form="form" />
-                    <FasilitasTab v-if="activeTab === 'fasilitas'" :asset="asset" :assetFacilities="assetFacilities" :masterFacilityCategories="masterFacilityCategories" />
-                    <UnitTab v-if="activeTab === 'unit' && asset.type?.allow_units" :asset="asset" :galleryCategories="galleryCategories" />
-                    <HargaTab v-if="activeTab === 'harga'" :asset="asset" :lowestPrice="lowestPrice" />
-                    <KetersediaanTab v-if="activeTab === 'ketersediaan'" :asset="asset" />
-                    <FotoTab v-if="activeTab === 'foto'" :asset="asset" :galleryCategories="galleryCategories" />
-                    <KebijkanFaqTab v-if="activeTab === 'kebijakan'" :asset="asset" />
+        <div class="w-full flex flex-col pt-4 md:pt-6">
+
+            <!-- TAB CONTENT -->
+            <div class="p-4 md:p-6 lg:p-8">
+                <!-- 2. Informasi Dasar -->
+                <div v-if="activeTab === 'informasi'" class="space-y-6">
+                    <InformasiDasarTab :asset="asset" :form="form" :specItems="specItems" />
                 </div>
 
+                <!-- 3. Lokasi & Fasilitas -->
+                <div v-if="activeTab === 'lokasi'" class="space-y-6">
+                    <LokasiFasilitasTab :asset="asset" :form="form" :assetFacilities="assetFacilities" :masterFacilityCategories="masterFacilityCategories" :nearbyPlaces="nearbyPlaces" />
+                </div>
+
+                <!-- 4. Harga & Kebijakan -->
+                <div v-if="activeTab === 'harga'" class="space-y-6">
+                    <HargaTab :asset="asset" :lowestPrice="lowestPrice" />
+                    <KebijkanFaqTab :asset="asset" />
+                </div>
+
+                <!-- 5. Daftar Unit -->
+                <UnitTab v-if="activeTab === 'unit' && asset.type?.allow_units" :asset="asset" :galleryCategories="galleryCategories" />
+
+                <!-- 6. Foto & Dokumen -->
+                <FotoTab v-if="activeTab === 'foto'" :asset="asset" :galleryCategories="galleryCategories" :mandatoryCategories="mandatoryCategories" />
+
+            </div>
         </div>
     </DashboardLayout>
 
     <!-- MODAL NONAKTIFKAN ASET -->
-    <div v-if="showDeactivateModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div class="p-6 text-center">
-                <div class="w-16 h-16 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <AlertTriangle class="text-3xl" />
-                </div>
-                <h3 class="text-xl font-bold text-slate-900 mb-2">Nonaktifkan Aset?</h3>
-
-                <div v-if="hasActiveBookings" class="mb-6">
-                    <p class="text-sm text-rose-600 font-semibold bg-rose-50 p-3 rounded-lg border border-rose-100 mb-3">
-                        Aset ini tidak dapat dinonaktifkan karena sedang memiliki penyewaan yang aktif atau menunggu konfirmasi.
-                    </p>
-                    <p class="text-xs text-slate-500">
-                        Harap selesaikan atau batalkan seluruh pesanan sebelum menonaktifkan aset ini.
-                    </p>
-                </div>
-                <div v-else class="mb-6">
-                    <p class="text-sm text-slate-500">
-                        Aset ini tidak akan lagi terlihat oleh publik. Anda bisa mengaktifkannya kembali kapan saja melalui halaman ini.
-                    </p>
-                </div>
-
-                <div class="flex items-center gap-3 w-full">
-                    <button @click="showDeactivateModal = false" class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition">
-                        {{ hasActiveBookings ? 'Tutup' : 'Batal' }}
-                    </button>
-                    <button v-if="!hasActiveBookings" @click="proceedToggleStatus('deactivate')" class="flex-1 px-4 py-3 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl shadow-md transition flex items-center justify-center gap-2" :disabled="isTogglingStatus">
-                        <Loader2 v-if="isTogglingStatus" class="animate-spin" />
-                        <span v-else>Ya, Nonaktifkan</span>
-                    </button>
-                </div>
+    <ConfirmModal
+        :show="showDeactivateModal"
+        type="primary"
+        title="Nonaktifkan aset ini?"
+        :message="hasActiveBookings
+            ? 'Aset ini tidak dapat dinonaktifkan karena sedang memiliki penyewaan yang aktif atau menunggu konfirmasi. Harap selesaikan atau batalkan seluruh pesanan terlebih dahulu.'
+            : 'Aset Anda tidak akan ditampilkan kepada calon penyewa selama dinonaktifkan. Anda bisa mengaktifkannya kembali kapan saja.'"
+        :confirmText="hasActiveBookings ? 'Oke, Paham' : (isTogglingStatus ? 'Memproses...' : 'Nonaktifkan Aset')"
+        cancelText="Batal"
+        @confirm="hasActiveBookings ? showDeactivateModal = false : proceedToggleStatus('deactivate')"
+        @cancel="showDeactivateModal = false"
+    >
+        <template #icon>
+            <div class="w-48 h-auto mx-auto mb-2 drop-shadow-sm pointer-events-none">
+                <AssetIllustration class="w-full h-full" />
             </div>
-        </div>
-    </div>
+        </template>
+    </ConfirmModal>
 </template>

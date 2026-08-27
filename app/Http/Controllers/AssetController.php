@@ -121,6 +121,7 @@ class AssetController extends Controller
             }
 
             // Batasi jumlah riwayat dilihat maksimum 100 aset per user
+            // Batasi jumlah riwayat dilihat maksimum 100 aset per user
             $viewCount = AssetView::where('user_id', auth()->id())->count();
             if ($viewCount > 100) {
                 $oldestViews = AssetView::where('user_id', auth()->id())
@@ -131,6 +132,32 @@ class AssetController extends Controller
                     $oldView->delete();
                 }
             }
+        }
+
+        // ==========================================
+        // Log Visitor Analytics (OS & Browser)
+        // ==========================================
+        try {
+            $agent = new \Jenssegers\Agent\Agent();
+            $os = $agent->platform() ?: 'Unknown';
+            $browser = $agent->browser() ?: 'Unknown';
+            
+            $matchAttributes = [
+                'asset_id' => $asset->id,
+                'os' => $os,
+                'browser' => $browser,
+            ];
+            
+            if (auth()->check()) {
+                $matchAttributes['user_id'] = auth()->id();
+            } else {
+                $matchAttributes['session_id'] = request()->session()->getId();
+                $matchAttributes['user_id'] = null;
+            }
+
+            \App\Models\AssetViewLog::firstOrCreate($matchAttributes);
+        } catch (\Exception $e) {
+            // Abaikan jika gagal mendeteksi
         }
 
         $serviceFeeRecord = DB::table('service_fees')->first();

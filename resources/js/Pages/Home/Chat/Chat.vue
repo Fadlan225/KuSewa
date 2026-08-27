@@ -83,6 +83,7 @@ import ChatList from './ChatList.vue';
 import ChatRoom from './ChatRoom.vue';
 import MessageInfoModal from '@/Components/ui/MessageInfoModal.vue';
 import { useWindowSize } from '@vueuse/core';
+import { usePermissionPrompt } from '@/Composables/usePermissionPrompt';
 
 const page = usePage();
 const { width } = useWindowSize();
@@ -402,6 +403,10 @@ const handleTyping = () => {
 
 onMounted(() => {
   fetchChats();
+
+  // Prompt notification permission if not yet decided
+  const { requestNotificationPermission } = usePermissionPrompt();
+  requestNotificationPermission();
 
   // Polling lambat hanya untuk fallback/update badge kalau ada pesan di chat lain
   setInterval(() => {

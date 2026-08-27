@@ -55,16 +55,7 @@ const goBack = () => {
     <AppLayout>
         <Head title="Pusat Aktivitas" />
 
-        <DetailNavbar 
-            title="Pusat Aktivitas" 
-            backUrl="/profile" 
-            :forceBackUrl="true" 
-            :showBackButton="true" 
-            :showSections="false" 
-            :showShare="false" 
-            :showFavorite="false" 
-            class="md:hidden"
-        />
+
 
         <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 sm:pb-16 text-[#1D1D1F] min-h-[70vh]">
             <div class="mb-6 hidden md:block">

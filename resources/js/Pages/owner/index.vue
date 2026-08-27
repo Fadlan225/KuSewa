@@ -4,6 +4,7 @@ import { DoorOpen, Percent, CalendarCheck, Wallet, BarChart, Map, TrendingUp, Li
 import { computed, ref, onMounted } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import OverviewTab from '@/Pages/owner/Asset/show/OverviewTab.vue';
 import AssetIllustration from '@/Components/ui/Icons/AssetIllustration.vue';
 import IncomeEmptyIllustration from '@/Components/ui/Icons/IncomeEmptyIllustration.vue';
 import SpreadEmptyIllustration from '@/Components/ui/Icons/SpreadEmptyIllustration.vue';
@@ -22,7 +23,9 @@ const props = defineProps({
         totalOccupied: 0,
         totalPendingVerification: 0,
         incomeToday: 0
-    }) }
+    }) },
+    isGlobal: { type: Boolean, default: true },
+    singleAssetData: { type: Object, default: null }
 });
 
 const handleIncompleteProfileClick = (e) => {
@@ -291,8 +294,9 @@ const assetChartSlices = computed(() => {
             </div>
         </div>
 
-        <!-- STATS OVERVIEW - Clean Panel Design -->
-        <div v-if="props.stats?.totalUnit > 0" class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
+        <template v-if="isGlobal">
+            <!-- STATS OVERVIEW - Clean Panel Design -->
+            <div v-if="props.stats?.totalUnit > 0" class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
             <div class="grid grid-cols-2 xl:grid-cols-4 border-slate-100">
                 <!-- Pesanan Baru -->
                 <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
@@ -367,7 +371,7 @@ const assetChartSlices = computed(() => {
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
 
             <!-- PENDAPATAN CHART -->
-            <Card class="xl:col-span-2 bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-2">
+            <Card :class="isGlobal ? 'xl:col-span-2' : 'xl:col-span-3'" class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-2">
                 <CardHeader class="relative z-20 flex flex-col items-stretch p-4 sm:flex-row pb-6">
                     <div class="flex flex-1 flex-col justify-center gap-1 text-left">
                         <div class="flex items-center justify-between">
@@ -423,32 +427,24 @@ const assetChartSlices = computed(() => {
                 </CardContent>
             </Card>
 
-            <!-- PERSEBARAN ASSET -->
-            <Card class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
+            <!-- PERSEBARAN ASSET (Hanya tampil di mode Global) -->
+            <Card v-if="isGlobal" class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4">
                     <CardTitle class="text-sm font-bold text-slate-800">Persebaran Aset</CardTitle>
                     <p class="text-xs text-slate-500 mt-1">Menampilkan persebaran aset berdasarkan kota.</p>
                 </CardHeader>
                 <CardContent class="p-5 flex-1">
-                    <div v-if="kotaList.length" class="space-y-4">
-                        <div v-for="(kota, idx) in kotaList" :key="idx" class="w-full flex items-center gap-2">
-                            <!-- Bar Chart with Inside Label -->
-                            <div class="flex-1 h-8 bg-slate-50 rounded-lg relative border border-slate-100/50">
-                                <!-- Animated Bar Fill -->
-                                <div class="absolute left-0 top-0 h-full bg-[#0A2540] rounded-lg transition-all duration-1000 ease-out"
-                                     :style="{ width: Math.max((kota.count / maxKotaCount) * 100, 2) + '%' }">
-                                </div>
-                                <!-- Label Inside Left -->
-                                <div class="absolute inset-y-0 left-3 flex items-center z-10 pointer-events-none pr-3">
-                                    <span class="text-xs font-medium text-white truncate" :title="kota.name">
-                                        {{ kota.name }}
-                                    </span>
+                    <div v-if="kotaList.length" class="flex flex-col gap-4">
+                        <div v-for="(kota, idx) in kotaList" :key="idx" class="w-full flex items-center h-[32px] gap-2 group cursor-default">
+                            <div class="flex-1 h-full flex items-center bg-transparent">
+                                <div class="bg-[#FFC000] h-full rounded flex items-center px-2.5 transition-all duration-1000 ease-out min-w-max max-w-full relative"
+                                     :style="{ width: isChartMounted ? `${Math.max((kota.count / maxKotaCount) * 100, 2)}%` : '0%' }">
+                                    <span class="text-[11px] font-semibold text-white drop-shadow-sm whitespace-nowrap overflow-hidden text-ellipsis">{{ kota.name }}</span>
                                 </div>
                             </div>
-                            <!-- Value Label Right -->
-                            <span class="text-xs font-black text-slate-600 shrink-0 w-8 text-right pr-1">
-                                {{ kota.count }}
-                            </span>
+                            <div class="min-w-[20px] text-right">
+                                <span class="text-xs font-semibold text-slate-700">{{ kota.count }}</span>
+                            </div>
                         </div>
                     </div>
                     <div v-else class="h-full w-full min-h-[220px] flex flex-col items-center justify-center text-slate-400 pt-6 pb-2">
@@ -480,7 +476,7 @@ const assetChartSlices = computed(() => {
 
         <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 mt-6">
             <!-- BOOKING TREND CHART -->
-            <Card class="xl:col-span-2 bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-0 sm:p-0">
+            <Card :class="isGlobal ? 'xl:col-span-2' : 'xl:col-span-3'" class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-0 sm:p-0">
                 <CardHeader class="flex flex-col items-stretch border-b border-gray-200 p-0 sm:flex-row">
                     <div class="flex flex-1 flex-col justify-center gap-1 px-6 py-5 text-left">
                         <CardTitle class="text-base font-black text-slate-800 tracking-tight">Tren Pemesanan</CardTitle>
@@ -534,8 +530,8 @@ const assetChartSlices = computed(() => {
                 </CardContent>
             </Card>
 
-            <!-- STATUS ASET CHART -->
-            <Card class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
+            <!-- STATUS ASET CHART (Hanya tampil di mode Global) -->
+            <Card v-if="isGlobal" class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4">
                     <CardTitle class="text-sm font-bold text-slate-800">Status Aset</CardTitle>
                     <p class="text-xs text-slate-500 mt-1">Ringkasan status seluruh aset Anda.</p>
@@ -597,5 +593,18 @@ const assetChartSlices = computed(() => {
                 </CardContent>
             </Card>
         </div>
+        </template>
+        
+        <template v-else-if="singleAssetData">
+            <OverviewTab 
+                :asset="singleAssetData.asset" 
+                :totalUnitsCount="singleAssetData.totalUnitsCount" 
+                :occupiedUnitsCount="singleAssetData.occupiedUnitsCount" 
+                :chartData="singleAssetData.chartData" 
+                :ratingDistribution="singleAssetData.ratingDistribution"
+                :osDistribution="singleAssetData.osDistribution ?? []"
+                :browserDistribution="singleAssetData.browserDistribution ?? []"
+            />
+        </template>
     </DashboardLayout>
 </template>

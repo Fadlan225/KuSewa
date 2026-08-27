@@ -1,9 +1,11 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { ChevronRight, Briefcase } from 'lucide-vue-next';
 import AppIcon from '@/Components/AppIcon.vue';
 import { ref } from 'vue';
 import { usePage } from '@inertiajs/vue3';
+import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
+import LogoutIllustrationIcon from '@/Components/ui/Icons/LogoutIllustrationIcon.vue';
 
 const props = defineProps({
     user: Object,
@@ -79,9 +81,8 @@ const activityMenuItems = [
     },
 ];
 
-const settingsMenuItems = [
-    { label: 'Notifikasi', icon: 'fa-regular fa-bell', route: '#', routeNames: ['notifications.*'] },
-];
+const settingsMenuItems = [];
+
 
 const helpMenuItems = [
     { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: route('bantuan'), routeNames: ['bantuan'] },
@@ -90,6 +91,10 @@ const helpMenuItems = [
 ];
 
 const showLogoutModal = ref(false);
+
+const handleLogoutConfirm = () => {
+    router.post(route('logout'));
+};
 
 const checkIsActive = (item) => {
     if (item.isActive) {
@@ -202,30 +207,6 @@ const checkIsActive = (item) => {
             </template>
         </div>
 
-        <!-- Grup Menu 'Pengaturan Aplikasi' -->
-        <div class="bg-white p-6 shadow-md rounded-2xl space-y-2">
-            <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Pengaturan Aplikasi</h3>
-            <div class="border-t border-[#F8F9FA] mb-2"></div>
-
-            <template v-for="(item, index) in settingsMenuItems" :key="index">
-                <Link
-                    v-if="!item.routeDesktop && !item.routeMobile"
-                    :href="item.route"
-                    :class="[
-                        'flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
-                        checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
-                    ]"
-                >
-                    <div v-if="checkIsActive(item)" class="hidden md:block absolute left-0 top-0 bottom-0 w-1 bg-[#FFC000]"></div>
-                    <div class="flex items-center space-x-4">
-                        <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D]' : 'text-[#6C757D] group-hover:text-[#FFC000]']" />
-                        <span :class="['text-sm sm:text-base font-semibold transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#0A2540]' : 'text-[#0A2540] group-hover:text-[#FFC000]']">{{ item.label }}</span>
-                    </div>
-                    <ChevronRight :class="['text-sm transition-all duration-200', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D] md:translate-x-1' : 'text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]']" />
-                </Link>
-            </template>
-        </div>
-
         <!-- Grup Menu 'Bantuan & Lainnya' -->
         <div class="bg-white p-6 shadow-md rounded-2xl space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Bantuan & Lainnya</h3>
@@ -261,37 +242,23 @@ const checkIsActive = (item) => {
             </template>
         </div>
 
-        <!-- Logout Modal -->
-        <Teleport to="body" v-if="showLogoutModal">
-            <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-                <div class="bg-white rounded-2xl max-w-sm w-full p-6 sm:p-8 shadow-xl transform transition-all duration-300 text-center">
-                    <h2 class="text-xl font-bold text-gray-900">Yakin ingin keluar dari akun?</h2>
-                    <p class="mt-2 text-sm text-gray-600">
-                        Kamu tetap bisa menjelajahi KitaSewa, tetapi perlu login kembali untuk melakukan booking atau mengelola aset.
-                    </p>
-
-                    <div class="mt-8 flex flex-col gap-3">
-                        <Link
-                            :href="route('logout')"
-                            method="post"
-                            as="button"
-                            @click="showLogoutModal = false"
-                            class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-sm text-white uppercase tracking-widest hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                        >
-                            Ya, Keluar
-                        </Link>
-
-                        <button
-                            type="button"
-                            @click="showLogoutModal = false"
-                            class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
-                        >
-                            Tidak
-                        </button>
-                    </div>
+        <!-- Logout Confirmation Modal -->
+        <ConfirmModal
+            :show="showLogoutModal"
+            type="primary"
+            title="Keluar dari Akun?"
+            message="Kamu tetap bisa menjelajahi KitaSewa, tetapi perlu login kembali untuk melakukan booking atau mengelola aset."
+            confirmText="Ya, Keluar"
+            cancelText="Batal"
+            @confirm="handleLogoutConfirm"
+            @cancel="showLogoutModal = false"
+        >
+            <template #icon>
+                <div class="w-28 mx-auto mb-2">
+                    <LogoutIllustrationIcon class="w-full h-auto" />
                 </div>
-            </div>
-        </Teleport>
+            </template>
+        </ConfirmModal>
     </div>
 </template>
 

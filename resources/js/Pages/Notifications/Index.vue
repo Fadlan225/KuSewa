@@ -3,11 +3,13 @@ import { ref, onMounted, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useNotifications } from '@/Composables/useNotifications';
+import { usePermissionPrompt } from '@/Composables/usePermissionPrompt';
 import { Loader2, RefreshCw } from 'lucide-vue-next';
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 import DetailNavbar from '@/Components/ui/DetailNavbar.vue';
 
 const { notifications, unreadCount, isLoading, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
+const { requestNotificationPermission } = usePermissionPrompt();
 
 // Filter Options
 const filters = ['Semua', 'Belum Dibaca', 'Booking', 'Pembayaran', 'Chat', 'Sistem'];
@@ -15,6 +17,8 @@ const activeFilter = ref('Semua');
 
 onMounted(async () => {
     await fetchNotifications();
+    // Prompt notification permission if not yet decided
+    requestNotificationPermission();
 });
 
 const switchFilter = async (filter) => {

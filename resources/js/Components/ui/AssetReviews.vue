@@ -1,5 +1,6 @@
 <script setup>
 import { Star } from 'lucide-vue-next';
+import EmptyReviewsIcon from '@/Components/ui/Icons/EmptyReviewsIcon.vue';
 import { ref, computed } from 'vue';
 
 const props = defineProps({
@@ -171,9 +172,7 @@ const formatDate = (dateString) => {
 
         <!-- EMPTY STATE (Jika belum ada ulasan) -->
         <div v-else class="flex flex-col items-center justify-center py-16 text-center">
-            <div class="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4 border border-gray-100">
-                <Star class="text-2xl text-gray-200" />
-            </div>
+            <EmptyReviewsIcon class="w-48 h-48 mb-4 opacity-80 object-contain" />
             <h3 class="text-[#0A2540] font-bold text-lg mb-1">Belum Ada Ulasan</h3>
             <p class="text-sm text-gray-500">Jadilah yang pertama memberikan ulasan!</p>
         </div>

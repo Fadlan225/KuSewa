@@ -1,4 +1,4 @@
-<script setup>
+    <script setup>
 import { onMounted, ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Bell, Check, CheckCheck, Loader2, ChevronRight } from 'lucide-vue-next';
@@ -43,7 +43,7 @@ const formatTime = (dateString) => {
         <div class="flex items-center justify-between px-4 py-3.5 border-b border-gray-100 flex-shrink-0">
             <div class="flex items-center gap-2">
                 <h3 class="font-bold text-[#0A2540] text-sm">Notifikasi</h3>
-                <span v-if="unreadCount > 0" class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center">
+                <span v-if="unreadCount > 0" class="bg-red-500 text-white text-[8px] font-bold min-w-[14px] h-[14px] px-1 flex items-center justify-center rounded-full shadow-sm">
                     {{ unreadCount > 99 ? '99+' : unreadCount }}
                 </span>
             </div>

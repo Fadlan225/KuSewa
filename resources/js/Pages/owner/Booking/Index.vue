@@ -4,6 +4,7 @@ import { Receipt, Clock, Wallet, ChevronDown, Image, User, Calendar, Search, Fil
 import { computed, ref, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/Components/ui/card';
 import BookingEmptyIllustration from '@/Components/ui/Icons/BookingEmptyIllustration.vue';
 // ========== PROPS ==========
 const props = defineProps({
@@ -164,8 +165,8 @@ const filterTime = ref('daily');
             <!-- ==================== BOOKINGS ==================== -->
             <section v-if="type === 'bookings'" class="space-y-4">
                     <!-- METRIC SUMMARY STATS - Clean Panel Design -->
-                    <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6">
-                        <div class="grid grid-cols-2 xl:grid-cols-4 border-slate-100">
+                    <Card class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6 overflow-hidden">
+                        <CardContent class="p-0 grid grid-cols-2 xl:grid-cols-4 border-slate-100">
                             <!-- Total Pesanan -->
                             <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
                                 <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
@@ -197,8 +198,8 @@ const filterTime = ref('daily');
                                 </p>
                                 <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ bookingCounts.active || 0 }}</p>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
                     <!-- Filter Status -->
                     <div class="flex flex-wrap items-center gap-2 p-3 bg-white border border-slate-200 rounded-lg overflow-x-auto hide-scrollbar">
@@ -480,7 +481,8 @@ const filterTime = ref('daily');
                     </div>
 
                     <!-- Grafik pendapatan -->
-                    <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <Card class="bg-white border border-slate-200 rounded-xl shadow-sm">
+                        <CardContent class="p-5">
                         <h2 class="font-bold text-slate-800">Grafik Pendapatan</h2>
                         <div class="h-[250px] mt-3 relative unovis-chart-container">
                             <VisXYContainer v-if="unovisChartData.length" :data="unovisChartData" :padding="{ top: 20, right: 10, left: 20, bottom: 0 }">
@@ -494,26 +496,34 @@ const filterTime = ref('daily');
                                 Tidak ada data
                             </div>
                         </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
                     <!-- Ringkasan 3 kartu -->
                     <section class="grid md:grid-cols-3 gap-4">
-                        <div class="bg-[#0A2540] text-white p-5 rounded-xl shadow-sm">
+                        <Card class="bg-[#0A2540] text-white rounded-xl shadow-sm border-transparent">
+                            <CardContent class="p-5">
                             <p class="text-xs text-slate-300">Pendapatan Tercatat</p>
                             <p class="mt-2 text-2xl font-black">{{ formatCurrency(income) }}</p>
-                        </div>
-                        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                            </CardContent>
+                        </Card>
+                        <Card class="bg-white border border-slate-200 rounded-xl shadow-sm">
+                            <CardContent class="p-5">
                             <p class="text-xs text-slate-400">Biaya Layanan</p>
                             <p class="mt-2 text-2xl font-black text-slate-800">{{ formatCurrency(fees) }}</p>
-                        </div>
-                        <div class="bg-white border border-slate-200 p-5 rounded-xl shadow-sm">
+                            </CardContent>
+                        </Card>
+                        <Card class="bg-white border border-slate-200 rounded-xl shadow-sm">
+                            <CardContent class="p-5">
                             <p class="text-xs text-slate-400">Pendapatan Bersih</p>
                             <p class="mt-2 text-2xl font-black text-emerald-600">{{ formatCurrency(income - fees) }}</p>
-                        </div>
+                            </CardContent>
+                        </Card>
                     </section>
 
                     <!-- Daftar transaksi terbaru -->
-                    <section class="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <Card class="bg-white border border-slate-200 rounded-xl shadow-sm">
+                        <CardContent class="p-5">
                         <h2 class="font-bold text-slate-800">Transaksi Terbaru</h2>
                         <div v-if="transactions.length" class="mt-4 divide-y divide-slate-100">
                             <div v-for="transaction in transactions" :key="transaction.code" class="py-3 flex justify-between gap-4">
@@ -525,11 +535,13 @@ const filterTime = ref('daily');
                             </div>
                         </div>
                         <p v-else class="mt-4 text-sm text-slate-400">Belum ada pendapatan yang tercatat.</p>
-                    </section>
+                        </CardContent>
+                    </Card>
                 </template>
 
                 <!-- ==================== VERIFICATION ==================== -->
-                <section v-else-if="type === 'verification'" class="max-w-3xl bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                <Card v-else-if="type === 'verification'" class="max-w-3xl bg-white border border-slate-200 rounded-xl shadow-sm">
+                    <CardContent class="p-6">
                     <div class="flex items-center justify-between bg-amber-50 rounded p-4 border border-amber-100">
                         <div>
                             <p class="text-xs text-amber-700">Status verifikasi</p>
@@ -546,10 +558,12 @@ const filterTime = ref('daily');
                             </span>
                         </div>
                     </div>
-                </section>
+                    </CardContent>
+                </Card>
 
                 <!-- ==================== SETTINGS ==================== -->
-                <section v-else-if="type === 'settings'" class="max-w-3xl bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+                <Card v-else-if="type === 'settings'" class="max-w-3xl bg-white border border-slate-200 rounded-xl shadow-sm">
+                    <CardContent class="p-6">
                     <h2 class="font-bold text-slate-800">Informasi Akun</h2>
                     <div class="mt-5 grid sm:grid-cols-2 gap-4">
                         <label class="text-xs font-bold">Nama
@@ -573,17 +587,20 @@ const filterTime = ref('daily');
                     <Link :href="route('profile.edit')" class="inline-flex mt-5 bg-[#0A2540] text-white text-xs font-bold px-4 py-2.5 rounded hover:bg-[#1a365d] transition">
                         Ubah profil & kata sandi
                     </Link>
-                </section>
+                    </CardContent>
+                </Card>
 
                 <!-- ==================== HELP ==================== -->
                 <section v-else-if="type === 'help'" class="max-w-3xl space-y-3">
-                    <div v-for="(faq, index) in faqs" :key="faq.question" class="bg-white border border-slate-200 rounded-lg shadow-sm">
+                    <Card v-for="(faq, index) in faqs" :key="faq.question" class="bg-white border border-slate-200 rounded-lg shadow-sm">
+                        <CardContent class="p-0">
                         <button @click="activeFaq = activeFaq === index ? null : index" class="w-full p-4 text-left flex items-center justify-between font-bold text-sm">
                             <span>{{ faq.question }}</span>
                             <AppIcon :iconClass="activeFaq === index ? 'fa-minus' : 'fa-plus'" class="fa-solid text-slate-400" />
                         </button>
                         <p v-if="activeFaq === index" class="px-4 pb-4 text-sm text-slate-500 leading-relaxed">{{ faq.answer }}</p>
-                    </div>
+                        </CardContent>
+                    </Card>
                     <div class="mt-6 bg-[#0A2540] text-white p-5 rounded-xl shadow-sm">
                         <p class="font-bold text-[#FFC000]">Butuh bantuan langsung?</p>
                         <p class="text-sm text-slate-300 mt-1">Hubungi tim dukungan kitasewa melalui email support@kitasewa.id.</p>

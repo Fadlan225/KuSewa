@@ -1,5 +1,5 @@
 <script setup>
-import { Send, History } from 'lucide-vue-next';
+import { Send, History, ArrowLeft } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -38,7 +38,7 @@ const page = usePage();
 const assetTypeDetails = ref(null);
 const isLoadingTypeDetails = ref(false);
 
-const fetchAssetTypeDetails = async (typeId) => {
+const fetchAssetTypeDetails = async (typeId, isReset = false) => {
     if (!typeId) {
         assetTypeDetails.value = null;
         return;
@@ -46,7 +46,33 @@ const fetchAssetTypeDetails = async (typeId) => {
     isLoadingTypeDetails.value = true;
     try {
         const res = await fetch(`/api/asset-type/${typeId}/details`);
-        assetTypeDetails.value = await res.json();
+        const data = await res.json();
+        assetTypeDetails.value = data;
+
+        if (isReset) {
+            form.detail = {};
+            form.facility_ids = [];
+            form.units = [makeEmptyUnit()];
+            
+            if (data.mandatory_categories && data.mandatory_categories.length > 0) {
+                form.photos = data.mandatory_categories.map(cat => ({
+                    _id: Date.now() + Math.random(),
+                    gallery_category_id: cat.id,
+                    gallery_category_name: cat.name,
+                    is_mandatory: true,
+                    files: [],
+                    previews: [],
+                }));
+            } else {
+                form.photos = [{
+                    _id: Date.now(),
+                    gallery_category_id: null,
+                    is_mandatory: false,
+                    files: [],
+                    previews: [],
+                }];
+            }
+        }
     } catch (e) {
         console.error('Gagal memuat detail jenis aset', e);
     } finally {
@@ -166,17 +192,8 @@ watch(() => form.category_id, (newCatId, oldCatId) => {
 });
 
 watch(() => form.asset_type_id, (newTypeId, oldTypeId) => {
-    fetchAssetTypeDetails(newTypeId);
-    if (props.draftData && !oldTypeId) return; // Mencegah reset saat resume draft
-    form.detail = {};
-    form.facility_ids = [];
-    form.units = [makeEmptyUnit()];
-    form.photos = [{
-        _id: Date.now(),
-        gallery_category_id: null,
-        files: [],
-        previews: [],
-    }];
+    const isReset = !(props.draftData && !oldTypeId);
+    fetchAssetTypeDetails(newTypeId, isReset);
 });
 
 const selectedAssetTypeName = computed(() => {
@@ -210,7 +227,7 @@ const isConfirmedLeave = ref(false);
 let unbindBefore = null;
 
 const handleBeforeUnload = (e) => {
-    if (!isSubmittingFinal.value && !showSuccessModal.value) {
+    if (!isSubmittingFinal.value && !showSuccessModal.value && form.draft_id) {
         e.preventDefault();
         e.returnValue = '';
     }
@@ -224,7 +241,7 @@ onMounted(() => {
 
     // Intercept Inertia routing
     unbindBefore = router.on('before', (event) => {
-        if (!isSubmittingFinal.value && !isConfirmedLeave.value && !showSuccessModal.value) {
+        if (!isSubmittingFinal.value && !isConfirmedLeave.value && !showSuccessModal.value && form.draft_id) {
             event.preventDefault();
             pendingVisitUrl.value = event.detail.visit.url;
             showLeaveModal.value = true;
@@ -515,7 +532,7 @@ const preparePayload = (data, isKos) => {
             delete p.previews;
         });
     }
-    
+
     if (payload.pricings) {
         payload.pricings.forEach(p => delete p._id);
     }
@@ -719,6 +736,15 @@ const closeModalAndRedirect = () => {
         role="Owner"
         subMenuParentRouteName="owner.asset.*"
     >
+        <template #leftAction>
+            <Link
+                href="/owner/asset"
+                class="w-9 h-9 flex items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 hover:text-[#0A2540] transition-all shrink-0"
+                title="Kembali"
+            >
+                <ArrowLeft class="w-5 h-5" />
+            </Link>
+        </template>
         <Head title="Ajukan Aset Baru" />
 
         <div class="pb-32 font-sans text-[#0A2540]">
@@ -957,7 +983,7 @@ const closeModalAndRedirect = () => {
 
                         <!-- Illustration Logo -->
                         <div class="w-24 h-auto mx-auto mb-2 flex items-center justify-center">
-                            <img src="/kitasewa-logo.png" alt="KuSewa Logo" class="w-full h-auto object-contain" />
+                            <img src="/kitasewa-logo.png" alt="KiraSewa Logo" class="w-full h-auto object-contain" />
                         </div>
 
                         <div class="space-y-2">

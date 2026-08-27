@@ -70,6 +70,7 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
 
     Route::post('asset/upload-temp', [OwnerAssetController::class, 'uploadTemp'])->name('asset.upload-temp');
     Route::get('asset/preview-nearby', [OwnerAssetController::class, 'previewNearby'])->name('asset.preview-nearby');
+    Route::post('/set-active-asset', [OwnerAssetController::class, 'setActiveAsset'])->name('set-active-asset');
     Route::post('asset/auto-save', [OwnerAssetController::class, 'autoSaveDraft'])->name('asset.auto-save');
     Route::get('asset/draft/{id}', [OwnerAssetController::class, 'editDraft'])->name('asset.edit-draft');
     Route::resource('asset', OwnerAssetController::class)->names('asset');
@@ -203,6 +204,9 @@ Route::middleware(['auth', 'web'])->group(function () {
 
     // Halaman notifikasi
     Route::get('/notifications', fn() => inertia('Notifications/Index'))->name('notifications.page');
+
+    // Settings pages
+    Route::get('/settings', fn() => inertia('Home/settings/index'))->name('settings.index');
 
 
 });

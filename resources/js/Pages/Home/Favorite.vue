@@ -1,11 +1,11 @@
-﻿<script setup>
+<script setup>
 import AppIcon from '@/Components/AppIcon.vue';
 import { Search, Check, ChevronDown, ChevronLeft } from 'lucide-vue-next';
 import { ref, computed } from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import { Head, router } from '@inertiajs/vue3';
 import HorizontalAssetCard from '@/Components/ui/HorizontalAssetCard.vue'
-import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
+import NotFoundIcon from '@/Components/ui/Icons/NotFoundIcon.vue';
 
 const props = defineProps({
     isComponent: { type: Boolean, default: false },
@@ -105,7 +105,7 @@ const filteredFavorites = computed(() => {
             <!-- DESKTOP COMPONENT HEADER -->
             <div v-if="isComponent" class="flex justify-between items-center mb-4 mt-2">
                 <h2 class="text-xl font-bold text-[#1D1D1F]">Favorit</h2>
-                
+
                 <div class="relative">
                     <button
                         @click="isSortOpenMobile = !isSortOpenMobile"
@@ -226,16 +226,16 @@ const filteredFavorites = computed(() => {
                         v-if="filteredFavorites.length === 0"
                         class="bg-white rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 py-12 sm:py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center"
                     >
-                        <EmptyStateIcon class="w-48 h-48 object-contain mb-6" />
+                        <NotFoundIcon class="w-48 h-48 object-contain mb-6" />
 
                         <template v-if="props.initialFavorites.length === 0 || filteredFavorites.length === 0">
-                            <h2 class="text-xl font-bold text-[#0A2540] mb-2">Tidak Ditemukan</h2>
-                            <p class="text-sm text-[#6C757D] mb-6">Ubah filter pencarian Anda.</p>
+                            <h2 class="text-xl font-bold text-[#0A2540] mb-2">Simpan yang kamu suka</h2>
+                            <p class="text-sm text-[#6C757D] mb-6">Temukan aset menarik di KitaSewa dan tambahkan ke favorit untuk melihatnya lagi kapan saja.</p>
                             <button
-                                @click="selectedCategory = 'Semua'"
+                                @click="router.get(route('assets.search'))"
                                 class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors"
                             >
-                                Reset Kategori
+                                Cari Aset
                             </button>
                         </template>
                     </div>

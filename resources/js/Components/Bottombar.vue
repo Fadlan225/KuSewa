@@ -98,7 +98,7 @@ const openAuthModal = inject('openAuthModal', () => { console.log('AuthModal not
                 <div class="relative flex flex-col items-center z-10">
                     <MessageSquareMore class="text-xl" />
                     <!-- Notification Badge -->
-                    <span v-if="page.props.auth.unreadCount > 0" class="absolute -top-1 -right-3 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold px-1 min-w-[15px] h-[15px] rounded-full">
+                    <span v-if="page.props.auth.unreadCount > 0" class="absolute -top-1 -right-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-black min-w-[16px] h-[16px] px-1 rounded-full shadow-sm leading-none">
                         {{ page.props.auth.unreadCount > 99 ? '99+' : page.props.auth.unreadCount }}
                     </span>
                 </div>

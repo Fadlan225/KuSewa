@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, watch, nextTick } from 'vue';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/Components/ui/card';
 
 const props = defineProps({
     asset: Object,
@@ -67,7 +68,8 @@ const handleNumberInput = (e, key) => {
 <template>
     <div class="flex flex-col gap-6 animate-in fade-in duration-300">
         <!-- Informasi Umum -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 md:p-6 h-fit">
+        <Card class="bg-white rounded-xl border border-slate-200 shadow-sm h-fit">
+            <CardContent class="p-5 md:p-6">
             <h2 class="font-bold text-slate-800 text-base mb-4">Informasi Umum</h2>
             
             <!-- Asset Details (Editable) -->
@@ -90,10 +92,12 @@ const handleNumberInput = (e, key) => {
             <div v-else class="text-sm text-slate-400 text-center py-6">
                 Belum ada informasi umum yang ditambahkan.
             </div>
-        </div>
+            </CardContent>
+        </Card>
 
         <!-- Deskripsi / Tentang Aset -->
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 md:p-6">
+        <Card class="bg-white rounded-xl border border-slate-200 shadow-sm">
+            <CardContent class="p-5 md:p-6">
             <h2 class="font-bold text-slate-800 mb-4 text-base">Tentang {{ asset.title }}</h2>
 
             <div class="mb-2 relative group">
@@ -113,6 +117,7 @@ const handleNumberInput = (e, key) => {
                     {{ isExpanded ? 'Tampilkan Lebih Sedikit' : 'Baca Selengkapnya' }}
                 </button>
             </div>
-        </div>
+            </CardContent>
+        </Card>
     </div>
 </template>

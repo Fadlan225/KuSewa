@@ -20,7 +20,7 @@
                 </p>
 
                 <p style="font-size: 15px; color: #555555; margin-bottom: 35px; line-height: 1.5;">
-                    Kode ini berlaku hanya <strong>1 menit</strong>. Atau, Anda dapat memverifikasi secara otomatis dengan menekan tombol berikut:
+                    Kode ini berlaku hanya <strong>10 menit</strong>. Atau, Anda dapat memverifikasi secara otomatis dengan menekan tombol berikut:
                 </p>
 
                 <div style="margin-bottom: 40px;">

@@ -31,6 +31,10 @@ class AssetController extends Controller
             return redirect()->route('Home')->with('error', 'Silakan lengkapi profil owner Anda terlebih dahulu.');
         }
 
+        if (session()->has('active_asset_slug')) {
+            return redirect()->route('owner.asset.show', session('active_asset_slug'));
+        }
+
         // Hitung statistik (Total aset/unit, tersedia, tersewa, pending verifikasi)
         $statsQuery = asset::where('owner_profile_id', $ownerProfile->id)
             ->withSum('units as total_units_quantity', 'quantity')
@@ -308,7 +312,7 @@ class AssetController extends Controller
     public function uploadTemp(Request $request)
     {
         $request->validate([
-            'file' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'file' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         $path = $request->file('file')->store('uploads/temp', 'public');
@@ -317,6 +321,42 @@ class AssetController extends Controller
             'path' => $path,
             'url' => asset('storage/' . $path)
         ]);
+    }
+
+    /**
+     * Set active asset in session for global dashboard context
+     */
+    public function setActiveAsset(Request $request)
+    {
+        $request->validate([
+            'asset_slug' => 'nullable|string'
+        ]);
+
+        if ($request->asset_slug) {
+            $request->session()->put('active_asset_slug', $request->asset_slug);
+        } else {
+            $request->session()->forget('active_asset_slug');
+        }
+
+        $referer = url()->previous();
+        try {
+            $refererRequest = \Illuminate\Http\Request::create($referer);
+            $route = app('router')->getRoutes()->match($refererRequest);
+            $routeName = $route->getName();
+
+            // Jika sedang berada di halaman detail/edit aset, arahkan dengan benar sesuai konteks baru
+            if (in_array($routeName, ['owner.asset.show', 'owner.asset.edit', 'owner.asset.update', 'owner.asset.destroy'])) {
+                if ($request->asset_slug) {
+                    return redirect()->route('owner.asset.show', $request->asset_slug);
+                } else {
+                    return redirect()->route('owner.asset.index');
+                }
+            }
+        } catch (\Exception $e) {
+            // Jika rute tidak ditemukan atau error, abaikan dan gunakan back()
+        }
+
+        return redirect()->back();
     }
 
     /**
@@ -767,6 +807,7 @@ class AssetController extends Controller
             'reviews',
             'favorites'
         ])
+        ->withSum('views', 'view_count')
         ->where(function($query) use ($id) {
             $query->where('id', $id)->orWhere('slug', $id);
         })
@@ -799,7 +840,64 @@ class AssetController extends Controller
         $status = $availableUnits > 0 ? 'Tersedia' : 'Tersewa';
 
         $asset->owner_status = $status;
+        $asset->total_views = $asset->views_sum_view_count ?? 0;
         $asset->owner_occupancy = $hasUnits ? "{$occupiedUnits}/{$totalUnits} Unit" : ($status === 'Tersewa' ? '1/1 Unit' : '0/1 Unit');
+
+        // Generate chart data for views (last 7 days)
+        $sevenDaysAgo = \Carbon\Carbon::now()->subDays(6)->startOfDay();
+        $viewsData = \App\Models\AssetView::where('asset_id', $asset->id)
+            ->where('updated_at', '>=', $sevenDaysAgo)
+            ->get();
+            
+        $chartData = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = \Carbon\Carbon::now()->subDays($i);
+            $start = $date->copy()->startOfDay();
+            $end = $date->copy()->endOfDay();
+            
+            $filtered = $viewsData->filter(function ($view) use ($start, $end) {
+                return $view->updated_at >= $start && $view->updated_at <= $end;
+            });
+            
+            $chartData[] = [
+                'name' => $date->locale('id')->translatedFormat('D'),
+                'full_name' => $date->locale('id')->translatedFormat('l'),
+                'views' => (int) $filtered->sum('view_count')
+            ];
+        }
+
+        // Generate Rating Distribution
+        $ratingDistribution = \App\Models\Review::whereHas('booking', function ($q) use ($asset) {
+            $q->where('asset_id', $asset->id);
+        })
+        ->selectRaw('rating, COUNT(*) as count')
+        ->groupBy('rating')
+        ->pluck('count', 'rating')
+        ->toArray();
+
+        $formattedRatingDistribution = [];
+        $totalReviews = array_sum($ratingDistribution);
+        for ($star = 5; $star >= 1; $star--) {
+            $count = $ratingDistribution[$star] ?? 0;
+            $formattedRatingDistribution[] = [
+                'star' => $star,
+                'count' => $count,
+                'percentage' => $totalReviews > 0 ? round(($count / $totalReviews) * 100) : 0
+            ];
+        }
+
+        // Fetch OS and Browser Distribution from AssetViewLog (all time or last 30 days)
+        $osDistribution = \App\Models\AssetViewLog::where('asset_id', $asset->id)
+            ->selectRaw('os as name, COUNT(*) as count')
+            ->groupBy('os')
+            ->orderByDesc('count')
+            ->get();
+
+        $browserDistribution = \App\Models\AssetViewLog::where('asset_id', $asset->id)
+            ->selectRaw('browser as name, COUNT(*) as count')
+            ->groupBy('browser')
+            ->orderByDesc('count')
+            ->get();
 
         // Kategori galeri bersifat global — satu set kategori untuk semua foto (asset & unit)
         $galleryCategories = \App\Models\galery_category::orderBy('name')->get();
@@ -808,10 +906,21 @@ class AssetController extends Controller
             $q->where('is_active', true)->orderBy('sort_order');
         }])->orderBy('sort_order')->get();
 
+        // Fetch nearby places from database (do not sync to prevent blocking)
+        $nearbyPlaces = \App\Services\OpenStreetMapService::getNearbyPlaces($asset->latitude, $asset->longitude, $asset->id, 3000, false);
+
+        $mandatoryCategories = $asset->type ? $asset->type->getMandatoryCategories() : [];
+
         return inertia('owner/Asset/show', [
             'asset'                    => $asset,
             'galleryCategories'        => $galleryCategories,
+            'mandatoryCategories'      => $mandatoryCategories,
             'masterFacilityCategories' => $masterFacilityCategories,
+            'nearbyPlaces'             => $nearbyPlaces,
+            'chartData'                => $chartData,
+            'ratingDistribution'       => $formattedRatingDistribution,
+            'osDistribution'           => $osDistribution,
+            'browserDistribution'      => $browserDistribution,
         ]);
     }
 
@@ -967,9 +1076,9 @@ class AssetController extends Controller
             'facilities' => 'nullable|array',
             'facilities.*' => 'exists:facilities,id',
             'new_images' => 'nullable|array',
-            'new_images.*.file' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'new_images.*.file' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'new_images.*.category_id' => 'required|exists:galery_categories,id',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         $unit = $asset->units()->create([
@@ -1103,11 +1212,11 @@ class AssetController extends Controller
             'facilities' => 'nullable|array',
             'facilities.*' => 'exists:facilities,id',
             'new_images' => 'nullable|array',
-            'new_images.*.file' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'new_images.*.file' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'new_images.*.category_id' => 'required|exists:galery_categories,id',
             'deleted_images' => 'nullable|array',
             'deleted_images.*' => 'exists:asset_images,id',
-            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
+            'thumbnail' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         $unit->update([
@@ -1196,7 +1305,7 @@ class AssetController extends Controller
         // Jika request memiliki file 'thumbnail' (Untuk Aset Utama)
         if ($request->hasFile('thumbnail')) {
             $request->validate([
-                'thumbnail' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+                'thumbnail' => 'image|mimes:jpeg,png,jpg|max:5120',
             ]);
 
             // Hapus thumbnail lama jika ada
@@ -1218,7 +1327,7 @@ class AssetController extends Controller
 
         $request->validate([
             'images' => 'required|array',
-            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:5120',
+            'images.*' => 'image|mimes:jpeg,png,jpg|max:5120',
             'gallery_category_id' => 'nullable|exists:galery_categories,id',
         ]);
 

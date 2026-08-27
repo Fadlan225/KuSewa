@@ -3,6 +3,7 @@ import { Image, Pen, X, Trash2, Plus, Loader2 } from 'lucide-vue-next';
 import { ref, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
 import BottomSheet from '@/Components/ui/BottomSheet.vue';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/Components/ui/card';
 
 const props = defineProps({
     asset: Object,
@@ -237,16 +238,16 @@ const submit = () => {
 
 <template>
     <div class="animate-in fade-in duration-300">
-        <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            <div class="border-b border-slate-100 bg-white px-5 py-4 flex items-center justify-between">
-                <h2 class="font-bold text-slate-800">Daftar Unit</h2>
-                <button @click="openCreateModal" class="text-xs font-bold text-secondary bg-primary hover:opacity-90 px-3 py-1.5 rounded-lg transition shadow-sm">
+        <Card class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            <CardHeader class="border-b border-slate-100 bg-white px-5 py-4 flex flex-row items-center justify-between space-y-0">
+                <CardTitle class="font-bold text-slate-800 text-base">Daftar Unit</CardTitle>
+                <button @click="openCreateModal" class="text-xs font-bold text-secondary bg-primary hover:opacity-90 px-3 py-1.5 rounded-lg transition shadow-sm !mt-0">
                     + Tambah Unit
                 </button>
-            </div>
+            </CardHeader>
 
             <!-- List / Table View -->
-            <div class="flex flex-col divide-y divide-slate-100">
+            <CardContent class="p-0 flex flex-col divide-y divide-slate-100">
                 <!-- Header (Desktop Only) -->
                 <div class="hidden md:grid grid-cols-[2fr_1fr_1fr_auto] gap-4 px-5 py-3 bg-slate-50 text-xs text-slate-500 uppercase font-semibold border-y border-slate-100">
                     <div>Nama Unit</div>
@@ -303,8 +304,8 @@ const submit = () => {
                         </button>
                     </div>
                 </div>
-            </div>
-        </div>
+            </CardContent>
+        </Card>
 
         <!-- Modal Tambah/Edit Unit (Desktop Only) -->
         <div v-if="showModal" class="hidden md:flex fixed inset-0 z-[100] items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -336,7 +337,7 @@ const submit = () => {
                         <div class="border border-slate-200 rounded-xl overflow-hidden">
                             <div class="bg-slate-50 px-4 py-3 flex items-center justify-between border-b border-slate-200">
                                 <label class="text-xs font-bold text-slate-700">Daftar Harga Sewa <span class="text-rose-500">*</span></label>
-                                <button type="button" @click="form.pricings.push({ _id: Date.now(), duration: 1, rental_unit: 'month', price: '' })" class="text-[10px] font-bold bg-white border border-slate-200 text-[#0A2540] hover:text-[#FFC000] px-2.5 py-1.5 rounded-lg transition shadow-sm">
+                                <button type="button" @click="form.pricings.push({ _id: Date.now(), duration: 1, rental_unit: 'month', price: '' })" class="text-[10px] font-bold bg-white border border-slate-200 text-slate-900 hover:text-[#FFC000] px-2.5 py-1.5 rounded-lg transition shadow-sm">
                                     + Tambah Harga
                                 </button>
                             </div>
@@ -344,11 +345,11 @@ const submit = () => {
                                 <div v-for="(pricing, pIdx) in form.pricings" :key="pricing._id || pIdx" class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-lg p-3">
                                     <div class="w-1/4">
                                         <label class="block text-[10px] font-bold text-slate-500 mb-1">Durasi</label>
-                                        <input v-model="pricing.duration" type="number" min="1" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#0A2540] focus:ring-0" required />
+                                        <input v-model="pricing.duration" type="number" min="1" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0" required />
                                     </div>
                                     <div class="w-1/4">
                                         <label class="block text-[10px] font-bold text-slate-500 mb-1">Satuan</label>
-                                        <select v-model="pricing.rental_unit" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#0A2540] focus:ring-0" required>
+                                        <select v-model="pricing.rental_unit" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0" required>
                                             <option value="hour">Jam</option>
                                             <option value="day">Hari</option>
                                             <option value="night">Malam</option>
@@ -358,9 +359,9 @@ const submit = () => {
                                     </div>
                                     <div class="flex-1">
                                         <label class="block text-[10px] font-bold text-slate-500 mb-1">Harga (Rp)</label>
-                                        <input v-model="pricing.price" type="number" min="0" placeholder="100000" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#0A2540] focus:ring-0" required />
+                                        <input v-model="pricing.price" type="number" min="0" placeholder="100000" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0" required />
                                     </div>
-                                    <button v-if="form.pricings.length > 1" type="button" @click="form.pricings.splice(pIdx, 1)" class="w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-white transition flex items-center justify-center shrink-0 mt-4" title="Hapus">
+                                    <button v-if="form.pricings.length > 1" type="button" @click="form.pricings.splice(pIdx, 1)" class="w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-slate-900 transition flex items-center justify-center shrink-0 mt-4" title="Hapus">
                                         <Trash2 class="text-xs" />
                                     </button>
                                 </div>
@@ -387,7 +388,7 @@ const submit = () => {
                                     <button
                                         type="button"
                                         @click="removeUnitThumbnail"
-                                        class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-white rounded-full flex items-center justify-center text-[10px] shadow opacity-0 group-hover/thumb:opacity-100 transition cursor-pointer"
+                                        class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-rose-500 text-slate-900 rounded-full flex items-center justify-center text-[10px] shadow opacity-0 group-hover/thumb:opacity-100 transition cursor-pointer"
                                         title="Hapus Thumbnail"
                                     >
                                         <X class="" />
@@ -436,7 +437,7 @@ const submit = () => {
                         <div class="border-t border-slate-100 pt-5">
                             <div class="flex items-center justify-between mb-3">
                                 <h4 class="text-sm font-bold text-slate-800">Foto Unit</h4>
-                                <button type="button" @click="addUnitImageGroup" class="text-xs font-bold text-[#0A2540] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition shadow-sm">
+                                <button type="button" @click="addUnitImageGroup" class="text-xs font-bold text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition shadow-sm">
                                     + Tambah Kategori Foto
                                 </button>
                             </div>
@@ -447,7 +448,7 @@ const submit = () => {
                                     <div v-for="img in existingImages" :key="img.id" class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
                                         <img :src="img.image_url" class="w-full h-full object-cover" />
                                         <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center p-2">
-                                            <span class="text-white text-[10px] font-bold text-center bg-black/50 px-2 py-1 rounded-full mb-2 truncate max-w-full">
+                                            <span class="text-slate-900 text-[10px] font-bold text-center bg-black/50 px-2 py-1 rounded-full mb-2 truncate max-w-full">
                                                 {{ img.gallery_category?.name || 'Umum' }}
                                             </span>
                                             <button type="button" @click="removeExistingImage(img)" class="w-8 h-8 rounded-full bg-white text-rose-500 hover:text-rose-600 flex items-center justify-center shadow-sm">
@@ -471,7 +472,7 @@ const submit = () => {
                                         <div v-for="(item, iIdx) in group.items" :key="item.id" class="w-20 h-20 rounded-lg overflow-hidden border border-slate-300 relative group/item">
                                             <img :src="item.preview" class="w-full h-full object-cover" />
                                             <div class="absolute inset-0 bg-black/40 opacity-0 group-hover/item:opacity-100 transition flex items-center justify-center">
-                                                <button type="button" @click="removeGroupItem(gIdx, iIdx)" class="text-white text-xs bg-rose-500 rounded-full w-6 h-6 flex items-center justify-center shadow-sm">
+                                                <button type="button" @click="removeGroupItem(gIdx, iIdx)" class="text-slate-900 text-xs bg-rose-500 rounded-full w-6 h-6 flex items-center justify-center shadow-sm">
                                                     <X class="" />
                                                 </button>
                                             </div>
@@ -491,7 +492,7 @@ const submit = () => {
                         <button type="button" @click="showModal = false" class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition text-sm">
                             Batal
                         </button>
-                        <button type="submit" :disabled="isSubmitting" class="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition text-sm flex items-center justify-center gap-2">
+                        <button type="submit" :disabled="isSubmitting" class="flex-1 px-4 py-2 bg-primary hover:bg-primary/90 text-slate-900 font-bold rounded-lg transition text-sm flex items-center justify-center gap-2">
                             <Loader2 v-if="isSubmitting" class="animate-spin" />
                             {{ isEditing ? 'Simpan Perubahan' : 'Simpan Unit' }}
                         </button>
@@ -565,7 +566,7 @@ const submit = () => {
                     <div class="border-t border-slate-100 pt-5">
                         <div class="flex items-center justify-between mb-3">
                             <h4 class="text-sm font-bold text-slate-800">Foto Unit</h4>
-                            <button type="button" @click="addUnitImageGroup" class="text-xs font-bold text-[#0A2540] bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition shadow-sm">
+                            <button type="button" @click="addUnitImageGroup" class="text-xs font-bold text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition shadow-sm">
                                 + Kategori Foto
                             </button>
                         </div>
@@ -576,7 +577,7 @@ const submit = () => {
                                 <div v-for="img in existingImages" :key="img.id" class="relative group rounded-lg overflow-hidden border border-slate-200 aspect-square">
                                     <img :src="img.image_url" class="w-full h-full object-cover" />
                                     <div class="absolute inset-0 bg-black/40 transition flex flex-col items-center justify-center p-2">
-                                        <span class="text-white text-[10px] font-bold text-center bg-black/60 px-2 py-1 rounded-full mb-2 truncate max-w-full">
+                                        <span class="text-slate-900 text-[10px] font-bold text-center bg-black/60 px-2 py-1 rounded-full mb-2 truncate max-w-full">
                                             {{ img.gallery_category?.name || 'Umum' }}
                                         </span>
                                         <button type="button" @click="removeExistingImage(img)" class="w-8 h-8 rounded-full bg-white text-rose-500 hover:text-rose-600 flex items-center justify-center shadow-sm">
@@ -602,7 +603,7 @@ const submit = () => {
                                     <div v-for="(item, iIdx) in group.items" :key="item.id" class="w-20 h-20 shrink-0 rounded-lg overflow-hidden border border-slate-300 relative snap-start">
                                         <img :src="item.preview" class="w-full h-full object-cover" />
                                         <div class="absolute top-1 right-1">
-                                            <button type="button" @click="removeGroupItem(gIdx, iIdx)" class="text-white text-xs bg-rose-500 rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
+                                            <button type="button" @click="removeGroupItem(gIdx, iIdx)" class="text-slate-900 text-xs bg-rose-500 rounded-full w-5 h-5 flex items-center justify-center shadow-sm">
                                                 <X class="" />
                                             </button>
                                         </div>

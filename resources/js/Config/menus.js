@@ -6,7 +6,7 @@ import {
 } from 'lucide-vue-next';
 
 export const getOwnerMenu = (sidebarCounts, isProfileComplete = true) => [
-    { label: 'Dashboard', route: route('owner.dashboard'), routeName: 'owner.dashboard', icon: Home },
+    { label: 'Overview', route: route('owner.dashboard'), routeName: 'owner.dashboard', icon: Home },
     {
         label: 'Aset Saya',
         route: route('owner.asset.index'),

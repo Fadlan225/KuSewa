@@ -1,6 +1,6 @@
 <script setup>
-import { Plus, Map, Building, Lock, DoorOpen, Search, Grid3X3, List, AlertTriangle, Loader2 } from 'lucide-vue-next';
-import { ref, computed, watch } from 'vue';
+import { Plus, Map, CheckCircle, FileEdit, Clock, Search, Grid3X3, List, AlertTriangle, Loader2 } from 'lucide-vue-next';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Head, Link, usePage, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import OwnerAssetCard from '@/Components/owner/OwnerAssetCard.vue';
@@ -19,10 +19,10 @@ const props = defineProps({
     stats: {
         type: Object,
         default: () => ({
-            totalAsset: 0,
-            totalAvailable: 0,
-            totalOccupied: 0,
-            totalPendingVerification: 0
+            totalAssetCount: 0,
+            totalActive: 0,
+            totalDraft: 0,
+            totalPending: 0
         })
     },
     kategoriPropertiGroups: {
@@ -54,6 +54,20 @@ const selectedCategory = ref(urlParams.get('category') || 'Semua');
 const selectedJenis = ref(urlParams.get('jenis') || 'Semua');
 const selectedStatus = ref(urlParams.get('status') || 'Semua');
 const viewMode = ref('grid');
+
+const userId = computed(() => page.props.auth?.user?.id || 'guest');
+const viewModeKey = computed(() => `owner_asset_viewMode_${userId.value}`);
+
+onMounted(() => {
+    const savedMode = localStorage.getItem(viewModeKey.value);
+    if (savedMode) {
+        viewMode.value = savedMode;
+    }
+});
+
+watch(viewMode, (newMode) => {
+    localStorage.setItem(viewModeKey.value, newMode);
+});
 
 // Reset filter jenis setiap kali kategori utama diganti, karena daftar jenis ikut berubah
 watch(selectedCategory, (newVal, oldVal) => {
@@ -93,15 +107,16 @@ const filteredProperties = computed(() => {
 
 // Summary Stat Computations
 const totalAset = computed(() => props.stats?.totalAssetCount || 0);
-const totalUnit = computed(() => props.stats?.totalAsset || 0);
-const totalTersewa = computed(() => props.stats?.totalOccupied || 0);
-const totalTersedia = computed(() => props.stats?.totalAvailable || 0);
-const totalPendingVerifikasi = computed(() => props.stats?.totalPendingVerification || 0);
-const verificationLabel = (status) => ({ pending: 'Menunggu Verifikasi', approved: 'Terverifikasi', rejected: 'Ditolak' }[status] || 'Menunggu Verifikasi');
+const totalAktif = computed(() => props.stats?.totalActive || 0);
+const totalInactive = computed(() => props.stats?.totalInactive || 0);
+const totalPending = computed(() => props.stats?.totalPending || 0);
+const verificationLabel = (status) => ({ pending: 'Menunggu Verifikasi', approved: 'Terverifikasi', rejected: 'Ditolak', draft: 'Draft', inactive: 'Nonaktif' }[status] || 'Menunggu Verifikasi');
 const verificationClass = (status) => ({
-    pending: 'bg-amber-50 text-amber-700 border-amber-200',
+    pending: 'bg-[#FFC000]/10 text-[#FFC000] border-[#FFC000]/20',
     approved: 'bg-emerald-50 text-emerald-700 border-emerald-200',
     rejected: 'bg-rose-50 text-rose-700 border-rose-200',
+    draft: 'bg-slate-50 text-slate-700 border-slate-200',
+    inactive: 'bg-slate-100 text-slate-600 border-slate-300',
 }[status] || 'bg-amber-50 text-amber-700 border-amber-200');
 const verificationIcon = (status) => ({
     pending: 'fa-clock',
@@ -183,33 +198,33 @@ const handleIncompleteProfileClick = (e) => {
                         <!-- Total Aset -->
                         <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
                             <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                <Map class="text-slate-400 mt-0.5" /> <span>Total Aset</span>
+                                <Map class="text-slate-400 mt-0.5 w-4 h-4" /> <span>Total Aset</span>
                             </p>
                             <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalAset }}</p>
                         </div>
 
-                        <!-- Total Unit -->
+                        <!-- Aset Aktif -->
                         <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
                             <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                <Building class="text-slate-400 mt-0.5" /> <span>Total Unit</span>
+                                <CheckCircle class="text-emerald-500 mt-0.5 w-4 h-4" /> <span>Aset Aktif</span>
                             </p>
-                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalUnit }}</p>
+                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalAktif }}</p>
                         </div>
 
-                        <!-- Unit Terisi -->
+                        <!-- Aset Draft -->
                         <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
                             <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                <Lock class="text-slate-400 mt-0.5" /> <span>Unit Terisi</span>
+                                <FileEdit class="text-slate-400 mt-0.5 w-4 h-4" /> <span>Aset Nonaktif</span>
                             </p>
-                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalTersewa }}</p>
+                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalInactive }}</p>
                         </div>
 
-                        <!-- Tersedia -->
+                        <!-- Menunggu Verifikasi -->
                         <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
                             <p class="text-xs text-slate-500 font-medium tracking-wide mb-1 flex items-start gap-2">
-                                <DoorOpen class="text-slate-400 mt-0.5" /> <span>Tersedia</span>
+                                <Clock class="text-amber-500 mt-0.5 w-4 h-4" /> <span>Menunggu Verifikasi</span>
                             </p>
-                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalTersedia }}</p>
+                            <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ totalPending }}</p>
                         </div>
                     </div>
                 </div>
@@ -318,7 +333,7 @@ const handleIncompleteProfileClick = (e) => {
                         href="/owner/asset/create"
                         class="bg-[#FFC000] hover:bg-[#e5ac00] active:scale-95 text-[#0A2540] font-black px-8 py-3.5 rounded text-sm uppercase tracking-wider transition-all shadow-sm inline-block"
                     >
-                        Tambahkan Aset Baru
+                        Daftarkan Aset
                     </Link>
                 </div>
 

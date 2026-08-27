@@ -31,9 +31,13 @@ export function usePushNotifications() {
         permission.value = Notification.permission;
 
         try {
-            const registration = await navigator.serviceWorker.ready;
-            const subscription = await registration.pushManager.getSubscription();
-            isSubscribed.value = !!subscription;
+            const registration = await navigator.serviceWorker.getRegistration();
+            if (registration) {
+                const subscription = await registration.pushManager.getSubscription();
+                isSubscribed.value = !!subscription;
+            } else {
+                isSubscribed.value = false;
+            }
         } catch (e) {
             isSubscribed.value = false;
         }

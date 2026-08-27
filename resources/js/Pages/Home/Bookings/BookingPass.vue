@@ -11,6 +11,7 @@ import QRCode from 'qrcode';
 import { toPng } from 'html-to-image';
 import { jsPDF } from 'jspdf';
 import NoImageIcon from '@/Components/ui/Icons/NoImageIcon.vue';
+import { usePermissionPrompt } from '@/Composables/usePermissionPrompt';
 
 const props = defineProps({
     booking: {
@@ -100,6 +101,10 @@ const generateCodes = async () => {
 };
 
 onMounted(() => {
+    // Request notification permission to notify them of booking updates
+    const { requestNotificationPermission } = usePermissionPrompt();
+    requestNotificationPermission();
+
     if (isConfirmedAndPaid.value) {
         nextTick(() => {
             generateCodes();

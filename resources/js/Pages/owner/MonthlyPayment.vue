@@ -4,6 +4,7 @@ import { CheckCircle, Clock, Hourglass, Info, HelpCircle, Headset, ArrowRight, C
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/Components/ui/card';
 
 const props = defineProps({
     billInfo: {
@@ -99,7 +100,8 @@ const canPay = computed(() => props.billInfo?.canPay === true);
             <div class="lg:col-span-7 space-y-5">
 
                 <!-- Card Ringkasan Tagihan -->
-                <div class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
+                <Card class="bg-white rounded-2xl border border-slate-200/70 shadow-sm">
+                    <CardContent class="p-5 space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                         <div>
                             <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">ID Tagihan</span>
@@ -136,40 +138,44 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                     <p class="text-[10px] text-slate-400 -mt-1">
                         Rumus: Rp {{ Number(billInfo.serviceFee).toLocaleString('id-ID') }} × {{ billInfo.totalTransactions }} transaksi
                     </p>
-                </div>
+                    </CardContent>
+                </Card>
 
                 <!-- Pilih Metode Pembayaran — tampilkan hanya jika belum waiting/paid & sudah bisa bayar -->
-                <div v-if="!isWaiting && !isAlreadyPaid && canPay" class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
-                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pilih Metode Pembayaran</h3>
-                    <div class="space-y-2">
-                        <label
-                            v-for="method in paymentMethods"
-                            :key="method.id"
-                            :class="[
-                                'flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition text-xs',
-                                selectedMethod === method.id
-                                    ? 'border-[#0A2540] bg-slate-50/80 ring-1 ring-[#0A2540]'
-                                    : 'border-slate-200/80 hover:bg-slate-50'
-                            ]"
-                        >
-                            <div class="flex items-center gap-3">
-                                <input type="radio" name="payment_method" :value="method.id" v-model="selectedMethod" class="accent-[#0A2540]" />
-                                <div class="flex items-center gap-2.5">
-                                    <AppIcon :iconClass="['fa-solid text-slate-600 text-sm', method.icon]" />
-                                    <span class="font-bold text-slate-800">{{ method.name }}</span>
+                <Card v-if="!isWaiting && !isAlreadyPaid && canPay" class="bg-white rounded-2xl border border-slate-200/70 shadow-sm">
+                    <CardContent class="p-5 space-y-4">
+
+                        <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Pilih Metode Pembayaran</h3>
+                        <div class="space-y-2">
+                            <label
+                                v-for="method in paymentMethods"
+                                :key="method.id"
+                                :class="[
+                                    'flex items-center justify-between p-3.5 rounded-xl border cursor-pointer transition text-xs',
+                                    selectedMethod === method.id
+                                        ? 'border-[#0A2540] bg-slate-50/80 ring-1 ring-[#0A2540]'
+                                        : 'border-slate-200/80 hover:bg-slate-50'
+                                ]"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <input type="radio" name="payment_method" :value="method.id" v-model="selectedMethod" class="accent-[#0A2540]" />
+                                    <div class="flex items-center gap-2.5">
+                                        <AppIcon :iconClass="['fa-solid text-slate-600 text-sm', method.icon]" />
+                                        <span class="font-bold text-slate-800">{{ method.name }}</span>
+                                    </div>
                                 </div>
-                            </div>
-                            <span class="text-[9px] font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
-                                {{ method.type }}
-                            </span>
-                        </label>
-                    </div>
-                </div>
+                                <span class="text-[9px] font-extrabold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">
+                                    {{ method.type }}
+                                </span>
+                            </label>
+                        </div>
+                    </CardContent>
+                </Card>
 
                 <!-- Banner: Bulan berjalan, belum bisa dibayar -->
-                <div v-if="isCurrentMonth" class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
+                <div v-if="isCurrentMonth && canPay" class="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
                     <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-500 shrink-0">
-                        <Clock class="" />
+                        <CalendarClock class="" />
                     </div>
                     <div>
                         <p class="text-sm font-bold text-amber-800">Tagihan Sedang Berjalan</p>
@@ -196,7 +202,8 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                 <!-- Panel Info & FAQ — tampil saat masih bulan berjalan -->
                 <template v-if="isCurrentMonth">
                     <!-- Kartu: Apa itu Biaya Layanan? -->
-                    <div class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
+                    <Card class="bg-white rounded-2xl border border-slate-200/70 shadow-sm">
+                        <CardContent class="p-5 space-y-4">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-[#0A2540]/5 flex items-center justify-center shrink-0">
                                 <Info class="text-[#0A2540] text-sm" />
@@ -206,10 +213,12 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                         <p class="text-xs text-slate-500 leading-relaxed">
                             Biaya layanan adalah kontribusi Anda sebagai Pemilik Aset kepada platform KitaSewa atas setiap transaksi sewa yang berhasil diselesaikan. Dana ini digunakan untuk menjaga keberlanjutan platform, meningkatkan promosi aset Anda, dan memastikan pengalaman terbaik bagi penyewa.
                         </p>
-                    </div>
+                    </CardContent>
+                    </Card>
 
                     <!-- Kartu: FAQ -->
-                    <div class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4">
+                    <Card class="bg-white rounded-2xl border border-slate-200/70 shadow-sm">
+                        <CardContent class="p-5 space-y-4">
                         <div class="flex items-center gap-3">
                             <div class="w-9 h-9 rounded-xl bg-amber-50 flex items-center justify-center shrink-0">
                                 <HelpCircle class="text-amber-500 text-sm" />
@@ -234,7 +243,8 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                                 <p class="text-xs text-slate-500 leading-relaxed">Ya, selama masih dalam bulan berjalan, angka total akan terus diperbarui secara otomatis setiap kali ada transaksi baru yang selesai. Angka final akan terkunci saat memasuki bulan berikutnya.</p>
                             </div>
                         </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
                     <!-- Kartu: Butuh Bantuan -->
                     <div class="bg-gradient-to-br from-[#0A2540] to-[#1a3a5c] rounded-2xl p-5 space-y-3 text-white">
@@ -256,16 +266,19 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                 <template v-if="!isAlreadyPaid && !isCurrentMonth">
 
                 <!-- Tampilan QRIS -->
-                <div v-if="selectedMethod === 'qris'" class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm text-center space-y-4">
+                <Card v-if="selectedMethod === 'qris'" class="bg-white rounded-2xl border border-slate-200/70 shadow-sm text-center">
+                    <CardContent class="p-5 space-y-4">
                     <span class="text-xs font-bold text-slate-800 block">Scan QRIS Untuk Membayar</span>
                     <div class="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-200 inline-block">
                         <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=kitasewa-monthly-bill" alt="QRIS Kitasewa" class="w-40 h-40 mx-auto" />
                     </div>
                     <p class="text-[11px] text-slate-400">Mendukung BCA, Mandiri, BRI, GoPay, ShopeePay, OVO, Dana, DLL.</p>
-                </div>
+                    </CardContent>
+                </Card>
 
                 <!-- Tampilan Virtual Account / Manual -->
-                <div v-else class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-3">
+                <Card v-else class="bg-white rounded-2xl border border-slate-200/70 shadow-sm">
+                    <CardContent class="p-5 space-y-3">
                     <span class="text-xs font-bold text-slate-800 block">Instruksi Transfer Bank</span>
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1">
                         <p class="text-slate-400 text-[10px]">Bank Tujuan</p>
@@ -276,10 +289,12 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                             <button class="text-[10px] font-bold text-[#0A2540] hover:underline">Salin</button>
                         </div>
                     </div>
-                </div>
+                    </CardContent>
+                </Card>
 
                 <!-- Upload Bukti Pembayaran -->
-                <div class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-3">
+                <Card class="bg-white rounded-2xl border border-slate-200/70 shadow-sm mt-5">
+                    <CardContent class="p-5 space-y-3">
                     <h4 class="text-xs font-bold text-slate-800">Upload Bukti Transfer</h4>
                     <p class="text-[10px] text-slate-400">Format yang didukung: JPG, PNG, PDF (Maks. 2MB)</p>
 
@@ -310,7 +325,8 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                         <Loader2 v-if="form.processing" class="animate-spin" />
                         <span>{{ isWaiting ? 'Menunggu Verifikasi Admin...' : 'Konfirmasi Pembayaran' }}</span>
                     </button>
-                </div>
+                    </CardContent>
+                </Card>
 
                 </template><!-- end payment panel -->
 
@@ -319,7 +335,8 @@ const canPay = computed(() => props.billInfo?.canPay === true);
         </div>
 
         <!-- RIWAYAT TAGIHAN -->
-        <div v-if="billingHistory.length > 0" class="bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm space-y-4 mt-6 mb-8">
+        <Card v-if="billingHistory.length > 0" class="bg-white rounded-2xl border border-slate-200/70 shadow-sm mt-6 mb-8">
+            <CardContent class="p-5 space-y-4">
             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Riwayat Tagihan Bulanan</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-xs">
@@ -349,7 +366,8 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                     </tbody>
                 </table>
             </div>
-        </div>
+            </CardContent>
+        </Card>
 
         <!-- Belum ada riwayat -->
         <div v-else-if="!billInfo" class="hidden"></div>

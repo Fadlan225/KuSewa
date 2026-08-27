@@ -90,8 +90,8 @@ const timeAgo = (dateString) => {
             <!-- Empty State -->
             <div v-if="!searchLogs.data || searchLogs.data.length === 0" class="bg-white rounded-[1.5rem] border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
                 <EmptyStateIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
-                <h2 class="text-xl font-bold text-[#0A2540] mb-2">Riwayat Kosong</h2>
-                <p class="text-sm text-[#6C757D] mb-6">Anda belum pernah melakukan pencarian apapun.</p>
+                <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada riwayat pencarian</h2>
+                <p class="text-sm text-[#6C757D] mb-6">Cari aset yang kamu butuhkan dan temukan berbagai pilihan menarik di KitaSewa.</p>
                 <button @click="router.get(route('assets.search'))" class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors">
                     Mulai Mencari
                 </button>

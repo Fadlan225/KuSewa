@@ -1,9 +1,10 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { Bell } from 'lucide-vue-next';
 import NotificationDropdown from '@/Components/ui/NotificationDropdown.vue';
 import { useNotifications } from '@/Composables/useNotifications';
+import AssetSwitcher from '@/Components/owner/AssetSwitcher.vue';
 
 defineProps({
     title: { type: String, required: true },
@@ -15,6 +16,10 @@ const page = usePage();
 const { unreadCount, init: initNotifications } = useNotifications();
 const isNotifDropdownOpen = ref(false);
 
+const currentAssetSlug = computed(() => {
+    return page.props.active_asset_slug;
+});
+
 onMounted(() => {
     if (page.props.auth?.user) {
         initNotifications();
@@ -23,19 +28,23 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="bg-white border-b border-slate-200/80 px-4 md:px-6 lg:px-8 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sticky top-[60px] lg:top-0 z-30">
-        <div>
-            <!-- BREADCRUMBS -->
-            <nav v-if="breadcrumbs && breadcrumbs.length" class="flex text-[10px] text-slate-400 font-medium mb-1 space-x-1.5">
-                <template v-for="(bc, idx) in breadcrumbs" :key="idx">
-                    <Link v-if="bc.route" :href="bc.route" class="hover:text-[#0A2540] transition-colors">{{ bc.label }}</Link>
-                    <span v-else class="text-slate-600">{{ bc.label }}</span>
-                    <span v-if="idx < breadcrumbs.length - 1" class="text-slate-300">/</span>
-                </template>
-            </nav>
-
-            <h1 class="text-xl font-black text-slate-900 tracking-tight">{{ title }}</h1>
-            <p v-if="description" class="text-xs text-slate-500 font-medium">{{ description }}</p>
+    <div class="bg-white border-b border-slate-200/80 px-4 md:px-6 lg:px-8 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-6 sticky top-[60px] lg:top-0 z-30">
+        <div class="flex items-center gap-3 flex-1 w-full min-w-0">
+            <slot name="leftAction" />
+            
+            <AssetSwitcher v-if="route().current()?.startsWith('owner.')" :current-asset-slug="currentAssetSlug" class="flex-1 min-w-0" />
+            
+            <div class="flex-1 w-full min-w-0 hidden md:block">
+                <!-- BREADCRUMBS -->
+                <nav v-if="breadcrumbs && breadcrumbs.length" class="flex text-[10px] text-slate-400 font-medium mb-1 space-x-1.5">
+                    <template v-for="(bc, idx) in breadcrumbs" :key="idx">
+                        <Link v-if="bc.route" :href="bc.route" class="hover:text-[#0A2540] transition-colors">{{ bc.label }}</Link>
+                        <span v-else class="text-slate-600">{{ bc.label }}</span>
+                        <span v-if="idx < breadcrumbs.length - 1" class="text-slate-300">/</span>
+                    </template>
+                </nav>
+                <!-- Removed title and description as requested by user -->
+            </div>
         </div>
 
         <div class="flex items-center gap-3 self-end sm:self-auto">
@@ -53,7 +62,7 @@ onMounted(() => {
                     <!-- Badge Unread Count -->
                     <span
                         v-if="unreadCount > 0"
-                        class="absolute -top-0.5 -right-0.5 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full px-1 shadow"
+                        class="absolute -top-1 -right-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-black min-w-[16px] h-[16px] px-1 rounded-full shadow-sm leading-none"
                     >
                         {{ unreadCount > 99 ? '99+' : unreadCount }}
                     </span>

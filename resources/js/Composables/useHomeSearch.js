@@ -1,6 +1,6 @@
 import { ref, computed, nextTick, watch } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
-import { useLocationPermission } from '@/Composables/useLocationPermission';
+import { usePermissionPrompt } from '@/Composables/usePermissionPrompt';
 
 // Global singleton state for Home Page Search
 // We keep them outside the function so they are shared across all components
@@ -747,7 +747,7 @@ export function useHomeSearch() {
     const hasFetchedLocation = ref(false);
     
     // Import location modal hook
-    const { requestLocationPermission } = useLocationPermission();
+    const { requestLocationPermission } = usePermissionPrompt();
 
     const initUserLocation = async (force = false) => {
         if ((!hasFetchedLocation.value || force) && typeof window !== 'undefined' && navigator.geolocation) {

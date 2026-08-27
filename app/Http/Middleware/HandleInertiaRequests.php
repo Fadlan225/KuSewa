@@ -79,8 +79,32 @@ class HandleInertiaRequests extends Middleware
         });
 
         $isProfileComplete = false;
+        $ownerAssets = [];
         if ($user && $user->ownerProfile) {
             $isProfileComplete = $user->ownerProfile->bankAccounts()->exists();
+            $ownerAssets = \App\Models\asset::where('owner_profile_id', $user->ownerProfile->id)
+                ->select('id', 'title', 'slug', 'status')
+                ->with(['thumbnailImages' => function($q) {
+                    $q->select('asset_id', 'image')->limit(1);
+                }])
+                ->get()
+                ->map(function ($asset) {
+                    $thumbnail = null;
+                    if ($asset->thumbnailImages->isNotEmpty()) {
+                        $img = $asset->thumbnailImages->first();
+                        $thumbnail = $img->image ?? null;
+                        if ($thumbnail && !str_starts_with($thumbnail, 'http')) {
+                            $thumbnail = asset('storage/' . $thumbnail);
+                        }
+                    }
+                    return [
+                        'id' => $asset->id,
+                        'slug' => $asset->slug,
+                        'title' => $asset->title,
+                        'status' => $asset->status,
+                        'thumbnail' => $thumbnail,
+                    ];
+                });
         }
 
         return [
@@ -89,6 +113,8 @@ class HandleInertiaRequests extends Middleware
                 'user' => $user,
                 'unreadCount' => $unreadCount,
             ],
+            'active_asset_slug' => $request->session()->get('active_asset_slug'),
+            'ownerAssets' => $ownerAssets,
             'sidebarCounts' => $sidebarCounts,
             'globalPriceRange' => $globalPriceRange,
             'isProfileComplete' => $isProfileComplete,

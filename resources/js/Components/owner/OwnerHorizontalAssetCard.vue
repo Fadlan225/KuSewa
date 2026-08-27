@@ -124,9 +124,9 @@ const availabilityText = computed(() => {
             <div class="relative shrink-0">
                 <!-- Ribbon Badge Status -->
                 <div class="absolute top-1 -left-1.5 z-20 pointer-events-none flex flex-col gap-1 items-start">
-                    <div v-if="asset.verification_status === 'draft'" class="relative bg-slate-200 text-slate-700 text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
+                    <div v-if="asset.verification_status === 'draft'" class="relative bg-slate-400 text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
                         <FileEdit class="mr-1" />Draft
-                        <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-slate-400 border-l-[4px] border-l-transparent"></div>
+                        <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-slate-600 border-l-[4px] border-l-transparent"></div>
                     </div>
                     <div v-else-if="asset.verification_status === 'pending'" class="relative bg-[#FFC000] text-[#0A2540] text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
                         <Clock class="mr-1" />Menunggu
@@ -136,9 +136,9 @@ const availabilityText = computed(() => {
                         <XCircle class="mr-1" />Ditolak
                         <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-rose-800 border-l-[4px] border-l-transparent"></div>
                     </div>
-                    <div v-else-if="asset.verification_status === 'approved'" class="relative bg-[#FFC000] text-[#0A2540] text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
+                    <div v-else-if="asset.verification_status === 'approved'" class="relative bg-emerald-500 text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
                         <CheckCircle class="mr-1" />Terverifikasi
-                        <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-[#B38600] border-l-[4px] border-l-transparent"></div>
+                        <div class="absolute left-0 -bottom-1 w-0 h-0 border-t-[4px] border-t-emerald-700 border-l-[4px] border-l-transparent"></div>
                     </div>
                     <div v-else-if="asset.verification_status === 'inactive'" class="relative bg-slate-500 text-white text-[8px] md:text-[9px] font-black px-1.5 py-0.5 rounded-r-md shadow-sm">
                         <Power class="mr-1" />Nonaktif
@@ -146,9 +146,9 @@ const availabilityText = computed(() => {
                     </div>
                 </div>
 
-                <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-md overflow-hidden bg-slate-100">
-                    <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-100 p-2">
-                        <NoImageIllustration class="w-full h-full object-contain opacity-50 mix-blend-multiply" />
+                <div class="w-16 h-16 md:w-20 md:h-20 shrink-0 relative rounded-md overflow-hidden bg-slate-50 border border-slate-200/60">
+                    <div v-if="!img1 || asset.imageError" class="absolute inset-0 flex items-center justify-center bg-slate-50 p-2 opacity-60">
+                        <NoImageIllustration class="w-8 h-8" />
                     </div>
                     <img v-else :src="img1" @load="imageLoaded = true" @error="asset.imageError = true" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 pointer-events-none" loading="lazy" />
                     

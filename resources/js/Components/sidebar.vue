@@ -9,9 +9,6 @@ const props = defineProps({
     role: { type: String, default: 'User' },
     menu: { type: Array, default: () => [] },
     bottomMenu: { type: Array, default: () => [] },
-    // Sub-menu kontekstual (tampil di bawah parent aktif saat di detail page)
-    subMenu: { type: Array, default: () => [] },
-    subMenuParentRouteName: { type: String, default: null },
 });
 
 const roleBadgeClass = computed(() => props.role === 'Admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-[#FFC000]/20 text-[#0A2540]');
@@ -115,11 +112,11 @@ const handleLogout = () => {
                             <div v-else class="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden">
                                 <UserAvatar :user="user" />
                             </div>
-                            
+
                             <!-- Red Dot Notif Badge -->
                             <div v-if="role === 'Owner' && $page.props.isProfileComplete === false" class="absolute -top-0.5 -right-0.5 w-3 h-3 bg-red-500 rounded-full border-2 border-white"></div>
                         </div>
-                        
+
                         <div v-if="!isCollapsed" class="min-w-0 text-left flex-1 whitespace-nowrap">
                             <h4 class="text-xs font-bold text-slate-800 truncate">{{ user.name }}</h4>
                             <p class="text-[10px] text-slate-400 truncate">{{ role }}</p>
@@ -194,34 +191,7 @@ const handleLogout = () => {
                             </template>
                         </Link>
 
-                        <!-- Sub-menu kontekstual (tampil jika parent aktif & ada subMenu) -->
-                        <div
-                            v-if="subMenu.length > 0 && subMenuParentRouteName && item.routeName === subMenuParentRouteName && route().current(item.routeName)"
-                            :class="isCollapsed ? 'mt-1 space-y-1' : 'ml-3 pl-3 border-l-2 border-slate-200 space-y-0.5 py-1'"
-                        >
-                            <button
-                                v-for="sub in subMenu"
-                                :key="sub.key"
-                                @click="sub.onClick && sub.onClick()"
-                                :title="isCollapsed ? sub.label : ''"
-                                :class="[
-                                    sub.active
-                                        ? 'bg-[#FFC000]/10 text-[#0A2540] font-bold'
-                                        : 'text-slate-500 hover:bg-slate-50 font-medium',
-                                    'w-full flex items-center rounded-lg transition-colors',
-                                    isCollapsed ? 'justify-center px-2 py-2' : 'justify-between gap-2 px-2.5 py-1.5 text-left'
-                                ]"
-                            >
-                                <div class="flex items-center" :class="isCollapsed ? 'justify-center' : 'gap-2'">
-                                    <AppIcon v-if="typeof sub.icon === 'string'" :iconClass="sub.icon" :class="isCollapsed ? 'w-4 text-sm' : 'w-3.5 text-center text-[11px]'" />
-                                    <component v-else :is="sub.icon" :class="[sub.active ? 'text-[#0A2540]' : 'text-slate-400', isCollapsed ? 'w-4 text-sm' : 'w-3.5 text-center text-[11px]']" />
-                                    <span v-if="!isCollapsed" class="text-[11px] whitespace-nowrap">{{ sub.label }}</span>
-                                </div>
-                                <span v-if="!isCollapsed && sub.badge" class="text-[9px] font-black bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full shrink-0">
-                                    {{ sub.badge }}
-                                </span>
-                            </button>
-                        </div>
+
                     </template>
                 </template>
                 </nav>

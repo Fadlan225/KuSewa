@@ -41,7 +41,7 @@ const emit = defineEmits(['goHome', 'resetFilter', 'clearSearch']);
 const localSections = ref([]);
 const isLocating = ref(true);
 
-import { useLocationPermission } from '@/Composables/useLocationPermission';
+import { usePermissionPrompt } from '@/Composables/usePermissionPrompt';
 
 onMounted(async () => {
     // Inisialisasi localSections dengan data dari props
@@ -51,7 +51,7 @@ onMounted(async () => {
     const nearbyIndex = localSections.value.findIndex(s => s.id === 'nearby');
     if (nearbyIndex !== -1) {
         if (navigator.geolocation) {
-            const { requestLocationPermission } = useLocationPermission();
+            const { requestLocationPermission } = usePermissionPrompt();
             const allowed = await requestLocationPermission();
 
             if (!allowed) {

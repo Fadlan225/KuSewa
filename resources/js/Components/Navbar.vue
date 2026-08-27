@@ -2,8 +2,10 @@
 import AppIcon from '@/Components/AppIcon.vue';
 import { ChevronDown, Search, X, Sliders, Bell, Loader2, History, Flame, ChevronRight, ChevronLeft, Check, HelpCircle, Headset, User, Shield, PieChart, LogOut, Smartphone, Building, Megaphone } from 'lucide-vue-next';
 import { ref, onMounted, onUnmounted, computed, watch, inject } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { usePage } from '@inertiajs/vue3';
+import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
+import LogoutIllustrationIcon from '@/Components/ui/Icons/LogoutIllustrationIcon.vue';
 import { useHomeSearch } from '@/Composables/useHomeSearch';
 import AnimatedPlaceholder from '@/Components/ui/AnimatedPlaceholder.vue';
 import StickySubNavSearch from '@/Components/ui/StickySubNavSearch.vue';
@@ -162,6 +164,10 @@ const initials = computed(() => {
         .substring(0, 2)
         .toUpperCase();
 });
+const showLogoutModal = ref(false);
+const handleLogoutConfirm = () => {
+    router.post(route('logout'));
+};
 </script>
 <template>
     <nav class="fixed top-0 left-0 w-full z-[100] transition-all duration-300">
@@ -254,7 +260,7 @@ const initials = computed(() => {
                                 <Bell class="w-5 h-5" />
                                 <span
                                     v-if="unreadCount > 0"
-                                    class="absolute -top-0.5 -right-0.5 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full px-1 shadow"
+                                    class="absolute -top-1 -right-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-black min-w-[16px] h-[16px] px-1 rounded-full shadow-sm leading-none"
                                 >
                                     {{ unreadCount > 99 ? '99+' : unreadCount }}
                                 </span>
@@ -311,7 +317,7 @@ const initials = computed(() => {
                                 <Bell class="text-sm" />
                                 <span
                                     v-if="unreadCount > 0"
-                                    class="absolute -top-1 -right-1 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full px-1 shadow"
+                                    class="absolute -top-1 -right-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-black min-w-[16px] h-[16px] px-1 rounded-full shadow-sm leading-none"
                                 >
                                     {{ unreadCount > 99 ? '99+' : unreadCount }}
                                 </span>
@@ -748,7 +754,7 @@ const initials = computed(() => {
                         ></span>
 
                         <!-- Notification Badge -->
-                        <span v-if="page.props.auth.unreadCount > 0" class="flex items-center justify-center bg-red-500 text-white text-[10px] font-bold px-1.5 min-w-[18px] h-[18px] rounded-full">
+                        <span v-if="page.props.auth.unreadCount > 0" class="flex items-center justify-center bg-red-500 text-white text-[10px] font-black min-w-[16px] h-[16px] px-1 rounded-full shadow-sm relative -top-2 -ml-1 leading-none">
                             {{ page.props.auth.unreadCount > 99 ? '99+' : page.props.auth.unreadCount }}
                         </span>
                     </Link>
@@ -787,7 +793,7 @@ const initials = computed(() => {
                                 <!-- Badge Unread Count -->
                                 <span
                                     v-if="unreadCount > 0"
-                                    class="absolute -top-0.5 -right-0.5 flex items-center justify-center bg-red-500 text-white text-[9px] font-bold min-w-[16px] h-4 rounded-full px-1 shadow"
+                                    class="absolute -top-1 -right-1 flex items-center justify-center bg-red-500 text-white text-[10px] font-black min-w-[16px] h-[16px] px-1 rounded-full shadow-sm leading-none"
                                 >
                                     {{ unreadCount > 99 ? '99+' : unreadCount }}
                                 </span>
@@ -987,16 +993,14 @@ const initials = computed(() => {
 
                                     <!-- 4. Footer: Logout -->
                                     <div class="pt-1">
-                                        <Link
-                                            :href="route('logout')"
-                                            method="post"
-                                            as="button"
-                                            @click="isUserMenuOpen = false"
+                                        <button
+                                            type="button"
+                                            @click="isUserMenuOpen = false; showLogoutModal = true"
                                             class="w-full text-left text-sm font-bold text-red-600 hover:text-red-700 py-1.5 transition flex items-center gap-2.5"
                                         >
                                             <LogOut class="text-xs" />
                                             Keluar
-                                        </Link>
+                                        </button>
                                     </div>
                                 </div>
                             </Transition>
@@ -1032,5 +1036,23 @@ const initials = computed(() => {
                 </div>
             </Transition>
         </div>
+
+        <!-- Logout Confirmation Modal -->
+        <ConfirmModal
+            :show="showLogoutModal"
+            type="primary"
+            title="Keluar dari Akun?"
+            message="Kamu tetap bisa menjelajahi KitaSewa, tetapi perlu login kembali untuk melakukan booking atau mengelola aset."
+            confirmText="Ya, Keluar"
+            cancelText="Batal"
+            @confirm="handleLogoutConfirm"
+            @cancel="showLogoutModal = false"
+        >
+            <template #icon>
+                <div class="w-28 mx-auto mb-2">
+                    <LogoutIllustrationIcon class="w-full h-auto" />
+                </div>
+            </template>
+        </ConfirmModal>
     </nav>
 </template>

@@ -51,15 +51,21 @@ class AssetTypeController extends Controller
             ->select('id', 'name')
             ->get();
 
+        $mandatoryNames = $assetType->getMandatoryCategories();
+        $mandatoryCategories = $galleryCategories->filter(function($cat) use ($mandatoryNames) {
+            return in_array($cat->name, $mandatoryNames);
+        })->values();
+
         return response()->json([
-            'id'                 => $assetType->id,
-            'name'               => $assetType->name,
-            'allow_units'        => (bool) $assetType->allow_units,
-            'facilities'         => $assetType->allowedFacilities,
-            'unit_facilities'    => $assetType->allowedUnitFacilities,
-            'gallery_categories' => $galleryCategories,
-            'detail_fields'      => $this->getDetailFields($assetType->id),
-            'unit_detail_fields' => $this->getUnitDetailFields($assetType->id),
+            'id'                   => $assetType->id,
+            'name'                 => $assetType->name,
+            'allow_units'          => (bool) $assetType->allow_units,
+            'facilities'           => $assetType->allowedFacilities,
+            'unit_facilities'      => $assetType->allowedUnitFacilities,
+            'gallery_categories'   => $galleryCategories,
+            'mandatory_categories' => $mandatoryCategories,
+            'detail_fields'        => $this->getDetailFields($assetType->id),
+            'unit_detail_fields'   => $this->getUnitDetailFields($assetType->id),
         ]);
     }
 

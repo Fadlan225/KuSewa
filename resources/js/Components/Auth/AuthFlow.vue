@@ -81,7 +81,7 @@ const countdown = ref(0);
 let timer = null;
 
 const startCountdown = () => {
-    countdown.value = 300;
+    countdown.value = 120;
     if (timer) clearInterval(timer);
     timer = setInterval(() => {
         if (countdown.value > 0) {

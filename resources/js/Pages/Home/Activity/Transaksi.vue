@@ -1,4 +1,4 @@
-﻿<script setup>
+<script setup>
 import AppIcon from '@/Components/AppIcon.vue';
 import { Check, ChevronDown, AlertTriangle, Image, Loader2, ChevronLeft } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
@@ -618,9 +618,9 @@ const processCancellation = () => {
 
               <div v-if="groupedActivities.length === 0" class="bg-white rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 py-12 sm:py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
                 <EmptyStateIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
-                <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada aktivitas</h2>
-                <p class="text-sm text-[#6C757D] mb-6">Mulai cari aset untuk disewa dan pantau di sini.</p>
-                <button @click="router.get('/')" class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors">
+                <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada pesanan? Yuk, mulai cari!</h2>
+                <p class="text-sm text-[#6C757D] mb-6">Temukan aset yang sesuai kebutuhanmu dan pesan dengan mudah di KitaSewa.</p>
+                <button @click="router.get(route('assets.search'))" class="px-6 py-2.5 rounded bg-[#FFC000] text-[#0A2540] text-sm font-bold uppercase tracking-wide hover:bg-[#e6ad00] transition-colors">
                   Cari Aset
                 </button>
               </div>

@@ -8,7 +8,7 @@ import GlobalLoading from "@/Components/GlobalLoading.vue";
 import FloatingChat from '@/Components/ui/FloatingChat.vue';
 import AuthModal from '@/Components/Auth/AuthModal.vue';
 import AuthFeedbackModal from '@/Components/Auth/AuthFeedbackModal.vue';
-import LocationPermissionModal from '@/Components/ui/LocationPermissionModal.vue';
+import PermissionModal from '@/Components/ui/PermissionModal.vue';
 import NotificationToast from '@/Components/ui/NotificationToast.vue';
 import { useAuthModalStore } from '@/Stores/AuthModalStore';
 import { useAuthFeedbackStore } from '@/Stores/AuthFeedbackStore';
@@ -48,6 +48,7 @@ import { onMounted, watch, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { useNotifications } from '@/Composables/useNotifications';
 import { usePushNotifications } from '@/Composables/usePushNotifications';
+import { useFaviconBadge } from '@/Composables/useFaviconBadge';
 
 const page = usePage();
 const isHome = computed(() => route().current('Home'));
@@ -58,6 +59,7 @@ const toastRef = ref(null);
 
 const { addNewNotification } = useNotifications();
 const { init: initPush, subscribe: subscribePush, isSubscribed, permission } = usePushNotifications();
+useFaviconBadge();
 
 let lastProcessedFlashId = null;
 
@@ -146,7 +148,7 @@ onMounted(async () => {
         <AuthModal v-model="isAuthModalOpen" @update:modelValue="(val) => !val && authModalStore.close()" />
         <AuthFeedbackModal />
         
-        <LocationPermissionModal />
+        <PermissionModal />
 
         <!-- Toast Notifikasi Real-time -->
         <NotificationToast ref="toastRef" />

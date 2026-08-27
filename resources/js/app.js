@@ -13,7 +13,7 @@ import {
     hideLoading,
 } from './Stores/loading';
 
-const appName = import.meta.env.VITE_APP_NAME || 'kuSewa';
+const appName = import.meta.env.VITE_APP_NAME || 'kitaSewa';
 
 let timer = null;
 

@@ -37,15 +37,15 @@ defineExpose({ addToast });
 </script>
 
 <template>
-    <!-- Container Toast (kiri bawah desktop, bawah mobile) -->
-    <div class="fixed bottom-20 md:bottom-6 left-0 right-0 md:left-auto md:right-6 z-[200] flex flex-col gap-2 items-center md:items-end px-4 md:px-0 pointer-events-none">
+    <!-- Container Toast (Tengah Atas) -->
+    <div class="fixed top-20 md:top-6 left-0 right-0 z-[200] flex flex-col gap-2 items-center px-4 pointer-events-none">
         <TransitionGroup
             enter-active-class="transition ease-out duration-300"
-            enter-from-class="opacity-0 translate-y-4 scale-95"
+            enter-from-class="opacity-0 -translate-y-4 scale-95"
             enter-to-class="opacity-100 translate-y-0 scale-100"
             leave-active-class="transition ease-in duration-200"
             leave-from-class="opacity-100 translate-y-0 scale-100"
-            leave-to-class="opacity-0 translate-y-4 scale-95"
+            leave-to-class="opacity-0 -translate-y-4 scale-95"
         >
             <div
                 v-for="toast in toasts"

@@ -1,8 +1,10 @@
 <script setup>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import Sidebar from '@/Components/sidebar.vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, usePage, router } from '@inertiajs/vue3';
 import { X, Menu } from 'lucide-vue-next';
+import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
+import LogoutIllustrationIcon from '@/Components/ui/Icons/LogoutIllustrationIcon.vue';
 import Topbar from '@/Components/Topbar.vue';
 import ProfileIncompleteModal from '@/Components/ui/ProfileIncompleteModal.vue';
 
@@ -18,9 +20,6 @@ const props = defineProps({
     description: { type: String, default: '' },
     role: { type: String, required: true },
     breadcrumbs: { type: Array, default: () => [] },
-    // Sub-menu kontekstual untuk detail page (misal: tab aset)
-    subMenu: { type: Array, default: () => [] },
-    subMenuParentRouteName: { type: String, default: null },
 });
 
 const page = usePage();
@@ -41,7 +40,15 @@ watch(() => page.url, () => {
     showMobileMenu.value = false;
 });
 
-import { onMounted } from 'vue';
+const showLogoutModal = ref(false);
+
+const openLogoutModal = () => {
+    showLogoutModal.value = true;
+};
+
+const handleLogoutConfirm = () => {
+    router.post(route('logout'));
+};
 
 onMounted(() => {
     if (page.props.auth?.user) {
@@ -51,6 +58,11 @@ onMounted(() => {
                 toastRef.value?.addToast(notification);
             });
     }
+    window.addEventListener('open-logout-modal', openLogoutModal);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('open-logout-modal', openLogoutModal);
 });
 </script>
 
@@ -85,8 +97,6 @@ onMounted(() => {
             class="hidden lg:flex sticky top-0 h-screen"
             :role="role"
             :menu="menu"
-            :subMenu="subMenu"
-            :subMenuParentRouteName="subMenuParentRouteName"
         />
 
         <!-- Mobile Sidebar Overlay -->
@@ -114,8 +124,15 @@ onMounted(() => {
         <main class="flex-1 min-w-0 flex flex-col min-h-[calc(100vh-60px)] lg:min-h-screen">
             <!-- TOPBAR COMPONENT -->
             <Topbar :title="title" :description="description" :breadcrumbs="breadcrumbs">
-                <slot name="action" />
+                <template #leftAction v-if="$slots.leftAction">
+                    <slot name="leftAction" />
+                </template>
+                <template #default>
+                    <slot name="action" />
+                </template>
             </Topbar>
+
+            <slot name="afterTopbar" />
 
             <div class="p-4 md:p-6 lg:p-6 xl:p-8 w-full max-w-[1400px] mx-auto flex-1 flex flex-col">
 
@@ -129,5 +146,23 @@ onMounted(() => {
         
         <!-- Toast Notifikasi Real-time -->
         <NotificationToast ref="toastRef" />
+
+        <!-- Logout Confirmation Modal -->
+        <ConfirmModal
+            :show="showLogoutModal"
+            type="primary"
+            title="Keluar dari Akun?"
+            message="Anda akan keluar dari sesi ini. Anda dapat masuk kembali kapan saja."
+            confirmText="Ya, Keluar"
+            cancelText="Batal"
+            @confirm="handleLogoutConfirm"
+            @cancel="showLogoutModal = false"
+        >
+            <template #icon>
+                <div class="w-28 mx-auto mb-2">
+                    <LogoutIllustrationIcon class="w-full h-auto" />
+                </div>
+            </template>
+        </ConfirmModal>
     </div>
 </template>
