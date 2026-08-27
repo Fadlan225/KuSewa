@@ -2,7 +2,7 @@
 import { Link, router } from '@inertiajs/vue3';
 import { ChevronRight, Briefcase } from 'lucide-vue-next';
 import AppIcon from '@/Components/AppIcon.vue';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
 import LogoutIllustrationIcon from '@/Components/ui/Icons/LogoutIllustrationIcon.vue';
@@ -16,6 +16,20 @@ const page = usePage();
 const getOwnerStatus = () => {
     return page.props.owner_profile?.status || page.props.auth.user?.owner_profile?.status;
 };
+
+const mitraLabel = computed(() => {
+    const status = getOwnerStatus();
+    if (status === 'verified') return 'Pusat Mitra';
+    if (status) return 'Status Pengajuan';
+    return 'Jadi Mitra KitaSewa';
+});
+
+const mitraRoute = computed(() => {
+    const status = getOwnerStatus();
+    if (status === 'verified') return route('owner.dashboard');
+    if (status) return route('owner.verification');
+    return route('owner.register');
+});
 
 const accountMenuItems = [
     {
@@ -169,13 +183,13 @@ const checkIsActive = (item) => {
             <!-- Profile Bisnis / Pusat Mitra -->
             <Link
                 v-if="user"
-                :href="user.is_owner ? route('owner.dashboard') : route('owner.register')"
+                :href="mitraRoute"
                 class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group relative overflow-hidden"
             >
                 <div class="flex items-center space-x-4">
                     <Briefcase class="text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors" />
                     <span class="text-sm sm:text-base font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">
-                        {{ user.is_owner ? 'Pusat Mitra' : 'Jadi Mitra KitaSewa' }}
+                        {{ mitraLabel }}
                     </span>
                 </div>
                 <ChevronRight class="text-sm text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000] transition-all duration-200" />

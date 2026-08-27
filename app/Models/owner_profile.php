@@ -16,6 +16,10 @@ class owner_profile extends Model
         'postal_code',
         'address',
         'ktp_photo',
+        'religion',
+        'marital_status',
+        'occupation',
+        'nationality',
         'status',
         'rejection_reason',
         'verification_at'

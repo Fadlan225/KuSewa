@@ -58,9 +58,15 @@ Route::get('/promosikan-properti', function () {
 
 Route::middleware('auth')->prefix('owner')->group(function () {
     Route::get('/register', [OwnerRegistrationController::class, 'index'])->name('owner.register');
+    Route::get('/register-instant', [OwnerRegistrationController::class, 'instantIndex'])->name('owner.register.instant');
+    // Legacy step routes (dipertahankan untuk backward compatibility)
     Route::post('/register/step1', [OwnerRegistrationController::class, 'storeStep1'])->name('owner.register.step1');
     Route::post('/register/step2', [OwnerRegistrationController::class, 'storeStep2'])->name('owner.register.step2');
     Route::post('/register/step3', [OwnerRegistrationController::class, 'storeStep3'])->name('owner.register.step3');
+    // New OCR flow routes
+    Route::post('/register/ktp-upload', [OwnerRegistrationController::class, 'uploadKtp'])->name('owner.register.ktp-upload');
+    Route::get('/register/ocr-status/{jobId}', [OwnerRegistrationController::class, 'pollOcrStatus'])->name('owner.register.ocr-status');
+    Route::post('/register/submit', [OwnerRegistrationController::class, 'storeOwnerData'])->name('owner.register.submit');
     Route::get('/verification', [OwnerRegistrationController::class, 'verificationStatus'])->name('owner.verification');
 });
 

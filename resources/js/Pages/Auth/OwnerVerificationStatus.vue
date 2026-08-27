@@ -26,7 +26,7 @@ const props = defineProps({
 <template>
     <Head title="Status Verifikasi Owner - kitasewa.id" />
 
-    <AppLayout hideNavbar hideBottombar>
+    <AppLayout hideNavbar hideBottombar hideFooter>
         <DetailNavbar title="Pendaftaran pemilik Aset" :showBackButton="true" :showSections="false" :showShare="false" :showFavorite="false" forceBackUrl backUrl="/" />
 
         <div class="min-h-screen bg-slate-50 font-sans text-slate-800 flex items-start justify-center pt-8 md:pt-16 pb-20 px-4">
@@ -80,7 +80,7 @@ const props = defineProps({
                                     </div>
                                 </div>
 
-                                <Link href="/" class="w-full h-[48px] rounded-xl bg-[#FFC000] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-[0_2px_10px_rgba(255,192,0,0.2)] flex items-center justify-center gap-2 animate-fade-in" style="animation-delay: 200ms;">
+                                <Link href="/" class="hidden md:flex w-full h-[48px] rounded-xl bg-[#FFC000] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-[0_2px_10px_rgba(255,192,0,0.2)] items-center justify-center gap-2 animate-fade-in" style="animation-delay: 200ms;">
                                     <Home class="w-4 h-4" />
                                     Kembali ke Beranda
                                 </Link>
@@ -106,7 +106,7 @@ const props = defineProps({
                                     </p>
                                 </div>
 
-                                <div class="space-y-3 animate-fade-in" style="animation-delay: 150ms;">
+                                <div class="hidden md:block space-y-3 animate-fade-in" style="animation-delay: 150ms;">
                                     <Link :href="route('owner.dashboard')" class="w-full h-[48px] rounded-xl bg-[#FFC000] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-[0_2px_10px_rgba(255,192,0,0.2)] flex items-center justify-center">
                                         Mulai Daftarkan Aset
                                     </Link>
@@ -148,7 +148,7 @@ const props = defineProps({
                                     </div>
                                 </div>
 
-                                <div class="space-y-3 animate-fade-in" style="animation-delay: 200ms;">
+                                <div class="hidden md:block space-y-3 animate-fade-in" style="animation-delay: 200ms;">
                                     <Link href="/owner/register" class="w-full h-[48px] rounded-xl bg-[#FFC000] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-[0_2px_10px_rgba(255,192,0,0.2)] flex items-center justify-center">
                                         Perbaiki Data
                                     </Link>
@@ -162,6 +162,36 @@ const props = defineProps({
 
             </div>
         </div>
+
+        <!-- Mobile Bottom Bars -->
+        <Teleport to="body">
+            <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-50 shadow-[0_-4px_12px_rgba(0,0,0,0.05)] pb-safe animate-fade-in">
+                <!-- Pending Action -->
+                <div v-if="status === 'pending'">
+                    <Link href="/" class="w-full h-[48px] rounded-xl bg-[#FFC000] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center justify-center gap-2">
+                        <Home class="w-4 h-4" />
+                        Kembali ke Beranda
+                    </Link>
+                </div>
+
+                <!-- Verified Action -->
+                <div v-else-if="status === 'verified'">
+                    <Link :href="route('owner.dashboard')" class="w-full h-[48px] rounded-xl bg-[#FFC000] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center justify-center">
+                        Mulai Daftarkan Aset
+                    </Link>
+                </div>
+
+                <!-- Rejected Actions -->
+                <div v-else-if="status === 'rejected'" class="flex gap-3">
+                    <Link href="/" class="flex-1 h-[48px] rounded-xl border border-slate-200 text-slate-600 font-bold text-[14px] hover:bg-slate-50 transition-all shadow-sm flex items-center justify-center">
+                        Beranda
+                    </Link>
+                    <Link href="/owner/register" class="flex-[1.5] h-[48px] rounded-xl bg-[#FFC000] text-[#0A2540] font-bold text-[14px] hover:brightness-95 transition-all shadow-sm flex items-center justify-center">
+                        Perbaiki Data
+                    </Link>
+                </div>
+            </div>
+        </Teleport>
     </AppLayout>
 </template>
 
