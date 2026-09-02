@@ -1,25 +1,20 @@
 <script setup>
 import { ChevronDown, ChevronUp, Plus } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const props = defineProps({
     form: Object,
+    policyTemplates: { type: Array, default: () => [] },
+    assetTypeName: { type: String, default: '' },
 });
 
 const emit = defineEmits(['addFaq', 'removeFaq']);
 
-// ─── State utama (Peraturan Kos) ─────────────────────────────────────────────
+// ─── State utama (Peraturan ...) ─────────────────────────────────────────────
 const mainOpen = ref(false);
 
-// ─── State sub-section ───────────────────────────────────────────────────────
-const openSections = ref({
-    persyaratan: false,
-    akses: false,
-    larangan: false,
-    tamu: false,
-    lainnya: false,
-});
-
+// ─── State sub-section (key dinamis dari template) ───────────────────────────
+const openSections = ref({});
 const toggleSub = (key) => {
     openSections.value[key] = !openSections.value[key];
 };
@@ -28,19 +23,34 @@ const toggleSub = (key) => {
 if (!props.form.policies || Array.isArray(props.form.policies)) {
     props.form.policies = {};
 }
-
 if (!Array.isArray(props.form.custom_policies)) {
     props.form.custom_policies = [];
 }
 
-const setPolicy = (key, value) => {
-    props.form.policies[key] = value;
+const setPolicy = (key, value) => { props.form.policies[key] = value; };
+const getPolicy = (key, defaultVal = false) => props.form.policies?.[key] ?? defaultVal;
+
+// ─── Apakah item visible (cek parent_key) ────────────────────────────────────
+const isVisible = (item) => {
+    if (!item.parent_key) return true;
+    const parentVal = getPolicy(item.parent_key);
+    // parent toggle harus true, atau parent radio harus memilih nilai tertentu
+    return parentVal === true || parentVal === item.parent_key;
 };
 
-const getPolicy = (key, defaultVal = false) => {
-    return props.form.policies?.[key] ?? defaultVal;
-};
+// ─── Helper: nilai radio group aktif ─────────────────────────────────────────
+const getRadioValue = (radioGroup) => getPolicy(radioGroup, null);
+const setRadioValue = (radioGroup, value) => setPolicy(radioGroup, value);
 
+// ─── Judul header "Peraturan ..." ─────────────────────────────────────────────
+const policyTitle = computed(() =>
+    props.assetTypeName ? `Peraturan ${props.assetTypeName}` : 'Peraturan'
+);
+
+// ─── Ada template atau tidak? ─────────────────────────────────────────────────
+const hasTemplates = computed(() => props.policyTemplates.length > 0);
+
+// ─── Custom (Lainnya) ─────────────────────────────────────────────────────────
 const addCustomPolicy = () => { props.form.custom_policies.push({ title: '' }); };
 const removeCustomPolicy = (idx) => { props.form.custom_policies.splice(idx, 1); };
 </script>
@@ -48,16 +58,16 @@ const removeCustomPolicy = (idx) => { props.form.custom_policies.splice(idx, 1);
 <template>
     <div class="divide-y divide-slate-200 border border-slate-200 rounded-lg overflow-hidden">
 
-        <!-- ============================================================ -->
-        <!-- PERATURAN KOS                                                 -->
-        <!-- ============================================================ -->
+        <!-- ================================================================ -->
+        <!-- PERATURAN ... (dinamis dari assetTypeName)                        -->
+        <!-- ================================================================ -->
         <div>
             <!-- Header utama -->
             <button type="button" @click="mainOpen = !mainOpen"
                 class="w-full flex items-start justify-between px-4 py-4 text-left bg-white hover:bg-slate-50 transition-colors">
                 <div>
                     <p class="text-sm font-bold text-slate-800">
-                        Peraturan Kos
+                        {{ policyTitle }}
                         <span class="font-normal text-slate-400">(opsional)</span>
                     </p>
                     <p class="text-sm text-slate-500 mt-0.5">Dianjurkan diisi agar jelas bagi penyewa</p>
@@ -66,251 +76,114 @@ const removeCustomPolicy = (idx) => { props.form.custom_policies.splice(idx, 1);
                 <ChevronUp v-else class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
             </button>
 
-            <!-- Isi sub-section -->
-            <div v-if="mainOpen" class="border-t border-slate-200 divide-y divide-slate-200">
+            <!-- Isi: render dari policyTemplates -->
+            <div v-if="mainOpen && hasTemplates" class="border-t border-slate-200 divide-y divide-slate-200">
 
-                <!-- ── Persyaratan dan Dokumen (selalu terbuka) ──────── -->
-                <div>
-                    <div class="px-4 py-3.5 bg-white border-b border-slate-100">
-                        <span class="text-sm font-bold text-slate-800">Persyaratan dan Dokumen</span>
+                <!-- Loop tiap group dari template -->
+                <div v-for="group in policyTemplates" :key="group.group_key">
+
+                    <!-- Group header: always_open → tidak ada toggle -->
+                    <div v-if="group.always_open" class="px-4 py-3.5 bg-white border-b border-slate-100">
+                        <span class="text-sm font-bold text-slate-800">{{ group.group_label }}</span>
                     </div>
-
-                    <div class="divide-y divide-slate-100">
-
-                        <!-- Boleh bawa anak -->
-                        <div class="flex items-center justify-between px-4 py-3 bg-white">
-                            <span class="text-sm text-slate-700">Boleh bawa anak</span>
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <span class="text-sm" :class="getPolicy('allow_children') ? 'text-[#FFC000] font-semibold' : 'text-slate-400'">
-                                    {{ getPolicy('allow_children') ? 'Ya' : 'Tidak' }}
-                                </span>
-                                <div @click="setPolicy('allow_children', !getPolicy('allow_children'))"
-                                    class="relative w-10 h-[22px] rounded-full transition-colors duration-200 cursor-pointer"
-                                    :class="getPolicy('allow_children') ? 'bg-[#FFC000]' : 'bg-slate-200'">
-                                    <span class="absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
-                                        :class="getPolicy('allow_children') ? 'translate-x-[18px]' : 'translate-x-0'"></span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <!-- Wajib KK — hanya jika boleh anak -->
-                        <div v-if="getPolicy('allow_children')"
-                            class="flex items-center justify-between px-4 py-3 bg-slate-50">
-                            <div>
-                                <span class="text-sm text-slate-700">Wajib sertakan kartu keluarga saat pengajuan sewa</span>
-                                <p class="text-xs text-slate-400 mt-0.5">Dokumen untuk membawa anak</p>
-                            </div>
-                            <label class="flex items-center gap-2 cursor-pointer select-none ml-4 shrink-0">
-                                <span class="text-sm" :class="getPolicy('require_family_card') ? 'text-[#FFC000] font-semibold' : 'text-slate-400'">
-                                    {{ getPolicy('require_family_card') ? 'Ya' : 'Tidak' }}
-                                </span>
-                                <div @click="setPolicy('require_family_card', !getPolicy('require_family_card'))"
-                                    class="relative w-10 h-[22px] rounded-full transition-colors duration-200 cursor-pointer"
-                                    :class="getPolicy('require_family_card') ? 'bg-[#FFC000]' : 'bg-slate-200'">
-                                    <span class="absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
-                                        :class="getPolicy('require_family_card') ? 'translate-x-[18px]' : 'translate-x-0'"></span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <!-- Boleh untuk pasutri -->
-                        <div class="flex items-center justify-between px-4 py-3 bg-white">
-                            <span class="text-sm text-slate-700">Boleh untuk pasutri</span>
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <span class="text-sm" :class="getPolicy('allow_couple') ? 'text-[#FFC000] font-semibold' : 'text-slate-400'">
-                                    {{ getPolicy('allow_couple') ? 'Ya' : 'Tidak' }}
-                                </span>
-                                <div @click="setPolicy('allow_couple', !getPolicy('allow_couple'))"
-                                    class="relative w-10 h-[22px] rounded-full transition-colors duration-200 cursor-pointer"
-                                    :class="getPolicy('allow_couple') ? 'bg-[#FFC000]' : 'bg-slate-200'">
-                                    <span class="absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
-                                        :class="getPolicy('allow_couple') ? 'translate-x-[18px]' : 'translate-x-0'"></span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <!-- Wajib Buku Nikah — hanya jika boleh pasutri -->
-                        <div v-if="getPolicy('allow_couple')"
-                            class="flex items-center justify-between px-4 py-3 bg-slate-50">
-                            <div>
-                                <span class="text-sm text-slate-700">Wajib sertakan buku nikah saat pengajuan sewa</span>
-                                <p class="text-xs text-slate-400 mt-0.5">Dokumen untuk pasutri</p>
-                            </div>
-                            <label class="flex items-center gap-2 cursor-pointer select-none ml-4 shrink-0">
-                                <span class="text-sm" :class="getPolicy('require_marriage_book') ? 'text-[#FFC000] font-semibold' : 'text-slate-400'">
-                                    {{ getPolicy('require_marriage_book') ? 'Ya' : 'Tidak' }}
-                                </span>
-                                <div @click="setPolicy('require_marriage_book', !getPolicy('require_marriage_book'))"
-                                    class="relative w-10 h-[22px] rounded-full transition-colors duration-200 cursor-pointer"
-                                    :class="getPolicy('require_marriage_book') ? 'bg-[#FFC000]' : 'bg-slate-200'">
-                                    <span class="absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
-                                        :class="getPolicy('require_marriage_book') ? 'translate-x-[18px]' : 'translate-x-0'"></span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <!-- Wajib KTP -->
-                        <div class="flex items-center justify-between px-4 py-3 bg-white">
-                            <span class="text-sm text-slate-700">Wajib sertakan KTP saat pengajuan sewa</span>
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <span class="text-sm" :class="getPolicy('require_ktp') ? 'text-[#FFC000] font-semibold' : 'text-slate-400'">
-                                    {{ getPolicy('require_ktp') ? 'Ya' : 'Tidak' }}
-                                </span>
-                                <div @click="setPolicy('require_ktp', !getPolicy('require_ktp'))"
-                                    class="relative w-10 h-[22px] rounded-full transition-colors duration-200 cursor-pointer"
-                                    :class="getPolicy('require_ktp') ? 'bg-[#FFC000]' : 'bg-slate-200'">
-                                    <span class="absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
-                                        :class="getPolicy('require_ktp') ? 'translate-x-[18px]' : 'translate-x-0'"></span>
-                                </div>
-                            </label>
-                        </div>
-
-                        <!-- Boleh bawa hewan -->
-                        <div class="flex items-center justify-between px-4 py-3 bg-white">
-                            <span class="text-sm text-slate-700">Boleh bawa hewan peliharaan</span>
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <span class="text-sm" :class="getPolicy('allow_pets') ? 'text-[#FFC000] font-semibold' : 'text-slate-400'">
-                                    {{ getPolicy('allow_pets') ? 'Ya' : 'Tidak' }}
-                                </span>
-                                <div @click="setPolicy('allow_pets', !getPolicy('allow_pets'))"
-                                    class="relative w-10 h-[22px] rounded-full transition-colors duration-200 cursor-pointer"
-                                    :class="getPolicy('allow_pets') ? 'bg-[#FFC000]' : 'bg-slate-200'">
-                                    <span class="absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
-                                        :class="getPolicy('allow_pets') ? 'translate-x-[18px]' : 'translate-x-0'"></span>
-                                </div>
-                            </label>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- ── Akses Jam Malam ─────────────────────────────────── -->
-                <div>
-                    <button type="button" @click="toggleSub('akses')"
+                    <button v-else type="button" @click="toggleSub(group.group_key)"
                         class="w-full flex items-center justify-between px-4 py-3.5 text-left bg-white hover:bg-slate-50 transition-colors">
-                        <span class="text-sm font-bold text-slate-800">Akses Jam Malam</span>
-                        <ChevronDown v-if="!openSections.akses" class="w-4 h-4 text-slate-400 shrink-0" />
+                        <span class="text-sm font-bold text-slate-800">{{ group.group_label }}</span>
+                        <ChevronDown v-if="!openSections[group.group_key]" class="w-4 h-4 text-slate-400 shrink-0" />
                         <ChevronUp v-else class="w-4 h-4 text-slate-400 shrink-0" />
                     </button>
 
-                    <div v-if="openSections.akses" class="divide-y divide-slate-100 border-t border-slate-100">
-                        <label @click="setPolicy('night_access', '24jam')"
-                            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 bg-white transition-colors">
-                            <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
-                                :class="getPolicy('night_access', null) === '24jam' ? 'border-[#FFC000]' : 'border-slate-300'">
-                                <span v-if="getPolicy('night_access', null) === '24jam'" class="w-2 h-2 rounded-full bg-[#FFC000]"></span>
-                            </div>
-                            <span class="text-sm text-slate-700">Akses 24 jam</span>
-                        </label>
-                        <label @click="setPolicy('night_access', 'ada_jam_malam')"
-                            class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 bg-white transition-colors">
-                            <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
-                                :class="getPolicy('night_access', null) === 'ada_jam_malam' ? 'border-[#FFC000]' : 'border-slate-300'">
-                                <span v-if="getPolicy('night_access', null) === 'ada_jam_malam'" class="w-2 h-2 rounded-full bg-[#FFC000]"></span>
-                            </div>
-                            <span class="text-sm text-slate-700">Ada jam malam</span>
-                        </label>
-                        <div v-if="getPolicy('night_access', null) === 'ada_jam_malam'"
-                            class="px-4 py-3 grid grid-cols-2 gap-3 bg-slate-50">
-                            <div>
-                                <label class="text-xs text-slate-500 block mb-1">Jam masuk terakhir</label>
-                                <input type="time" v-model="form.policies.night_access_in"
-                                    class="w-full text-sm border border-slate-300 focus:ring-2 focus:ring-[#FFC000] focus:border-transparent outline-none rounded-md px-3 py-2 transition" />
-                            </div>
-                            <div>
-                                <label class="text-xs text-slate-500 block mb-1">Jam keluar terbatas mulai</label>
-                                <input type="time" v-model="form.policies.night_access_out"
-                                    class="w-full text-sm border border-slate-300 focus:ring-2 focus:ring-[#FFC000] focus:border-transparent outline-none rounded-md px-3 py-2 transition" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                    <!-- Group content -->
+                    <div v-if="group.always_open || openSections[group.group_key]"
+                        class="divide-y divide-slate-100 border-t border-slate-100">
 
-                <!-- ── Larangan Penyewa ────────────────────────────────── -->
-                <div>
-                    <button type="button" @click="toggleSub('larangan')"
-                        class="w-full flex items-center justify-between px-4 py-3.5 text-left bg-white hover:bg-slate-50 transition-colors">
-                        <span class="text-sm font-bold text-slate-800">Larangan Penyewa</span>
-                        <ChevronDown v-if="!openSections.larangan" class="w-4 h-4 text-slate-400 shrink-0" />
-                        <ChevronUp v-else class="w-4 h-4 text-slate-400 shrink-0" />
-                    </button>
+                        <template v-for="item in group.items" :key="item.key + '_' + (item.radio_value ?? '')">
+                            <!-- Sembunyikan jika parent_key belum aktif -->
+                            <template v-if="isVisible(item)">
 
-                    <div v-if="openSections.larangan" class="divide-y divide-slate-100 border-t border-slate-100">
-                        <template v-for="item in [
-                            { key: 'no_smoking', label: 'Dilarang merokok di dalam kamar/unit' },
-                            { key: 'no_alcohol', label: 'Dilarang membawa/mengonsumsi alkohol' },
-                            { key: 'no_drugs', label: 'Dilarang membawa narkoba atau barang terlarang' },
-                            { key: 'no_loud_music', label: 'Dilarang memainkan musik keras malam hari' },
-                            { key: 'no_cooking', label: 'Dilarang memasak di dalam kamar' },
-                        ]" :key="item.key">
-                            <label @click="setPolicy(item.key, !getPolicy(item.key))"
-                                class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 bg-white transition-colors">
-                                <div class="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors"
-                                    :class="getPolicy(item.key) ? 'border-[#FFC000] bg-[#FFC000]' : 'border-slate-300'">
-                                    <svg v-if="getPolicy(item.key)" class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
+                                <!-- ── TOGGLE ─────────────────────────────── -->
+                                <div v-if="item.input_type === 'toggle'"
+                                    class="flex items-center justify-between px-4 py-3 bg-white"
+                                    :class="item.parent_key ? 'bg-slate-50' : 'bg-white'">
+                                    <span class="text-sm text-slate-700">{{ item.label }}</span>
+                                    <label class="flex items-center gap-2 cursor-pointer select-none ml-4 shrink-0">
+                                        <span class="text-sm"
+                                            :class="getPolicy(item.key) ? 'text-[#FFC000] font-semibold' : 'text-slate-400'">
+                                            {{ getPolicy(item.key) ? 'Ya' : 'Tidak' }}
+                                        </span>
+                                        <div @click="setPolicy(item.key, !getPolicy(item.key))"
+                                            class="relative w-10 h-[22px] rounded-full transition-colors duration-200 cursor-pointer"
+                                            :class="getPolicy(item.key) ? 'bg-[#FFC000]' : 'bg-slate-200'">
+                                            <span class="absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
+                                                :class="getPolicy(item.key) ? 'translate-x-[18px]' : 'translate-x-0'"></span>
+                                        </div>
+                                    </label>
                                 </div>
-                                <span class="text-sm text-slate-700">{{ item.label }}</span>
-                            </label>
+
+                                <!-- ── CHECKBOX ────────────────────────────── -->
+                                <label v-else-if="item.input_type === 'checkbox'"
+                                    @click="setPolicy(item.key, !getPolicy(item.key))"
+                                    class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 bg-white transition-colors">
+                                    <div class="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors"
+                                        :class="getPolicy(item.key) ? 'border-[#FFC000] bg-[#FFC000]' : 'border-slate-300'">
+                                        <svg v-if="getPolicy(item.key)" class="w-2.5 h-2.5 text-white" fill="none"
+                                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    </div>
+                                    <span class="text-sm text-slate-700">{{ item.label }}</span>
+                                </label>
+
+                                <!-- ── RADIO ───────────────────────────────── -->
+                                <div v-else-if="item.input_type === 'radio'">
+                                    <label @click="setRadioValue(item.radio_group, item.radio_value)"
+                                        class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 bg-white transition-colors">
+                                        <div class="w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors"
+                                            :class="getRadioValue(item.radio_group) === item.radio_value
+                                                ? 'border-[#FFC000]' : 'border-slate-300'">
+                                            <span v-if="getRadioValue(item.radio_group) === item.radio_value"
+                                                class="w-2 h-2 rounded-full bg-[#FFC000]"></span>
+                                        </div>
+                                        <span class="text-sm text-slate-700">{{ item.label }}</span>
+                                    </label>
+
+                                    <!-- Extra input khusus night_access = ada_jam_malam (hardcode) -->
+                                    <div v-if="item.radio_group === 'night_access'
+                                            && item.radio_value === 'ada_jam_malam'
+                                            && getRadioValue('night_access') === 'ada_jam_malam'"
+                                        class="px-4 py-3 grid grid-cols-2 gap-3 bg-slate-50 border-t border-slate-100">
+                                        <div>
+                                            <label class="text-xs text-slate-500 block mb-1">Jam masuk terakhir</label>
+                                            <input type="time" v-model="form.policies.night_access_in"
+                                                min="20:00" max="23:59"
+                                                class="w-full text-sm border border-slate-300 focus:ring-2 focus:ring-[#FFC000] focus:border-transparent outline-none rounded-md px-3 py-2 transition" />
+                                            <p class="text-xs text-slate-400 mt-1">Rentang jam malam: 20.00 – 24.00</p>
+                                        </div>
+                                        <div>
+                                            <label class="text-xs text-slate-500 block mb-1">Jam keluar terbatas mulai</label>
+                                            <input type="time" v-model="form.policies.night_access_out"
+                                                min="20:00" max="23:59"
+                                                class="w-full text-sm border border-slate-300 focus:ring-2 focus:ring-[#FFC000] focus:border-transparent outline-none rounded-md px-3 py-2 transition" />
+                                            <p class="text-xs text-slate-400 mt-1">Rentang jam malam: 20.00 – 24.00</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </template>
                         </template>
+
                     </div>
                 </div>
 
-                <!-- ── Peraturan Tamu ──────────────────────────────────── -->
-                <div>
-                    <button type="button" @click="toggleSub('tamu')"
-                        class="w-full flex items-center justify-between px-4 py-3.5 text-left bg-white hover:bg-slate-50 transition-colors">
-                        <span class="text-sm font-bold text-slate-800">Peraturan Tamu</span>
-                        <ChevronDown v-if="!openSections.tamu" class="w-4 h-4 text-slate-400 shrink-0" />
-                        <ChevronUp v-else class="w-4 h-4 text-slate-400 shrink-0" />
-                    </button>
-
-                    <div v-if="openSections.tamu" class="divide-y divide-slate-100 border-t border-slate-100">
-                        <div class="flex items-center justify-between px-4 py-3 bg-white">
-                            <span class="text-sm text-slate-700">Boleh menerima tamu?</span>
-                            <label class="flex items-center gap-2 cursor-pointer select-none">
-                                <span class="text-sm" :class="getPolicy('allow_guests') ? 'text-[#FFC000] font-semibold' : 'text-slate-400'">
-                                    {{ getPolicy('allow_guests') ? 'Ya' : 'Tidak' }}
-                                </span>
-                                <div @click="setPolicy('allow_guests', !getPolicy('allow_guests'))"
-                                    class="relative w-10 h-[22px] rounded-full transition-colors duration-200 cursor-pointer"
-                                    :class="getPolicy('allow_guests') ? 'bg-[#FFC000]' : 'bg-slate-200'">
-                                    <span class="absolute top-0.5 left-0.5 w-[18px] h-[18px] bg-white rounded-full shadow transition-transform duration-200"
-                                        :class="getPolicy('allow_guests') ? 'translate-x-[18px]' : 'translate-x-0'"></span>
-                                </div>
-                            </label>
-                        </div>
-                        <template v-if="getPolicy('allow_guests')" v-for="item in [
-                            { key: 'no_opposite_gender_guest', label: 'Dilarang membawa tamu lawan jenis' },
-                            { key: 'guest_overnight_fee', label: 'Tamu menginap dikenakan biaya' },
-                            { key: 'guest_can_overnight', label: 'Tamu boleh menginap' },
-                            { key: 'guest_night_curfew', label: 'Ada jam malam untuk tamu' },
-                        ]" :key="item.key">
-                            <label @click="setPolicy(item.key, !getPolicy(item.key))"
-                                class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-slate-50 bg-white transition-colors">
-                                <div class="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors"
-                                    :class="getPolicy(item.key) ? 'border-[#FFC000] bg-[#FFC000]' : 'border-slate-300'">
-                                    <svg v-if="getPolicy(item.key)" class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                                <span class="text-sm text-slate-700">{{ item.label }}</span>
-                            </label>
-                        </template>
-                    </div>
-                </div>
-
-                <!-- ── Lainnya ─────────────────────────────────────────── -->
+                <!-- ── Lainnya (selalu ada di bawah) ─────────────────────── -->
                 <div>
                     <button type="button" @click="toggleSub('lainnya')"
                         class="w-full flex items-center justify-between px-4 py-3.5 text-left bg-white hover:bg-slate-50 transition-colors">
                         <span class="text-sm font-bold text-slate-800">Lainnya</span>
-                        <ChevronDown v-if="!openSections.lainnya" class="w-4 h-4 text-slate-400 shrink-0" />
+                        <ChevronDown v-if="!openSections['lainnya']" class="w-4 h-4 text-slate-400 shrink-0" />
                         <ChevronUp v-else class="w-4 h-4 text-slate-400 shrink-0" />
                     </button>
-
-                    <div v-if="openSections.lainnya" class="px-4 py-3 space-y-2 bg-white border-t border-slate-100">
+                    <div v-if="openSections['lainnya']" class="px-4 py-3 space-y-2 bg-white border-t border-slate-100">
                         <div v-for="(cp, idx) in form.custom_policies" :key="idx" class="flex items-center gap-2">
                             <input v-model="cp.title" type="text" maxlength="200"
                                 placeholder="Contoh: Tidak boleh membawa kendaraan roda empat"
@@ -331,11 +204,17 @@ const removeCustomPolicy = (idx) => { props.form.custom_policies.splice(idx, 1);
                 </div>
 
             </div>
+
+            <!-- Jika tidak ada template untuk tipe ini -->
+            <div v-else-if="mainOpen && !hasTemplates"
+                class="border-t border-slate-200 px-4 py-4 text-sm text-slate-400 bg-white">
+                Belum ada template peraturan untuk jenis aset ini.
+            </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- FAQ                                                           -->
-        <!-- ============================================================ -->
+        <!-- ================================================================ -->
+        <!-- FAQ                                                               -->
+        <!-- ================================================================ -->
         <div>
             <div class="flex items-start justify-between px-4 py-4 bg-white">
                 <div>
@@ -379,9 +258,9 @@ const removeCustomPolicy = (idx) => { props.form.custom_policies.splice(idx, 1);
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- DESKRIPSI ASET                                                -->
-        <!-- ============================================================ -->
+        <!-- ================================================================ -->
+        <!-- DESKRIPSI ASET                                                    -->
+        <!-- ================================================================ -->
         <div class="px-4 py-4 bg-white">
             <label class="block text-sm font-bold text-slate-800 mb-0.5">
                 Deskripsi Aset <span class="text-rose-400">*</span>

@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\asset_type;
 use App\Models\galery_category;
+use App\Models\PolicyTemplate;
 use Illuminate\Http\Request;
+
 
 class AssetTypeController extends Controller
 {
@@ -86,6 +88,7 @@ class AssetTypeController extends Controller
             'mandatory_unit_facility_categories' => $mandatoryUnitFacilityCategories,
             'detail_fields'        => is_string($assetType->detail_fields) ? json_decode($assetType->detail_fields, true) : ($assetType->detail_fields ?? []),
             'unit_detail_fields'   => is_string($assetType->unit_detail_fields) ? json_decode($assetType->unit_detail_fields, true) : ($assetType->unit_detail_fields ?? []),
+            'policy_templates'     => PolicyTemplate::getGroupedForType($assetType->id),
         ]);
     }
 }

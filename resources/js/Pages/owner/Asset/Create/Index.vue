@@ -56,6 +56,8 @@ const fetchAssetTypeDetails = async (typeId, isReset = false) => {
             form.detail = {};
             form.facility_ids = [];
             form.units = [makeEmptyUnit()];
+            form.policies = {};
+            form.custom_policies = [];
 
             if (data.mandatory_categories && data.mandatory_categories.length > 0) {
                 form.photos = data.mandatory_categories.map(cat => ({
@@ -84,6 +86,7 @@ const fetchAssetTypeDetails = async (typeId, isReset = false) => {
 };
 
 const allowUnits = computed(() => assetTypeDetails.value?.allow_units ?? false);
+const policyTemplates = computed(() => assetTypeDetails.value?.policy_templates ?? []);
 
 const availableTypes = computed(() => {
     if (!form.category_id) return [];
@@ -1152,9 +1155,12 @@ const closeModalAndRedirect = () => {
                 <Step9
                     v-show="steps[currentStep - 1]?.component === 'Step9'"
                     :form="form"
+                    :policyTemplates="policyTemplates"
+                    :assetTypeName="selectedAssetTypeName"
                     @addFaq="addFaq"
                     @removeFaq="removeFaq"
                 />
+
 
                     </form>
                 </div>
