@@ -9,7 +9,7 @@
         @focus="openDropdown"
         :placeholder="placeholder"
         :disabled="disabled"
-        class="block w-full appearance-none bg-white border border-slate-200 rounded-xl py-2.5 pl-3 pr-10 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#0A2540] focus:border-[#0A2540] transition-colors shadow-sm placeholder:text-slate-400 placeholder:font-normal"
+        class="block w-full appearance-none bg-white border border-slate-200 rounded-xl py-2.5 pl-3 pr-10 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm placeholder:text-slate-400 placeholder:font-normal"
         :class="{ 'opacity-70 cursor-not-allowed': disabled }"
       />
       

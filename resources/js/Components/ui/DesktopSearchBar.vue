@@ -204,7 +204,7 @@ onUnmounted(() => {
                 <!-- ================== DESKTOP: LOKASI ================== -->
                 <div v-if="desktopActiveMenu === 'lokasi'" class="w-full max-w-sm mx-auto">
                     <h2 class="text-lg font-extrabold text-[#0A2540] mb-3">Pencarian Lokasi</h2>
-                    <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#0A2540] focus-within:ring-2 focus-within:ring-[#0A2540]/20 transition">
+                    <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#FFC000] focus-within:ring-2 focus-within:ring-[#FFC000]/20 transition">
                         <Search class="text-[#0A2540] pl-1 text-sm" />
                         <input v-model="searchQuery" type="text" placeholder="Cari destinasi..." class="w-full outline-none text-[#0A2540] font-medium text-sm bg-transparent">
                     </div>
@@ -238,7 +238,7 @@ onUnmounted(() => {
                 <!-- ================== DESKTOP: JENIS ASET ================== -->
                 <div v-if="desktopActiveMenu === 'jenis'" class="w-full max-w-sm mx-auto">
                     <h2 class="text-lg font-extrabold text-[#0A2540] mb-4">Pilih Jenis Aset</h2>
-                    <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#0A2540] focus-within:ring-2 focus-within:ring-[#0A2540]/20 transition">
+                    <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#FFC000] focus-within:ring-2 focus-within:ring-[#FFC000]/20 transition">
                         <Search class="text-[#0A2540] pl-1 text-sm" />
                         <input v-model="assetSearchQuery" type="text" placeholder="Cari jenis aset..." class="w-full outline-none text-[#0A2540] font-medium text-sm bg-transparent">
                     </div>

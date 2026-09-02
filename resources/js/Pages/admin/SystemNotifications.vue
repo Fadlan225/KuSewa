@@ -285,7 +285,7 @@ function closeAll() {
                                 type="text"
                                 v-model="form.title"
                                 placeholder="Contoh: Server Maintenance"
-                                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                             />
                         </div>
                         <div class="grid grid-cols-2 gap-3">
@@ -293,7 +293,7 @@ function closeAll() {
                                 <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Tipe</label>
                                 <select
                                     v-model="form.type"
-                                    class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                    class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                                 >
                                     <option v-for="type in notificationTypes" :key="type">{{ type }}</option>
                                 </select>
@@ -302,7 +302,7 @@ function closeAll() {
                                 <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Status</label>
                                 <select
                                     v-model="form.status"
-                                    class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                    class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                                 >
                                     <option v-for="status in notificationStatuses" :key="status">{{ status }}</option>
                                 </select>
@@ -314,7 +314,7 @@ function closeAll() {
                                 type="text"
                                 v-model="form.created"
                                 placeholder="Contoh: 12 Agu 2026"
-                                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                             />
                         </div>
                         <p v-if="formError" class="text-[11px] font-semibold text-rose-600">{{ formError }}</p>
@@ -410,14 +410,14 @@ function closeAll() {
                         </div>
                         <select
                             v-model="allTypeFilter"
-                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                         >
                             <option>Semua</option>
                             <option v-for="type in notificationTypes" :key="type">{{ type }}</option>
                         </select>
                         <select
                             v-model="allStatusFilter"
-                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                         >
                             <option>Semua</option>
                             <option v-for="status in notificationStatuses" :key="status">{{ status }}</option>

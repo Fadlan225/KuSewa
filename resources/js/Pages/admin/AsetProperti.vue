@@ -98,10 +98,10 @@ function closeStats() {
                 <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
 
                     <div class="flex flex-wrap items-center gap-2 text-xs">
-                        <select v-model="statusFilter" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20">
+                        <select v-model="statusFilter" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20">
                             <option v-for="status in statuses" :key="status">{{ status }}</option>
                         </select>
-                        <select v-model="typeFilter" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20">
+                        <select v-model="typeFilter" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20">
                             <option v-for="type in propertyTypes" :key="type">{{ type }}</option>
                         </select>
                     </div>

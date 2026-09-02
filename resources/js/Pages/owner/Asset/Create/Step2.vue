@@ -174,6 +174,7 @@ watch(isLocatingGPS, (val) => {
 
 let mapInstance = null;
 let markerInstance = null;
+let mapResizeObserver = null;
 const searchSuggestions = ref([]);
 const showSuggestions = ref(false);
 let searchTimeout = null;
@@ -191,6 +192,10 @@ const initMap = () => {
         mapInstance.remove();
         mapInstance = null;
         markerInstance = null;
+    }
+    if (mapResizeObserver) {
+        mapResizeObserver.disconnect();
+        mapResizeObserver = null;
     }
 
     const lat = form.latitude ? parseFloat(form.latitude) : DEFAULT_LAT;
@@ -220,7 +225,12 @@ const initMap = () => {
     });
 
     // Perbaiki bug ukuran peta yang kadang blank saat container baru terlihat
-    setTimeout(() => mapInstance.invalidateSize(), 200);
+    mapResizeObserver = new ResizeObserver(() => {
+        if (mapInstance) {
+            mapInstance.invalidateSize();
+        }
+    });
+    mapResizeObserver.observe(mapContainer.value);
 };
 
 const isFetchingAddress = ref(false);
@@ -336,18 +346,18 @@ const fetchSuggestions = async () => {
     try {
         const lat = form.latitude || -0.5021;
         const lon = form.longitude || 117.1536;
-        
+
         // Gunakan Photon API (lebih bagus untuk typo / partial match dibanding nominatim)
         const res = await fetch(
             `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5&lat=${lat}&lon=${lon}`
         );
         const data = await res.json();
-        
+
         searchSuggestions.value = (data.features || []).map(f => {
             const p = f.properties;
             const displayNameParts = [p.name, p.street, p.district, p.city, p.state].filter(Boolean);
             const displayName = [...new Set(displayNameParts)].join(', ');
-            
+
             return {
                 name: p.name || p.street || 'Lokasi',
                 display_name: displayName,
@@ -367,7 +377,7 @@ const fetchSuggestions = async () => {
 const onSearchInput = () => {
     form.location_name = cariAlamatInput.value;
     if (searchTimeout) clearTimeout(searchTimeout);
-    
+
     if (cariAlamatInput.value.trim().length < 3) {
         isSearchingAlamat.value = false;
         showSuggestions.value = false;
@@ -410,7 +420,7 @@ const selectSuggestion = (suggestion) => {
     } else {
         mapInstance.setView([lat, lon], 17);
     }
-    
+
     // pasangMarker dgn true akan memanggil Nominatim Reverse Geocode yang melengkapi semua alamat (rt, kelurahan, dst)
     pasangMarker(lat, lon, true);
     fetchNearbyPreview(lat, lon);
@@ -454,7 +464,7 @@ const clearSearch = () => {
 // Peta hanya perlu di-init saat Step 2 aktif, karena elemen mapContainer
 // dilepas dari DOM oleh v-if ketika step lain sedang tampil
 watch(() => props.currentStep, async (step) => {
-    if (step === 2) {
+    if (step === 1) {
         await nextTick();
         initMap();
     }
@@ -466,9 +476,18 @@ onMounted(() => {
     if (form.city_code) fetchDistricts(form.city_code);
     if (form.district_code) fetchVillages(form.district_code);
     document.addEventListener('click', closeSuggestions);
+
+    if (props.currentStep === 1) {
+        nextTick(() => {
+            initMap();
+        });
+    }
 });
 
 onBeforeUnmount(() => {
+    if (mapResizeObserver) {
+        mapResizeObserver.disconnect();
+    }
     if (mapInstance) mapInstance.remove();
     document.removeEventListener('click', closeSuggestions);
 });
@@ -479,14 +498,11 @@ onBeforeUnmount(() => {
 <template>
 <div class="space-y-6">
 <!-- STEP 2: LOKASI -->
-    <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-4">
-        Alamat {{ assetTypeName || 'Properti' }}
-    </h2>
 
     <!-- PILIH TITIK KOORDINAT DI PETA -->
     <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1.5">
-            Titik Lokasi di Peta <span class="text-rose-500">*</span>
+        <label class="block text-base font-bold text-slate-800 mb-1.5">
+            Alamat Lengkap {{ form.title ? form.title : (assetTypeName || 'Aset') }} <span class="text-rose-500">*</span>
         </label>
         <p class="text-xs text-slate-500 mb-2.5">
             Cari alamat di kolom pencarian pada peta, gunakan lokasi GPS Anda, atau klik/geser pin langsung di peta untuk menandai titik properti secara presisi.
@@ -570,7 +586,7 @@ onBeforeUnmount(() => {
 
         <!-- Preview Nearby Places -->
         <div v-if="isFetchingNearby || Object.keys(previewNearbyPlaces).length > 0" class="mt-4 mb-6 p-4 border border-slate-200 rounded-md bg-white">
-            <h3 class="text-sm font-semibold text-slate-800 mb-5 flex items-center gap-2">
+            <h3 class="text-base font-bold text-slate-800 mb-5 flex items-center gap-2">
                 <MapPin class="w-4 h-4 text-[#FFC000]" />
                 Tempat Terdekat dari Lokasi Pin
             </h3>
@@ -632,7 +648,7 @@ onBeforeUnmount(() => {
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Provinsi <span class="text-rose-500">*</span></label>
+            <label class="block text-base font-bold text-slate-800 mb-1.5">Provinsi <span class="text-rose-500">*</span></label>
             <SearchableSelect
                 v-model="form.province_code"
                 :options="provinces"
@@ -641,7 +657,7 @@ onBeforeUnmount(() => {
         </div>
         <template v-if="form.province_code">
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kota<span class="text-rose-500">*</span></label>
+                <label class="block text-base font-bold text-slate-800 mb-1.5">Kota<span class="text-rose-500">*</span></label>
                 <SearchableSelect
                     v-model="form.city_code"
                     :options="cities"
@@ -650,7 +666,7 @@ onBeforeUnmount(() => {
                 />
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kecamatan <span class="text-rose-500">*</span></label>
+                <label class="block text-base font-bold text-slate-800 mb-1.5">Kecamatan <span class="text-rose-500">*</span></label>
                 <SearchableSelect
                     v-model="form.district_code"
                     :options="districts"
@@ -659,7 +675,7 @@ onBeforeUnmount(() => {
                 />
             </div>
             <div>
-                <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kelurahan / Desa <span class="text-rose-500">*</span></label>
+                <label class="block text-base font-bold text-slate-800 mb-1.5">Kelurahan / Desa <span class="text-rose-500">*</span></label>
                 <SearchableSelect
                     v-model="form.village_code"
                     :options="villages"
@@ -675,12 +691,12 @@ onBeforeUnmount(() => {
     <!-- Alamat Lengkap & Kode Pos (Auto-fill dari Peta) -->
     <div class="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-4">
         <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Alamat Lengkap <span class="text-rose-500">*</span></label>
+            <label class="block text-base font-bold text-slate-800 mb-1.5">Alamat Lengkap <span class="text-rose-500">*</span></label>
             <div v-if="isFetchingAddress" class="h-10 bg-slate-200/60 rounded-md animate-pulse w-full"></div>
-            <input v-else v-model="form.address" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition" required />
+            <input v-else v-model="form.address" type="text" placeholder="Jl. M. Yamin No. 45, RT 12" class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-transparent transition" required />
         </div>
         <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kode Pos</label>
+            <label class="block text-base font-bold text-slate-800 mb-1.5">Kode Pos</label>
             <div v-if="isFetchingAddress" class="h-10 bg-slate-200/60 rounded-md animate-pulse w-full"></div>
             <input
                 v-else
@@ -690,7 +706,7 @@ onBeforeUnmount(() => {
                 placeholder="50123"
                 minlength="5"
                 maxlength="5"
-                class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition"
+                class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-transparent transition"
             />
         </div>
     </div>

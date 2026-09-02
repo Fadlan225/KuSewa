@@ -174,13 +174,13 @@ function confirmCleanup() {
                             </div>
                             <select
                                 v-model="actionFilter"
-                                class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                             >
                                 <option v-for="action in actionOptions" :key="action">{{ action }}</option>
                             </select>
                             <select
                                 v-model="adminFilter"
-                                class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                             >
                                 <option v-for="admin in adminOptions" :key="admin">{{ admin }}</option>
                             </select>
@@ -246,7 +246,7 @@ function confirmCleanup() {
                         <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Hapus log lebih lama dari</label>
                         <select
                             v-model.number="cleanupDays"
-                            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                         >
                             <option v-for="days in cleanupOptions" :key="days" :value="days">{{ days }} hari</option>
                         </select>

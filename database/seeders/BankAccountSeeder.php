@@ -12,20 +12,26 @@ class BankAccountSeeder extends Seeder
     {
         $owners = owner_profile::with('user')->get();
 
-        $allBanks = ['BCA', 'Mandiri', 'BNI', 'BRI', 'BSI', 'CIMB Niaga'];
+        $allBanks = [
+            'BCA' => '014',
+            'Mandiri' => '008',
+            'BNI' => '009',
+            'BRI' => '002',
+            'BSI' => '451',
+            'CIMB Niaga' => '022'
+        ];
+        $bankKeys = array_keys($allBanks);
         $deterministicRandoms = ['12345', '67890', '54321', '09876', '11223', '33445'];
 
         $count = 0;
         foreach ($owners as $index => $owner) {
             // Pick exactly 5 banks by excluding one bank based on owner index
-            $banks = $allBanks;
+            $banks = $bankKeys;
             unset($banks[$index % 6]);
             $banks = array_values($banks);
 
-            foreach ($banks as $bankIndex => $bank) {
+            foreach ($banks as $bankIndex => $bankName) {
                 // Generate a unique 12-digit account number that is deterministic for idempotency
-                // Format: 10 + owner_id (2 digits) + bank_index (2 digits) + deterministic_random (5 digits)
-                // Result length: 2 + 2 + 2 + 5 = 11 digits
                 $accountNumber = '10' . 
                                  str_pad($owner->id, 2, '0', STR_PAD_LEFT) . 
                                  str_pad($bankIndex, 2, '0', STR_PAD_LEFT) . 
@@ -37,7 +43,7 @@ class BankAccountSeeder extends Seeder
                         'account_number' => $accountNumber,
                     ],
                     [
-                        'bank_name' => $bank,
+                        'bank_code' => $allBanks[$bankName],
                         'account_holder' => $owner->user->name,
                         'status' => 'active',
                     ]

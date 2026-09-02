@@ -151,18 +151,18 @@ const addAdmin = () => {
                 <div class="p-6 space-y-5">
                     <div class="grid grid-cols-1 gap-4">
                         <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Nama Lengkap</label>
-                        <input v-model="form.name" type="text" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20" placeholder="Masukkan nama admin" />
+                        <input v-model="form.name" type="text" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20" placeholder="Masukkan nama admin" />
                         <p v-if="form.errors.name" class="mt-2 text-[10px] text-rose-600">{{ form.errors.name }}</p>
                     </div>
                     <div class="grid grid-cols-1 gap-4">
                         <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Email</label>
-                        <input v-model="form.email" type="email" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20" placeholder="admin@kitasewa.id" />
+                        <input v-model="form.email" type="email" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20" placeholder="admin@kitasewa.id" />
                         <p v-if="form.errors.email" class="mt-2 text-[10px] text-rose-600">{{ form.errors.email }}</p>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Peran</label>
-                            <select v-model="form.role" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20">
+                            <select v-model="form.role" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20">
                                 <option>Super Admin</option>
                                 <option>Admin Konten</option>
                                 <option>Admin Support</option>
@@ -171,7 +171,7 @@ const addAdmin = () => {
                         </div>
                         <div>
                             <label class="block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">Status</label>
-                            <select v-model="form.status" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20">
+                            <select v-model="form.status" class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20">
                                 <option>Aktif</option>
                                 <option>Tidak Aktif</option>
                             </select>

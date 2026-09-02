@@ -1,6 +1,8 @@
 <script setup>
 import { computed, watch, ref } from 'vue';
 import CustomSelect from '@/Components/ui/CustomSelect.vue';
+import GroupedSearchableSelect from '@/Components/ui/GroupedSearchableSelect.vue';
+import Step2 from './Step2.vue';
 
 const props = defineProps({
     form: Object,
@@ -8,6 +10,8 @@ const props = defineProps({
     availableTypes: Array,
     assetTypeDetails: Object,  // null | { rental_unit, allow_units, facilities, unit_facilities, detail_fields, unit_detail_fields }
     allowUnits: Boolean,
+    currentStep: Number,
+    assetTypeName: String,
 });
 
 const emit = defineEmits([
@@ -64,58 +68,38 @@ const toggleUnitFasilitasDropdown = (index) => {
 <template>
 <div class="space-y-6">
 <!-- STEP 1: INFORMASI ASET -->
-    <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-4">
-        Informasi Dasar Aset
-    </h2>
 
-    <!-- Nama Aset -->
+    <!-- Tipe Aset (Grouped Searchable Select) -->
+    <div class="relative z-20">
+        <label class="block text-base font-bold text-slate-800 mb-1.5">Tipe Aset <span class="text-rose-500">*</span></label>
+        <GroupedSearchableSelect
+            v-model="form.asset_type_id"
+            :categories="categories"
+            placeholder="Cari atau pilih tipe aset..."
+        />
+        <p class="text-xs text-slate-500 mt-1.5">Pilih tipe aset yang ingin Anda daftarkan.</p>
+    </div>
+
+    <!-- Nama Aset (Dynamic) -->
     <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Aset <span class="text-rose-500">*</span></label>
+        <label class="block text-base font-bold text-slate-800 mb-1.5">Nama {{ assetTypeName || 'Aset' }} <span class="text-rose-500">*</span></label>
         <input
             v-model="form.title"
             type="text"
-            placeholder="cth: Kost Pak Budi, Hotel Bintang Lima, Gudang Jl. Sudirman"
-            class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition"
+            :placeholder="'Contoh : ' + (assetTypeName || 'Aset') + ' Suka Maju'"
+            class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-transparent transition"
             required
         />
     </div>
 
-    <!-- Deskripsi -->
-    <div>
-        <label class="block text-sm font-semibold text-slate-700 mb-1.5">Deskripsi Aset <span class="text-rose-500">*</span></label>
-        <textarea
-            v-model="form.description"
-            rows="4"
-            minlength="100"
-            placeholder="Deskripsikan aset Anda secara lengkap. Sebutkan keunggulan, kondisi, dan informasi penting lainnya..."
-            class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition resize-none"
-            required
-        ></textarea>
-        <p class="text-xs text-slate-500 mt-1.5">Minimal 100 karakter. {{ form.description?.length ?? 0 }} karakter.</p>
-    </div>
 
-    <!-- Kategori & Jenis Aset -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Kategori -->
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Kategori Aset <span class="text-rose-500">*</span></label>
-            <CustomSelect
-                v-model="form.category_id"
-                :options="categoryOptions"
-                placeholder="Pilih Kategori"
-            />
-        </div>
 
-        <!-- Jenis / Tipe Aset -->
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Jenis Aset <span class="text-rose-500">*</span></label>
-            <CustomSelect
-                v-model="form.asset_type_id"
-                :options="typeOptions"
-                :disabled="!availableTypes || availableTypes.length === 0"
-                placeholder="Pilih Jenis"
-            />
-        </div>
+    <div class="pt-6 mt-6 border-t border-slate-200">
+        <Step2 
+            :form="form" 
+            :currentStep="currentStep" 
+            :assetTypeName="assetTypeName" 
+        />
     </div>
 
     </div>

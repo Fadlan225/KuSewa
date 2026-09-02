@@ -269,7 +269,7 @@ function closeAll() {
                                     <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Pilih backup</label>
                                     <select
                                         v-model.number="selectedBackupId"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                                     >
                                         <option v-for="item in restorableBackups" :key="item.id" :value="item.id">
                                             {{ item.name }} · {{ item.size }}
@@ -292,7 +292,7 @@ function closeAll() {
                                         type="text"
                                         v-model="restoreConfirmText"
                                         placeholder="RESTORE"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                                     />
                                 </div>
                             </template>
@@ -376,7 +376,7 @@ function closeAll() {
                         </div>
                         <select
                             v-model="allStatusFilter"
-                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                            class="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                         >
                             <option v-for="status in statusOptions" :key="status">{{ status }}</option>
                         </select>

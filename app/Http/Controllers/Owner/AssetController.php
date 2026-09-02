@@ -276,8 +276,15 @@ class AssetController extends Controller
         $categories = asset_category::with(['types:id,category_id,name,allow_units'])
             ->get(['id', 'name']);
 
+        $banks = \Illuminate\Support\Facades\DB::table('banks')->get(['code', 'name']);
+        $existingBank = $ownerProfile->bankAccounts()->first();
+        $ktpName = auth()->user()->name;
+
         return inertia('owner/Asset/Create/Index', [
             'categories' => $categories,
+            'banks' => $banks,
+            'existingBank' => $existingBank,
+            'ktpName' => $ktpName,
         ]);
     }
 
@@ -299,10 +306,17 @@ class AssetController extends Controller
         $categories = asset_category::with(['types:id,category_id,name,allow_units'])
             ->get(['id', 'name']);
 
+        $banks = \Illuminate\Support\Facades\DB::table('banks')->get(['code', 'name']);
+        $existingBank = $ownerProfile->bankAccounts()->first();
+        $ktpName = auth()->user()->name;
+
         return inertia('owner/Asset/Create/Index', [
             'categories' => $categories,
-            'draftData' => $asset->draft_payload,
-            'draftId' => $asset->id,
+            'draftData'  => $asset->draft_payload,
+            'draftId'    => $asset->id,
+            'banks' => $banks,
+            'existingBank' => $existingBank,
+            'ktpName' => $ktpName,
         ]);
     }
 
@@ -460,12 +474,30 @@ class AssetController extends Controller
      */
     public function store(StoreAssetRequest $request)
     {
-        $ownerProfile = auth()->user()->ownerProfile;
+        $ownerProfile = $request->user()->ownerProfile;
+        if (!$ownerProfile) abort(403);
 
-        // Cek apakah rekening bank sudah ditambahkan sebelum mengizinkan submit verifikasi
-        $hasBankAccount = $ownerProfile->bankAccounts()->exists();
-        if (!$hasBankAccount) {
-            return back()->withErrors(['bank_account' => 'Anda harus melengkapi profil bisnis (Rekening Bank) sebelum mengajukan verifikasi aset.']);
+        $action = $request->input('action', 'submit');
+
+        if ($action === 'submit') {
+            // Update atau buat rekening bank jika datanya dikirim
+            if ($request->filled('bank_code') && $request->filled('account_number') && $request->filled('account_holder')) {
+                \App\Models\BankAccount::updateOrCreate(
+                    ['owner_profile_id' => $ownerProfile->id],
+                    [
+                        'bank_code' => $request->bank_code,
+                        'account_number' => $request->account_number,
+                        'account_holder' => $request->account_holder,
+                        'status' => 'active'
+                    ]
+                );
+            }
+
+            // Cek apakah rekening bank sudah ditambahkan sebelum mengizinkan submit verifikasi
+            $hasBankAccount = $ownerProfile->bankAccounts()->exists();
+            if (!$hasBankAccount) {
+                return back()->withErrors(['bank_account' => 'Anda harus melengkapi profil bisnis (Rekening Bank) sebelum mengajukan verifikasi aset.']);
+            }
         }
 
         $assetType = asset_type::findOrFail($request->asset_type_id);
@@ -717,14 +749,53 @@ class AssetController extends Controller
             }
 
             // --- 7. FAQ ---
+            $faqSortOrder = 1;
+
+            // Generate System FAQs (Default) up to 3
+            $detail = $request->detail ?? [];
+            if (!empty($detail['wajib_ktp'])) {
+                asset_faq::create([
+                    'asset_id'   => $assetRecord->id,
+                    'question'   => 'Apakah ada syarat dokumen tertentu?',
+                    'answer'     => 'Ya, Anda wajib melampirkan KTP/identitas resmi saat check-in.',
+                    'sort_order' => $faqSortOrder++,
+                ]);
+            }
+            if (isset($detail['boleh_bawa_hewan']) && $faqSortOrder <= 3) {
+                asset_faq::create([
+                    'asset_id'   => $assetRecord->id,
+                    'question'   => 'Bolehkah membawa hewan peliharaan?',
+                    'answer'     => $detail['boleh_bawa_hewan'] ? 'Boleh, kos kami ramah hewan peliharaan (Pet-Friendly).' : 'Mohon maaf, tidak diizinkan membawa hewan peliharaan.',
+                    'sort_order' => $faqSortOrder++,
+                ]);
+            }
+            if (isset($detail['aturan_jam_malam']) && $faqSortOrder <= 3) {
+                if ($detail['aturan_jam_malam'] === 'Akses 24 Jam') {
+                    asset_faq::create([
+                        'asset_id'   => $assetRecord->id,
+                        'question'   => 'Apakah ada batas jam malam?',
+                        'answer'     => 'Tidak ada, penyewa diberikan kunci sendiri dengan akses 24 jam.',
+                        'sort_order' => $faqSortOrder++,
+                    ]);
+                } elseif ($detail['aturan_jam_malam'] === 'Ada jam malam') {
+                    $time = $detail['waktu_jam_malam'] ?? '22:00';
+                    asset_faq::create([
+                        'asset_id'   => $assetRecord->id,
+                        'question'   => 'Apakah ada batas jam malam?',
+                        'answer'     => "Ya, gerbang utama akan dikunci pada pukul {$time} setiap malamnya.",
+                        'sort_order' => $faqSortOrder++,
+                    ]);
+                }
+            }
+
             if ($request->has('faqs')) {
-                foreach ($request->faqs as $index => $faqData) {
+                foreach ($request->faqs as $faqData) {
                     if (!empty($faqData['question']) && !empty($faqData['answer'])) {
                         asset_faq::create([
                             'asset_id'   => $assetRecord->id,
                             'question'   => $faqData['question'],
                             'answer'     => $faqData['answer'],
-                            'sort_order' => $index + 1,
+                            'sort_order' => $faqSortOrder++,
                         ]);
                     }
                 }
@@ -737,7 +808,6 @@ class AssetController extends Controller
                         asset_policy::create([
                             'asset_id'    => $assetRecord->id,
                             'title'       => $policyData['title'],
-                            'description' => $policyData['description'] ?? null,
                             'sort_order'  => $index + 1,
                         ]);
                     }
@@ -1434,13 +1504,11 @@ class AssetController extends Controller
         }
         $request->validate([
             'title'       => 'required|string|max:200',
-            'description' => 'nullable|string|max:2000',
         ]);
         $sortOrder = $asset->policies()->max('sort_order') + 1;
         asset_policy::create([
             'asset_id'    => $asset->id,
             'title'       => $request->title,
-            'description' => $request->description,
             'sort_order'  => $sortOrder,
         ]);
         return redirect()->back()->with('success', 'Kebijakan berhasil ditambahkan.');
@@ -1455,12 +1523,10 @@ class AssetController extends Controller
         }
         $request->validate([
             'title'       => 'required|string|max:200',
-            'description' => 'nullable|string|max:2000',
         ]);
         $policy = asset_policy::where('asset_id', $asset->id)->findOrFail($policyId);
         $policy->update([
             'title'       => $request->title,
-            'description' => $request->description,
         ]);
         return redirect()->back()->with('success', 'Kebijakan berhasil diperbarui.');
     }

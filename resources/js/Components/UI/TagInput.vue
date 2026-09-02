@@ -2,7 +2,7 @@
     <div class="relative w-full" ref="containerRef">
         <!-- Input Area -->
         <div 
-            class="min-h-[42px] flex items-center w-full bg-white border border-slate-300 rounded-md px-3 py-1.5 focus-within:ring-2 focus-within:ring-[#0A2540] focus-within:border-transparent transition cursor-text"
+            class="min-h-[42px] flex items-center w-full bg-white border border-slate-300 rounded-md px-3 py-1.5 focus-within:ring-2 focus-within:ring-[#FFC000] focus-within:border-transparent transition cursor-text"
             @click="focusInput"
         >
             <!-- Search Input -->

@@ -33,7 +33,7 @@ class DatabaseSeeder extends Seeder
             // AssetSeeder::class,
             // AssetUnitSeeder::class,
             // AssetFacilitySeeder::class,
-            // GaleryCategorySeeder::class,
+            GaleryCategorySeeder::class,
             // AssetImageSeeder::class,
             // AssetPricingSeeder::class,
 

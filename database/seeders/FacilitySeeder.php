@@ -34,16 +34,25 @@ class FacilitySeeder extends Seeder
             ['category' => 'Hiburan',            'name' => 'Karaoke',               'sort_order' => 4],
             ['category' => 'Hiburan',            'name' => 'Billiard',              'sort_order' => 5],
 
-            // ── Kenyamanan Kamar ──────────────────────────────────────────────
-            ['category' => 'Kenyamanan Kamar',   'name' => 'AC',                    'sort_order' => 1],
-            ['category' => 'Kenyamanan Kamar',   'name' => 'Kipas Angin',           'sort_order' => 2],
-            ['category' => 'Kenyamanan Kamar',   'name' => 'Lemari Pakaian',        'sort_order' => 3],
-            ['category' => 'Kenyamanan Kamar',   'name' => 'Meja Kerja',            'sort_order' => 4],
-            ['category' => 'Kenyamanan Kamar',   'name' => 'Brankas',               'sort_order' => 5],
-            ['category' => 'Kenyamanan Kamar',   'name' => 'Hair Dryer',            'sort_order' => 6],
-            ['category' => 'Kenyamanan Kamar',   'name' => 'Mini Bar',              'sort_order' => 7],
-            ['category' => 'Kenyamanan Kamar',   'name' => 'Sofa',                  'sort_order' => 8],
-            ['category' => 'Kenyamanan Kamar',   'name' => 'Balkon',                'sort_order' => 9],
+            // ── Perlengkapan Kamar ──────────────────────────────────────────────
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Kasur',                 'sort_order' => 1],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Bantal',                'sort_order' => 2],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Guling',                'sort_order' => 3],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Lemari Pakaian',        'sort_order' => 4],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Meja',                  'sort_order' => 5],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Meja Rias',             'sort_order' => 6],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Kursi',                 'sort_order' => 7],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Sofa',                  'sort_order' => 8],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Cermin',                'sort_order' => 9],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Brankas',               'sort_order' => 10],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Hair Dryer',            'sort_order' => 11],
+            ['category' => 'Perlengkapan Kamar',   'name' => 'Mini Bar',              'sort_order' => 12],
+
+            // ── Sirkulasi Udara ───────────────────────────────────────────────
+            ['category' => 'Sirkulasi Udara',      'name' => 'AC',                    'sort_order' => 1],
+            ['category' => 'Sirkulasi Udara',      'name' => 'Kipas Angin',           'sort_order' => 2],
+            ['category' => 'Sirkulasi Udara',      'name' => 'Ventilasi',             'sort_order' => 3],
+            ['category' => 'Sirkulasi Udara',      'name' => 'Jendela',               'sort_order' => 4],
 
             // ── Dapur ─────────────────────────────────────────────────────────
             ['category' => 'Dapur',              'name' => 'Kulkas',                'sort_order' => 1],
@@ -52,6 +61,7 @@ class FacilitySeeder extends Seeder
             ['category' => 'Dapur',              'name' => 'Peralatan Masak',       'sort_order' => 4],
             ['category' => 'Dapur',              'name' => 'Dapur Bersama',         'sort_order' => 5],
             ['category' => 'Dapur',              'name' => 'Dispenser Air',         'sort_order' => 6],
+            ['category' => 'Dapur',              'name' => 'Kulkas Bersama',        'sort_order' => 7],
 
             // ── Kamar Mandi ───────────────────────────────────────────────────
             ['category' => 'Kamar Mandi',        'name' => 'Bathtub',               'sort_order' => 1],
@@ -59,7 +69,8 @@ class FacilitySeeder extends Seeder
             ['category' => 'Kamar Mandi',        'name' => 'Water Heater',          'sort_order' => 3],
             ['category' => 'Kamar Mandi',        'name' => 'Kamar Mandi Dalam',     'sort_order' => 4],
             ['category' => 'Kamar Mandi',        'name' => 'Kamar Mandi Bersama',   'sort_order' => 5],
-            ['category' => 'Kamar Mandi',        'name' => 'Toiletries',            'sort_order' => 6],
+            ['category' => 'Kamar Mandi',        'name' => 'Kamar Mandi Luar',      'sort_order' => 6],
+            ['category' => 'Kamar Mandi',        'name' => 'Toiletries',            'sort_order' => 7],
 
             // ── Keamanan ──────────────────────────────────────────────────────
             ['category' => 'Keamanan',           'name' => 'CCTV',                  'sort_order' => 1],
@@ -68,6 +79,10 @@ class FacilitySeeder extends Seeder
             ['category' => 'Keamanan',           'name' => 'Intercom',              'sort_order' => 4],
             ['category' => 'Keamanan',           'name' => 'Alarm Kebakaran',       'sort_order' => 5],
             ['category' => 'Keamanan',           'name' => 'Alat Pemadam Api',      'sort_order' => 6],
+            ['category' => 'Keamanan',           'name' => 'Kunci Gerbang',         'sort_order' => 7],
+            ['category' => 'Keamanan',           'name' => 'Penjaga Kos',           'sort_order' => 8],
+            ['category' => 'Keamanan',           'name' => 'Pengurus Kos',          'sort_order' => 9],
+            ['category' => 'Keamanan',           'name' => 'Kartu Akses Masuk',     'sort_order' => 10],
 
             // ── Parkir ────────────────────────────────────────────────────────
             ['category' => 'Parkir',             'name' => 'Parkir Motor',          'sort_order' => 1],
@@ -114,6 +129,10 @@ class FacilitySeeder extends Seeder
             ['category' => 'Peralatan Musik',    'name' => 'Soundproof Room',       'sort_order' => 7],
             ['category' => 'Peralatan Musik',    'name' => 'Ruang Rekaman',         'sort_order' => 8],
 
+            // ── Indoor ────────────────────────────────────────────────────────
+            ['category' => 'Indoor',             'name' => 'Ruang Santai',          'sort_order' => 1],
+            ['category' => 'Indoor',             'name' => 'Ruang Tamu',            'sort_order' => 2],
+
             // ── Outdoor ───────────────────────────────────────────────────────
             ['category' => 'Outdoor',            'name' => 'Taman',                 'sort_order' => 1],
             ['category' => 'Outdoor',            'name' => 'Gazebo',                'sort_order' => 2],
@@ -121,9 +140,11 @@ class FacilitySeeder extends Seeder
             ['category' => 'Outdoor',            'name' => 'Pemandangan Laut',      'sort_order' => 4],
             ['category' => 'Outdoor',            'name' => 'Pemandangan Gunung',    'sort_order' => 5],
 
-            // ── Laundry ───────────────────────────────────────────────────────
+            // ── Laundry & Cuci ────────────────────────────────────────────────
             ['category' => 'Laundry',            'name' => 'Mesin Cuci',            'sort_order' => 1],
             ['category' => 'Laundry',            'name' => 'Layanan Laundry',       'sort_order' => 2],
+            ['category' => 'Laundry',            'name' => 'Ruang Cuci',            'sort_order' => 3],
+            ['category' => 'Laundry',            'name' => 'Jemuran',               'sort_order' => 4],
 
             // ── Penyimpanan ───────────────────────────────────────────────────
             ['category' => 'Penyimpanan',        'name' => 'Gudang Penyimpanan',    'sort_order' => 1],

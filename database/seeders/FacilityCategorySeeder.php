@@ -17,7 +17,8 @@ class FacilityCategorySeeder extends Seeder
         $categories = [
             ['name' => 'Internet',           'icon' => 'wifi',            'sort_order' => 1],
             ['name' => 'Hiburan',            'icon' => 'tv',              'sort_order' => 2],
-            ['name' => 'Kenyamanan Kamar',   'icon' => 'bed',             'sort_order' => 3],
+            ['name' => 'Perlengkapan Kamar', 'icon' => 'bed',             'sort_order' => 3],
+            ['name' => 'Sirkulasi Udara',    'icon' => 'wind',            'sort_order' => 4],
             ['name' => 'Dapur',              'icon' => 'utensils',        'sort_order' => 4],
             ['name' => 'Kamar Mandi',        'icon' => 'bath',            'sort_order' => 5],
             ['name' => 'Keamanan',           'icon' => 'shield',          'sort_order' => 6],
@@ -28,8 +29,9 @@ class FacilityCategorySeeder extends Seeder
             ['name' => 'Bisnis',             'icon' => 'briefcase',       'sort_order' => 11],
             ['name' => 'Peralatan Musik',    'icon' => 'music',           'sort_order' => 12],
             ['name' => 'Outdoor',            'icon' => 'tree',            'sort_order' => 13],
-            ['name' => 'Laundry',            'icon' => 'washing-machine', 'sort_order' => 14],
-            ['name' => 'Penyimpanan',         'icon' => 'box',             'sort_order' => 15],
+            ['name' => 'Indoor',             'icon' => 'home',            'sort_order' => 14],
+            ['name' => 'Laundry',            'icon' => 'washing-machine', 'sort_order' => 15],
+            ['name' => 'Penyimpanan',         'icon' => 'box',             'sort_order' => 16],
             ['name' => 'Lainnya',             'icon' => 'more-horizontal', 'sort_order' => 99],
         ];
 

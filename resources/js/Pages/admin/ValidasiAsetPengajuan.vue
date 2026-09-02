@@ -43,7 +43,7 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
 
     <DashboardLayout role="Admin" title="Validasi Aset Properti" description="Pantau dan verifikasi aset properti yang didaftarkan oleh para owner.">
         <template #header-actions>
-            <div class="flex items-center gap-2.5 w-64 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 focus-within:border-[#0A2540] focus-within:ring-1 focus-within:ring-[#0A2540] transition-all">
+            <div class="flex items-center gap-2.5 w-64 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 focus-within:border-[#FFC000] focus-within:ring-1 focus-within:ring-[#FFC000] transition-all">
                 <Search class="text-slate-400 text-sm" />
                 <input
                     type="text"

@@ -15,6 +15,9 @@ import Step4 from './Step4.vue';
 import Step5 from './Step5.vue';
 import Step6 from './Step6.vue';
 import Step7 from './Step7.vue';
+import Step8 from './Step8.vue';
+import Step8Unit from './Step8Unit.vue';
+import Step9 from './Step9.vue';
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 // Fix bug ikon marker default Leaflet yang tidak muncul di build Vite
@@ -53,7 +56,7 @@ const fetchAssetTypeDetails = async (typeId, isReset = false) => {
             form.detail = {};
             form.facility_ids = [];
             form.units = [makeEmptyUnit()];
-            
+
             if (data.mandatory_categories && data.mandatory_categories.length > 0) {
                 form.photos = data.mandatory_categories.map(cat => ({
                     _id: Date.now() + Math.random(),
@@ -92,12 +95,14 @@ const makeEmptyUnit = () => ({
     _id: Date.now() + Math.random(),
     name: '',
     quantity: 1,
+    empty_rooms: 1,
     pricings: [{ _id: Date.now(), duration: 1, rental_unit: 'month', price: '' }],
     detail: {},
     facility_ids: [],
     thumbnail: null,
     thumbnail_preview: null,
     photos: [{ _id: Date.now(), gallery_category_id: null, files: [], previews: [] }],
+    is_expanded: true,
 });
 
 let safeDraftData = null;
@@ -115,6 +120,9 @@ if (props.draftData) {
     if (Array.isArray(safeDraftData.detail)) safeDraftData.detail = {};
     if (Array.isArray(safeDraftData.units)) {
         safeDraftData.units.forEach(u => {
+            if (u.name && u.name.toLowerCase().startsWith('tipe ')) {
+                u.name = u.name.substring(5).trim();
+            }
             if (Array.isArray(u.detail)) u.detail = {};
             if (u.thumbnail && typeof u.thumbnail === 'string') {
                 u.thumbnail_preview = u.thumbnail.startsWith('http') ? u.thumbnail : '/storage/' + u.thumbnail;
@@ -149,8 +157,8 @@ const defaultForm = {
     draft_id: props.draftId ?? null,
     title: '',
     description: '',
-    category_id: props.categories?.[0]?.id ?? null,
-    asset_type_id: props.categories?.[0]?.types?.[0]?.id ?? null,
+    category_id: null,
+    asset_type_id: null,
     detail: {},
     facility_ids: [],
     units: [makeEmptyUnit()],
@@ -173,26 +181,31 @@ const defaultForm = {
         previews: [],
     }],
     faqs: [],
-    policies: [],
+    policies: {},
+    custom_policies: [],
 };
 
 const form = useForm(safeDraftData ? { ...defaultForm, ...safeDraftData, draft_id: props.draftId } : defaultForm);
 
-watch(() => form.category_id, (newCatId, oldCatId) => {
-    if (props.draftData && !oldCatId) return; // Mencegah reset saat resume draft
-    const cat = props.categories?.find(c => c.id === newCatId);
-    if (cat && cat.types.length > 0) {
-        form.asset_type_id = cat.types[0].id;
-    } else {
-        form.asset_type_id = null;
-    }
-    form.detail = {};
-    form.facility_ids = [];
-    form.units = [makeEmptyUnit()];
-});
-
 watch(() => form.asset_type_id, (newTypeId, oldTypeId) => {
+    // Sinkronisasi category_id
+    for (const cat of (props.categories || [])) {
+        if (cat.types?.some(t => t.id === newTypeId)) {
+            if (form.category_id !== cat.id) {
+                form.category_id = cat.id;
+            }
+            break;
+        }
+    }
+
     const isReset = !(props.draftData && !oldTypeId);
+
+    if (isReset) {
+        form.detail = {};
+        form.facility_ids = [];
+        form.units = [makeEmptyUnit()];
+    }
+
     fetchAssetTypeDetails(newTypeId, isReset);
 });
 
@@ -202,6 +215,18 @@ const selectedAssetTypeName = computed(() => {
         if (type) return type.name;
     }
     return '';
+});
+
+const unitLabel = computed(() => {
+    const name = selectedAssetTypeName.value?.toLowerCase() || '';
+    if (name.includes('hotel')) return 'Kamar';
+    if (name.includes('apartemen')) return 'Unit';
+    if (name.includes('homestay')) return 'Kamar';
+    if (name.includes('guest house')) return 'Kamar';
+    if (name.includes('kos')) return 'Kamar';
+    if (name.includes('resort')) return 'Kamar';
+    if (name.includes('studio')) return 'Ruang';
+    return 'Unit';
 });
 
 
@@ -271,36 +296,67 @@ const cancelLeave = () => {
 
 const steps = computed(() => {
     if (allowUnits.value) {
-        return [
-            { id: 1, title: 'Informasi Utama', component: 'Step1' },
-            { id: 2, title: 'Lokasi', component: 'Step2' },
-            { id: 3, title: 'Detail & Fasilitas', component: 'Step3' },
-            { id: 4, title: 'Tipe Unit', component: 'Step4' },
-            { id: 5, title: 'Harga Sewa', component: 'Step5' },
-            { id: 6, title: 'Galeri Foto', component: 'Step6' },
-            { id: 7, title: 'Kebijakan & FAQ', component: 'Step7' },
+        let baseSteps = [
+            { id: 1, title: 'Informasi & Lokasi', component: 'Step1' },
+            { id: 2, title: 'Detail & Tipe ' + unitLabel.value, component: 'Step3' },
+            { id: 3, title: 'Harga Sewa', component: 'Step5' },
+            { id: 4, title: 'Galeri Foto Aset', component: 'Step6' },
         ];
+
+        let nextId = 5;
+
+        form.units.forEach((unit, index) => {
+            baseSteps.push({
+                id: nextId++,
+                title: 'Foto ' + (unit.name ? 'Tipe ' + unit.name : (unitLabel.value + ' ' + (index + 1))),
+                component: 'Step7',
+                unitIndex: index
+            });
+        });
+
+        baseSteps.push({
+            id: nextId++,
+            title: 'Fasilitas Aset',
+            component: 'Step8'
+        });
+
+        form.units.forEach((unit, index) => {
+            baseSteps.push({
+                id: nextId++,
+                title: 'Fasilitas ' + (unit.name ? 'Tipe ' + unit.name : (unitLabel.value + ' ' + (index + 1))),
+                component: 'Step8Unit',
+                unitIndex: index
+            });
+        });
+
+        baseSteps.push({
+            id: nextId++,
+            title: 'Kebijakan & FAQ',
+            component: 'Step9'
+        });
+
+        return baseSteps;
     } else {
         return [
-            { id: 1, title: 'Informasi Utama', component: 'Step1' },
-            { id: 2, title: 'Lokasi', component: 'Step2' },
-            { id: 3, title: 'Detail & Fasilitas', component: 'Step3' },
-            { id: 4, title: 'Harga Sewa', component: 'Step5' },
-            { id: 5, title: 'Galeri Foto', component: 'Step6' },
-            { id: 6, title: 'Kebijakan & FAQ', component: 'Step7' },
+            { id: 1, title: 'Informasi & Lokasi', component: 'Step1' },
+            { id: 2, title: 'Detail Aset', component: 'Step3' },
+            { id: 3, title: 'Harga Sewa', component: 'Step5' },
+            { id: 4, title: 'Galeri Foto', component: 'Step6' },
+            { id: 5, title: 'Fasilitas Aset', component: 'Step8' },
+            { id: 6, title: 'Kebijakan & FAQ', component: 'Step9' },
         ];
     }
 });
 
 const isCurrentStepValid = computed(() => {
-    const component = steps.value[currentStep.value - 1]?.component;
+    const currentStepConfig = steps.value[currentStep.value - 1];
+    if (!currentStepConfig) return true;
+    const component = currentStepConfig.component;
     if (!component) return true;
 
     switch (component) {
         case 'Step1':
-            return !!(form.title && form.description && form.category_id && form.asset_type_id);
-        case 'Step2':
-            return !!(form.province_code && form.city_code && form.district_code && form.address && form.latitude && form.longitude);
+            return !!(form.title && form.asset_type_id && form.province_code && form.city_code && form.district_code && form.village_code && form.address && form.latitude && form.longitude);
         case 'Step3':
             if (assetTypeDetails.value?.specifications) {
                 const requiredSpecs = assetTypeDetails.value.specifications.filter(s => s.is_required);
@@ -308,39 +364,64 @@ const isCurrentStepValid = computed(() => {
                     if (!form.detail[spec.key]) return false;
                 }
             }
-            return true;
-        case 'Step4': // Tipe Unit (Only for Kos)
             if (allowUnits.value) {
                 return form.units.every(u => u.name?.trim() && Number(u.quantity) > 0);
             }
             return true;
         case 'Step5': // Harga Sewa (Kos: Step 5, Non-Kos: Step 4)
             if (allowUnits.value) {
-                return form.units.every(u => u.pricings && u.pricings.every(p => Number(p.price) > 0 && Number(p.duration) > 0 && p.rental_unit));
+                return form.units.every(u => u.pricings && u.pricings[0] && Number(u.pricings[0].price) > 0 && Number(u.pricings[0].duration) > 0 && u.pricings[0].rental_unit);
             } else {
-                return form.pricings && form.pricings.every(p => Number(p.price) > 0 && Number(p.duration) > 0 && p.rental_unit);
+                return form.pricings && form.pricings[0] && Number(form.pricings[0].price) > 0 && Number(form.pricings[0].duration) > 0 && form.pricings[0].rental_unit;
             }
         case 'Step6': // Galeri
-            return !!form.thumbnail;
-        case 'Step7':
+            if (!form.thumbnail) return false;
+            if (form.photos) {
+                for (const group of form.photos) {
+                    if (group.is_mandatory && (!group.files || group.files.length === 0)) return false;
+                }
+            }
+            return true;
+        case 'Step7': // Galeri Unit
+            if (allowUnits.value) {
+                return Object.keys(validateStep7(currentStepConfig.unitIndex)).length === 0;
+            }
+            return true;
+        case 'Step8': // Fasilitas Aset
+            return Object.keys(validateStep8()).length === 0;
+        case 'Step8Unit': // Fasilitas Unit
+            if (allowUnits.value) {
+                return Object.keys(validateStep8Unit(currentStepConfig.unitIndex)).length === 0;
+            }
+            return true;
+        case 'Step9': // Kebijakan & FAQ
             return true;
         default:
             return true;
     }
 });
 
+const stepTwoTitle = computed(() => {
+    if (selectedAssetTypeName.value) {
+        return `${unitLabel.value} ${selectedAssetTypeName.value}`;
+    }
+    return 'Harga Sewa';
+});
+
 const mainSteps = computed(() => {
+    const lastMainStepIds = steps.value.filter(s => s.id >= 4).map(s => s.id);
+
     if (allowUnits.value) {
         return [
-            { id: 1, title: 'Data Aset', internalSteps: [1, 2, 3] },
-            { id: 2, title: 'Kamar & Harga', internalSteps: [4, 5] },
-            { id: 3, title: 'Foto Fasilitas', internalSteps: [6, 7] }
+            { id: 1, title: 'Data Aset', internalSteps: [1, 2] },
+            { id: 2, title: stepTwoTitle.value, internalSteps: [3] },
+            { id: 3, title: 'Foto & Fasilitas', internalSteps: lastMainStepIds }
         ];
     } else {
         return [
-            { id: 1, title: 'Data Aset', internalSteps: [1, 2, 3] },
-            { id: 2, title: 'Harga Sewa', internalSteps: [4] },
-            { id: 3, title: 'Foto Fasilitas', internalSteps: [5, 6] }
+            { id: 1, title: 'Data Aset', internalSteps: [1, 2] },
+            { id: 2, title: stepTwoTitle.value, internalSteps: [3] },
+            { id: 3, title: 'Foto & Fasilitas', internalSteps: lastMainStepIds }
         ];
     }
 });
@@ -369,7 +450,10 @@ const toggleFasilitas = (facilityId) => {
     else form.facility_ids.splice(index, 1);
 };
 
-const tambahUnit = () => form.units.push(makeEmptyUnit());
+const tambahUnit = () => {
+    form.units.forEach(u => u.is_expanded = false);
+    form.units.push(makeEmptyUnit());
+};
 const hapusUnit = (index) => { if (form.units.length > 1) form.units.splice(index, 1); };
 const toggleUnitFasilitas = (unitIndex, facilityId) => {
     const unit = form.units[unitIndex];
@@ -412,6 +496,40 @@ const hapusUnitFoto = async (unitIndex, photoIndex, fileIndex) => {
     URL.revokeObjectURL(form.units[unitIndex].photos[photoIndex].previews[fileIndex]);
     form.units[unitIndex].photos[photoIndex].files.splice(fileIndex, 1);
     form.units[unitIndex].photos[photoIndex].previews.splice(fileIndex, 1);
+    await saveDraft();
+};
+
+const gantiUnitFoto = async (event, unitIndex, photoIndex, fileIndex) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    URL.revokeObjectURL(form.units[unitIndex].photos[photoIndex].previews[fileIndex]);
+
+    const previewUrl = URL.createObjectURL(file);
+    form.units[unitIndex].photos[photoIndex].previews.splice(fileIndex, 1, previewUrl);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const res = await axios.post(route('owner.asset.upload-temp'), formData);
+        form.units[unitIndex].photos[photoIndex].files.splice(fileIndex, 1, res.data.path);
+        await saveDraft();
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+const pindahkanUnitFoto = async (unitIndex, sourcePhotoIndex, fileIndex, targetUnitIndex, targetPhotoIndex) => {
+    const preview = form.units[unitIndex].photos[sourcePhotoIndex].previews.splice(fileIndex, 1)[0];
+
+    if (!form.units[targetUnitIndex].photos[targetPhotoIndex].previews) form.units[targetUnitIndex].photos[targetPhotoIndex].previews = [];
+    if (!form.units[targetUnitIndex].photos[targetPhotoIndex].files) form.units[targetUnitIndex].photos[targetPhotoIndex].files = [];
+
+    form.units[targetUnitIndex].photos[targetPhotoIndex].previews.push(preview);
+
+    const file = form.units[unitIndex].photos[sourcePhotoIndex].files.splice(fileIndex, 1)[0];
+    form.units[targetUnitIndex].photos[targetPhotoIndex].files.push(file);
+
     await saveDraft();
 };
 
@@ -474,6 +592,40 @@ const hapusFoto = async (catIndex, fileIndex) => {
     await saveDraft();
 };
 
+const gantiFoto = async (event, index, fileIndex) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    URL.revokeObjectURL(form.photos[index].previews[fileIndex]);
+
+    const previewUrl = URL.createObjectURL(file);
+    form.photos[index].previews.splice(fileIndex, 1, previewUrl);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const res = await axios.post(route('owner.asset.upload-temp'), formData);
+        form.photos[index].files.splice(fileIndex, 1, res.data.path);
+        await saveDraft();
+    } catch (e) {
+        console.error(e);
+    }
+};
+
+const pindahkanFoto = async (sourceCatIndex, fileIndex, targetCatIndex) => {
+    const preview = form.photos[sourceCatIndex].previews.splice(fileIndex, 1)[0];
+
+    if (!form.photos[targetCatIndex].previews) form.photos[targetCatIndex].previews = [];
+    if (!form.photos[targetCatIndex].files) form.photos[targetCatIndex].files = [];
+
+    form.photos[targetCatIndex].previews.push(preview);
+
+    const file = form.photos[sourceCatIndex].files.splice(fileIndex, 1)[0];
+    form.photos[targetCatIndex].files.push(file);
+
+    await saveDraft();
+};
+
 const handleThumbnailUpload = async (event) => {
     const file = event.target.files[0];
     if (file) {
@@ -511,7 +663,10 @@ const preparePayload = (data, isKos) => {
             const u = { ...unit };
             delete u._id;
             delete u.thumbnail_preview;
-            if (u.pricings) u.pricings.forEach(p => delete p._id);
+            if (u.pricings) {
+                u.pricings = u.pricings.filter(p => p.price && Number(p.price) > 0);
+                u.pricings.forEach(p => delete p._id);
+            }
             if (u.photos) {
                 // Hanya simpan grup foto yang memiliki file terpilih
                 u.photos = u.photos.filter(p => p.files && p.files.length > 0);
@@ -520,6 +675,10 @@ const preparePayload = (data, isKos) => {
                     delete p.previews;
                 });
             }
+            if (isKos && u.name && !u.name.toLowerCase().startsWith('tipe ')) {
+                u.name = 'Tipe ' + u.name.trim();
+            }
+
             return u;
         });
     }
@@ -534,6 +693,7 @@ const preparePayload = (data, isKos) => {
     }
 
     if (payload.pricings) {
+        payload.pricings = payload.pricings.filter(p => p.price && Number(p.price) > 0);
         payload.pricings.forEach(p => delete p._id);
     }
     delete payload.thumbnail_preview;
@@ -576,12 +736,16 @@ const nextStep = async () => {
     validationErrors.value = {};
     let err = {};
 
-    if (currentStep.value === 1) err = validateStep1();
-    else if (currentStep.value === 2) err = validateStep2();
-    else if (currentStep.value === 3) err = validateStep3();
-    else if (currentStep.value === 4) err = validateStep4();
-    else if (currentStep.value === 5) err = validateStep5();
-    else if (currentStep.value === 6) err = validateStep6();
+    const currentStepConfig = steps.value[currentStep.value - 1];
+    const currentComponent = currentStepConfig.component;
+    if (currentComponent === 'Step1') err = validateStep1();
+    else if (currentComponent === 'Step3') err = validateStep3();
+    else if (currentComponent === 'Step5') err = validateStep5();
+    else if (currentComponent === 'Step6') err = validateStep6();
+    else if (currentComponent === 'Step7') err = validateStep7(currentStepConfig.unitIndex);
+    else if (currentComponent === 'Step8') err = validateStep8();
+    else if (currentComponent === 'Step8Unit') err = validateStep8Unit(currentStepConfig.unitIndex);
+    else if (currentComponent === 'Step9') err = validateStep9();
 
     if (Object.keys(err).length > 0) {
         validationErrors.value = err;
@@ -605,82 +769,159 @@ const prevStep = () => {
 
 const addFaq = () => form.faqs.push({ question: '', answer: '' });
 const removeFaq = (idx) => form.faqs.splice(idx, 1);
-const addPolicy = () => form.policies.push({ title: '', description: '' });
-const removePolicy = (idx) => form.policies.splice(idx, 1);
 
 const validateStep1 = () => {
     const errors = {};
+    if (!form.asset_type_id) errors.asset_type_id = 'Tipe aset wajib dipilih.';
     if (!form.title?.trim()) errors.title = 'Nama aset wajib diisi.';
-    if (!form.description?.trim() || form.description.trim().length < 100)
-        errors.description = 'Deskripsi wajib diisi (minimal 100 karakter).';
-    if (!form.category_id) errors.category_id = 'Kategori wajib dipilih.';
-    if (!form.asset_type_id) errors.asset_type_id = 'Jenis aset wajib dipilih.';
-    return errors;
-};
 
-const validateStep2 = () => {
-    const errors = {};
+    // Validasi lokasi juga
     if (!form.address?.trim()) errors.address = 'Alamat lengkap wajib diisi.';
     if (!form.province_code) errors.province_code = 'Provinsi wajib dipilih.';
     if (!form.city_code) errors.city_code = 'Kota wajib dipilih.';
     if (!form.district_code) errors.district_code = 'Kecamatan wajib dipilih.';
     if (!form.village_code) errors.village_code = 'Kelurahan/Desa wajib dipilih.';
     if (!form.latitude || !form.longitude) errors.latitude = 'Titik lokasi di peta wajib ditentukan.';
+
     return errors;
 };
 
 const validateStep3 = () => {
     const errors = {};
-    return errors;
-};
-
-const validateStep4 = () => { // Jika units, maka Step4 = Tipe Unit. Jika tidak, maka Harga Sewa (Step5 component)
-    const errors = {};
-    if (steps.value[3].component === 'Step4') {
+    if (assetTypeDetails.value?.specifications) {
+        const requiredSpecs = assetTypeDetails.value.specifications.filter(s => s.is_required);
+        for (const spec of requiredSpecs) {
+            if (!form.detail[spec.key]) errors[`detail.${spec.key}`] = `${spec.label} wajib diisi.`;
+        }
+    }
+    if (allowUnits.value) {
         form.units.forEach((unit, i) => {
             if (!unit.name?.trim()) errors[`units.${i}.name`] = 'Nama unit wajib diisi.';
             if (!unit.quantity || Number(unit.quantity) < 1) errors[`units.${i}.quantity`] = 'Jumlah unit wajib diisi.';
         });
-    } else if (steps.value[3].component === 'Step5') {
+    }
+    return errors;
+};
+
+const validateStep5 = () => {
+    const errors = {};
+    if (allowUnits.value) {
+        form.units.forEach((unit, i) => {
+            if (!unit.pricings || unit.pricings.length === 0) {
+                errors[`units.${i}.pricings`] = 'Paket harga unit wajib diisi.';
+            } else {
+                if (!unit.pricings[0].price || Number(unit.pricings[0].price) <= 0) {
+                    errors[`units.${i}.pricings.0.price`] = 'Harga unit wajib diisi.';
+                }
+            }
+        });
+    } else {
         if (!form.pricings || form.pricings.length === 0) {
             errors.pricings = 'Paket harga sewa wajib diisi.';
         } else {
-            form.pricings.forEach((p, i) => {
-                if (!p.price || Number(p.price) <= 0) errors[`pricings.${i}.price`] = 'Harga sewa wajib diisi.';
+            if (!form.pricings[0].price || Number(form.pricings[0].price) <= 0) {
+                errors[`pricings.0.price`] = 'Harga sewa dasar wajib diisi.';
+            }
+        }
+    }
+    return errors;
+};
+
+const validateStep6 = () => {
+    const errors = {};
+    if (!form.thumbnail) errors.thumbnail = 'Foto sampul utama wajib diunggah.';
+    if (form.photos) {
+        form.photos.forEach((group, i) => {
+            if (group.is_mandatory && (!group.files || group.files.length === 0)) {
+                errors[`foto_${i}`] = `Foto untuk kategori ${group.gallery_category_name} wajib diunggah.`;
+            }
+        });
+    }
+    return errors;
+};
+
+const validateStep7 = (unitIdx) => {
+    const errors = {};
+    if (allowUnits.value) {
+        const unit = form.units[unitIdx];
+        if (!unit) return errors;
+        if (!unit.thumbnail) {
+            errors[`unit_${unitIdx}_thumbnail`] = `Foto sampul untuk unit ${unit.name || 'ini'} wajib diunggah.`;
+        }
+        if (unit.photos) {
+            unit.photos.forEach((group, photoIdx) => {
+                if (group.is_mandatory && (!group.files || group.files.length === 0)) {
+                    errors[`unit_${unitIdx}_photo_${photoIdx}`] = `Foto untuk kategori ${group.gallery_category_name} wajib diunggah.`;
+                }
             });
         }
     }
     return errors;
 };
 
-const validateStep5 = () => { // Jika units, maka Step5 = Harga Sewa. Jika tidak, maka Step6 component (Galeri Foto)
+const validateStep8 = () => { // Fasilitas Aset
     const errors = {};
-    if (steps.value[4].component === 'Step5') { // allowUnits = true
-        form.units.forEach((unit, i) => {
-            if (!unit.pricings || unit.pricings.length === 0) {
-                errors[`units.${i}.pricings`] = 'Paket harga unit wajib diisi.';
-            } else {
-                unit.pricings.forEach((p, pIdx) => {
-                    if (!p.price || Number(p.price) <= 0) errors[`units.${i}.pricings.${pIdx}.price`] = 'Harga unit wajib diisi.';
-                });
+    if (assetTypeDetails.value?.mandatory_facility_categories?.length > 0) {
+        let availableAssetFacilities = [...(assetTypeDetails.value.facilities || [])];
+        
+        const isLuarOrBersamaSelected = availableAssetFacilities.some(f => 
+            (f.name === 'Kamar Mandi Luar' || f.name === 'Kamar Mandi Bersama') && 
+            form.facility_ids.includes(f.id)
+        );
+        if (isLuarOrBersamaSelected) {
+            const perabotFacilities = (assetTypeDetails.value.unit_facilities || [])
+                .filter(f => f.category?.name === 'Perabot Kamar Mandi');
+            availableAssetFacilities = availableAssetFacilities.concat(perabotFacilities);
+        }
+
+        for (const cat of assetTypeDetails.value.mandatory_facility_categories) {
+            const facilitiesInCat = availableAssetFacilities.filter(f => f.category?.name === cat.name || f.facility_category_id === cat.id);
+            if (facilitiesInCat.length === 0) continue;
+            
+            const hasSelected = facilitiesInCat.some(f => form.facility_ids.includes(f.id));
+            if (!hasSelected) {
+                errors[`facility_dasar_${cat.id}`] = `Pilih minimal 1 fasilitas dari kategori ${cat.name}.`;
             }
-        });
-    } else if (steps.value[4].component === 'Step6') {
-        if (!form.thumbnail) errors.thumbnail = 'Foto sampul utama wajib diunggah.';
+        }
     }
     return errors;
 };
 
-const validateStep6 = () => { // Jika units, maka Step6 = Galeri Foto
+const validateStep8Unit = (unitIdx) => { // Fasilitas Unit
     const errors = {};
-    if (steps.value[5].component === 'Step6') {
-        if (!form.thumbnail) errors.thumbnail = 'Foto sampul utama wajib diunggah.';
+    if (allowUnits.value) {
+        const unit = form.units[unitIdx];
+        if (!unit) return errors;
+        if (assetTypeDetails.value?.mandatory_unit_facility_categories?.length > 0) {
+            const assetFacilities = assetTypeDetails.value.facilities || [];
+            const isDalamSelected = assetFacilities.some(f => 
+                f.name === 'Kamar Mandi Dalam' && form.facility_ids.includes(f.id)
+            );
+            
+            let availableUnitFacilities = [...(assetTypeDetails.value.unit_facilities || [])];
+            if (!isDalamSelected) {
+                availableUnitFacilities = availableUnitFacilities.filter(f => f.category?.name !== 'Perabot Kamar Mandi');
+            }
+
+            for (const cat of assetTypeDetails.value.mandatory_unit_facility_categories) {
+                const facilitiesInCat = availableUnitFacilities.filter(f => f.category?.name === cat.name || f.facility_category_id === cat.id);
+                if (facilitiesInCat.length === 0) continue;
+                
+                const hasSelected = facilitiesInCat.some(f => unit.facility_ids?.includes(f.id));
+                if (!hasSelected) {
+                    errors[`unit_${unitIdx}_facility_dasar_${cat.id}`] = `Pilih minimal 1 fasilitas dari kategori ${cat.name}.`;
+                }
+            }
+        }
     }
     return errors;
 };
 
-const validateStep7 = () => { // Kebijakan & FAQ (Optional)
-    return {};
+const validateStep9 = () => { // Kebijakan & FAQ (Optional), tapi Deskripsi sekarang disini
+    const errors = {};
+    if (!form.description?.trim()) errors.description = 'Deskripsi aset wajib diisi.';
+    else if (form.description.trim().length < 100) errors.description = 'Deskripsi minimal 100 karakter.';
+    return errors;
 };
 
 const submitProperty = async () => {
@@ -688,7 +929,9 @@ const submitProperty = async () => {
     validationErrors.value = {};
 
     // Hanya validasi step terakhir saat submit
-    const err = steps.value.length === 6 ? validateStep6() : validateStep7(); // asumsikan step terakhir
+    const currentComponent = steps.value[steps.value.length - 1].component;
+    let err = {};
+    if (currentComponent === 'Step9') err = validateStep9();
 
     if (Object.keys(err).length > 0) {
         validationErrors.value = err;
@@ -760,7 +1003,7 @@ const closeModalAndRedirect = () => {
                                 <div class="w-6 h-6 sm:w-7 sm:h-7 rounded-full flex items-center justify-center text-[11px] sm:text-[13px] font-bold transition-colors shrink-0 border-[1.5px]"
                                     :class="[
                                         currentStep > mStep.internalSteps[mStep.internalSteps.length-1]
-                                            ? 'border-[#FFC000] text-[#FFC000] bg-transparent'
+                                            ? 'border-[#FFC000] bg-[#FFC000] text-white'
                                             : currentMainStep.id === mStep.id
                                             ? 'border-[#FFC000] text-[#FFC000] bg-transparent'
                                             : 'border-slate-300 text-slate-400 bg-transparent'
@@ -775,8 +1018,8 @@ const closeModalAndRedirect = () => {
                             </div>
 
                             <!-- Continuous Progress Line -->
-                            <div class="w-full h-[3px] mt-auto relative px-1">
-                                <div class="w-full h-full bg-slate-200 relative">
+                            <div class="w-full h-1.5 mt-auto relative px-1">
+                                <div class="w-full h-full bg-slate-200 relative rounded-full overflow-hidden">
                                     <div class="h-full bg-[#FFC000] transition-all duration-500 ease-out"
                                          :style="{ width: getProgressWidth(mStep) }">
                                     </div>
@@ -800,13 +1043,21 @@ const closeModalAndRedirect = () => {
                         </ul>
                     </div>
 
-                    <!-- LOADING TYPE DETAILS -->
-                    <div v-if="isLoadingTypeDetails && currentStep === 1" class="mb-4 flex items-center gap-3 text-sm font-semibold text-slate-500 bg-white p-4 rounded-lg border border-slate-200/80 shadow-sm">
-                        <svg class="animate-spin h-5 w-5 text-[#0A2540]" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                        </svg>
-                        Memuat spesifikasi aset...
+                    <!-- FORM SKELETON LOADER -->
+                    <div v-if="isLoadingTypeDetails && currentStep !== 1" class="bg-white rounded-lg p-6 md:p-8 border border-slate-200/80 shadow-sm space-y-6">
+                        <div class="h-6 bg-slate-200 rounded animate-pulse w-1/3 mb-4"></div>
+                        <div class="space-y-4">
+                            <div class="h-4 bg-slate-200 rounded animate-pulse w-1/4"></div>
+                            <div class="h-12 bg-slate-200 rounded animate-pulse w-full"></div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="h-4 bg-slate-200 rounded animate-pulse w-1/4"></div>
+                            <div class="h-12 bg-slate-200 rounded animate-pulse w-full"></div>
+                        </div>
+                        <div class="space-y-4 pt-4 border-t border-slate-100">
+                            <div class="h-4 bg-slate-200 rounded animate-pulse w-1/4"></div>
+                            <div class="h-40 bg-slate-200 rounded animate-pulse w-full"></div>
+                        </div>
                     </div>
 
                     <!-- FORM CARD -->
@@ -820,11 +1071,6 @@ const closeModalAndRedirect = () => {
                     :availableTypes="availableTypes"
                     :assetTypeDetails="assetTypeDetails"
                     :allowUnits="allowUnits"
-                />
-
-                <Step2
-                    v-show="steps[currentStep - 1]?.component === 'Step2'"
-                    :form="form"
                     :currentStep="currentStep"
                     :assetTypeName="selectedAssetTypeName"
                 />
@@ -833,13 +1079,17 @@ const closeModalAndRedirect = () => {
                     v-show="steps[currentStep - 1]?.component === 'Step3'"
                     :form="form"
                     :assetTypeDetails="assetTypeDetails"
+                    :unitLabel="unitLabel"
                     @toggleFasilitas="toggleFasilitas"
+                    @tambahUnit="tambahUnit"
+                    @hapusUnit="hapusUnit"
                 />
 
                 <Step4
                     v-show="steps[currentStep - 1]?.component === 'Step4'"
                     :form="form"
                     :assetTypeDetails="assetTypeDetails"
+                    :unitLabel="unitLabel"
                     @tambahUnit="tambahUnit"
                     @hapusUnit="hapusUnit"
                     @toggleUnitFasilitas="toggleUnitFasilitas"
@@ -850,34 +1100,60 @@ const closeModalAndRedirect = () => {
                     :form="form"
                     :allowUnits="allowUnits"
                     :assetTypeDetails="assetTypeDetails"
+                    :unitLabel="unitLabel"
                 />
 
                 <Step6
                     v-show="steps[currentStep - 1]?.component === 'Step6'"
+                    :isActive="steps[currentStep - 1]?.component === 'Step6'"
                     :form="form"
-                    :allowUnits="allowUnits"
                     :assetTypeDetails="assetTypeDetails"
                     @tambahKategoriFoto="tambahKategoriFoto"
                     @hapusKategoriFoto="hapusKategoriFoto"
                     @handleFileUpload="handleFileUpload"
                     @hapusFoto="hapusFoto"
+                    @gantiFoto="gantiFoto"
+                    @pindahkanFoto="pindahkanFoto"
                     @handleThumbnailUpload="handleThumbnailUpload"
                     @hapusThumbnail="hapusThumbnail"
+                />
+
+                <Step7
+                    v-if="steps[currentStep - 1]?.component === 'Step7'"
+                    :form="form"
+                    :allowUnits="allowUnits"
+                    :assetTypeDetails="assetTypeDetails"
+                    :unitLabel="unitLabel"
+                    :currentUnitIndex="steps[currentStep - 1]?.unitIndex"
                     @tambahUnitKategoriFoto="tambahUnitKategoriFoto"
                     @hapusUnitKategoriFoto="hapusUnitKategoriFoto"
                     @handleUnitFileUpload="handleUnitFileUpload"
                     @hapusUnitFoto="hapusUnitFoto"
+                    @gantiUnitFoto="gantiUnitFoto"
+                    @pindahkanUnitFoto="pindahkanUnitFoto"
                     @handleUnitThumbnailUpload="handleUnitThumbnailUpload"
                     @hapusUnitThumbnail="hapusUnitThumbnail"
                 />
 
-                <Step7
-                    v-show="steps[currentStep - 1]?.component === 'Step7'"
+                <Step8
+                    v-show="steps[currentStep - 1]?.component === 'Step8'"
+                    :form="form"
+                    :assetTypeDetails="assetTypeDetails"
+                />
+
+                <Step8Unit
+                    v-if="steps[currentStep - 1]?.component === 'Step8Unit'"
+                    :form="form"
+                    :assetTypeDetails="assetTypeDetails"
+                    :unitLabel="unitLabel"
+                    :unitIndex="steps[currentStep - 1]?.unitIndex"
+                />
+
+                <Step9
+                    v-show="steps[currentStep - 1]?.component === 'Step9'"
                     :form="form"
                     @addFaq="addFaq"
                     @removeFaq="removeFaq"
-                    @addPolicy="addPolicy"
-                    @removePolicy="removePolicy"
                 />
 
                     </form>
@@ -910,7 +1186,7 @@ const closeModalAndRedirect = () => {
 
         <!-- STICKY BOTTOM ACTION BAR (Desktop) -->
         <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 shadow-[0_-4px_12px_rgba(0,0,0,0.03)] z-40 hidden md:block">
-            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="w-full px-6 h-16 flex items-center justify-between">
                 <div>
                     <button type="button" @click="prevStep" :disabled="isSavingDraft" class="h-[40px] px-6 rounded-md border border-slate-300 text-[#0A2540] font-semibold text-[14px] hover:bg-slate-50 transition-colors bg-white shadow-sm flex items-center gap-2 disabled:opacity-50" :class="currentStep === 1 ? 'invisible' : ''">
                         Sebelumnya

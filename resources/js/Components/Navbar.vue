@@ -276,7 +276,7 @@ const handleLogoutConfirm = () => {
                                 <!-- Fake Input Search -->
                                 <div
                                     @click="isKeywordSheetOpen = true"
-                                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-10 pr-10 py-2.5 border border-gray-200/80 focus:outline-none focus:bg-white focus:border-[#0A2540] focus:ring-1 focus:ring-[#0A2540] transition-all shadow-inner flex items-center cursor-pointer relative overflow-hidden"
+                                    class="w-full bg-[#F8F9FA] text-[#0A2540] text-xs font-medium rounded-full pl-10 pr-10 py-2.5 border border-gray-200/80 focus:outline-none focus:bg-white focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-all shadow-inner flex items-center cursor-pointer relative overflow-hidden"
                                     style="min-height: 38px;"
                                 >
                                     <span v-if="keywordQuery" class="truncate pr-4 text-[#0A2540] relative z-10">{{ keywordQuery }}</span>
@@ -535,7 +535,7 @@ const handleLogoutConfirm = () => {
 
                                     <!-- JENIS ASET -->
                                     <div v-if="desktopNavActiveMenu === 'aset'" class="w-full">
-                                        <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#0A2540] focus-within:ring-2 focus-within:ring-[#0A2540]/20 transition">
+                                        <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#FFC000] focus-within:ring-2 focus-within:ring-[#FFC000]/20 transition">
                                             <Search class="text-[#0A2540] pl-1 text-sm" />
                                             <input v-model="assetSearchQuery" type="text" placeholder="Cari jenis aset..." class="w-full outline-none text-[#0A2540] font-medium text-sm bg-transparent">
                                         </div>
@@ -567,7 +567,7 @@ const handleLogoutConfirm = () => {
 
                                     <!-- LOKASI -->
                                     <div v-else-if="desktopNavActiveMenu === 'lokasi'" class="w-full">
-                                        <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#0A2540] focus-within:ring-2 focus-within:ring-[#0A2540]/20 transition">
+                                        <div class="flex items-center gap-3 border border-[#6C757D]/30 rounded-xl p-2 bg-white mb-4 focus-within:border-[#FFC000] focus-within:ring-2 focus-within:ring-[#FFC000]/20 transition">
                                             <Search class="text-[#0A2540] pl-1 text-sm" />
                                             <input v-model="searchQuery" type="text" placeholder="Cari destinasi..." class="w-full outline-none text-[#0A2540] font-medium text-sm bg-transparent">
                                         </div>

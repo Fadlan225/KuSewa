@@ -1,50 +1,41 @@
 <script setup>
-import { Trash2 } from 'lucide-vue-next';
-import { computed } from 'vue';
-import CustomSelect from '@/Components/ui/CustomSelect.vue';
+import { computed, onMounted } from 'vue';
+import { ChevronUp, ChevronDown, Trash2 } from 'lucide-vue-next';
+import PricingEditor from './PricingEditor.vue';
 
 const props = defineProps({
     form: Object,
     allowUnits: Boolean,
-    assetTypeDetails: Object, // { rental_unit }
+    assetTypeDetails: Object,
+    unitLabel: {
+        type: String,
+        default: 'Unit'
+    }, // { rental_unit }
 });
 
-const rentalUnitOptions = [
-    { label: 'Jam', value: 'hour' },
-    { label: 'Hari', value: 'day' },
-    { label: 'Malam', value: 'night' },
-    { label: 'Minggu', value: 'week' },
-    { label: 'Bulan', value: 'month' }
-];
-
-const formatPrice = (val) => {
-    if (!val) return '';
-    return val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+const toggleExpand = (index) => {
+    props.form.units.forEach((u, i) => {
+        if (i === index) {
+            u.is_expanded = !u.is_expanded;
+        } else {
+            u.is_expanded = false;
+        }
+    });
 };
 
-const updatePrice = (pricing, val) => {
-    const numericVal = val.replace(/\D/g, '');
-    pricing.price = numericVal ? parseInt(numericVal, 10) : '';
-};
-
-// Rental unit label untuk tooltip harga
-const rentalUnitLabel = computed(() => {
-    const map = {
-        hour: '/Jam',
-        night: '/Malam',
-        day: '/Hari',
-        month: '/Bulan',
-    };
-    return map[props.assetTypeDetails?.rental_unit] ?? '';
+onMounted(() => {
+    if (props.form.units && props.form.units.length > 0) {
+        const hasExpanded = props.form.units.some(u => u.is_expanded);
+        if (!hasExpanded) {
+            props.form.units[0].is_expanded = true;
+        }
+    }
 });
 </script>
 
 <template>
 <div class="space-y-6">
     <!-- STEP 5: HARGA SEWA -->
-    <h2 class="text-lg font-bold text-slate-800 border-b border-slate-200 pb-4">
-        Pengaturan Harga Sewa
-    </h2>
 
     <p class="text-sm text-slate-500 mb-4">
         Atur tarif sewa unit Anda. Anda dapat menambahkan berbagai variasi harga berdasarkan durasi (misal: Harian, Mingguan, Bulanan).
@@ -54,108 +45,44 @@ const rentalUnitLabel = computed(() => {
     <!-- HARGA — Tanpa Unit (satu harga untuk aset) -->
     <!-- ============================================ -->
     <div v-if="!allowUnits">
-        <div class="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-            <label class="block text-sm font-semibold text-slate-700">
-                Daftar Harga Sewa <span class="text-rose-500">*</span>
-            </label>
-            <button
-                type="button"
-                @click="form.pricings.push({ _id: Date.now(), duration: 1, rental_unit: assetTypeDetails?.rental_unit || 'month', price: '' })"
-                class="text-sm font-semibold text-white bg-[#0A2540] hover:bg-[#123e6b] px-4 py-2 rounded-md transition cursor-pointer shadow-sm"
-            >
-                + Tambah Varian Harga
-            </button>
-        </div>
-        <div class="space-y-4">
-            <div v-for="(pricing, pIdx) in form.pricings" :key="pricing._id || pIdx" class="flex gap-4 items-center bg-white shadow-sm p-5 rounded-lg border border-slate-300 relative">
-                <div class="w-1/4">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">Durasi</label>
-                    <input v-model="pricing.duration" type="number" min="1" class="w-full text-sm px-3 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition" required />
-                </div>
-                <div class="w-1/4">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">Satuan</label>
-                    <CustomSelect v-model="pricing.rental_unit" :options="rentalUnitOptions" placeholder="Pilih..." class="w-full" required />
-                </div>
-                <div class="flex-1">
-                    <label class="block text-xs font-semibold text-slate-500 mb-1.5">Tarif Harga</label>
-                    <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rp</span>
-                        <input :value="formatPrice(pricing.price)" @input="updatePrice(pricing, $event.target.value)" type="text" placeholder="1.500.000" class="w-full text-sm pl-11 pr-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition" required />
-                    </div>
-                </div>
-                <button
-                    v-if="form.pricings.length > 1"
-                    type="button"
-                    @click="form.pricings.splice(pIdx, 1)"
-                    class="w-10 h-10 rounded-md bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 mt-5 hover:bg-rose-500 hover:text-white transition cursor-pointer"
-                    title="Hapus Varian Harga"
-                >
-                    <Trash2 class="text-sm" />
-                </button>
-            </div>
-        </div>
+        <PricingEditor 
+            :pricings="form.pricings" 
+            :detail="form.detail" 
+            :assetTypeDetails="assetTypeDetails" 
+        />
     </div>
 
     <!-- ============================================ -->
-    <!-- HARGA — Dengan Unit (Atur harga per unit) -->
+    <!-- HARGA — Dengan Unit (harga per tipe kamar) -->
     <!-- ============================================ -->
-    <div v-if="allowUnits" class="space-y-6">
-        <div
-            v-for="(unit, unitIndex) in form.units"
-            :key="unit._id"
-            class="border border-slate-300 rounded-lg p-6 relative bg-white shadow-sm"
-        >
-            <div class="flex items-center gap-3 mb-5">
-                <div class="w-8 h-8 rounded-md bg-[#FFC000] text-[#0A2540] font-bold flex items-center justify-center text-sm">
-                    {{ unitIndex + 1 }}
-                </div>
-                <p class="text-sm font-semibold text-slate-800">{{ unit.name || `Tipe Unit ${unitIndex + 1}` }}</p>
-                <span class="text-xs bg-slate-100 text-slate-500 px-2.5 py-1 rounded-md">{{ unit.quantity || 0 }} Unit</span>
-            </div>
-
-            <!-- Daftar Harga Sewa Unit -->
-            <div class="mb-2">
-                <div class="flex items-center justify-between mb-4 border-b border-slate-200 pb-3">
-                    <label class="block text-sm font-semibold text-slate-700">
-                        Harga Sewa Tipe Ini <span class="text-rose-500">*</span>
-                    </label>
-                    <button
-                        type="button"
-                        @click="unit.pricings.push({ _id: Date.now(), duration: 1, rental_unit: assetTypeDetails?.rental_unit || 'month', price: '' })"
-                        class="text-sm font-semibold text-white bg-[#0A2540] hover:bg-[#123e6b] px-4 py-2 rounded-md transition cursor-pointer shadow-sm"
-                    >
-                        + Tambah Varian Harga
-                    </button>
-                </div>
-
-                <div class="space-y-4">
-                    <div v-for="(pricing, pIdx) in unit.pricings" :key="pricing._id || pIdx" class="flex gap-4 items-center bg-slate-50 p-5 rounded-lg border border-slate-300 relative">
-                        <div class="w-1/4">
-                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Durasi</label>
-                            <input v-model="pricing.duration" type="number" min="1" class="w-full text-sm px-3 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition" required />
-                        </div>
-                        <div class="w-1/4">
-                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Satuan</label>
-                            <CustomSelect v-model="pricing.rental_unit" :options="rentalUnitOptions" placeholder="Pilih..." class="w-full" required />
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-xs font-semibold text-slate-500 mb-1.5">Tarif Harga</label>
-                            <div class="relative">
-                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rp</span>
-                                <input :value="formatPrice(pricing.price)" @input="updatePrice(pricing, $event.target.value)" type="text" placeholder="100.000" class="w-full text-sm pl-11 pr-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:border-transparent transition" required />
-                            </div>
-                        </div>
-                        <button
-                            v-if="unit.pricings.length > 1"
-                            type="button"
-                            @click="unit.pricings.splice(pIdx, 1)"
-                            class="w-10 h-10 rounded-md bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 mt-5 hover:bg-rose-500 hover:text-white transition cursor-pointer"
-                            title="Hapus Varian Harga"
-                        >
-                            <Trash2 class="text-sm" />
-                        </button>
+    <div v-else class="space-y-6">
+        <div v-for="(unit, unitIndex) in form.units" :key="unit._id" class="border border-slate-300 rounded-lg relative bg-white shadow-sm">
+            
+            <!-- Header (Collapsible) -->
+            <div @click="toggleExpand(unitIndex)" class="bg-white p-5 flex items-center justify-between cursor-pointer border-b border-slate-200/60 hover:bg-slate-50 transition-colors rounded-t-lg" :class="{ 'rounded-b-lg border-b-0': unit.is_expanded === false }">
+                <div class="flex items-center gap-4">
+                    <div class="text-slate-500 font-bold text-lg">
+                        {{ String(unitIndex + 1).padStart(2, '0') }}
+                    </div>
+                    <div>
+                        <p class="text-lg font-bold text-[#0A2540]">{{ unit.name ? 'Tipe ' + unit.name : `Tipe ${unitLabel || 'Unit'}` }}</p>
+                        <p class="text-xs text-slate-500 mt-0.5 font-medium">{{ unit.quantity || 0 }} {{ (unitLabel || 'Unit').toLowerCase() }}<template v-if="unit.detail?.ukuran_kamar"> &middot; {{ unit.detail.ukuran_kamar }} m</template><template v-else-if="unit.detail?.room_size"> &middot; {{ unit.detail.room_size }} m&sup2;</template> &middot; {{ (unit.quantity || 0) - (unit.empty_rooms || 0) }} terisi</p>
                     </div>
                 </div>
+                <div class="flex items-center gap-1">
+                    <button type="button" class="w-8 h-8 rounded-md hover:bg-slate-200 text-slate-400 transition flex items-center justify-center cursor-pointer">
+                        <ChevronUp v-if="unit.is_expanded !== false" class="w-5 h-5" />
+                        <ChevronDown v-else class="w-5 h-5" />
+                    </button>
+                </div>
+            </div>
+
+            <div v-show="unit.is_expanded !== false" class="p-6">
+                <PricingEditor 
+                    :pricings="unit.pricings" 
+                    :detail="unit.detail" 
+                    :assetTypeDetails="assetTypeDetails" 
+                />
             </div>
         </div>
     </div>

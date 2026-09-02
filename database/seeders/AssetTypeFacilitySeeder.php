@@ -58,7 +58,7 @@ class AssetTypeFacilitySeeder extends Seeder
             ['type' => 'Hotel', 'facility' => 'Water Heater',       'scope' => 'unit'],
             ['type' => 'Hotel', 'facility' => 'Balkon',             'scope' => 'unit'],
             ['type' => 'Hotel', 'facility' => 'Sofa',               'scope' => 'unit'],
-            ['type' => 'Hotel', 'facility' => 'Meja Kerja',         'scope' => 'unit'],
+            ['type' => 'Hotel', 'facility' => 'Meja',               'scope' => 'unit'],
 
             // ─────────────────────────────────────────────────────────────────
             // RESORT (allow_units = true)
@@ -128,14 +128,37 @@ class AssetTypeFacilitySeeder extends Seeder
             ['type' => 'Kos', 'facility' => 'Dapur Bersama',        'scope' => 'asset'],
             ['type' => 'Kos', 'facility' => 'Layanan Laundry',      'scope' => 'asset'],
             ['type' => 'Kos', 'facility' => 'Dispenser Air',        'scope' => 'asset'],
+            ['type' => 'Kos', 'facility' => 'Kulkas Bersama',       'scope' => 'asset'],
+            ['type' => 'Kos', 'facility' => 'Ruang Cuci',           'scope' => 'asset'],
+            ['type' => 'Kos', 'facility' => 'Jemuran',              'scope' => 'asset'],
             // Level unit (kamar kos)
             ['type' => 'Kos', 'facility' => 'AC',                   'scope' => 'unit'],
             ['type' => 'Kos', 'facility' => 'Kipas Angin',          'scope' => 'unit'],
             ['type' => 'Kos', 'facility' => 'Kamar Mandi Dalam',    'scope' => 'unit'],
             ['type' => 'Kos', 'facility' => 'Kamar Mandi Bersama',  'scope' => 'unit'],
+            ['type' => 'Kos', 'facility' => 'Kamar Mandi Luar',     'scope' => 'unit'],
             ['type' => 'Kos', 'facility' => 'Lemari Pakaian',       'scope' => 'unit'],
-            ['type' => 'Kos', 'facility' => 'Meja Kerja',           'scope' => 'unit'],
+            ['type' => 'Kos', 'facility' => 'Meja',                 'scope' => 'unit'],
             ['type' => 'Kos', 'facility' => 'Water Heater',         'scope' => 'unit'],
+            ['type' => 'Kos', 'facility' => 'Kasur',                'scope' => 'unit'],
+            ['type' => 'Kos', 'facility' => 'Bantal',               'scope' => 'unit'],
+            ['type' => 'Kos', 'facility' => 'Guling',               'scope' => 'unit'],
+            ['type' => 'Kos', 'facility' => 'Kursi',                'scope' => 'unit'],
+            ['type' => 'Kos', 'facility' => 'Jendela',              'scope' => 'unit'],
+            
+            // Tambahan keamanan
+            ['type' => 'Kos', 'facility' => 'Kunci Gerbang',        'scope' => 'asset'],
+            ['type' => 'Kos', 'facility' => 'Penjaga Kos',          'scope' => 'asset'],
+            ['type' => 'Kos', 'facility' => 'Pengurus Kos',         'scope' => 'asset'],
+            ['type' => 'Kos', 'facility' => 'Kartu Akses Masuk',    'scope' => 'asset'],
+
+            // Tambahan Indoor
+            ['type' => 'Kos', 'facility' => 'Ruang Santai',         'scope' => 'asset'],
+            ['type' => 'Kos', 'facility' => 'Ruang Tamu',           'scope' => 'asset'],
+
+            // Tambahan Outdoor
+            ['type' => 'Kos', 'facility' => 'Taman',                'scope' => 'asset'],
+            ['type' => 'Kos', 'facility' => 'Gazebo',               'scope' => 'asset'],
 
             // ─────────────────────────────────────────────────────────────────
             // HOMESTAY & GUEST HOUSE (allow_units = true)

@@ -40,7 +40,7 @@ const updatePassword = () => {
                     ref="currentPasswordInput"
                     v-model="form.current_password"
                     type="password"
-                    class="block w-full border-gray-300 focus:border-[#0A2540] focus:ring-[#0A2540] rounded-xl shadow-sm px-4 py-2"
+                    class="block w-full border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-2"
                     autocomplete="current-password"
                 />
 
@@ -57,7 +57,7 @@ const updatePassword = () => {
                     ref="passwordInput"
                     v-model="form.password"
                     type="password"
-                    class="block w-full border-gray-300 focus:border-[#0A2540] focus:ring-[#0A2540] rounded-xl shadow-sm px-4 py-2"
+                    class="block w-full border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-2"
                     autocomplete="new-password"
                 />
 
@@ -73,7 +73,7 @@ const updatePassword = () => {
                     id="password_confirmation"
                     v-model="form.password_confirmation"
                     type="password"
-                    class="block w-full border-gray-300 focus:border-[#0A2540] focus:ring-[#0A2540] rounded-xl shadow-sm px-4 py-2"
+                    class="block w-full border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-2"
                     autocomplete="new-password"
                 />
 
@@ -86,7 +86,7 @@ const updatePassword = () => {
                 <button
                     type="submit"
                     :disabled="form.processing"
-                    class="inline-flex items-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-[#0f3459] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#0A2540] focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
+                    class="inline-flex items-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-xs text-white uppercase tracking-widest hover:bg-[#0f3459] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-25"
                 >
                     Simpan Kata Sandi
                 </button>

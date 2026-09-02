@@ -24,10 +24,15 @@ class StoreAssetRequest extends FormRequest
         $rules = [
             // --- Step 1: Informasi Aset ---
             'title'              => ['required', 'string', 'max:255'],
-            'description'        => ['required', 'string', 'min:100'],
+            'description'        => ['required', 'string'],
             'category_id'        => ['required', 'integer', 'exists:asset_categories,id'],
             'asset_type_id'      => ['required', 'integer', 'exists:asset_types,id'],
             'detail'             => ['nullable', 'array'],
+            'policies'           => ['nullable', 'array'],
+            'policies.*.title'   => ['required_with:policies', 'string', 'max:200'],
+            'faqs'               => ['nullable', 'array'],
+            'faqs.*.question'    => ['required_with:faqs', 'string', 'max:300'],
+            'faqs.*.answer'      => ['required_with:faqs', 'string', 'max:2000'],
 
             // Fasilitas aset (pivot asset_facilities, scope=asset)
             'facility_ids'       => ['nullable', 'array'],
@@ -79,6 +84,15 @@ class StoreAssetRequest extends FormRequest
             $rules['pricings.*.price'] = ['required', 'numeric', 'min:0'];
         }
 
+        // --- Step 10: Rekening Bank (Saat Submit Final) ---
+        if ($this->input('action') === 'submit') {
+            $rules['bank_code'] = ['required', 'string', 'exists:banks,code'];
+            $rules['account_number'] = ['required', 'string', 'max:25', 'regex:/^[0-9]+$/'];
+            $rules['account_holder'] = ['required', 'string', 'max:100'];
+            $rules['terms_agreed'] = ['accepted'];
+            $rules['booking_terms_agreed'] = ['accepted'];
+        }
+
         return $rules;
     }
 
@@ -87,7 +101,6 @@ class StoreAssetRequest extends FormRequest
         return [
             'title.required'           => 'Nama aset wajib diisi.',
             'description.required'     => 'Deskripsi wajib diisi.',
-            'description.min'          => 'Deskripsi minimal 100 karakter.',
             'category_id.required'     => 'Kategori aset wajib dipilih.',
             'category_id.exists'       => 'Kategori aset tidak valid.',
             'asset_type_id.required'   => 'Jenis aset wajib dipilih.',
@@ -114,6 +127,14 @@ class StoreAssetRequest extends FormRequest
             'units.*.quantity.required'=> 'Jumlah unit wajib diisi.',
             'units.*.pricings.required'=> 'Harga unit wajib diisi.',
             'units.*.photos.*.files.required_with' => 'Anda telah menambahkan kategori foto unit, tetapi belum ada file yang dipilih (Atau total upload melebihi batas sistem).',
+            'bank_code.required'       => 'Bank wajib dipilih.',
+            'bank_code.exists'         => 'Bank tidak valid.',
+            'account_number.required'  => 'Nomor rekening wajib diisi.',
+            'account_number.max'       => 'Nomor rekening maksimal 25 digit.',
+            'account_number.regex'     => 'Nomor rekening hanya boleh berisi angka.',
+            'account_holder.required'  => 'Nama pemilik rekening wajib diisi.',
+            'terms_agreed.accepted'    => 'Anda harus menyetujui Syarat dan Ketentuan Utama.',
+            'booking_terms_agreed.accepted' => 'Anda harus menyetujui Syarat dan Ketentuan Booking Langsung.',
         ];
     }
 }

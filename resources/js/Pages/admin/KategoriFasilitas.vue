@@ -381,7 +381,7 @@ function removeItem(item) {
                                 type="text"
                                 v-model="formData.name"
                                 :placeholder="`Contoh: ${levelTab === 'Kategori' ? 'Hunian Jangka Pendek' : 'Kost'}`"
-                                class="mt-1.5 w-full text-xs bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                class="mt-1.5 w-full text-xs bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                             />
                         </div>
 
@@ -389,7 +389,7 @@ function removeItem(item) {
                             <label class="text-[11px] font-semibold text-slate-500">{{ kategoriLabel }}</label>
                             <select
                                 v-model="formData.kategoriId"
-                                class="mt-1.5 w-full text-xs bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                class="mt-1.5 w-full text-xs bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                             >
                                 <option v-for="k in currentKategoriList" :key="k.id" :value="k.id">{{ k.name }}</option>
                             </select>
@@ -401,12 +401,12 @@ function removeItem(item) {
                                 v-model="formData.description"
                                 rows="3"
                                 placeholder="Deskripsi singkat..."
-                                class="mt-1.5 w-full text-xs bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20 resize-none"
+                                class="mt-1.5 w-full text-xs bg-slate-50 border border-slate-200/80 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20 resize-none"
                             ></textarea>
                         </div>
 
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" v-model="formData.active" class="rounded border-slate-300 text-[#0A2540] focus:ring-[#0A2540]/30" />
+                            <input type="checkbox" v-model="formData.active" class="rounded border-slate-300 text-[#0A2540] focus:ring-[#FFC000]/30" />
                             <span class="text-xs font-medium text-slate-600">Aktifkan item ini</span>
                         </label>
                     </div>

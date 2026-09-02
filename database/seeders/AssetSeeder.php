@@ -181,8 +181,11 @@ class AssetSeeder extends Seeder
             $detail['tahun_dibangun'] = $faker->numberBetween(2015, 2023);
             $detail['kapasitas_parkir'] = $faker->numberBetween(10, 50) . ' Kendaraan';
             if ($typeName == 'Kos') {
+                $detail['tipe_penyewa'] = $faker->randomElement(['Putra', 'Putri', 'Campur']);
                 $detail['aturan_jam_malam'] = $faker->boolean;
-                $detail['parkir_motor'] = true;
+                $detail['biaya_tambahan'] = [
+                    ['nama' => 'Listrik (Perangkat Tambahan)', 'biaya' => 50000, 'tipe' => 'Per Bulan']
+                ];
             }
         } elseif (in_array($typeName, ['Gudang'])) {
             $detail['luas_bangunan'] = $faker->numberBetween(500, 2000) . ' m2';

@@ -9,7 +9,7 @@ class bank_account extends Model
 {
     protected $fillable = [
         'owner_profile_id',
-        'bank_name',
+        'bank_code',
         'account_number',
         'account_holder',
         'status'
@@ -18,5 +18,10 @@ class bank_account extends Model
     public function ownerProfile()
     {
         return $this->belongsTo(owner_profile::class);
+    }
+
+    public function bank()
+    {
+        return $this->belongsTo(bank::class, 'bank_code', 'code');
     }
 }

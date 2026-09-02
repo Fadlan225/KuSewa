@@ -36,7 +36,7 @@ class AssetUnitSeeder extends Seeder
                 $unitCount = $faker->numberBetween(5, 15);
                 $unitNames = ['Studio Type', '1BR Unit', '2BR Unit', 'Penthouse'];
             } elseif ($type == 'Kos') {
-                $unitCount = $faker->numberBetween(15, 40);
+                $unitCount = $faker->numberBetween(2, 4);
                 $unitNames = ['Kamar Standar', 'Kamar AC', 'Kamar Ekstra Luas', 'Kamar VIP'];
             } elseif ($type == 'Studio') {
                 $unitCount = $faker->numberBetween(2, 6);
@@ -63,7 +63,7 @@ class AssetUnitSeeder extends Seeder
                     'name' => $unitName,
                     'description' => $faker->paragraph(2),
                     'detail' => json_encode($this->generateUnitDetail($type, $faker)),
-                    'quantity' => $faker->numberBetween(1, 5),
+                    'quantity' => $type == 'Kos' ? $faker->numberBetween(5, 15) : $faker->numberBetween(1, 5),
                     'status' => 'active',
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -94,9 +94,10 @@ class AssetUnitSeeder extends Seeder
             $detail['balcony'] = $faker->boolean;
             $detail['furnished'] = $faker->boolean;
         } elseif ($typeName == 'Kos') {
-            $detail['ac'] = $faker->boolean;
-            $detail['wifi'] = true;
-            $detail['bathroom_inside'] = $faker->boolean;
+            $detail['ukuran_kamar'] = $faker->randomElement(['3x3', '3x4', '4x4', '2.5x3']);
+            $detail['kamar_terisi'] = $faker->numberBetween(0, 3); // Dari quantity total
+            $detail['dp_persen'] = 50; // DP 50%
+            $detail['uang_deposit'] = $faker->randomElement([100000, 200000, 500000]);
         } elseif ($typeName == 'Studio') {
             $detail['luas_ruangan'] = $faker->numberBetween(15, 40) . ' m2';
             $detail['soundproof'] = true;

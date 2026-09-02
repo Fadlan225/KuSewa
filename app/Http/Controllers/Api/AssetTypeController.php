@@ -52,9 +52,26 @@ class AssetTypeController extends Controller
             ->get();
 
         $mandatoryNames = $assetType->getMandatoryCategories();
-        $mandatoryCategories = $galleryCategories->filter(function($cat) use ($mandatoryNames) {
-            return in_array($cat->name, $mandatoryNames);
-        })->values();
+        $mandatoryCategories = collect($mandatoryNames)->map(function ($name) use ($galleryCategories) {
+            return $galleryCategories->firstWhere('name', $name);
+        })->filter()->values();
+
+        $mandatoryUnitNames = $assetType->getMandatoryUnitCategories();
+        $mandatoryUnitCategories = collect($mandatoryUnitNames)->map(function ($name) use ($galleryCategories) {
+            return $galleryCategories->firstWhere('name', $name);
+        })->filter()->values();
+
+        $facilityCategories = \App\Models\facility_category::orderBy('name')->select('id', 'name')->get();
+
+        $mandatoryFacilityNames = $assetType->getMandatoryFacilityCategories();
+        $mandatoryFacilityCategories = collect($mandatoryFacilityNames)->map(function ($name) use ($facilityCategories) {
+            return $facilityCategories->firstWhere('name', $name);
+        })->filter()->values();
+
+        $mandatoryUnitFacilityNames = $assetType->getMandatoryUnitFacilityCategories();
+        $mandatoryUnitFacilityCategories = collect($mandatoryUnitFacilityNames)->map(function ($name) use ($facilityCategories) {
+            return $facilityCategories->firstWhere('name', $name);
+        })->filter()->values();
 
         return response()->json([
             'id'                   => $assetType->id,
@@ -64,139 +81,11 @@ class AssetTypeController extends Controller
             'unit_facilities'      => $assetType->allowedUnitFacilities,
             'gallery_categories'   => $galleryCategories,
             'mandatory_categories' => $mandatoryCategories,
-            'detail_fields'        => $this->getDetailFields($assetType->id),
-            'unit_detail_fields'   => $this->getUnitDetailFields($assetType->id),
+            'mandatory_unit_categories' => $mandatoryUnitCategories,
+            'mandatory_facility_categories' => $mandatoryFacilityCategories,
+            'mandatory_unit_facility_categories' => $mandatoryUnitFacilityCategories,
+            'detail_fields'        => is_string($assetType->detail_fields) ? json_decode($assetType->detail_fields, true) : ($assetType->detail_fields ?? []),
+            'unit_detail_fields'   => is_string($assetType->unit_detail_fields) ? json_decode($assetType->unit_detail_fields, true) : ($assetType->unit_detail_fields ?? []),
         ]);
-    }
-
-    /**
-     * Mapping template field detail aset berdasarkan asset_type_id.
-     * Field ini digunakan untuk menampilkan input dinamis di Step 1.
-     *
-     * Format setiap field:
-     * [key, label, type, required, options?]
-     */
-    private function getDetailFields(int $typeId): array
-    {
-        $type = asset_type::with('category')->find($typeId);
-        $typeName = $type ? strtolower($type->name) : '';
-        $categoryName = $type && $type->category ? strtolower($type->category->name) : '';
-
-        // --- HUNIAN: kos-kosan, apartemen, rusun ---
-        if (in_array($typeName, ['kos', 'apartemen', 'rusun / condominium'])) {
-            return [
-                ['key' => 'floor',       'label' => 'Jumlah Lantai',      'type' => 'number', 'required' => false],
-                ['key' => 'building_area','label' => 'Luas Bangunan (m²)','type' => 'number', 'required' => false],
-                ['key' => 'year_built',  'label' => 'Tahun Dibangun',     'type' => 'number', 'required' => false],
-                ['key' => 'parking',     'label' => 'Kapasitas Parkir',   'type' => 'text',   'required' => false],
-            ];
-        }
-
-        // --- HUNIAN: hotel ---
-        if (in_array($typeName, ['hotel', 'resort'])) {
-            return [
-                ['key' => 'stars',        'label' => 'Bintang Hotel / Resort','type' => 'select', 'required' => false, 'options' => ['1','2','3','4','5']],
-                ['key' => 'floor',        'label' => 'Jumlah Lantai',     'type' => 'number', 'required' => false],
-                ['key' => 'building_area','label' => 'Luas Bangunan (m²)','type' => 'number', 'required' => false],
-                ['key' => 'land_area',    'label' => 'Luas Tanah (m²)',   'type' => 'number', 'required' => false],
-                ['key' => 'checkin',      'label' => 'Waktu Check-in',    'type' => 'time',   'required' => false],
-                ['key' => 'checkout',     'label' => 'Waktu Check-out',   'type' => 'time',   'required' => false],
-            ];
-        }
-
-        // --- HUNIAN: rumah tapak, villa, homestay, guest house, kontrakan ---
-        if (in_array($typeName, ['rumah tapak', 'villa', 'homestay', 'guest house', 'kontrakan'])) {
-            $fields = [
-                ['key' => 'building_area','label' => 'Luas Bangunan (m²)', 'type' => 'number', 'required' => false],
-                ['key' => 'land_area',    'label' => 'Luas Tanah (m²)',    'type' => 'number', 'required' => false],
-                ['key' => 'floor',        'label' => 'Jumlah Lantai',      'type' => 'number', 'required' => false],
-                ['key' => 'year_built',   'label' => 'Tahun Dibangun',     'type' => 'number', 'required' => false],
-                ['key' => 'electricity',  'label' => 'Daya Listrik (VA)',  'type' => 'select', 'required' => false, 'options' => ['900','1300','2200','3500','4400','5500']],
-                ['key' => 'water_source', 'label' => 'Sumber Air',         'type' => 'select', 'required' => false, 'options' => ['PDAM','Sumur Bor']],
-                ['key' => 'parking',      'label' => 'Kapasitas Parkir',   'type' => 'text',   'required' => false],
-                ['key' => 'capacity',     'label' => 'Kapasitas Maksimal Tamu','type' => 'number','required' => false],
-            ];
-            if ($typeName === 'villa') {
-                $fields[] = ['key' => 'view','label' => 'Pemandangan / View','type' => 'select','required' => false,'options' => ['Pantai','Pegunungan','Hutan','Kota','Danau']];
-            }
-            return $fields;
-        }
-
-        // --- KOMERSIAL: ruko, kios, kantor, gedung, food court ---
-        if (in_array($typeName, ['ruko', 'kios / lapak pasar', 'kantor / workspace', 'gedung', 'food court / booth'])) {
-            $fields = [
-                ['key' => 'building_area','label' => 'Luas Bangunan (m²)','type' => 'number','required' => false],
-                ['key' => 'floor',        'label' => 'Jumlah Lantai',     'type' => 'number','required' => false],
-                ['key' => 'electricity',  'label' => 'Daya Listrik (VA)', 'type' => 'select','required' => false,'options' => ['900','1300','2200','3500','4400','11000']],
-                ['key' => 'bathroom',     'label' => 'Kamar Mandi Dalam', 'type' => 'radio', 'required' => false,'options' => ['Ya','Tidak']],
-            ];
-            if (in_array($typeName, ['kantor / workspace', 'gedung'])) {
-                $fields[] = ['key' => 'capacity',     'label' => 'Kapasitas Orang',  'type' => 'number','required' => false];
-                $fields[] = ['key' => 'ceiling_height','label' => 'Tinggi Plafon (m)','type' => 'number','required' => false];
-            }
-            return $fields;
-        }
-
-        // --- RUANG ACARA / LAINNYA ---
-        if (in_array($typeName, ['aula', 'ruang meeting', 'studio'])) {
-            return [
-                ['key' => 'capacity',     'label' => 'Kapasitas Maksimal', 'type' => 'number', 'required' => false],
-                ['key' => 'building_area','label' => 'Luas Ruangan (m²)',  'type' => 'number', 'required' => false],
-                ['key' => 'floor',        'label' => 'Berada di Lantai',   'type' => 'number', 'required' => false],
-            ];
-        }
-
-        // --- PENYIMPANAN & INDUSTRI ---
-        if (in_array($typeName, ['gudang', 'pabrik / manufaktur', 'cold storage'])) {
-            return [
-                ['key' => 'land_area',      'label' => 'Luas Tanah (m²)',         'type' => 'number','required' => false],
-                ['key' => 'building_area',  'label' => 'Luas Bangunan (m²)',       'type' => 'number','required' => false],
-                ['key' => 'ceiling_height', 'label' => 'Tinggi Plafon (m)',        'type' => 'number','required' => false],
-                ['key' => 'year_built',     'label' => 'Tahun Dibangun',           'type' => 'number','required' => false],
-            ];
-        }
-
-        // --- TANAH & LAHAN ---
-        if (in_array($typeName, ['lahan', 'lahan pertanian / perkebunan'])) {
-            return [
-                ['key' => 'land_area',   'label' => 'Luas Tanah (m²)',        'type' => 'number','required' => true],
-                ['key' => 'certificate', 'label' => 'Sertifikat Kepemilikan', 'type' => 'select','required' => false,'options' => ['SHM','HGB','AJB','Girik','Lainnya']],
-                ['key' => 'terrain',     'label' => 'Kontur Tanah',           'type' => 'select','required' => false,'options' => ['Datar','Miring','Berbukit']],
-            ];
-        }
-
-        // --- MEDIA IKLAN ---
-        if (in_array($typeName, ['baliho', 'billboard / videotron', 'neon box / titik toko'])) {
-            return [
-                ['key' => 'display_type', 'label' => 'Jenis Tampilan',    'type' => 'select','required' => true,'options' => ['Konvensional','Elektronik']],
-                ['key' => 'dimension',    'label' => 'Dimensi (m)',        'type' => 'text',  'required' => false],
-                ['key' => 'sides',        'label' => 'Jumlah Sisi Tampil', 'type' => 'select','required' => false,'options' => ['1','2']],
-                ['key' => 'orientation',  'label' => 'Orientasi',          'type' => 'select','required' => false,'options' => ['Horizontal','Vertical']],
-                ['key' => 'lighting',     'label' => 'Penerangan Malam',   'type' => 'checkbox','required' => false],
-                ['key' => 'resolution',   'label' => 'Resolusi Layar',     'type' => 'text',  'required' => false],
-            ];
-        }
-
-        return [];
-    }
-
-    /**
-     * Template field detail untuk unit (kamar/ruang).
-     * Hanya berlaku jika asset_type.allow_units = true.
-     */
-    private function getUnitDetailFields(int $typeId): array
-    {
-        $type = asset_type::find($typeId);
-        $typeName = $type ? strtolower($type->name) : '';
-
-        if (in_array($typeName, ['kos', 'hotel', 'resort', 'apartemen', 'rusun / condominium', 'guest house'])) {
-            return [
-                ['key' => 'room_size', 'label' => 'Ukuran Unit (m²)', 'type' => 'number', 'required' => true],
-                ['key' => 'bed_type',  'label' => 'Tipe Kasur',         'type' => 'select', 'required' => false, 'options' => ['Single','Double','Queen','King','Twin']],
-                ['key' => 'bathroom',  'label' => 'Kamar Mandi',        'type' => 'select', 'required' => false, 'options' => ['Dalam','Luar','Bersama']],
-            ];
-        }
-
-        return [];
     }
 }

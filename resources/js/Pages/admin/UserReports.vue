@@ -237,14 +237,14 @@ function exportReports() {
                         </div>
                         <select
                             v-model="typeFilter"
-                            class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                            class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                         >
                             <option>Semua</option>
                             <option v-for="type in reportTypes" :key="type">{{ type }}</option>
                         </select>
                         <select
                             v-model="statusFilter"
-                            class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                            class="rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                         >
                             <option>Semua</option>
                             <option v-for="status in reportStatuses" :key="status">{{ status }}</option>
@@ -377,7 +377,7 @@ function exportReports() {
                             <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Status laporan</label>
                             <select
                                 v-model="reviewStatus"
-                                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                             >
                                 <option v-for="status in reportStatuses" :key="status">{{ status }}</option>
                             </select>
@@ -389,7 +389,7 @@ function exportReports() {
                                 v-model="reviewNote"
                                 rows="2"
                                 placeholder="Tulis tindakan yang sudah atau akan dilakukan..."
-                                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20 resize-none"
+                                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20 resize-none"
                             ></textarea>
                         </div>
 
@@ -405,7 +405,7 @@ function exportReports() {
                                     <label class="block text-[11px] font-semibold text-slate-500 mb-1.5">Jenis sanksi</label>
                                     <select
                                         v-model="sanctionType"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                                     >
                                         <option v-for="type in sanctionTypes" :key="type">{{ type }}</option>
                                     </select>
@@ -417,7 +417,7 @@ function exportReports() {
                                         type="number"
                                         min="1"
                                         v-model.number="suspendDays"
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20"
+                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20"
                                     />
                                 </div>
 
@@ -427,7 +427,7 @@ function exportReports() {
                                         v-model="sanctionReason"
                                         rows="2"
                                         placeholder="Contoh: Pelanggaran berulang terhadap kebijakan komunitas."
-                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#0A2540]/20 resize-none"
+                                        class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20 resize-none"
                                     ></textarea>
                                 </div>
 

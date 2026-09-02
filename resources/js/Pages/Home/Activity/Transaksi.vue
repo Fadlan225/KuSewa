@@ -746,7 +746,7 @@ const processCancellation = () => {
             <div class="mb-2">
               <label class="block font-bold text-gray-800 mb-2">Alasan Pembatalan <span class="text-red-500">*</span></label>
               <div class="relative">
-                <select v-model="cancelReason" class="w-full appearance-none bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:border-[#0A2540] focus:ring-2 focus:ring-[#0A2540]/20 transition-all">
+                <select v-model="cancelReason" class="w-full appearance-none bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:border-[#FFC000] focus:ring-2 focus:ring-[#FFC000]/20 transition-all">
                   <option value="" disabled selected>Pilih alasan...</option>
                   <option value="salah_tanggal">Salah pilih tanggal/jadwal</option>
                   <option value="nemu_lain">Menemukan opsi penyewaan lain</option>
@@ -762,7 +762,7 @@ const processCancellation = () => {
               <!-- Input text for 'Lainnya' -->
               <transition name="fade">
                 <div v-if="cancelReason === 'lainnya'" class="mt-3">
-                  <input type="text" v-model="cancelReasonOther" placeholder="Tuliskan alasan spesifik..." class="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl focus:outline-none focus:border-[#0A2540] focus:ring-2 focus:ring-[#0A2540]/20 transition-all text-sm" />
+                  <input type="text" v-model="cancelReasonOther" placeholder="Tuliskan alasan spesifik..." class="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl focus:outline-none focus:border-[#FFC000] focus:ring-2 focus:ring-[#FFC000]/20 transition-all text-sm" />
                 </div>
               </transition>
             </div>

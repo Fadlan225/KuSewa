@@ -163,7 +163,7 @@ const handleLogout = () => {
             <!-- Navigation Links Wrapper with Fade Effect -->
             <div class="relative flex-1 min-h-0 -mx-2">
                 <div class="h-full overflow-y-auto no-scrollbar px-2 pb-6">
-                    <nav class="space-y-2 text-xs">
+                    <nav class="space-y-2 text-base">
                 <template v-for="(item, idx) in menu" :key="idx">
                     <!-- Jika ada item divider -->
                     <div v-if="item.divider" class="pt-2 pb-1">
@@ -178,8 +178,8 @@ const handleLogout = () => {
                             :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200 w-full', isCollapsed ? 'justify-center' : 'justify-between']"
                         >
                             <div class="flex items-center gap-3">
-                                <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-4 text-center" />
-                                <component v-else :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']" />
+                                <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-6 h-6 text-center" />
+                                <component v-else :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-6 h-6 text-center']" />
                                 <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                             </div>
 
@@ -203,7 +203,7 @@ const handleLogout = () => {
         <!-- Bottom Navigation Links -->
         <div v-if="bottomMenu && bottomMenu.length" class="shrink-0 pt-4 mt-auto">
             <hr class="border-slate-100 mb-4" />
-            <nav class="space-y-2 text-xs">
+            <nav class="space-y-2 text-base">
                 <template v-for="(item, idx) in bottomMenu" :key="idx">
                     <div v-if="item.divider" class="pt-2 pb-1">
                         <hr class="border-slate-100 border-dashed" />
@@ -215,8 +215,8 @@ const handleLogout = () => {
                         :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200 w-full', isCollapsed ? 'justify-center' : 'justify-between']"
                     >
                         <div class="flex items-center gap-3">
-                            <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-4 text-center" />
-                            <component v-else :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-4 text-center']" />
+                            <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-6 h-6 text-center" />
+                            <component v-else :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-6 h-6 text-center']" />
                             <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                         </div>
                         <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">
