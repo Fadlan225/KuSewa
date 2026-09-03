@@ -28,6 +28,7 @@ class asset extends Model
         'longitude',
         'status',
         'draft_payload',
+        'rejection_reason',
     ];
 
     protected $casts = [

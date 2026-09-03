@@ -191,7 +191,11 @@ const handleLogoutConfirm = () => {
                             <Megaphone class="w-3.5 h-3.5" />
                             Promosikan Aset Anda
                         </button>
-                        <Link v-else-if="isVerifiedOwner || isAdmin" :href="route('owner.dashboard')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
+                        <Link v-else-if="isAdmin" :href="route('admin.dashboard')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
+                            <Megaphone class="w-3.5 h-3.5" />
+                            Dashboard Admin
+                        </Link>
+                        <Link v-else-if="isVerifiedOwner" :href="route('owner.dashboard')" class="flex items-center gap-1.5 hover:text-[#FFC000] transition-colors">
                             <Megaphone class="w-3.5 h-3.5" />
                             Dashboard Owner
                         </Link>
@@ -964,7 +968,33 @@ const handleLogoutConfirm = () => {
                                     </template>
 
                                     <!-- 3. Option to go to Dashboard IF user has owner_profile -->
-                                    <template v-if="isVerifiedOwner">
+                                    <template v-if="isAdmin">
+                                        <div class="h-px bg-gray-100 my-2"></div>
+                                        <Link
+                                            :href="route('admin.dashboard')"
+                                            @click="isUserMenuOpen = false"
+                                            class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1 block"
+                                        >
+                                            <!-- Ilustrasi (Ditempatkan di sudut kanan) -->
+                                            <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
+                                                <div class="w-full h-full flex items-center justify-end pr-4 text-[#0A2540] opacity-10 group-hover:opacity-20 transition-opacity">
+                                                    <Shield class="text-5xl" />
+                                                </div>
+                                            </div>
+
+                                            <!-- Konten Teks -->
+                                            <div class="relative z-10 w-3/4 pr-2">
+                                                <h3 class="text-sm font-bold text-[#0A2540] group-hover:text-amber-600 transition-colors">
+                                                    Dashboard Admin
+                                                </h3>
+                                                <p class="text-[11px] text-gray-500 leading-snug mt-1 font-normal">
+                                                    Kelola sistem, pengguna, dan pengaturan aplikasi.
+                                                </p>
+                                            </div>
+                                        </Link>
+                                        <div class="h-px bg-gray-100 my-2"></div>
+                                    </template>
+                                    <template v-else-if="isVerifiedOwner">
                                         <div class="h-px bg-gray-100 my-2"></div>
                                         <Link
                                             :href="route('owner.dashboard')"

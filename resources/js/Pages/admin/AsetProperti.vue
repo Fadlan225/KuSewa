@@ -1,80 +1,50 @@
 <script setup>
-import { Search, X } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { Search, X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { ref } from 'vue';
+import { Head, router, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
-const searchQuery = ref('');
-const statusFilter = ref('Semua');
-const typeFilter = ref('Semua');
-const statuses = ['Semua', 'Publikasi', 'Draft', 'Ditolak'];
-const propertyTypes = ['Semua', 'Kost', 'Apartemen', 'Ruko', 'Rumah', 'Gudang'];
-
-const properties = ref([
-    { id: 1, name: 'Kos Mewah Pondok Indah', owner: 'Dian Prasetyo', type: 'Kost', city: 'Jakarta Selatan', price: 'Rp 2.400.000/bulan', status: 'Publikasi', rooms: 12 },
-    { id: 2, name: 'Apartemen Sakura Residence', owner: 'Fajar Maulana', type: 'Apartemen', city: 'Bandung', price: 'Rp 3.200.000/bulan', status: 'Draft', rooms: 8 },
-    { id: 3, name: 'Ruko Elok Sentra Niaga', owner: 'Ratna Sari', type: 'Ruko', city: 'Surabaya', price: 'Rp 1.350.000/hari', status: 'Publikasi', rooms: 1 },
-    { id: 4, name: 'Villa Bukit Hijau', owner: 'Toni Hidayat', type: 'Rumah', city: 'Bogor', price: 'Rp 4.500.000/malam', status: 'Ditolak', rooms: 5 },
-]);
-
-const filteredProperties = computed(() => {
-    return properties.value.filter(item => {
-        const matchesStatus = statusFilter.value === 'Semua' || item.status === statusFilter.value;
-        const matchesType = typeFilter.value === 'Semua' || item.type === typeFilter.value;
-        const matchesSearch = [item.name, item.owner, item.city, item.type]
-            .join(' ')
-            .toLowerCase()
-            .includes(searchQuery.value.toLowerCase());
-        return matchesStatus && matchesType && matchesSearch;
-    });
+const props = defineProps({
+    assets:     { type: Object, default: () => ({ data: [] }) },
+    assetTypes: { type: Array,  default: () => [] },
+    stats:      { type: Object, default: () => ({ total: 0, approved: 0, pending: 0, rejected: 0, draft: 0 }) },
+    filters:    { type: Object, default: () => ({}) },
 });
 
-const totals = computed(() => ({
-    totalProperties: properties.value.length,
-    published: properties.value.filter(item => item.status === 'Publikasi').length,
-    draft: properties.value.filter(item => item.status === 'Draft').length,
-    rejected: properties.value.filter(item => item.status === 'Ditolak').length,
-}));
+const searchQuery  = ref(props.filters.search || '');
+const statusFilter = ref(props.filters.status || 'Semua');
+const typeFilter   = ref(props.filters.type   || 'Semua');
 
-// ==== Statistik: state & logic ====
-const showStatsModal = ref(false);
+const statuses     = ['Semua', 'approved', 'pending', 'rejected', 'draft'];
+const statusLabels = { Semua: 'Semua', approved: 'Disetujui', pending: 'Pending', rejected: 'Ditolak', draft: 'Draft' };
 
-const byType = computed(() => {
-    const map = {};
-    for (const item of properties.value) {
-        map[item.type] = (map[item.type] || 0) + 1;
-    }
-    return Object.entries(map)
-        .map(([type, count]) => ({ type, count }))
-        .sort((a, b) => b.count - a.count);
-});
+const selectedAsset   = ref(null);
+const showStatsModal  = ref(false);
 
-const byCity = computed(() => {
-    const map = {};
-    for (const item of properties.value) {
-        map[item.city] = (map[item.city] || 0) + 1;
-    }
-    return Object.entries(map)
-        .map(([city, count]) => ({ city, count }))
-        .sort((a, b) => b.count - a.count);
-});
+let searchTimer = null;
+const applyFilters = () => {
+    router.get(route('admin.aset-properti'), {
+        search: searchQuery.value || undefined,
+        status: statusFilter.value !== 'Semua' ? statusFilter.value : undefined,
+        type:   typeFilter.value   !== 'Semua' ? typeFilter.value   : undefined,
+    }, { preserveState: true, replace: true });
+};
 
-const totalRooms = computed(() =>
-    properties.value.reduce((sum, item) => sum + (item.rooms || 0), 0)
-);
+const applySearch = () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(applyFilters, 400);
+};
 
-const publishRate = computed(() => {
-    if (properties.value.length === 0) return 0;
-    return Math.round((totals.value.published / properties.value.length) * 100);
-});
+const formatDate   = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+const formatRupiah = (v) => v ? `Rp ${Number(v).toLocaleString('id-ID')}` : '-';
+const thumbnail    = (asset) => asset.thumbnail_images?.[0]?.image ? '/storage/' + asset.thumbnail_images[0].image : null;
 
-function openStats() {
-    showStatsModal.value = true;
-}
-
-function closeStats() {
-    showStatsModal.value = false;
-}
+const statusClass = (s) => ({
+    approved: 'bg-emerald-50 text-emerald-600 border-emerald-200/60',
+    pending:  'bg-amber-50 text-amber-600 border-amber-200/60',
+    rejected: 'bg-rose-50 text-rose-600 border-rose-200/60',
+    draft:    'bg-slate-100 text-slate-500 border-slate-200',
+}[s] ?? 'bg-slate-50 text-slate-500 border-slate-200');
 </script>
 
 <template>
@@ -82,27 +52,27 @@ function closeStats() {
 
     <DashboardLayout role="Admin" title="Aset Properti" description="Kelola semua listing properti, status publikasi, dan detail pemilik.">
         <template #header-actions>
-            <div class="flex items-center gap-3 w-64 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60">
-                <Search class="text-slate-400 text-xs" />
+            <div class="flex items-center gap-3 w-64 bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200/60 focus-within:border-[#FFC000] focus-within:ring-1 focus-within:ring-[#FFC000] transition-all">
+                <Search class="text-slate-400 w-3.5 h-3.5 shrink-0" />
                 <input
                     type="text"
                     v-model="searchQuery"
-                    placeholder="Cari properti..."
+                    @input="applySearch"
+                    placeholder="Cari properti, pemilik..."
                     class="w-full text-xs bg-transparent focus:outline-none placeholder-slate-400 text-slate-700"
                 />
             </div>
-            <button class="rounded-2xl bg-[#0A2540] px-4 py-2.5 text-xs font-bold text-white hover:bg-slate-900 transition">Tambah Aset</button>
         </template>
 
             <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-end gap-4">
-
                     <div class="flex flex-wrap items-center gap-2 text-xs">
-                        <select v-model="statusFilter" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20">
-                            <option v-for="status in statuses" :key="status">{{ status }}</option>
+                        <select v-model="statusFilter" @change="applyFilters" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20">
+                            <option v-for="s in statuses" :key="s" :value="s">{{ statusLabels[s] }}</option>
                         </select>
-                        <select v-model="typeFilter" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20">
-                            <option v-for="type in propertyTypes" :key="type">{{ type }}</option>
+                        <select v-model="typeFilter" @change="applyFilters" class="rounded-2xl border border-slate-200 bg-white px-4 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#FFC000]/20">
+                            <option value="Semua">Semua Tipe</option>
+                            <option v-for="t in assetTypes" :key="t" :value="t">{{ t }}</option>
                         </select>
                     </div>
                 </div>
@@ -110,22 +80,22 @@ function closeStats() {
                 <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
                     <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
                         <p class="text-[11px] font-semibold uppercase text-slate-400">Total Properti</p>
-                        <p class="mt-3 text-3xl font-extrabold text-slate-900">{{ totals.totalProperties }}</p>
+                        <p class="mt-3 text-3xl font-extrabold text-slate-900">{{ stats.total }}</p>
                         <p class="text-[11px] text-slate-500 mt-2">Jumlah semua listing properti.</p>
                     </div>
                     <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
-                        <p class="text-[11px] font-semibold uppercase text-slate-400">Publikasi</p>
-                        <p class="mt-3 text-3xl font-extrabold text-emerald-600">{{ totals.published }}</p>
+                        <p class="text-[11px] font-semibold uppercase text-slate-400">Disetujui</p>
+                        <p class="mt-3 text-3xl font-extrabold text-emerald-600">{{ stats.approved }}</p>
                         <p class="text-[11px] text-slate-500 mt-2">Properti sudah live.</p>
                     </div>
                     <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
-                        <p class="text-[11px] font-semibold uppercase text-slate-400">Draft</p>
-                        <p class="mt-3 text-3xl font-extrabold text-slate-900">{{ totals.draft }}</p>
-                        <p class="text-[11px] text-slate-500 mt-2">Properti belum selesai.</p>
+                        <p class="text-[11px] font-semibold uppercase text-slate-400">Draft / Pending</p>
+                        <p class="mt-3 text-3xl font-extrabold text-slate-900">{{ stats.draft + stats.pending }}</p>
+                        <p class="text-[11px] text-slate-500 mt-2">Properti belum selesai / belum divalidasi.</p>
                     </div>
                     <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
                         <p class="text-[11px] font-semibold uppercase text-slate-400">Ditolak</p>
-                        <p class="mt-3 text-3xl font-extrabold text-rose-600">{{ totals.rejected }}</p>
+                        <p class="mt-3 text-3xl font-extrabold text-rose-600">{{ stats.rejected }}</p>
                         <p class="text-[11px] text-slate-500 mt-2">Properti yang tidak disetujui.</p>
                     </div>
                 </div>
@@ -158,31 +128,47 @@ function closeStats() {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <tr v-for="item in filteredProperties" :key="item.id" class="hover:bg-slate-50/70 transition-colors">
-                                    <td class="py-4 px-5 font-semibold text-slate-900">{{ item.name }}</td>
-                                    <td class="py-4 px-4 text-slate-600">{{ item.owner }}</td>
-                                    <td class="py-4 px-4 text-slate-600">{{ item.type }}</td>
-                                    <td class="py-4 px-4 text-slate-600">{{ item.city }}</td>
-                                    <td class="py-4 px-4 text-slate-600">{{ item.price }}</td>
+                                <tr v-for="item in assets.data" :key="item.id" class="hover:bg-slate-50/70 transition-colors">
+                                    <td class="py-4 px-5">
+                                        <p class="font-semibold text-slate-900">{{ item.title }}</p>
+                                        <p class="text-[10px] text-slate-400 mt-0.5">{{ item.city?.name ?? '-' }}</p>
+                                    </td>
+                                    <td class="py-4 px-4 text-slate-600">{{ item.owner_profile?.user?.name ?? '-' }}</td>
+                                    <td class="py-4 px-4 text-slate-600">{{ item.type?.name ?? '-' }}</td>
+                                    <td class="py-4 px-4 text-slate-600">
+                                        {{ item.pricings?.[0] ? formatRupiah(item.pricings[0].price) + '/' + item.pricings[0].rental_unit : '-' }}
+                                    </td>
                                     <td class="py-4 px-4">
-                                        <span :class="[
-                                            'inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-bold',
-                                            item.status === 'Publikasi' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : item.status === 'Draft' ? 'bg-slate-50 text-slate-700 border border-slate-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
-                                        ]">
-                                            {{ item.status }}
+                                        <span :class="['inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold', statusClass(item.status)]">
+                                            {{ statusLabels[item.status] ?? item.status }}
                                         </span>
                                     </td>
+                                    <td class="py-4 px-4 text-slate-500 text-[11px] whitespace-nowrap">{{ formatDate(item.created_at) }}</td>
                                     <td class="py-4 px-5 text-right whitespace-nowrap">
-                                        <button class="rounded-full bg-slate-900 px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-slate-800 transition">Edit</button>
+                                        <button @click="selectedAsset = item" class="rounded-full bg-slate-900 px-4 py-1.5 text-[11px] font-semibold text-white hover:bg-slate-800 transition">Detail</button>
                                     </td>
                                 </tr>
-                                <tr v-if="filteredProperties.length === 0">
+                                <tr v-if="assets.data.length === 0">
                                     <td colspan="7" class="py-12 text-center text-slate-400">
                                         Tidak ada properti sesuai filter.
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                <div v-if="assets.last_page > 1" class="flex items-center justify-between text-xs text-slate-500">
+                    <span>Menampilkan {{ assets.from }}–{{ assets.to }} dari {{ assets.total }} aset</span>
+                    <div class="flex items-center gap-1">
+                        <Link v-if="assets.prev_page_url" :href="assets.prev_page_url" preserve-state class="rounded-lg border border-slate-200 px-3 py-1.5 hover:bg-slate-50 transition flex items-center gap-1">
+                            <ChevronLeft class="w-3.5 h-3.5" /> Prev
+                        </Link>
+                        <span class="px-3 py-1.5 font-semibold text-slate-700">{{ assets.current_page }} / {{ assets.last_page }}</span>
+                        <Link v-if="assets.next_page_url" :href="assets.next_page_url" preserve-state class="rounded-lg border border-slate-200 px-3 py-1.5 hover:bg-slate-50 transition flex items-center gap-1">
+                            Next <ChevronRight class="w-3.5 h-3.5" />
+                        </Link>
                     </div>
                 </div>
             </div>

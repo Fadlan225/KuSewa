@@ -5,37 +5,74 @@ import { Head, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 
 const props = defineProps({
-    assets: { type: Array, default: () => [] },
+    assets:  { type: Object, default: () => ({ data: [] }) },
+    stats:   { type: Object, default: () => ({ pending: 0, approved: 0, rejected: 0, total: 0 }) },
     filters: { type: Object, default: () => ({}) },
 });
 
-const activeFilter = ref('Pending');
-const searchQuery = ref(props.filters.search || '');
-const filters = ['Semua', 'Pending', 'Disetujui', 'Ditolak'];
+const activeFilter = ref(props.filters.status || 'Semua');
+const searchQuery  = ref(props.filters.search || '');
+const filters      = ['Semua', 'Pending', 'Disetujui', 'Ditolak'];
+const statusMap    = { Semua: undefined, Pending: 'pending', Disetujui: 'approved', Ditolak: 'rejected' };
 const selectedAsset = ref(null);
 
-const filteredAssets = computed(() => {
-    return props.assets.filter(item => {
-        const matchesFilter = activeFilter.value === 'Semua' || item.status === activeFilter.value;
-        const matchesSearch = [item.title, item.owner, item.location, item.category]
-            .join(' ').toLowerCase().includes(searchQuery.value.toLowerCase());
-        return matchesFilter && matchesSearch;
+const rejectReason   = ref('');
+const showRejectForm = ref(false);
+const isSubmitting   = ref(false);
+
+let searchTimer = null;
+const applyFilter = (f) => {
+    activeFilter.value = f;
+    router.get(route('admin.validasi-aset'), {
+        search: searchQuery.value || undefined,
+        status: statusMap[f],
+    }, { preserveState: true, replace: true });
+};
+const applySearch = () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => applyFilter(activeFilter.value), 400);
+};
+
+const refresh = () => applyFilter(activeFilter.value);
+
+const reviewAsset = (asset) => {
+    selectedAsset.value = asset;
+    showRejectForm.value = false;
+    rejectReason.value = '';
+};
+
+const approveAsset = (id) => {
+    isSubmitting.value = true;
+    router.patch(route('admin.validasi-aset.approve', id), {}, {
+        preserveScroll: true,
+        onSuccess: () => { selectedAsset.value = null; isSubmitting.value = false; },
+        onError:   () => { isSubmitting.value = false; },
     });
-});
+};
 
-const totals = computed(() => ({
-    pendingAssets: props.assets.filter(item => item.status === 'Pending').length,
-    approvedAssets: props.assets.filter(item => item.status === 'Disetujui').length,
-    rejectedAssets: props.assets.filter(item => item.status === 'Ditolak').length,
-    totalAssets: props.assets.length,
-}));
+const rejectAsset = (id) => {
+    if (!rejectReason.value.trim()) return;
+    isSubmitting.value = true;
+    router.patch(route('admin.validasi-aset.reject', id), { reason: rejectReason.value }, {
+        preserveScroll: true,
+        onSuccess: () => { selectedAsset.value = null; showRejectForm.value = false; isSubmitting.value = false; },
+        onError:   () => { isSubmitting.value = false; },
+    });
+};
 
-const refresh = () => router.get(route('admin.validasi-aset'), { search: searchQuery.value }, { preserveState: true, replace: true });
-const updateStatus = (id, action) => router.patch(route(`admin.validasi-aset.${action}`, id), {}, { preserveScroll: true });
-const reviewAsset = (asset) => { selectedAsset.value = asset; };
 const formatRupiah = (value) => value ? `Rp ${Number(value).toLocaleString('id-ID')}` : '-';
-const assetImages = (asset) => asset?.images?.length ? asset.images : ['https://placehold.co/800x500?text=Belum+Ada+Foto'];
+const formatDate   = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+const assetImages  = (asset) => {
+    const imgs = asset?.images?.map(i => i.image ? '/storage/' + i.image : null).filter(Boolean);
+    return imgs?.length ? imgs : ['https://placehold.co/800x500?text=Belum+Ada+Foto'];
+};
 const detailLabel = (key) => key.replaceAll('_', ' ');
+const statusClass = (s) => ({
+    pending:  'bg-amber-50 text-amber-700 ring-amber-200',
+    approved: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+    rejected: 'bg-rose-50 text-rose-700 ring-rose-200',
+}[s] ?? 'bg-slate-50 text-slate-700 ring-slate-200');
+const statusLabel = (s) => ({ pending: 'Pending', approved: 'Disetujui', rejected: 'Ditolak' }[s] ?? s);
 </script>
 
 <template>
@@ -69,11 +106,11 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                         <button
                             v-for="filter in filters"
                             :key="filter"
-                            @click="activeFilter = filter"
+                            @click="applyFilter(filter)"
                             :class="[
                                 'px-4 py-1.5 rounded-md text-sm font-medium transition-all duration-200',
-                                activeFilter === filter 
-                                    ? 'bg-white text-[#0A2540] shadow-sm ring-1 ring-slate-200' 
+                                activeFilter === filter
+                                    ? 'bg-white text-[#0A2540] shadow-sm ring-1 ring-slate-200'
                                     : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
                             ]"
                         >
@@ -86,19 +123,19 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-slate-100 overflow-hidden">
                     <div class="p-5 flex flex-col justify-center">
                         <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Menunggu Verifikasi</p>
-                        <p class="mt-1 text-2xl font-bold text-amber-600">{{ totals.pendingAssets }}</p>
+                        <p class="mt-1 text-2xl font-bold text-amber-600">{{ stats.pending }}</p>
                     </div>
                     <div class="p-5 flex flex-col justify-center">
                         <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Aset Disetujui</p>
-                        <p class="mt-1 text-2xl font-bold text-emerald-600">{{ totals.approvedAssets }}</p>
+                        <p class="mt-1 text-2xl font-bold text-emerald-600">{{ stats.approved }}</p>
                     </div>
                     <div class="p-5 flex flex-col justify-center">
                         <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Aset Ditolak</p>
-                        <p class="mt-1 text-2xl font-bold text-rose-600">{{ totals.rejectedAssets }}</p>
+                        <p class="mt-1 text-2xl font-bold text-rose-600">{{ stats.rejected }}</p>
                     </div>
                     <div class="p-5 flex flex-col justify-center">
                         <p class="text-xs font-semibold uppercase text-slate-400 tracking-wider">Total Keseluruhan</p>
-                        <p class="mt-1 text-2xl font-bold text-[#0A2540]">{{ totals.totalAssets }}</p>
+                        <p class="mt-1 text-2xl font-bold text-[#0A2540]">{{ stats.total }}</p>
                     </div>
                 </div>
 
@@ -123,21 +160,16 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    <tr v-for="item in filteredAssets" :key="item.id" class="hover:bg-slate-50 transition-colors group">
+                                    <tr v-for="item in assets.data" :key="item.id" class="hover:bg-slate-50 transition-colors group">
                                         <td class="py-3 px-5 font-semibold text-slate-800">{{ item.title }}</td>
-                                        <td class="py-3 px-4 text-slate-600">{{ item.owner }}</td>
+                                        <td class="py-3 px-4 text-slate-600">{{ item.owner_profile?.user?.name ?? '-' }}</td>
                                         <td class="py-3 px-4 text-slate-600">
-                                            {{ item.location }} <span class="text-slate-300 mx-1">|</span> {{ item.category }}
+                                            {{ item.city?.name ?? '-' }} <span class="text-slate-300 mx-1">|</span> {{ item.type?.name ?? '-' }}
                                         </td>
-                                        <td class="py-3 px-4 text-slate-500 text-xs">{{ item.submitted }}</td>
+                                        <td class="py-3 px-4 text-slate-500 text-xs">{{ formatDate(item.created_at) }}</td>
                                         <td class="py-3 px-4">
-                                            <span :class="[
-                                                'inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset',
-                                                item.status === 'Pending' ? 'bg-amber-50 text-amber-700 ring-amber-200' : 
-                                                item.status === 'Disetujui' ? 'bg-emerald-50 text-emerald-700 ring-emerald-200' : 
-                                                'bg-rose-50 text-rose-700 ring-rose-200'
-                                            ]">
-                                                {{ item.status }}
+                                            <span :class="['inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold ring-1 ring-inset', statusClass(item.status)]">
+                                                {{ statusLabel(item.status) }}
                                             </span>
                                         </td>
                                         <td class="py-3 px-5 text-right">
@@ -146,7 +178,7 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                                             </div>
                                         </td>
                                     </tr>
-                                    <tr v-if="filteredAssets.length === 0">
+                                    <tr v-if="assets.data.length === 0">
                                         <td colspan="6" class="py-10 text-center text-slate-500">Tidak ada data aset yang sesuai.</td>
                                     </tr>
                                 </tbody>
@@ -217,9 +249,42 @@ const detailLabel = (key) => key.replaceAll('_', ' ');
                                 <div class="flex justify-between text-xs"><span class="text-slate-400">Tanggal Daftar</span><b>{{ selectedAsset.submitted || '-' }}</b></div>
                             </div>
                             <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-xs space-y-2"><h3 class="text-xs font-bold text-slate-800 uppercase tracking-wide mb-1">Lokasi</h3><div class="flex justify-between text-xs"><span class="text-slate-400">Provinsi</span><b>{{ selectedAsset.province || '-' }}</b></div><div class="flex justify-between text-xs"><span class="text-slate-400">Kota</span><b>{{ selectedAsset.location || '-' }}</b></div><div class="text-xs text-slate-500 pt-2 border-t border-slate-100">{{ selectedAsset.address || '-' }}</div></div>
-                            <div class="flex gap-2">
-                                <button v-if="selectedAsset.status === 'Pending'" @click="updateStatus(selectedAsset.id, 'reject'); selectedAsset = null" class="flex-1 border border-rose-200 text-rose-700 font-bold px-4 py-3 rounded-xl hover:bg-rose-50 text-xs"><X class="mr-1" />Tolak Aset</button>
-                                <button v-if="selectedAsset.status === 'Pending'" @click="updateStatus(selectedAsset.id, 'approve'); selectedAsset = null" class="flex-1 bg-emerald-600 text-white font-bold px-4 py-3 rounded-xl hover:bg-emerald-700 text-xs"><Check class="mr-1" />Validasi Aset</button>
+                            <div class="space-y-2">
+                                <!-- Alasan penolakan jika sudah ditolak -->
+                                <div v-if="selectedAsset.rejection_reason" class="bg-rose-50 rounded-xl p-4 border border-rose-200/60">
+                                    <span class="text-[10px] font-bold uppercase text-rose-400 block mb-1">Alasan Penolakan</span>
+                                    <p class="text-xs text-rose-700">{{ selectedAsset.rejection_reason }}</p>
+                                </div>
+
+                                <template v-if="selectedAsset.status === 'pending'">
+                                    <!-- Form reject -->
+                                    <div v-if="showRejectForm" class="space-y-2">
+                                        <label class="text-xs font-bold text-slate-600 block">Alasan Penolakan <span class="text-rose-500">*</span></label>
+                                        <textarea
+                                            v-model="rejectReason"
+                                            rows="3"
+                                            placeholder="Jelaskan alasan penolakan secara singkat dan jelas..."
+                                            class="w-full text-xs border border-slate-300 focus:ring-2 focus:ring-rose-400 focus:border-transparent outline-none rounded-xl px-3 py-2 transition resize-none"
+                                        ></textarea>
+                                        <div class="flex gap-2">
+                                            <button @click="showRejectForm = false" class="flex-1 border border-slate-200 text-slate-600 font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-slate-50 transition">Batal</button>
+                                            <button
+                                                @click="rejectAsset(selectedAsset.id)"
+                                                :disabled="!rejectReason.trim() || isSubmitting"
+                                                class="flex-1 bg-rose-600 text-white font-bold px-3 py-2.5 rounded-xl text-xs hover:bg-rose-700 disabled:opacity-50 transition"
+                                            >{{ isSubmitting ? 'Memproses...' : 'Konfirmasi Tolak' }}</button>
+                                        </div>
+                                    </div>
+
+                                    <div v-else class="flex gap-2">
+                                        <button @click="showRejectForm = true" class="flex-1 border border-rose-200 text-rose-700 font-bold px-4 py-3 rounded-xl hover:bg-rose-50 text-xs"><X class="mr-1 inline w-3.5 h-3.5" />Tolak Aset</button>
+                                        <button
+                                            @click="approveAsset(selectedAsset.id)"
+                                            :disabled="isSubmitting"
+                                            class="flex-1 bg-emerald-600 text-white font-bold px-4 py-3 rounded-xl hover:bg-emerald-700 text-xs disabled:opacity-60 transition"
+                                        ><Check class="mr-1 inline w-3.5 h-3.5" />{{ isSubmitting ? 'Memproses...' : 'Validasi Aset' }}</button>
+                                    </div>
+                                </template>
                             </div>
                         </div>
                     </div>

@@ -171,24 +171,37 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/security', [ProfileController::class, 'security'])->name('profile.security');
 });
 
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', fn() => Inertia::render('admin/dashboard'))->name('dashboard');
     Route::get('/activity-log', fn() => Inertia::render('admin/ActivityLog'))->name('activity-log');
     Route::get('/account-management', fn() => Inertia::render('admin/AdministratorAccountManagement'))->name('account-management');
-    Route::get('/aset-properti', fn() => Inertia::render('admin/AsetProperti'))->name('aset-properti');
     Route::get('/backup-restore', fn() => Inertia::render('admin/BackupRestore'))->name('backup-restore');
     Route::get('/cms-manager', fn() => Inertia::render('admin/CMSManager'))->name('cms-manager');
     Route::get('/kategori-fasilitas', fn() => Inertia::render('admin/KategoriFasilitas'))->name('kategori-fasilitas');
-    Route::get('/pengajuan-akun', fn() => Inertia::render('admin/KelolaPengajuanAkun'))->name('pengajuan-akun');
     Route::get('/payment-system', fn() => Inertia::render('admin/PaymentSystem'))->name('payment-system');
     Route::get('/promo-diskon', fn() => Inertia::render('admin/PromoDiskon'))->name('promo-diskon');
     Route::get('/service-fee', fn() => Inertia::render('admin/ServiceFeeSanksi'))->name('service-fee');
     Route::get('/system-notifications', fn() => Inertia::render('admin/SystemNotifications'))->name('system-notifications');
-    Route::get('/user-management', fn() => Inertia::render('admin/UserAccountManagement'))->name('user-management');
     Route::get('/user-reports', fn() => Inertia::render('admin/UserReports'))->name('user-reports');
-    Route::get('/validasi-aset', fn() => Inertia::render('admin/ValidasiAsetPengajuan'))->name('validasi-aset');
-    Route::patch('/validasi-aset/{id}/approve', fn() => back())->name('validasi-aset.approve');
-    Route::patch('/validasi-aset/{id}/reject', fn() => back())->name('validasi-aset.reject');
+
+    // ── Akun Penyewa & Pemilik ──────────────────────────────────────────
+    Route::get('/user-management', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('user-management');
+    Route::patch('/user-management/{user}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('user-management.toggle-status');
+    Route::delete('/user-management/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('user-management.destroy');
+
+    // ── Pengajuan Akun Owner ────────────────────────────────────────────
+    Route::get('/pengajuan-akun', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'index'])->name('pengajuan-akun');
+    Route::patch('/pengajuan-akun/{id}/approve', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'approve'])->name('pengajuan-akun.approve');
+    Route::patch('/pengajuan-akun/{id}/reject', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'reject'])->name('pengajuan-akun.reject');
+    Route::get('/ktp-photo/{id}', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'serveKtpPhoto'])->name('ktp-photo');
+
+    // ── Aset & Properti ─────────────────────────────────────────────────
+    Route::get('/aset-properti', [\App\Http\Controllers\Admin\AssetManagementController::class, 'index'])->name('aset-properti');
+
+    // ── Validasi Aset ───────────────────────────────────────────────────
+    Route::get('/validasi-aset', [\App\Http\Controllers\Admin\AssetValidationController::class, 'index'])->name('validasi-aset');
+    Route::patch('/validasi-aset/{id}/approve', [\App\Http\Controllers\Admin\AssetValidationController::class, 'approve'])->name('validasi-aset.approve');
+    Route::patch('/validasi-aset/{id}/reject', [\App\Http\Controllers\Admin\AssetValidationController::class, 'reject'])->name('validasi-aset.reject');
 });
 
 // =============================================
