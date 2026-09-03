@@ -10,7 +10,9 @@ class asset_category extends Model
 
     protected $fillable = [
         'name',
+        'description',
         'icon',
+        'is_active',
     ];
 
     public function types()

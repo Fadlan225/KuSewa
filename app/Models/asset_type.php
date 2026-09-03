@@ -9,6 +9,8 @@ class asset_type extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'description',
+        'is_active',
         'allow_units',
         'payment_countdown_minutes',
         'detail_fields',
@@ -98,13 +100,34 @@ class asset_type extends Model
     }
 
     /**
+     * Kategori fasilitas yang WAJIB dipilih untuk tipe aset ini (database-driven).
+     */
+    public function mandatoryFacilityCategories()
+    {
+        return $this->belongsToMany(
+            facility_category::class,
+            'asset_type_mandatory_categories',
+            'asset_type_id',
+            'facility_category_id'
+        )->withTimestamps();
+    }
+
+    /**
      * Get the mandatory facility categories based on asset type name.
+     * @deprecated Gunakan relasi mandatoryFacilityCategories() — hardcoded hanya sebagai fallback.
      */
     public function getMandatoryFacilityCategories()
     {
+        // Prioritaskan data dari database
+        $dbCategories = $this->mandatoryFacilityCategories()->pluck('name')->toArray();
+        if (!empty($dbCategories)) {
+            return $dbCategories;
+        }
+
+        // Fallback ke hardcoded (backward compat)
         $map = [
-            'Kos' => ['Internet', 'Parkir', 'Keamanan', 'Kamar Mandi', 'Perabot Kamar Mandi'],
-            'Hotel' => ['Internet', 'Parkir', 'Lobby', 'Kamar Mandi', 'Perabot Kamar Mandi'],
+            'Kos'       => ['Internet', 'Parkir', 'Keamanan', 'Kamar Mandi', 'Perabot Kamar Mandi'],
+            'Hotel'     => ['Internet', 'Parkir', 'Lobby', 'Kamar Mandi', 'Perabot Kamar Mandi'],
             'Apartemen' => ['Internet', 'Parkir', 'Keamanan', 'Kamar Mandi', 'Perabot Kamar Mandi'],
         ];
 

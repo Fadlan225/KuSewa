@@ -177,7 +177,25 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/account-management', fn() => Inertia::render('admin/AdministratorAccountManagement'))->name('account-management');
     Route::get('/backup-restore', fn() => Inertia::render('admin/BackupRestore'))->name('backup-restore');
     Route::get('/cms-manager', fn() => Inertia::render('admin/CMSManager'))->name('cms-manager');
-    Route::get('/kategori-fasilitas', fn() => Inertia::render('admin/KategoriFasilitas'))->name('kategori-fasilitas');
+    Route::get('/kategori-fasilitas', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'index'])->name('kategori-fasilitas');
+    // Kategori Aset
+    Route::post('/kategori-fasilitas/kategori-aset', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'storeKategoriAset'])->name('kategori-aset.store');
+    Route::put('/kategori-fasilitas/kategori-aset/{kategoriAset}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'updateKategoriAset'])->name('kategori-aset.update');
+    Route::patch('/kategori-fasilitas/kategori-aset/{kategoriAset}/toggle', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'toggleKategoriAset'])->name('kategori-aset.toggle');
+    Route::delete('/kategori-fasilitas/kategori-aset/{kategoriAset}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'destroyKategoriAset'])->name('kategori-aset.destroy');
+    // Jenis Aset
+    Route::post('/kategori-fasilitas/jenis-aset', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'storeJenisAset'])->name('jenis-aset.store');
+    Route::put('/kategori-fasilitas/jenis-aset/{jenisAset}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'updateJenisAset'])->name('jenis-aset.update');
+    Route::patch('/kategori-fasilitas/jenis-aset/{jenisAset}/toggle', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'toggleJenisAset'])->name('jenis-aset.toggle');
+    Route::delete('/kategori-fasilitas/jenis-aset/{jenisAset}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'destroyJenisAset'])->name('jenis-aset.destroy');
+    // Kategori Fasilitas
+    Route::post('/kategori-fasilitas/kategori-fas', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'storeKategoriFasilitas'])->name('kategori-fas.store');
+    Route::put('/kategori-fasilitas/kategori-fas/{kategoriFasilitas}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'updateKategoriFasilitas'])->name('kategori-fas.update');
+    Route::patch('/kategori-fasilitas/kategori-fas/{kategoriFasilitas}/toggle', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'toggleKategoriFasilitas'])->name('kategori-fas.toggle');
+    Route::delete('/kategori-fasilitas/kategori-fas/{kategoriFasilitas}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'destroyKategoriFasilitas'])->name('kategori-fas.destroy');
+    // Kategori Wajib per Tipe Aset
+    Route::put('/kategori-fasilitas/mandatory/{assetType}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'syncMandatoryCategories'])->name('mandatory-fas.sync');
+
     Route::get('/payment-system', fn() => Inertia::render('admin/PaymentSystem'))->name('payment-system');
     Route::get('/promo-diskon', fn() => Inertia::render('admin/PromoDiskon'))->name('promo-diskon');
     Route::get('/service-fee', fn() => Inertia::render('admin/ServiceFeeSanksi'))->name('service-fee');

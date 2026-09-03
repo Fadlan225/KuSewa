@@ -11,6 +11,7 @@ class facility_category extends Model
         'slug',
         'icon',
         'sort_order',
+        'is_active',
     ];
 
     public function facilities()
