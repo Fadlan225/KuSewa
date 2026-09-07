@@ -3,6 +3,7 @@ import { Search, FolderOpen, X, ShieldOff, ShieldCheck, Trash2, ChevronLeft, Che
 import { ref } from 'vue';
 import { Head, router, Link, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
 
 const props = defineProps({
     users:   { type: Object, default: () => ({ data: [] }) },
@@ -18,6 +19,7 @@ const filters      = ['Semua', 'Pemilik', 'Penyewa'];
 
 const selectedUser   = ref(null);
 const confirmDelete  = ref(null);
+const confirmToggle  = ref(null);
 const isDeleting     = ref(false);
 
 // ── Navigasi filter / search ──────────────────────────────────────────────────
@@ -41,11 +43,19 @@ const applySearch = () => {
 };
 
 // ── Aksi suspend / aktifkan ───────────────────────────────────────────────────
-const toggleStatus = (user) => {
-    if (user.role === 'admin') return; // Admin tidak bisa di-suspend dari halaman ini
-    router.patch(route('admin.user-management.toggle-status', user.id), {}, {
+const openConfirmToggle = (user) => {
+    if (user.role === 'admin') return;
+    confirmToggle.value = user;
+};
+
+const executeToggleStatus = () => {
+    if (!confirmToggle.value) return;
+    router.patch(route('admin.user-management.toggle-status', confirmToggle.value.id), {}, {
         preserveScroll: true,
-        onSuccess: () => { selectedUser.value = null; },
+        onSuccess: () => { 
+            confirmToggle.value = null; 
+            selectedUser.value = null; 
+        },
     });
 };
 
@@ -53,6 +63,13 @@ const toggleStatus = (user) => {
 const openConfirmDelete = (user) => {
     if (user.role === 'admin') return; // Admin tidak dapat dihapus
     confirmDelete.value = user;
+};
+
+const handleDeleteClick = () => {
+    if (selectedUser.value) {
+        openConfirmDelete(selectedUser.value);
+        selectedUser.value = null;
+    }
 };
 
 const deleteUser = () => {
@@ -71,6 +88,20 @@ const isOwner    = (user) => !!user.owner_profile;
 const isActive   = (user) => user.status === 'active';
 const isAdminRole = (user) => user.role === 'admin';
 
+const translateRole = (role) => {
+    const map = { customer: 'Penyewa', admin: 'Admin' };
+    return map[role] || role;
+};
+
+const translateOwnerStatus = (status) => {
+    const map = { verified: 'Terverifikasi', pending: 'Menunggu', rejected: 'Ditolak' };
+    return map[status] || status;
+};
+
+const translateGender = (gender) => {
+    const map = { male: 'Laki-laki', female: 'Perempuan' };
+    return map[gender] || gender;
+};
 const ownerBadge = (user) => {
     const s = user.owner_profile?.status;
     if (!s) return null;
@@ -153,19 +184,19 @@ const ownerBadge = (user) => {
                             <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
                                 <th class="py-4 px-6">Nama Pengguna</th>
                                 <th class="py-4 px-4">Email</th>
+                                <th class="py-4 px-4">No Telp</th>
                                 <th class="py-4 px-4">Peran</th>
                                 <th class="py-4 px-4">Status</th>
-                                <th class="py-4 px-4">Bergabung</th>
-                                <th class="py-4 px-6 text-right">Aksi</th>
+                                <th class="py-4 px-6 text-right"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            <tr v-for="user in users.data" :key="user.id" class="hover:bg-slate-50/60 transition-colors">
+                            <tr v-for="user in users.data" :key="user.id" @click="selectedUser = user" class="hover:bg-slate-50/60 transition-colors cursor-pointer group">
                                 <td class="py-4 px-6">
                                     <p class="font-bold text-slate-900">{{ user.name }}</p>
-                                    <p class="text-[10px] text-slate-400">{{ user.phone || '-' }}</p>
                                 </td>
                                 <td class="py-4 px-4 text-slate-600 font-medium">{{ user.email }}</td>
+                                <td class="py-4 px-4 text-slate-500 whitespace-nowrap font-medium">{{ user.phone || '-' }}</td>
                                 <td class="py-4 px-4 whitespace-nowrap">
                                     <span v-if="ownerBadge(user)"
                                         :class="['inline-flex items-center rounded-full border px-3 py-1 text-[10px] font-bold', ownerBadge(user).class]">
@@ -183,32 +214,10 @@ const ownerBadge = (user) => {
                                         {{ isActive(user) ? 'Aktif' : 'Nonaktif' }}
                                     </span>
                                 </td>
-                                <td class="py-4 px-4 text-slate-500 whitespace-nowrap">{{ formatDate(user.created_at) }}</td>
                                 <td class="py-4 px-6 text-right whitespace-nowrap">
-                                    <div class="inline-flex items-center gap-2">
-                                        <button
-                                            @click="selectedUser = user"
-                                            class="rounded-full bg-slate-900 px-4 py-1.5 text-[11px] font-semibold text-white transition hover:bg-slate-800 shadow-sm"
-                                        >
-                                            Detail
-                                        </button>
-                                        <!-- Tombol hapus disembunyikan untuk akun admin -->
-                                        <span
-                                            v-if="isAdminRole(user)"
-                                            class="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/70 px-3 py-1.5 text-[11px] font-semibold text-amber-600 cursor-not-allowed"
-                                            title="Akun administrator tidak dapat dihapus"
-                                        >
-                                            <ShieldAlert class="w-3 h-3" />
-                                            Admin
-                                        </span>
-                                        <button
-                                            v-else
-                                            @click="openConfirmDelete(user)"
-                                            class="rounded-full bg-rose-50 border border-rose-200/70 px-3 py-1.5 text-[11px] font-semibold text-rose-600 transition hover:bg-rose-100"
-                                        >
-                                            Hapus
-                                        </button>
-                                    </div>
+                                    <button class="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 group-hover:text-slate-600 group-hover:bg-slate-200/50 transition">
+                                        <ChevronRight class="w-4 h-4" />
+                                    </button>
                                 </td>
                             </tr>
                             <tr v-if="users.data.length === 0">
@@ -248,97 +257,161 @@ const ownerBadge = (user) => {
         </div>
 
         <!-- MODAL: Detail & Suspend -->
-        <div v-if="selectedUser" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="w-full max-w-xl rounded-3xl bg-white border border-slate-100 shadow-2xl overflow-hidden">
-                <div class="flex items-center justify-between p-5 border-b border-slate-100">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-900">Detail Akun Pengguna</h3>
-                        <p class="text-xs text-slate-500">Informasi lengkap akun penyewa / pemilik</p>
+        <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
+        >
+            <div v-if="selectedUser" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="selectedUser = null"></div>
+                <div class="relative w-full max-w-3xl rounded-xl bg-white border border-slate-100 shadow-2xl flex flex-col max-h-[90vh]">
+                    <div class="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900">Detail Akun Pengguna</h3>
+                            <p class="text-xs text-slate-500">Informasi lengkap akun penyewa / pemilik</p>
+                        </div>
+                        <button @click="selectedUser = null" class="w-9 h-9 rounded-xl bg-slate-100 text-slate-500 hover:text-slate-700 transition flex items-center justify-center">
+                            <X class="w-4 h-4" />
+                        </button>
                     </div>
-                    <button @click="selectedUser = null" class="w-9 h-9 rounded-2xl bg-slate-100 text-slate-500 hover:text-slate-700 transition flex items-center justify-center">
-                        <X class="w-4 h-4" />
-                    </button>
-                </div>
-                <div class="p-6 space-y-5">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 rounded-3xl p-4 border border-slate-100">
+                    
+                    <div class="p-6 overflow-y-auto space-y-6">
+                        <!-- Basic Info -->
                         <div>
-                            <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Nama Lengkap</span>
-                            <p class="mt-2 font-semibold text-slate-900">{{ selectedUser.name }}</p>
+                            <h4 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">Informasi Akun Utama</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-slate-50 rounded-xl p-4 border border-slate-100">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Nama Lengkap</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.name }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Email</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.email }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Telepon</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.phone || '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Jenis Kelamin</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm capitalize">{{ translateGender(selectedUser.gender) || '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Tanggal Lahir</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.date_of_birth ? formatDate(selectedUser.date_of_birth) : '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Status Akun</span>
+                                    <p class="mt-1 font-semibold text-sm" :class="isActive(selectedUser) ? 'text-emerald-600' : 'text-rose-600'">
+                                        {{ isActive(selectedUser) ? 'Aktif' : 'Nonaktif' }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Peran</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm capitalize">{{ translateRole(selectedUser.role) }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Bergabung Pada</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ formatDate(selectedUser.created_at) }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Login Terakhir</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.last_login_at ? formatDate(selectedUser.last_login_at) : '-' }}</p>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Email</span>
-                            <p class="mt-2 font-semibold text-slate-900">{{ selectedUser.email }}</p>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Telepon</span>
-                            <p class="mt-2 font-semibold text-slate-900">{{ selectedUser.phone || '-' }}</p>
-                        </div>
-                        <div>
-                            <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Status</span>
-                            <p class="mt-2 font-semibold" :class="isActive(selectedUser) ? 'text-emerald-600' : 'text-rose-600'">
-                                {{ isActive(selectedUser) ? 'Aktif' : 'Nonaktif' }}
-                            </p>
-                        </div>
-                        <div v-if="ownerBadge(selectedUser)">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Status Owner</span>
-                            <p class="mt-2 font-semibold text-amber-600">{{ ownerBadge(selectedUser).label }}</p>
-                        </div>
-                        <div class="sm:col-span-2">
-                            <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Bergabung</span>
-                            <p class="mt-2 font-semibold text-slate-900">{{ formatDate(selectedUser.created_at) }}</p>
-                        </div>
-                    </div>
 
-                    <div class="flex justify-between items-center">
-                        <button
-                            @click="toggleStatus(selectedUser)"
-                            :class="[
-                                'flex items-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-bold transition',
-                                isActive(selectedUser)
-                                    ? 'bg-rose-50 text-rose-600 hover:bg-rose-100'
-                                    : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-                            ]"
-                        >
-                            <ShieldOff v-if="isActive(selectedUser)" class="w-4 h-4" />
-                            <ShieldCheck v-else class="w-4 h-4" />
-                            {{ isActive(selectedUser) ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}
-                        </button>
-                        <button @click="selectedUser = null" class="rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white hover:bg-slate-800 transition">
-                            Tutup
-                        </button>
+                        <!-- Owner Profile -->
+                        <div v-if="selectedUser.owner_profile">
+                            <h4 class="text-sm font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">Profil Pemilik Tambahan</h4>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 bg-amber-50/50 rounded-xl p-4 border border-amber-100/50">
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">NIK (No. KTP)</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.owner_profile.national_id || '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Status Verifikasi</span>
+                                    <p class="mt-1 font-semibold text-amber-600 text-sm capitalize">{{ translateOwnerStatus(selectedUser.owner_profile.status) }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Kewarganegaraan</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.owner_profile.nationality || '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Agama</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.owner_profile.religion || '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Status Pernikahan</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.owner_profile.marital_status || '-' }}</p>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Pekerjaan</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.owner_profile.occupation || '-' }}</p>
+                                </div>
+                                <div class="sm:col-span-2 lg:col-span-3">
+                                    <span class="text-[10px] text-slate-400 uppercase tracking-[0.2em]">Alamat Lengkap</span>
+                                    <p class="mt-1 font-semibold text-slate-900 text-sm">{{ selectedUser.owner_profile.address || '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between items-center flex-wrap gap-3 mt-4 pt-4 border-t border-slate-100">
+                        <div class="flex items-center gap-2">
+                                <button
+                                    @click="openConfirmToggle(selectedUser)"
+                                    :class="[
+                                        'flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold transition',
+                                        isActive(selectedUser)
+                                            ? 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+                                            : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+                                    ]"
+                                >
+                                    <ShieldOff v-if="isActive(selectedUser)" class="w-4 h-4" />
+                                    <ShieldCheck v-else class="w-4 h-4" />
+                                    {{ isActive(selectedUser) ? 'Nonaktifkan' : 'Aktifkan' }}
+                                </button>
+                                <button
+                                    v-if="!isAdminRole(selectedUser)"
+                                    @click="handleDeleteClick"
+                                    class="flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-bold bg-rose-50 text-rose-600 hover:bg-rose-100 transition"
+                                >
+                                    <Trash2 class="w-4 h-4" />
+                                    Hapus
+                                </button>
+                            </div>
+                            <button @click="selectedUser = null" class="rounded-xl bg-slate-900 px-6 py-2 text-sm font-bold text-white hover:bg-slate-800 transition">
+                                Tutup
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </Transition>
 
-        <!-- MODAL: Konfirmasi Hapus -->
-        <div v-if="confirmDelete" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-            <div class="w-full max-w-sm rounded-3xl bg-white border border-slate-100 shadow-2xl p-6 space-y-4">
-                <div class="flex items-start gap-3">
-                    <div class="w-10 h-10 rounded-2xl bg-rose-50 flex items-center justify-center shrink-0">
-                        <Trash2 class="w-5 h-5 text-rose-500" />
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-slate-900 text-sm">Hapus Akun Pengguna?</h3>
-                        <p class="text-xs text-slate-500 mt-1">
-                            Akun <span class="font-semibold text-slate-800">{{ confirmDelete.name }}</span> akan dihapus permanen.
-                            Tindakan ini tidak dapat dibatalkan.
-                        </p>
-                    </div>
-                </div>
-                <div class="flex justify-end gap-3">
-                    <button @click="confirmDelete = null" class="rounded-2xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 transition">
-                        Batal
-                    </button>
-                    <button
-                        @click="deleteUser"
-                        :disabled="isDeleting"
-                        class="rounded-2xl bg-rose-600 px-4 py-2 text-sm font-bold text-white hover:bg-rose-700 disabled:opacity-60 transition"
-                    >
-                        {{ isDeleting ? 'Menghapus...' : 'Ya, Hapus' }}
-                    </button>
-                </div>
-            </div>
-        </div>
+        <ConfirmModal
+            :show="!!confirmDelete"
+            type="danger"
+            title="Hapus Akun Pengguna?"
+            :message="confirmDelete ? `Akun ${confirmDelete.name} akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.` : ''"
+            confirmText="Ya, Hapus"
+            cancelText="Batal"
+            @confirm="deleteUser"
+            @cancel="confirmDelete = null"
+        />
+
+        <ConfirmModal
+            :show="!!confirmToggle"
+            :type="confirmToggle && isActive(confirmToggle) ? 'danger' : 'primary'"
+            :title="confirmToggle && isActive(confirmToggle) ? 'Nonaktifkan Akun?' : 'Aktifkan Akun?'"
+            :message="confirmToggle ? `Apakah Anda yakin ingin ${isActive(confirmToggle) ? 'menonaktifkan' : 'mengaktifkan'} akun ${confirmToggle.name}?` : ''"
+            :confirmText="confirmToggle && isActive(confirmToggle) ? 'Ya, Nonaktifkan' : 'Ya, Aktifkan'"
+            cancelText="Batal"
+            @confirm="executeToggleStatus"
+            @cancel="confirmToggle = null"
+        />
     </DashboardLayout>
 </template>

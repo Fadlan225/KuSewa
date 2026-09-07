@@ -37,3 +37,18 @@ svg.lucide {
     display: inline-block;
     vertical-align: -0.125em;
 }
+
+@layer base {
+    /* Globally force all checkboxes and radios to use the primary yellow color */
+    [type='checkbox'],
+    [type='radio'] {
+        accent-color: var(--color-primary) !important;
+        color: var(--color-primary) !important;
+    }
+    
+    [type='checkbox']:focus,
+    [type='radio']:focus {
+        outline-color: var(--color-primary) !important;
+        --tw-ring-color: var(--color-primary) !important;
+    }
+}

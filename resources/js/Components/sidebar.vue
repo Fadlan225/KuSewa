@@ -163,11 +163,11 @@ const handleLogout = () => {
             <!-- Navigation Links Wrapper with Fade Effect -->
             <div class="relative flex-1 min-h-0 -mx-2">
                 <div class="h-full overflow-y-auto no-scrollbar px-2 pb-6">
-                    <nav class="space-y-2 text-base">
+                    <nav class="space-y-1 text-sm px-2">
                 <template v-for="(item, idx) in menu" :key="idx">
                     <!-- Jika ada item divider -->
-                    <div v-if="item.divider" class="pt-2 pb-1">
-                        <hr class="border-slate-100 border-dashed" />
+                    <div v-if="item.divider" class="pt-4 pb-2 px-3">
+                        <div class="h-px bg-slate-200/80"></div>
                     </div>
 
                     <!-- Otomatis mendeteksi status aktif dari rute laravel menggunakan routeName -->
@@ -175,11 +175,31 @@ const handleLogout = () => {
                         <Link
                             :href="item.route"
                             :title="isCollapsed ? item.label : ''"
-                            :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200 w-full', isCollapsed ? 'justify-center' : 'justify-between']"
+                            :class="[
+                                route().current(item.routeName) 
+                                    ? 'bg-[#FFF8E6] text-[#0A2540] font-bold shadow-sm ring-1 ring-[#FFC000]/20' 
+                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium', 
+                                'flex items-center px-3 py-2 rounded-lg transition-all duration-200 w-full', 
+                                isCollapsed ? 'justify-center' : 'justify-between'
+                            ]"
                         >
                             <div class="flex items-center gap-3">
-                                <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-6 h-6 text-center" />
-                                <component v-else :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-6 h-6 text-center']" />
+                                <component 
+                                    v-if="typeof item.icon !== 'string'" 
+                                    :is="item.icon" 
+                                    :class="[
+                                        route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-500', 
+                                        'w-5 h-5 text-center transition-colors'
+                                    ]" 
+                                />
+                                <AppIcon 
+                                    v-else 
+                                    :iconClass="item.icon" 
+                                    :class="[
+                                        route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-500', 
+                                        'w-5 h-5 text-center transition-colors'
+                                    ]" 
+                                />
                                 <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                             </div>
 
@@ -190,8 +210,6 @@ const handleLogout = () => {
                                 </span>
                             </template>
                         </Link>
-
-
                     </template>
                 </template>
                 </nav>

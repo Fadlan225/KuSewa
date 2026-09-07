@@ -5,31 +5,33 @@ const props = defineProps({
     form: Object,
     banks: Array,
     ktpName: String,
+    compact: { type: Boolean, default: false }, // mode ringkas untuk modal pasca-submit
 });
 </script>
 
 <template>
-    <div class="space-y-6">
-        <div>
-            <h2 class="text-2xl font-bold text-[#0A2540]">Lengkapi data diri Anda</h2>
-            <p class="text-sm text-slate-500 mt-1">Pastikan data benar agar uang pembayaran sewa kos dapat ditransfer dengan lancar.</p>
-        </div>
+    <div class="space-y-5">
+        <template v-if="!compact">
+            <div>
+                <h2 class="text-2xl font-bold text-[#0A2540]">Lengkapi data diri Anda</h2>
+                <p class="text-sm text-slate-500 mt-1">Pastikan data benar agar uang pembayaran sewa dapat ditransfer dengan lancar.</p>
+            </div>
+        </template>
 
-        <div class="space-y-6 bg-white p-6 rounded-lg border border-slate-200">
+        <div :class="['space-y-5', !compact && 'bg-white p-6 rounded-lg border border-slate-200']">
             <!-- Nama KTP -->
             <div>
-                <label class="block text-base font-bold text-slate-800 mb-2">Nama Lengkap Sesuai KTP</label>
+                <label class="block text-sm font-bold text-slate-800 mb-2">Nama Lengkap Sesuai KTP</label>
                 <div class="w-full bg-slate-50 text-slate-700 text-sm border border-slate-300 rounded-md px-4 py-3 cursor-not-allowed">
                     {{ ktpName }}
                 </div>
             </div>
 
-            <!-- Border separator -->
             <div class="border-t border-slate-100"></div>
 
             <!-- Bank -->
             <div>
-                <label class="block text-base font-bold text-slate-800 mb-2">Bank <span class="text-rose-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-800 mb-2">Bank <span class="text-rose-500">*</span></label>
                 <SearchableSelect
                     v-model="form.bank_code"
                     :options="banks"
@@ -39,7 +41,7 @@ const props = defineProps({
 
             <!-- Nomor Rekening -->
             <div>
-                <label class="block text-base font-bold text-slate-800 mb-2">Nomor Rekening <span class="text-rose-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-800 mb-2">Nomor Rekening <span class="text-rose-500">*</span></label>
                 <input
                     type="text"
                     v-model="form.account_number"
@@ -52,7 +54,7 @@ const props = defineProps({
 
             <!-- Nama Pemilik Rekening -->
             <div>
-                <label class="block text-base font-bold text-slate-800 mb-2">Nama Pemilik Rekening <span class="text-rose-500">*</span></label>
+                <label class="block text-sm font-bold text-slate-800 mb-2">Nama Pemilik Rekening <span class="text-rose-500">*</span></label>
                 <input
                     type="text"
                     v-model="form.account_holder"
@@ -62,20 +64,23 @@ const props = defineProps({
                 />
             </div>
 
-            <div class="border-t border-slate-100 pt-6">
-                <label class="flex items-start gap-3 cursor-pointer group">
-                    <div class="relative flex items-center">
-                        <input
-                            type="checkbox"
-                            v-model="form.terms_agreed"
-                            class="w-5 h-5 border border-slate-300 rounded text-[#10B981] focus:ring-[#10B981] transition peer cursor-pointer"
-                        />
-                    </div>
-                    <span class="text-sm text-slate-600 leading-tight pt-0.5">
-                        Saya menyetujui <a href="#" target="_blank" class="text-slate-800 font-semibold underline hover:text-[#10B981] transition">Syarat dan Ketentuan</a> fitur Booking Langsung Mamikos
-                    </span>
-                </label>
-            </div>
+            <!-- Terms (hanya di non-compact) -->
+            <template v-if="!compact">
+                <div class="border-t border-slate-100 pt-5">
+                    <label class="flex items-start gap-3 cursor-pointer group">
+                        <div class="relative flex items-center">
+                            <input
+                                type="checkbox"
+                                v-model="form.terms_agreed"
+                                class="w-5 h-5 border border-slate-300 rounded text-[#10B981] focus:ring-[#10B981] transition peer cursor-pointer"
+                            />
+                        </div>
+                        <span class="text-sm text-slate-600 leading-tight pt-0.5">
+                            Saya menyetujui <a href="#" target="_blank" class="text-slate-800 font-semibold underline hover:text-[#10B981] transition">Syarat dan Ketentuan</a> fitur Booking Langsung
+                        </span>
+                    </label>
+                </div>
+            </template>
         </div>
     </div>
 </template>

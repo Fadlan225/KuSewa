@@ -196,6 +196,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Kategori Wajib per Tipe Aset
     Route::put('/kategori-fasilitas/mandatory/{assetType}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'syncMandatoryCategories'])->name('mandatory-fas.sync');
 
+    // Template Field Aset (detail_fields & gallery wajib per tipe aset)
+    Route::get('/template-aset', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'index'])->name('template-aset');
+    Route::put('/template-aset/{assetType}/fields', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'updateFields'])->name('template-aset.fields');
+    Route::put('/template-aset/{assetType}/gallery', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'syncGallery'])->name('template-aset.gallery');
+
     Route::get('/payment-system', fn() => Inertia::render('admin/PaymentSystem'))->name('payment-system');
     Route::get('/promo-diskon', fn() => Inertia::render('admin/PromoDiskon'))->name('promo-diskon');
     Route::get('/service-fee', fn() => Inertia::render('admin/ServiceFeeSanksi'))->name('service-fee');

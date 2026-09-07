@@ -482,13 +482,13 @@ class AssetController extends Controller
         if ($action === 'submit') {
             // Update atau buat rekening bank jika datanya dikirim
             if ($request->filled('bank_code') && $request->filled('account_number') && $request->filled('account_holder')) {
-                \App\Models\BankAccount::updateOrCreate(
+                \App\Models\bank_account::updateOrCreate(
                     ['owner_profile_id' => $ownerProfile->id],
                     [
-                        'bank_code' => $request->bank_code,
+                        'bank_code'      => $request->bank_code,
                         'account_number' => $request->account_number,
                         'account_holder' => $request->account_holder,
-                        'status' => 'active'
+                        'status'         => 'active'
                     ]
                 );
             }

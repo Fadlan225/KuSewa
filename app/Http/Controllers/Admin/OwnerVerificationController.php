@@ -12,7 +12,7 @@ class OwnerVerificationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = owner_profile::with('user:id,name,email,phone,created_at')
+        $query = owner_profile::with('user')
             ->when($request->status && $request->status !== 'Semua', fn($q) => $q->where('status', $request->status))
             ->when($request->search, fn($q) => $q
                 ->where('national_id', 'like', "%{$request->search}%")

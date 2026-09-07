@@ -18,6 +18,7 @@ import Step7 from './Step7.vue';
 import Step8 from './Step8.vue';
 import Step8Unit from './Step8Unit.vue';
 import Step9 from './Step9.vue';
+import Step10 from './Step10.vue';
 import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
 
 // Fix bug ikon marker default Leaflet yang tidak muncul di build Vite
@@ -30,9 +31,12 @@ L.Icon.Default.mergeOptions({
 
 // --- PROPS dari Controller (data dari DB) ---
 const props = defineProps({
-    categories: Array, // [{ id, name, types: [{id, name, rental_unit, allow_units}] }]
-    draftData: Object,
-    draftId: Number,
+    categories:   Array,  // [{ id, name, types: [{id, name, rental_unit, allow_units}] }]
+    draftData:    Object,
+    draftId:      Number,
+    banks:        Array,  // untuk Step10 rekening bank pasca-submit
+    ktpName:      String, // nama sesuai KTP
+    existingBank: Object, // bank account yang sudah ada (jika ada)
 });
 
 const page = usePage();
@@ -186,6 +190,9 @@ const defaultForm = {
     faqs: [],
     policies: {},
     custom_policies: [],
+    bank_code: '',
+    account_number: '',
+    account_holder: '',
 };
 
 const form = useForm(safeDraftData ? { ...defaultForm, ...safeDraftData, draft_id: props.draftId } : defaultForm);
@@ -233,7 +240,7 @@ const unitLabel = computed(() => {
 });
 
 
-const currentStep = ref(1);
+const currentStep    = ref(1);
 const showSuccessModal = ref(false);
 
 // --- TOAST NOTIFICATION ---
@@ -338,6 +345,12 @@ const steps = computed(() => {
             component: 'Step9'
         });
 
+        baseSteps.push({
+            id: nextId++,
+            title: 'Rekening Bank',
+            component: 'Step10'
+        });
+
         return baseSteps;
     } else {
         return [
@@ -347,6 +360,7 @@ const steps = computed(() => {
             { id: 4, title: 'Galeri Foto', component: 'Step6' },
             { id: 5, title: 'Fasilitas Aset', component: 'Step8' },
             { id: 6, title: 'Kebijakan & FAQ', component: 'Step9' },
+            { id: 7, title: 'Rekening Bank', component: 'Step10' },
         ];
     }
 });
@@ -399,6 +413,8 @@ const isCurrentStepValid = computed(() => {
             return true;
         case 'Step9': // Kebijakan & FAQ
             return true;
+        case 'Step10': // Rekening Bank
+            return !!(form.bank_code && form.account_number?.trim() && form.account_holder?.trim());
         default:
             return true;
     }
@@ -705,7 +721,7 @@ const preparePayload = (data, isKos) => {
     if (payload.faqs) {
         payload.faqs = payload.faqs.filter(f => f.question?.trim() && f.answer?.trim());
     }
-    if (payload.policies) {
+    if (payload.policies && Array.isArray(payload.policies)) {
         payload.policies = payload.policies.filter(p => p.title?.trim());
     }
 
@@ -749,6 +765,7 @@ const nextStep = async () => {
     else if (currentComponent === 'Step8') err = validateStep8();
     else if (currentComponent === 'Step8Unit') err = validateStep8Unit(currentStepConfig.unitIndex);
     else if (currentComponent === 'Step9') err = validateStep9();
+    else if (currentComponent === 'Step10') err = {}; // validasi inline via isCurrentStepValid
 
     if (Object.keys(err).length > 0) {
         validationErrors.value = err;
@@ -931,10 +948,15 @@ const submitProperty = async () => {
     showValidationAlert.value = false;
     validationErrors.value = {};
 
-    // Hanya validasi step terakhir saat submit
+    // Validasi step terakhir (Step10: rekening bank)
     const currentComponent = steps.value[steps.value.length - 1].component;
     let err = {};
     if (currentComponent === 'Step9') err = validateStep9();
+    if (currentComponent === 'Step10') {
+        if (!form.bank_code) err.bank_code = 'Bank wajib dipilih.';
+        if (!form.account_number?.trim()) err.account_number = 'Nomor rekening wajib diisi.';
+        if (!form.account_holder?.trim()) err.account_holder = 'Nama pemilik rekening wajib diisi.';
+    }
 
     if (Object.keys(err).length > 0) {
         validationErrors.value = err;
@@ -943,12 +965,7 @@ const submitProperty = async () => {
         return;
     }
 
-    if (page.props.isProfileComplete === false) {
-        window.dispatchEvent(new CustomEvent('show-profile-incomplete-bubble'));
-        return;
-    }
-
-    // Auto save draft for the last time before submitting (optional, but good for safety)
+    // Auto save draft
     await saveDraft();
 
     isSubmittingFinal.value = true;
@@ -1161,6 +1178,13 @@ const closeModalAndRedirect = () => {
                     @removeFaq="removeFaq"
                 />
 
+                <Step10
+                    v-show="steps[currentStep - 1]?.component === 'Step10'"
+                    :form="form"
+                    :banks="banks"
+                    :ktp-name="ktpName"
+                    :compact="true"
+                />
 
                     </form>
                 </div>
@@ -1211,6 +1235,7 @@ const closeModalAndRedirect = () => {
                 </div>
             </div>
         </div>
+
 
         <!-- POP-UP SUCCESS MODAL -->
         <Teleport to="body">

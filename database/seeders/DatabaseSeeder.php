@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             FacilityCategorySeeder::class,  // 16 Master kategori fasilitas
             FacilitySeeder::class,          // 81 Master fasilitas (WiFi, AC, dll)
             AssetTypeFacilitySeeder::class, // 184 Aturan fasilitas per asset type
+            AssetTypeMandatorySeeder::class, // Default kategori wajib (fasilitas + galeri) per tipe aset
 
             // ── Users & Profiles ───────────────────────────────────────────
             AdminSeeder::class,             // 1 akun admin khusus

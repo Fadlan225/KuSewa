@@ -24,7 +24,7 @@ class UserController extends Controller
                     $q->whereDoesntHave('ownerProfile');
                 }
             })
-            ->with('ownerProfile:id,user_id,status')
+            ->with('ownerProfile')
             ->orderBy('created_at', 'desc')
             ->paginate(15)
             ->withQueryString();
@@ -67,8 +67,15 @@ class UserController extends Controller
         }
 
         $name = $user->name;
-        $user->delete();
 
-        return back()->with('success', "Akun {$name} berhasil dihapus.");
+        try {
+            $user->delete();
+            return back()->with('success', "Akun {$name} berhasil dihapus.");
+        } catch (\Illuminate\Database\QueryException $e) {
+            if ($e->getCode() == 23000) {
+                return back()->with('error', "Akun {$name} tidak dapat dihapus karena masih memiliki data yang terhubung (misal: aset atau transaksi). Silakan hapus atau nonaktifkan data terkait terlebih dahulu.");
+            }
+            return back()->with('error', "Terjadi kesalahan saat menghapus akun {$name}.");
+        }
     }
 }

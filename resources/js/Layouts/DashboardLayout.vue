@@ -20,6 +20,7 @@ const props = defineProps({
     description: { type: String, default: '' },
     role: { type: String, required: true },
     breadcrumbs: { type: Array, default: () => [] },
+    noPadding: { type: Boolean, default: false },
 });
 
 const page = usePage();
@@ -134,7 +135,7 @@ onUnmounted(() => {
 
             <slot name="afterTopbar" />
 
-            <div class="p-4 md:p-6 lg:p-6 xl:p-8 w-full max-w-[1400px] mx-auto flex-1 flex flex-col">
+            <div :class="[noPadding ? 'flex-1' : 'p-4 md:p-6 lg:p-6 xl:p-8 max-w-[1400px] mx-auto', 'w-full flex-1 flex flex-col']">
 
 
                 <!-- PAGE CONTENT SLOT -->

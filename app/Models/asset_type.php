@@ -18,7 +18,7 @@ class asset_type extends Model
     ];
 
     protected $casts = [
-        'detail_fields' => 'array',
+        'detail_fields'      => 'array',
         'unit_detail_fields' => 'array',
     ];
 
@@ -58,50 +58,9 @@ class asset_type extends Model
         return $this->hasMany(review_tag::class);
     }
 
-    /**
-     * Get the mandatory gallery categories based on asset type name.
-     */
-    public function getMandatoryCategories()
-    {
-        $map = [
-            'Hotel' => ['Tampak Depan', 'Lobby', 'Kamar', 'Kamar Mandi'],
-            'Baliho' => ['Tampak Baliho', 'Area Sekitar', 'Akses Jalan'],
-            'Villa' => ['Tampak Depan', 'Ruang Utama', 'Kamar', 'Kamar Mandi', 'Area Outdoor'],
-            'Apartemen' => ['Tampak Gedung', 'Ruang Unit', 'Kamar', 'Kamar Mandi'],
-            'Homestay' => ['Tampak Depan', 'Ruang Utama', 'Kamar', 'Kamar Mandi'],
-            'Guest House' => ['Tampak Depan', 'Area Bersama', 'Kamar', 'Kamar Mandi'],
-            'Kos' => ['Bangunan Kos', 'Bangunan Kos Dari Jalan', 'Kamar Mandi', 'Fasilitas Bersama'],
-            'Resort' => ['Exterior', 'Lobby', 'Kamar', 'Kamar Mandi'],
-            'Kontrakan' => ['Tampak Depan', 'Ruang Utama', 'Kamar', 'Kamar Mandi'],
-            'Ruko' => ['Tampak Depan', 'Area Utama', 'Interior', 'Akses Parkir'],
-            'Gudang' => ['Tampak Depan', 'Area Gudang', 'Akses Kendaraan', 'Loading Area'],
-            'Lahan' => ['Keseluruhan Lahan', 'Akses Masuk', 'Lingkungan Sekitar'],
-            'Gedung' => ['Tampak Depan', 'Ruang Utama', 'Lobby'],
-            'Aula' => ['Area Utama', 'Area Masuk'],
-            'Ruang Meeting' => ['Ruang Keseluruhan', 'Meja & Kursi', 'Fasilitas Presentasi', 'Area Masuk'],
-            'Studio' => ['Ruang Keseluruhan', 'Area Utama', 'Peralatan'],
-        ];
+    // ── Mandatory Facility Categories ─────────────────────────────────────────
 
-        return $map[$this->name] ?? [];
-    }
-
-    /**
-     * Get the mandatory gallery categories for units based on asset type name.
-     */
-    public function getMandatoryUnitCategories()
-    {
-        $map = [
-            'Kos' => ['Kamar Tidur', 'Depan Kamar'],
-            'Hotel' => ['Kamar Tidur', 'Kamar Mandi'],
-            'Apartemen' => ['Kamar Tidur', 'Ruang Unit'],
-        ];
-
-        return $map[$this->name] ?? [];
-    }
-
-    /**
-     * Kategori fasilitas yang WAJIB dipilih untuk tipe aset ini (database-driven).
-     */
+    /** Kategori fasilitas wajib aset. */
     public function mandatoryFacilityCategories()
     {
         return $this->belongsToMany(
@@ -109,42 +68,73 @@ class asset_type extends Model
             'asset_type_mandatory_categories',
             'asset_type_id',
             'facility_category_id'
-        )->withTimestamps();
+        )->wherePivot('scope', 'asset')->withPivot('scope')->withTimestamps();
     }
 
-    /**
-     * Get the mandatory facility categories based on asset type name.
-     * @deprecated Gunakan relasi mandatoryFacilityCategories() — hardcoded hanya sebagai fallback.
-     */
-    public function getMandatoryFacilityCategories()
+    /** Kategori fasilitas wajib unit. */
+    public function mandatoryUnitFacilityCategories()
     {
-        // Prioritaskan data dari database
-        $dbCategories = $this->mandatoryFacilityCategories()->pluck('name')->toArray();
-        if (!empty($dbCategories)) {
-            return $dbCategories;
-        }
-
-        // Fallback ke hardcoded (backward compat)
-        $map = [
-            'Kos'       => ['Internet', 'Parkir', 'Keamanan', 'Kamar Mandi', 'Perabot Kamar Mandi'],
-            'Hotel'     => ['Internet', 'Parkir', 'Lobby', 'Kamar Mandi', 'Perabot Kamar Mandi'],
-            'Apartemen' => ['Internet', 'Parkir', 'Keamanan', 'Kamar Mandi', 'Perabot Kamar Mandi'],
-        ];
-
-        return $map[$this->name] ?? [];
+        return $this->belongsToMany(
+            facility_category::class,
+            'asset_type_mandatory_categories',
+            'asset_type_id',
+            'facility_category_id'
+        )->wherePivot('scope', 'unit')->withPivot('scope')->withTimestamps();
     }
 
-    /**
-     * Get the mandatory facility categories for units based on asset type name.
-     */
-    public function getMandatoryUnitFacilityCategories()
-    {
-        $map = [
-            'Kos' => ['Perabot Kamar Mandi', 'Perlengkapan Kamar', 'Sirkulasi Udara'],
-            'Hotel' => ['Perabot Kamar Mandi', 'Perlengkapan Kamar', 'Sirkulasi Udara'],
-            'Apartemen' => ['Perabot Kamar Mandi', 'Dapur'],
-        ];
+    // ── Mandatory Gallery Categories ──────────────────────────────────────────
 
-        return $map[$this->name] ?? [];
+    /** Kategori galeri yang diizinkan untuk aset (bisa wajib/opsional). */
+    public function galleryCategories()
+    {
+        return $this->belongsToMany(
+            galery_category::class,
+            'asset_type_gallery_categories',
+            'asset_type_id',
+            'galery_category_id'
+        )->wherePivot('scope', 'asset')
+         ->withPivot('scope', 'is_mandatory', 'sort_order')
+         ->orderByPivot('sort_order', 'asc')
+         ->withTimestamps();
+    }
+
+    /** Kategori galeri yang diizinkan untuk unit (bisa wajib/opsional). */
+    public function unitGalleryCategories()
+    {
+        return $this->belongsToMany(
+            galery_category::class,
+            'asset_type_gallery_categories',
+            'asset_type_id',
+            'galery_category_id'
+        )->wherePivot('scope', 'unit')
+         ->withPivot('scope', 'is_mandatory', 'sort_order')
+         ->orderByPivot('sort_order', 'asc')
+         ->withTimestamps();
+    }
+
+    // ── Backward-compat helpers (DB-driven, tanpa hardcode) ───────────────────
+
+    /** @deprecated Gunakan relasi mandatoryFacilityCategories() */
+    public function getMandatoryFacilityCategories(): array
+    {
+        return $this->mandatoryFacilityCategories()->pluck('name')->toArray();
+    }
+
+    /** @deprecated Gunakan relasi mandatoryUnitFacilityCategories() */
+    public function getMandatoryUnitFacilityCategories(): array
+    {
+        return $this->mandatoryUnitFacilityCategories()->pluck('name')->toArray();
+    }
+
+    /** @deprecated Gunakan relasi galleryCategories() dengan kondisi pivot */
+    public function getMandatoryCategories(): array
+    {
+        return $this->galleryCategories()->wherePivot('is_mandatory', true)->pluck('name')->toArray();
+    }
+
+    /** @deprecated Gunakan relasi unitGalleryCategories() dengan kondisi pivot */
+    public function getMandatoryUnitCategories(): array
+    {
+        return $this->unitGalleryCategories()->wherePivot('is_mandatory', true)->pluck('name')->toArray();
     }
 }

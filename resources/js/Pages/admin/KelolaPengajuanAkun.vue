@@ -79,6 +79,11 @@ const statusClass = (s) => ({
     rejected: 'bg-rose-50 text-rose-600 border border-rose-200/60',
 }[s] ?? 'bg-slate-50 text-slate-600 border border-slate-200');
 const statusLabel = (s) => ({ pending: 'Pending', verified: 'Disetujui', rejected: 'Ditolak' }[s] ?? s);
+
+const translateGender = (gender) => {
+    const map = { male: 'Laki-laki', female: 'Perempuan' };
+    return map[gender] || gender;
+};
 </script>
 
 <template>
@@ -147,7 +152,8 @@ const statusLabel = (s) => ({ pending: 'Pending', verified: 'Disetujui', rejecte
                             <tr v-for="item in applicants.data" :key="item.id" class="hover:bg-slate-50/60 transition-colors">
                                 <td class="py-4 px-6">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-800 uppercase shadow-xs">
+                                        <img v-if="item.user?.avatar" :src="item.user.avatar" class="w-9 h-9 rounded-xl object-cover border border-slate-200" />
+                                        <div v-else class="w-9 h-9 rounded-xl bg-slate-100 flex items-center justify-center font-bold text-slate-800 uppercase shadow-xs">
                                             {{ item.user?.name?.charAt(0) ?? '?' }}
                                         </div>
                                         <div>
@@ -204,39 +210,72 @@ const statusLabel = (s) => ({ pending: 'Pending', verified: 'Disetujui', rejecte
         </div>
 
         <!-- MODAL: Detail KTP & Verifikasi -->
-        <div v-if="selectedApplicant" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-            <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl border border-slate-100">
-                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <div>
-                        <h3 class="font-bold text-slate-900 text-sm">Verifikasi Dokumen NIK & KTP Owner</h3>
-                        <p class="text-[10px] text-slate-400">Periksa kesesuaian data diri dengan foto KTP terlampir.</p>
+        <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
+        >
+            <div v-if="selectedApplicant" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+                <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" @click="selectedApplicant = null; showRejectInput = false"></div>
+                <div class="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]">
+                    <div class="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">Verifikasi Dokumen NIK & KTP Owner</h3>
+                            <p class="text-[10px] text-slate-400">Periksa kesesuaian data diri dengan foto KTP terlampir.</p>
+                        </div>
+                        <button @click="selectedApplicant = null; showRejectInput = false" class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
+                            <X class="w-4 h-4" />
+                        </button>
                     </div>
-                    <button @click="selectedApplicant = null; showRejectInput = false" class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
-                        <X class="w-4 h-4" />
-                    </button>
-                </div>
 
-                <div class="space-y-4 text-xs">
-                    <div class="grid grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                        <div>
-                            <span class="text-slate-400 text-[10px] block font-medium">Nama Lengkap</span>
-                            <p class="font-bold text-slate-900 text-sm mt-0.5">{{ selectedApplicant.user?.name }}</p>
+                    <div class="p-6 overflow-y-auto space-y-6 text-xs">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Nama Lengkap</span>
+                                <p class="font-bold text-slate-900 text-sm mt-0.5">{{ selectedApplicant.user?.name }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Nomor NIK</span>
+                                <p class="font-mono font-bold text-slate-800 mt-0.5">{{ selectedApplicant.national_id ?? '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Status Pengajuan</span>
+                                <span :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold mt-0.5', statusClass(selectedApplicant.status)]">
+                                    {{ statusLabel(selectedApplicant.status) }}
+                                </span>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Telepon / WhatsApp</span>
+                                <p class="font-semibold text-slate-800 mt-0.5">{{ selectedApplicant.user?.phone ?? '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Email</span>
+                                <p class="font-semibold text-slate-800 mt-0.5 truncate" :title="selectedApplicant.user?.email">{{ selectedApplicant.user?.email ?? '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Jenis Kelamin</span>
+                                <p class="font-semibold text-slate-800 mt-0.5 capitalize">{{ translateGender(selectedApplicant.user?.gender) ?? '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Tanggal Lahir</span>
+                                <p class="font-semibold text-slate-800 mt-0.5">{{ formatDate(selectedApplicant.user?.date_of_birth) }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Pekerjaan</span>
+                                <p class="font-semibold text-slate-800 mt-0.5">{{ selectedApplicant.occupation ?? '-' }}</p>
+                            </div>
+                            <div>
+                                <span class="text-slate-400 text-[10px] block font-medium">Agama</span>
+                                <p class="font-semibold text-slate-800 mt-0.5">{{ selectedApplicant.religion ?? '-' }}</p>
+                            </div>
+                            <div class="sm:col-span-3">
+                                <span class="text-slate-400 text-[10px] block font-medium">Alamat Lengkap</span>
+                                <p class="font-semibold text-slate-800 mt-0.5 leading-relaxed">{{ selectedApplicant.address ?? '-' }}</p>
+                            </div>
                         </div>
-                        <div>
-                            <span class="text-slate-400 text-[10px] block font-medium">Status</span>
-                            <span :class="['inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-bold mt-0.5', statusClass(selectedApplicant.status)]">
-                                {{ statusLabel(selectedApplicant.status) }}
-                            </span>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 text-[10px] block font-medium">Nomor NIK</span>
-                            <p class="font-mono font-bold text-slate-800 mt-0.5">{{ selectedApplicant.national_id ?? '-' }}</p>
-                        </div>
-                        <div>
-                            <span class="text-slate-400 text-[10px] block font-medium">Telepon / WhatsApp</span>
-                            <p class="font-semibold text-slate-800 mt-0.5">{{ selectedApplicant.user?.phone ?? '-' }}</p>
-                        </div>
-                    </div>
 
                     <!-- KTP Photo -->
                     <div>
@@ -317,10 +356,11 @@ const statusLabel = (s) => ({ pending: 'Pending', verified: 'Disetujui', rejecte
                         >{{ isSubmitting ? 'Memproses...' : 'Setujui Pengajuan' }}</button>
                     </div>
                 </div>
-                <div v-else class="flex items-center justify-end pt-3 border-t border-slate-100">
-                    <span class="text-sm font-semibold text-slate-500">Pengajuan sudah {{ statusLabel(selectedApplicant.status).toLowerCase() }}.</span>
+                    <div v-else class="flex items-center justify-end pt-3 border-t border-slate-100">
+                        <span class="text-sm font-semibold text-slate-500">Pengajuan sudah {{ statusLabel(selectedApplicant.status).toLowerCase() }}.</span>
+                    </div>
                 </div>
             </div>
-        </div>
+        </Transition>
     </DashboardLayout>
 </template>
