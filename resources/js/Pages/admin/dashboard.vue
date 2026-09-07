@@ -1,7 +1,10 @@
 <script setup>
-import { Download, Users, Building2, AlertTriangle, LineChart, RefreshCw, IdCard, ChevronRight, ShieldCheck, Receipt } from 'lucide-vue-next';
+import { Download, Users, Building2, AlertTriangle, LineChart, RefreshCw, IdCard, ChevronRight, ShieldCheck, Receipt, UserPlus } from 'lucide-vue-next';
 import { Head, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import AvatarMale from '@/Components/ui/Icons/AvatarMale.vue';
+import AvatarFemale from '@/Components/ui/Icons/AvatarFemale.vue';
+import AvatarDefault from '@/Components/ui/Icons/AvatarDefault.vue';
 
 const props = defineProps({
     admin: {
@@ -18,7 +21,16 @@ const props = defineProps({
             totalUsers: 0,
             totalProperties: 0,
             pendingApprovals: 0,
-            monthlyRevenue: 0
+            monthlyRevenue: 'Rp 0'
+        })
+    },
+    bookingStats: {
+        type: Object,
+        default: () => ({
+            total: 0,
+            pending: 0,
+            active: 0,
+            completed: 0
         })
     },
     recentActivities: { type: Array, default: () => [] },
@@ -122,59 +134,59 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
 
                     </div>
 
-                    <!-- System Health & Quick Actions Card (6 Cols) -->
+                    <!-- Statistik Booking Card (6 Cols) -->
                     <div class="lg:col-span-6 bg-white rounded-2xl p-5 border border-slate-200/70 shadow-sm flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
                                 <div class="flex items-center gap-2">
-                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Status Infrastruktur Sistem</h3>
+                                    <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                                    <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Statistik Booking Keseluruhan</h3>
                                 </div>
-                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200">
-                                    Optimal (99.9%)
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-600 border border-blue-200">
+                                    Total: {{ bookingStats.total }}
                                 </span>
                             </div>
 
-                            <!-- Server Metrics Bars -->
+                            <!-- Booking Status Bars -->
                             <div class="space-y-3 text-xs">
                                 <div>
                                     <div class="flex justify-between text-[11px] mb-1">
-                                        <span class="text-slate-500">Penggunaan CPU Server</span>
-                                        <span class="font-bold text-slate-700">24%</span>
+                                        <span class="text-slate-500">Menunggu Pembayaran / Persetujuan</span>
+                                        <span class="font-bold text-slate-700">{{ bookingStats.pending }}</span>
                                     </div>
                                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                        <div class="bg-[#0A2540] h-full rounded-full" style="width: 24%"></div>
+                                        <div class="bg-amber-400 h-full rounded-full" :style="`width: ${bookingStats.total ? (bookingStats.pending / bookingStats.total) * 100 : 0}%`"></div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <div class="flex justify-between text-[11px] mb-1">
-                                        <span class="text-slate-500">Kapasitas Database MySQL</span>
-                                        <span class="font-bold text-slate-700">42.8 GB / 100 GB</span>
+                                        <span class="text-slate-500">Booking Aktif / Berjalan</span>
+                                        <span class="font-bold text-slate-700">{{ bookingStats.active }}</span>
                                     </div>
                                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                        <div class="bg-amber-500 h-full rounded-full" style="width: 43%"></div>
+                                        <div class="bg-blue-500 h-full rounded-full" :style="`width: ${bookingStats.total ? (bookingStats.active / bookingStats.total) * 100 : 0}%`"></div>
                                     </div>
                                 </div>
 
                                 <div>
                                     <div class="flex justify-between text-[11px] mb-1">
-                                        <span class="text-slate-500">Storage Gambar & Berkas (Cloud)</span>
-                                        <span class="font-bold text-slate-700">180 GB / 500 GB</span>
+                                        <span class="text-slate-500">Booking Selesai</span>
+                                        <span class="font-bold text-slate-700">{{ bookingStats.completed }}</span>
                                     </div>
                                     <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
-                                        <div class="bg-blue-600 h-full rounded-full" style="width: 36%"></div>
+                                        <div class="bg-emerald-500 h-full rounded-full" :style="`width: ${bookingStats.total ? (bookingStats.completed / bookingStats.total) * 100 : 0}%`"></div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div class="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 text-[11px]">
-                            <span class="text-slate-400">Sinkronisasi Terakhir: Baru saja</span>
-                            <button class="text-[#0A2540] font-bold hover:underline flex items-center gap-1">
+                            <span class="text-slate-400">Data realtime dari database sistem.</span>
+                            <Link :href="route('admin.dashboard')" class="text-[#0A2540] font-bold hover:underline flex items-center gap-1">
                                 <RefreshCw class="text-[10px]" />
-                                <span>Clear Cache</span>
-                            </button>
+                                <span>Refresh</span>
+                            </Link>
                         </div>
                     </div>
 
@@ -194,25 +206,21 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                             <div class="divide-y divide-slate-100">
                                 <div v-for="(act, index) in recentActivities" :key="index" class="py-3 flex items-center justify-between text-xs">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center text-xs shrink-0 font-bold">
-                                            <i :class="[
-                                                'fa-solid',
-                                                act.type === 'user' ? 'fa-user-plus text-blue-600' :
-                                                act.type === 'property' ? 'fa-house-chimney text-amber-600' :
-                                                act.type === 'finance' ? 'fa-wallet text-emerald-600' :
-                                                act.type === 'report' ? 'fa-triangle-exclamation text-rose-500' : 'fa-check text-slate-600'
-                                            ]"></i>
+                                        <div v-if="act.avatar" class="w-8 h-8 rounded-xl overflow-hidden shrink-0">
+                                            <img :src="act.avatar" :alt="act.name" class="w-full h-full object-cover" />
+                                        </div>
+                                        <div v-else class="w-8 h-8 shrink-0 overflow-hidden rounded-xl border border-slate-100 bg-slate-50 flex items-center justify-center">
+                                            <AvatarMale v-if="act.gender === 'male'" class="w-full h-full" />
+                                            <AvatarFemale v-else-if="act.gender === 'female'" class="w-full h-full" />
+                                            <AvatarDefault v-else class="w-full h-full" />
                                         </div>
                                         <div>
                                             <p class="font-bold text-slate-800">{{ act.title }}</p>
-                                            <p class="text-[10px] text-slate-400">{{ act.desc }}</p>
+                                            <p class="text-[10px] text-slate-400">{{ act.description }}</p>
                                         </div>
                                     </div>
                                     <div class="text-right shrink-0">
                                         <span class="text-[10px] font-semibold text-slate-400 block mb-1">{{ act.time }}</span>
-                                        <span class="text-[9px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">
-                                            {{ act.status }}
-                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -226,44 +234,24 @@ const formatRupiah = (value) => `Rp ${Number(value || 0).toLocaleString('id-ID')
                             <p class="text-[10px] text-slate-400 mb-4">Pintasan tugas penting untuk menjaga keamanan platform</p>
 
                             <div class="space-y-2.5 text-xs">
-                                <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
-                                            <IdCard class="" />
+                                <template v-if="quickActions.length > 0">
+                                    <Link v-for="(action, idx) in quickActions" :key="idx" :href="action.link" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                                                <IdCard class="" />
+                                            </div>
+                                            <div>
+                                                <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">{{ action.title }}</p>
+                                                <p class="text-[10px] text-slate-400">{{ action.description }}</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Validasi Identitas Pemilik</p>
-                                            <p class="text-[10px] text-slate-400">3 NIK baru menunggu pencocokan Dukcapil</p>
-                                        </div>
-                                    </div>
-                                    <ChevronRight class="text-[10px] text-slate-400" />
-                                </button>
-
-                                <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
-                                            <ShieldCheck class="" />
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Review Listing Properti</p>
-                                            <p class="text-[10px] text-slate-400">5 Kos & Rumah baru diunggah owner</p>
-                                        </div>
-                                    </div>
-                                    <ChevronRight class="text-[10px] text-slate-400" />
-                                </button>
-
-                                <button class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
-                                            <Receipt class="" />
-                                        </div>
-                                        <div>
-                                            <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">Persetujuan Withdrawal</p>
-                                            <p class="text-[10px] text-slate-400">4 Permintaan pencairan dana sewa</p>
-                                        </div>
-                                    </div>
-                                    <ChevronRight class="text-[10px] text-slate-400" />
-                                </button>
+                                        <ChevronRight class="text-[10px] text-slate-400" />
+                                    </Link>
+                                </template>
+                                <div v-else class="text-center py-6 text-slate-400">
+                                    <ShieldCheck class="w-8 h-8 mx-auto mb-2 opacity-30" />
+                                    <p class="text-[11px] font-semibold">Tidak ada moderasi prioritas saat ini.</p>
+                                </div>
                             </div>
                         </div>
 

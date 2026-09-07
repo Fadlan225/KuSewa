@@ -172,7 +172,7 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', fn() => Inertia::render('admin/dashboard'))->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/activity-log', fn() => Inertia::render('admin/ActivityLog'))->name('activity-log');
     Route::get('/account-management', fn() => Inertia::render('admin/AdministratorAccountManagement'))->name('account-management');
     Route::get('/backup-restore', fn() => Inertia::render('admin/BackupRestore'))->name('backup-restore');

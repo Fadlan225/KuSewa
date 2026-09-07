@@ -4,6 +4,9 @@ import { ref } from 'vue';
 import { Head, router, Link, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
+import AvatarMale from '@/Components/ui/Icons/AvatarMale.vue';
+import AvatarFemale from '@/Components/ui/Icons/AvatarFemale.vue';
+import AvatarDefault from '@/Components/ui/Icons/AvatarDefault.vue';
 
 const props = defineProps({
     users:   { type: Object, default: () => ({ data: [] }) },
@@ -182,6 +185,7 @@ const ownerBadge = (user) => {
                     <table class="min-w-[940px] w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="bg-slate-50/80 border-b border-slate-100 text-slate-400 uppercase font-bold text-[10px] tracking-wider">
+                                <th class="py-4 px-6 w-14">Foto</th>
                                 <th class="py-4 px-6">Nama Pengguna</th>
                                 <th class="py-4 px-4">Email</th>
                                 <th class="py-4 px-4">No Telp</th>
@@ -192,6 +196,16 @@ const ownerBadge = (user) => {
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             <tr v-for="user in users.data" :key="user.id" @click="selectedUser = user" class="hover:bg-slate-50/60 transition-colors cursor-pointer group">
+                                <td class="py-4 px-6">
+                                    <div v-if="user.avatar" class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200">
+                                        <img :src="user.avatar" :alt="user.name" class="w-full h-full object-cover" />
+                                    </div>
+                                    <div v-else class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200 bg-slate-50 flex items-center justify-center">
+                                        <AvatarMale v-if="user.gender === 'male'" class="w-full h-full" />
+                                        <AvatarFemale v-else-if="user.gender === 'female'" class="w-full h-full" />
+                                        <AvatarDefault v-else class="w-full h-full" />
+                                    </div>
+                                </td>
                                 <td class="py-4 px-6">
                                     <p class="font-bold text-slate-900">{{ user.name }}</p>
                                 </td>
