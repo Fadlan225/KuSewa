@@ -2,7 +2,7 @@ import {
     Home, Building, Receipt, CreditCard, Wallet,
     Gauge, List, Flag, Shield, Users, UserPlus,
     CheckSquare, Layers, Scale, Tags, Bell, Laptop, Database,
-    User, FileText, ToolCase
+    User, FileText, ToolCase, SlidersHorizontal, Images
 } from 'lucide-vue-next';
 
 export const getOwnerMenu = (sidebarCounts, isProfileComplete = true) => [
@@ -39,8 +39,11 @@ export const getAdminMenu = (sidebarCounts) => [
     { divider: true },
     { label: 'Aset & Properti', route: route('admin.aset-properti'), routeName: 'admin.aset-properti', icon: Building },
     { label: 'Validasi Aset', route: route('admin.validasi-aset'), routeName: 'admin.validasi-aset', icon: CheckSquare },
-    { label: 'Kategori Fasilitas', route: route('admin.kategori-fasilitas'), routeName: 'admin.kategori-fasilitas', icon: Layers },
-    { label: 'Konfigurasi Aset', route: route('admin.template-aset'), routeName: 'admin.template-aset', icon: ToolCase },
+    { isHeader: true, label: 'Konfigurasi Aset' },
+    { label: 'Kategori & Tipe Aset', route: route('admin.konfigurasi-aset.kategori-tipe'), routeName: 'admin.konfigurasi-aset.kategori-tipe', icon: Building },
+    { label: 'Spesifikasi Aset', route: route('admin.konfigurasi-aset.spesifikasi'), routeName: 'admin.konfigurasi-aset.spesifikasi', icon: SlidersHorizontal },
+    { label: 'Kategori Galeri', route: route('admin.konfigurasi-aset.galeri'), routeName: 'admin.konfigurasi-aset.galeri', icon: Images },
+    { label: 'Fasilitas Aset', route: route('admin.konfigurasi-aset.fasilitas'), routeName: 'admin.konfigurasi-aset.fasilitas', icon: Layers },
     { divider: true },
     { label: 'Sistem Pembayaran', route: route('admin.payment-system'), routeName: 'admin.payment-system', icon: CreditCard },
     { label: 'Biaya & Sanksi', route: route('admin.service-fee'), routeName: 'admin.service-fee', icon: Scale },

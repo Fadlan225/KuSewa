@@ -42,7 +42,10 @@ const ownerStatus = computed(() => {
 
 const isVerifiedOwner = computed(() => ownerStatus.value === 'verified');
 const isPendingOwner = computed(() => ownerStatus.value === 'pending' || ownerStatus.value === 'rejected');
-const isAdmin = computed(() => page.props.auth.user?.role === 'admin');
+const isAdmin = computed(() => {
+    const role = page.props.auth.user?.role;
+    return typeof role === 'string' && role.trim().toLowerCase() === 'admin';
+});
 
 const userProfilePhoto = computed(() => {
     const photo = page.props.auth.user?.profile_photo;

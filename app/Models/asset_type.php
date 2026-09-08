@@ -68,7 +68,37 @@ class asset_type extends Model
             'asset_type_mandatory_categories',
             'asset_type_id',
             'facility_category_id'
-        )->wherePivot('scope', 'asset')->withPivot('scope')->withTimestamps();
+        )->wherePivot('scope', 'asset')
+         ->wherePivot('is_mandatory', true)
+         ->withPivot('scope', 'is_mandatory')
+         ->withTimestamps();
+    }
+
+    /** Kategori fasilitas opsional aset. */
+    public function optionalFacilityCategories()
+    {
+        return $this->belongsToMany(
+            facility_category::class,
+            'asset_type_mandatory_categories',
+            'asset_type_id',
+            'facility_category_id'
+        )->wherePivot('scope', 'asset')
+         ->wherePivot('is_mandatory', false)
+         ->withPivot('scope', 'is_mandatory')
+         ->withTimestamps();
+    }
+
+    /** Semua kategori fasilitas aset (wajib & opsional). */
+    public function allFacilityCategories()
+    {
+        return $this->belongsToMany(
+            facility_category::class,
+            'asset_type_mandatory_categories',
+            'asset_type_id',
+            'facility_category_id'
+        )->wherePivot('scope', 'asset')
+         ->withPivot('scope', 'is_mandatory')
+         ->withTimestamps();
     }
 
     /** Kategori fasilitas wajib unit. */

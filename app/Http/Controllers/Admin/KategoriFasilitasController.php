@@ -17,14 +17,24 @@ class KategoriFasilitasController extends Controller
     // INDEX — kirim semua data ke halaman
     // ═══════════════════════════════════════════════════════════════════════════
 
-    public function index()
+    public function kategoriTipe()
     {
-        return Inertia::render('admin/KategoriFasilitas', [
+        return Inertia::render('admin/KonfigurasiAset/KategoriTipeAset', [
             'kategoriAset'      => asset_category::orderBy('name')->get(['id','name','description','icon','is_active']),
             'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->get(['id','category_id','name','description','is_active']),
-            'kategoriFasilitas' => facility_category::orderBy('sort_order')->orderBy('name')->get(['id','name','slug','sort_order','is_active']),
+        ]);
+    }
+
+    public function fasilitas()
+    {
+        return Inertia::render('admin/KonfigurasiAset/KategoriFasilitas', [
+            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->get(['id','category_id','name','description','is_active']),
+            'kategoriFasilitas' => facility_category::with('facilities')->orderBy('sort_order')->orderBy('name')->get(['id','name','slug','sort_order','is_active']),
             // Tipe aset beserta kategori fasilitas wajib yang sudah dipilih
-            'tipeAsetMandatory' => asset_type::with('mandatoryFacilityCategories:id,name')
+            'tipeAsetMandatory' => asset_type::with([
+                                            'mandatoryFacilityCategories:id,name',
+                                            'optionalFacilityCategories:id,name'
+                                        ])
                                         ->orderBy('name')
                                         ->get(['id','name','description'])
                                         ->map(fn($t) => [
@@ -33,6 +43,8 @@ class KategoriFasilitasController extends Controller
                                             'description' => $t->description,
                                             'mandatory_ids' => $t->mandatoryFacilityCategories->pluck('id')->values(),
                                             'mandatory_names' => $t->mandatoryFacilityCategories->pluck('name')->values(),
+                                            'optional_ids' => $t->optionalFacilityCategories->pluck('id')->values(),
+                                            'optional_names' => $t->optionalFacilityCategories->pluck('name')->values(),
                                         ]),
         ]);
     }
@@ -191,13 +203,30 @@ class KategoriFasilitasController extends Controller
     public function syncMandatoryCategories(Request $request, asset_type $assetType)
     {
         $data = $request->validate([
-            'facility_category_ids'   => 'required|array',
+            'facility_category_ids'   => 'nullable|array',
             'facility_category_ids.*' => 'integer|exists:facility_categories,id',
+            'optional_category_ids'   => 'nullable|array',
+            'optional_category_ids.*' => 'integer|exists:facility_categories,id',
         ]);
 
-        $assetType->mandatoryFacilityCategories()->sync($data['facility_category_ids']);
+        $syncData = [];
+        if (!empty($data['facility_category_ids'])) {
+            foreach ($data['facility_category_ids'] as $id) {
+                $syncData[$id] = ['scope' => 'asset', 'is_mandatory' => true];
+            }
+        }
+        if (!empty($data['optional_category_ids'])) {
+            foreach ($data['optional_category_ids'] as $id) {
+                // if ID is already in mandatory, mandatory takes precedence, but we shouldn't have duplicate keys anyway
+                if (!isset($syncData[$id])) {
+                    $syncData[$id] = ['scope' => 'asset', 'is_mandatory' => false];
+                }
+            }
+        }
 
-        return back()->with('success', "Kategori wajib untuk tipe aset \"" . $assetType->name . "\" berhasil disimpan.");
+        $assetType->allFacilityCategories()->sync($syncData);
+
+        return back()->with('success', "Kategori fasilitas untuk tipe aset \"" . $assetType->name . "\" berhasil disimpan.");
     }
 
 

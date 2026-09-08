@@ -11,11 +11,30 @@ use Inertia\Inertia;
 class TemplateAsetController extends Controller
 {
     /**
-     * Tampilkan halaman template field aset & unit.
-     * Kirim semua tipe aset beserta detail_fields, unit_detail_fields,
-     * serta mandatory gallery categories dari DB.
+     * Tampilkan halaman Spesifikasi Aset.
      */
-    public function index()
+    public function spesifikasiAset()
+    {
+        $assetTypes = asset_type::with([
+            'category:id,name',
+        ])->orderBy('name')->get()->map(fn($t) => [
+            'id'                => $t->id,
+            'name'              => $t->name,
+            'category'          => $t->category?->name,
+            'allow_units'       => (bool) $t->allow_units,
+            'detail_fields'     => $t->detail_fields     ?? [],
+            'unit_detail_fields' => $t->unit_detail_fields ?? [],
+        ]);
+
+        return Inertia::render('admin/KonfigurasiAset/SpesifikasiAset', [
+            'assetTypes'       => $assetTypes,
+        ]);
+    }
+
+    /**
+     * Tampilkan halaman Kategori Galeri.
+     */
+    public function kategoriGaleri()
     {
         $assetTypes = asset_type::with([
             'category:id,name',
@@ -26,8 +45,6 @@ class TemplateAsetController extends Controller
             'name'              => $t->name,
             'category'          => $t->category?->name,
             'allow_units'       => (bool) $t->allow_units,
-            'detail_fields'     => $t->detail_fields     ?? [],
-            'unit_detail_fields' => $t->unit_detail_fields ?? [],
             'gallery_categories' => $t->galleryCategories->map(fn($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
@@ -42,7 +59,7 @@ class TemplateAsetController extends Controller
             ])->values(),
         ]);
 
-        return Inertia::render('admin/TemplateAset', [
+        return Inertia::render('admin/KonfigurasiAset/KategoriGaleri', [
             'assetTypes'       => $assetTypes,
             'galleryCategories' => galery_category::orderBy('name')->get(['id', 'name']),
         ]);

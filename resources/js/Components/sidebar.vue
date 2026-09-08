@@ -170,6 +170,10 @@ const handleLogout = () => {
                         <div class="h-px bg-slate-200/80"></div>
                     </div>
 
+                    <div v-else-if="item.isHeader" class="pt-3 pb-1 px-3">
+                        <span v-if="!isCollapsed" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.label }}</span>
+                    </div>
+
                     <!-- Otomatis mendeteksi status aktif dari rute laravel menggunakan routeName -->
                     <template v-else>
                         <Link

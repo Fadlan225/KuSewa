@@ -177,7 +177,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/account-management', fn() => Inertia::render('admin/AdministratorAccountManagement'))->name('account-management');
     Route::get('/backup-restore', fn() => Inertia::render('admin/BackupRestore'))->name('backup-restore');
     Route::get('/cms-manager', fn() => Inertia::render('admin/CMSManager'))->name('cms-manager');
-    Route::get('/kategori-fasilitas', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'index'])->name('kategori-fasilitas');
+    // Kategori & Tipe Aset
+    Route::get('/konfigurasi-aset/kategori-tipe', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'kategoriTipe'])->name('konfigurasi-aset.kategori-tipe');
+    // Fasilitas Aset
+    Route::get('/konfigurasi-aset/fasilitas', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'fasilitas'])->name('konfigurasi-aset.fasilitas');
     // Kategori Aset
     Route::post('/kategori-fasilitas/kategori-aset', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'storeKategoriAset'])->name('kategori-aset.store');
     Route::put('/kategori-fasilitas/kategori-aset/{kategoriAset}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'updateKategoriAset'])->name('kategori-aset.update');
@@ -195,11 +198,17 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/kategori-fasilitas/kategori-fas/{kategoriFasilitas}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'destroyKategoriFasilitas'])->name('kategori-fas.destroy');
     // Kategori Wajib per Tipe Aset
     Route::put('/kategori-fasilitas/mandatory/{assetType}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'syncMandatoryCategories'])->name('mandatory-fas.sync');
+    // Item Fasilitas
+    Route::post('/kategori-fasilitas/jenis-fas', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'storeJenisFasilitas'])->name('jenis-fas.store');
+    Route::put('/kategori-fasilitas/jenis-fas/{jenisFasilitas}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'updateJenisFasilitas'])->name('jenis-fas.update');
+    Route::patch('/kategori-fasilitas/jenis-fas/{jenisFasilitas}/toggle', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'toggleJenisFasilitas'])->name('jenis-fas.toggle');
+    Route::delete('/kategori-fasilitas/jenis-fas/{jenisFasilitas}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'destroyJenisFasilitas'])->name('jenis-fas.destroy');
 
-    // Template Field Aset (detail_fields & gallery wajib per tipe aset)
-    Route::get('/template-aset', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'index'])->name('template-aset');
-    Route::put('/template-aset/{assetType}/fields', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'updateFields'])->name('template-aset.fields');
-    Route::put('/template-aset/{assetType}/gallery', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'syncGallery'])->name('template-aset.gallery');
+    // Konfigurasi Aset (detail_fields & gallery wajib per tipe aset)
+    Route::get('/konfigurasi-aset/spesifikasi', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'spesifikasiAset'])->name('konfigurasi-aset.spesifikasi');
+    Route::get('/konfigurasi-aset/galeri', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'kategoriGaleri'])->name('konfigurasi-aset.galeri');
+    Route::put('/konfigurasi-aset/{assetType}/fields', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'updateFields'])->name('konfigurasi-aset.fields');
+    Route::put('/konfigurasi-aset/{assetType}/gallery', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'syncGallery'])->name('konfigurasi-aset.gallery');
 
     Route::get('/payment-system', fn() => Inertia::render('admin/PaymentSystem'))->name('payment-system');
     Route::get('/promo-diskon', fn() => Inertia::render('admin/PromoDiskon'))->name('promo-diskon');
