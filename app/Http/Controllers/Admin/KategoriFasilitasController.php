@@ -28,23 +28,30 @@ class KategoriFasilitasController extends Controller
     public function fasilitas()
     {
         return Inertia::render('admin/KonfigurasiAset/KategoriFasilitas', [
-            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->get(['id','category_id','name','description','is_active']),
+            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->get(['id','category_id','name','description','is_active','allow_units']),
             'kategoriFasilitas' => facility_category::with('facilities')->orderBy('sort_order')->orderBy('name')->get(['id','name','slug','sort_order','is_active']),
             // Tipe aset beserta kategori fasilitas wajib yang sudah dipilih
             'tipeAsetMandatory' => asset_type::with([
                                             'mandatoryFacilityCategories:id,name',
-                                            'optionalFacilityCategories:id,name'
+                                            'optionalFacilityCategories:id,name',
+                                            'mandatoryUnitFacilityCategories:id,name',
+                                            'optionalUnitFacilityCategories:id,name'
                                         ])
                                         ->orderBy('name')
-                                        ->get(['id','name','description'])
+                                        ->get(['id','name','description','allow_units'])
                                         ->map(fn($t) => [
                                             'id'          => $t->id,
                                             'name'        => $t->name,
                                             'description' => $t->description,
+                                            'allow_units' => $t->allow_units,
                                             'mandatory_ids' => $t->mandatoryFacilityCategories->pluck('id')->values(),
                                             'mandatory_names' => $t->mandatoryFacilityCategories->pluck('name')->values(),
                                             'optional_ids' => $t->optionalFacilityCategories->pluck('id')->values(),
                                             'optional_names' => $t->optionalFacilityCategories->pluck('name')->values(),
+                                            'unit_mandatory_ids' => $t->mandatoryUnitFacilityCategories->pluck('id')->values(),
+                                            'unit_mandatory_names' => $t->mandatoryUnitFacilityCategories->pluck('name')->values(),
+                                            'unit_optional_ids' => $t->optionalUnitFacilityCategories->pluck('id')->values(),
+                                            'unit_optional_names' => $t->optionalUnitFacilityCategories->pluck('name')->values(),
                                         ]),
         ]);
     }
@@ -203,28 +210,38 @@ class KategoriFasilitasController extends Controller
     public function syncMandatoryCategories(Request $request, asset_type $assetType)
     {
         $data = $request->validate([
+            'scope'                   => 'nullable|string|in:asset,unit',
             'facility_category_ids'   => 'nullable|array',
             'facility_category_ids.*' => 'integer|exists:facility_categories,id',
             'optional_category_ids'   => 'nullable|array',
             'optional_category_ids.*' => 'integer|exists:facility_categories,id',
         ]);
 
+        $scope = $data['scope'] ?? 'asset';
+
         $syncData = [];
         if (!empty($data['facility_category_ids'])) {
             foreach ($data['facility_category_ids'] as $id) {
-                $syncData[$id] = ['scope' => 'asset', 'is_mandatory' => true];
+                $syncData[$id] = ['scope' => $scope, 'is_mandatory' => true];
             }
         }
         if (!empty($data['optional_category_ids'])) {
             foreach ($data['optional_category_ids'] as $id) {
-                // if ID is already in mandatory, mandatory takes precedence, but we shouldn't have duplicate keys anyway
                 if (!isset($syncData[$id])) {
-                    $syncData[$id] = ['scope' => 'asset', 'is_mandatory' => false];
+                    $syncData[$id] = ['scope' => $scope, 'is_mandatory' => false];
                 }
             }
         }
 
-        $assetType->allFacilityCategories()->sync($syncData);
+        // Hapus mapping untuk scope ini saja agar scope lain tidak terpengaruh
+        \DB::table('asset_type_mandatory_categories')
+            ->where('asset_type_id', $assetType->id)
+            ->where('scope', $scope)
+            ->delete();
+
+        if (!empty($syncData)) {
+            $assetType->allFacilityCategories()->attach($syncData);
+        }
 
         return back()->with('success', "Kategori fasilitas untuk tipe aset \"" . $assetType->name . "\" berhasil disimpan.");
     }

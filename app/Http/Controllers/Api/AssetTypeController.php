@@ -42,11 +42,35 @@ class AssetTypeController extends Controller
     public function details($id)
     {
         $assetType = asset_type::with([
-            'allowedFacilities:id,name,slug,facility_category_id',
-            'allowedFacilities.category:id,name',
-            'allowedUnitFacilities:id,name,slug,facility_category_id',
-            'allowedUnitFacilities.category:id,name',
+            'allFacilityCategories.facilities' => function ($query) {
+                $query->where('is_active', true);
+            },
+            'allFacilityCategories.facilities.category:id,name',
+            'mandatoryUnitFacilityCategories.facilities' => function ($query) {
+                $query->where('is_active', true);
+            },
+            'mandatoryUnitFacilityCategories.facilities.category:id,name',
+            'optionalUnitFacilityCategories.facilities' => function ($query) {
+                $query->where('is_active', true);
+            },
+            'optionalUnitFacilityCategories.facilities.category:id,name',
         ])->findOrFail($id);
+
+        $facilities = collect();
+        foreach ($assetType->allFacilityCategories as $cat) {
+            $facilities = $facilities->concat($cat->facilities);
+        }
+
+        $unitFacilities = collect();
+        foreach ($assetType->mandatoryUnitFacilityCategories as $cat) {
+            $unitFacilities = $unitFacilities->concat($cat->facilities);
+        }
+        foreach ($assetType->optionalUnitFacilityCategories as $cat) {
+            $unitFacilities = $unitFacilities->concat($cat->facilities);
+        }
+
+        $facilities = $facilities->unique('id')->values();
+        $unitFacilities = $unitFacilities->unique('id')->values();
 
         // Kategori galeri bersifat global — ambil semua, diurutkan alfabetis
         $galleryCategories = galery_category::orderBy('name')
@@ -79,8 +103,8 @@ class AssetTypeController extends Controller
             'id'                   => $assetType->id,
             'name'                 => $assetType->name,
             'allow_units'          => (bool) $assetType->allow_units,
-            'facilities'           => $assetType->allowedFacilities,
-            'unit_facilities'      => $assetType->allowedUnitFacilities,
+            'facilities'           => $facilities,
+            'unit_facilities'      => $unitFacilities,
             'gallery_categories'   => $galleryCategories,
             'mandatory_categories' => $mandatoryCategories,
             'mandatory_unit_categories' => $mandatoryUnitCategories,

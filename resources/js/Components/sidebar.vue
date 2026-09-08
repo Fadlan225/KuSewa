@@ -18,6 +18,8 @@ const page = usePage();
 // Hanya mengambil data nyata dari session. Jika gagal, akan error sesuai standar SaaS (no dummy data)
 const user = computed(() => page.props.auth.user);
 
+
+
 const showProfileMenu = ref(false);
 const profileMenuRef = ref(null);
 
@@ -164,58 +166,59 @@ const handleLogout = () => {
             <div class="relative flex-1 min-h-0 -mx-2">
                 <div class="h-full overflow-y-auto no-scrollbar px-2 pb-6">
                     <nav class="space-y-1 text-sm px-2">
-                <template v-for="(item, idx) in menu" :key="idx">
-                    <!-- Jika ada item divider -->
-                    <div v-if="item.divider" class="pt-4 pb-2 px-3">
-                        <div class="h-px bg-slate-200/80"></div>
-                    </div>
+                    <template v-for="(item, idx) in menu" :key="idx">
+                        <!-- Jika ada item divider -->
+                        <div v-if="item.divider" class="pt-4 pb-2 px-3">
+                            <div class="h-px bg-slate-200/80"></div>
+                        </div>
 
-                    <div v-else-if="item.isHeader" class="pt-3 pb-1 px-3">
-                        <span v-if="!isCollapsed" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.label }}</span>
-                    </div>
+                        <div v-else-if="item.isHeader" class="pt-3 pb-1 px-3">
+                            <span v-if="!isCollapsed" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.label }}</span>
+                        </div>
 
-                    <!-- Otomatis mendeteksi status aktif dari rute laravel menggunakan routeName -->
-                    <template v-else>
-                        <Link
-                            :href="item.route"
-                            :title="isCollapsed ? item.label : ''"
-                            :class="[
-                                route().current(item.routeName) 
-                                    ? 'bg-[#FFF8E6] text-[#0A2540] font-bold shadow-sm ring-1 ring-[#FFC000]/20' 
-                                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium', 
-                                'flex items-center px-3 py-2 rounded-lg transition-all duration-200 w-full', 
-                                isCollapsed ? 'justify-center' : 'justify-between'
-                            ]"
-                        >
-                            <div class="flex items-center gap-3">
-                                <component 
-                                    v-if="typeof item.icon !== 'string'" 
-                                    :is="item.icon" 
-                                    :class="[
-                                        route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-500', 
-                                        'w-5 h-5 text-center transition-colors'
-                                    ]" 
-                                />
-                                <AppIcon 
-                                    v-else 
-                                    :iconClass="item.icon" 
-                                    :class="[
-                                        route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-500', 
-                                        'w-5 h-5 text-center transition-colors'
-                                    ]" 
-                                />
-                                <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
-                            </div>
+                        <!-- Otomatis mendeteksi status aktif dari rute laravel menggunakan routeName -->
+                        <template v-else>
+                            <Link
+                                :href="item.route"
+                                :title="isCollapsed ? item.label : ''"
+                                :class="[
+                                    route().current(item.routeName) 
+                                        ? 'bg-[#FFF8E6] text-[#0A2540] font-bold shadow-sm ring-1 ring-[#FFC000]/20' 
+                                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium', 
+                                    'flex items-center px-3 py-2 rounded-lg transition-all duration-200 w-full', 
+                                    isCollapsed ? 'justify-center' : 'justify-between'
+                                ]"
+                            >
+                                <div class="flex items-center gap-3">
+                                    <component 
+                                        v-if="typeof item.icon !== 'string'" 
+                                        :is="item.icon" 
+                                        :stroke-width="2.5"
+                                        :class="[
+                                            route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-500', 
+                                            'w-5 h-5 text-center transition-colors'
+                                        ]" 
+                                    />
+                                    <AppIcon 
+                                        v-else 
+                                        :iconClass="item.icon" 
+                                        :class="[
+                                            route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-500', 
+                                            'w-5 h-5 text-center transition-colors'
+                                        ]" 
+                                    />
+                                    <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
+                                </div>
 
-                            <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">
-                                <AppIcon :iconClass="item.badgeIcon" v-if="item.badgeIcon && !item.badge" />
-                                <span v-else-if="item.badge" :class="item.badgeClass || 'bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold'">
-                                    {{ item.badge }}
-                                </span>
-                            </template>
-                        </Link>
+                                <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">
+                                    <AppIcon :iconClass="item.badgeIcon" v-if="item.badgeIcon && !item.badge" />
+                                    <span v-else-if="item.badge" :class="item.badgeClass || 'bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded text-[9px] font-bold'">
+                                        {{ item.badge }}
+                                    </span>
+                                </template>
+                            </Link>
+                        </template>
                     </template>
-                </template>
                 </nav>
                 </div>
                 <!-- Fade Shadow Bottom -->
@@ -238,7 +241,7 @@ const handleLogout = () => {
                     >
                         <div class="flex items-center gap-3">
                             <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-6 h-6 text-center" />
-                            <component v-else :is="item.icon" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-6 h-6 text-center']" />
+                            <component v-else :is="item.icon" :stroke-width="2.5" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-6 h-6 text-center']" />
                             <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                         </div>
                         <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">

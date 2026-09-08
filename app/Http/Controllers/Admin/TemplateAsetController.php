@@ -48,20 +48,26 @@ class TemplateAsetController extends Controller
             'gallery_categories' => $t->galleryCategories->map(fn($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
+                'description' => $c->pivot->description,
                 'is_mandatory' => (bool) $c->pivot->is_mandatory,
                 'sort_order' => (int) $c->pivot->sort_order,
+                'min_photos' => (int) $c->pivot->min_photos,
+                'max_photos' => $c->pivot->max_photos !== null ? (int) $c->pivot->max_photos : null,
             ])->values(),
             'unit_gallery_categories' => $t->unitGalleryCategories->map(fn($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
+                'description' => $c->pivot->description,
                 'is_mandatory' => (bool) $c->pivot->is_mandatory,
                 'sort_order' => (int) $c->pivot->sort_order,
+                'min_photos' => (int) $c->pivot->min_photos,
+                'max_photos' => $c->pivot->max_photos !== null ? (int) $c->pivot->max_photos : null,
             ])->values(),
         ]);
 
         return Inertia::render('admin/KonfigurasiAset/KategoriGaleri', [
             'assetTypes'       => $assetTypes,
-            'galleryCategories' => galery_category::orderBy('name')->get(['id', 'name']),
+            'galleryCategories' => galery_category::orderBy('name')->get(['id', 'name', 'description']),
         ]);
     }
 
@@ -76,7 +82,7 @@ class TemplateAsetController extends Controller
             'fields'             => 'required|array',
             'fields.*.key'       => 'required|string|max:64',
             'fields.*.label'     => 'required|string|max:128',
-            'fields.*.type'      => 'required|in:text,number,select,radio,checkbox,time,room_size',
+            'fields.*.type'      => 'required|in:text,textarea,number,counter,select,searchable_select,radio,checkbox_list,checkbox,date,time,room_size',
             'fields.*.required'  => 'required|boolean',
             'fields.*.options'   => 'nullable|array',
             'fields.*.options.*' => 'string|max:64',
@@ -88,7 +94,7 @@ class TemplateAsetController extends Controller
             $assetType->update(['unit_detail_fields' => $data['fields']]);
         }
 
-        return back()->with('success', "Template field {$assetType->name} berhasil disimpan.");
+        return back()->with('success', "Konfigurasi form {$assetType->name} berhasil disimpan.");
     }
 
     /**
@@ -103,6 +109,9 @@ class TemplateAsetController extends Controller
             'categories.*.id'           => 'required|integer|exists:galery_categories,id',
             'categories.*.is_mandatory' => 'required|boolean',
             'categories.*.sort_order'   => 'required|integer',
+            'categories.*.description'  => 'nullable|string',
+            'categories.*.min_photos'   => 'nullable|integer|min:0',
+            'categories.*.max_photos'   => 'nullable|integer|min:0',
         ]);
 
         $relation = $data['scope'] === 'asset'
@@ -110,11 +119,51 @@ class TemplateAsetController extends Controller
             : $assetType->unitGalleryCategories();
 
         $syncData = [];
+        $existingCategories = \App\Models\galery_category::whereIn('name', ['Sampul Utama', 'Lainnya'])->get()->keyBy('name');
+        $sampulUtamaId = $existingCategories->get('Sampul Utama')?->id;
+        $lainnyaId = $existingCategories->get('Lainnya')?->id;
+
+        $hasSampul = false;
+        $hasLainnya = false;
+
         foreach ($data['categories'] as $cat) {
+            if ($cat['id'] == $sampulUtamaId) {
+                $hasSampul = true;
+                $cat['is_mandatory'] = true;
+            }
+            if ($cat['id'] == $lainnyaId) {
+                $hasLainnya = true;
+                $cat['is_mandatory'] = false;
+            }
+
             $syncData[$cat['id']] = [
                 'scope' => $data['scope'],
                 'is_mandatory' => $cat['is_mandatory'],
                 'sort_order' => $cat['sort_order'],
+                'description' => $cat['description'] ?? null,
+                'min_photos' => $cat['min_photos'] ?? 0,
+                'max_photos' => $cat['max_photos'] ?? null,
+            ];
+        }
+
+        // Enforce defaults if missing
+        if (!$hasSampul && $sampulUtamaId) {
+            $syncData[$sampulUtamaId] = [
+                'scope' => $data['scope'],
+                'is_mandatory' => true,
+                'sort_order' => 0,
+                'min_photos' => 1,
+                'max_photos' => null,
+            ];
+        }
+
+        if (!$hasLainnya && $lainnyaId) {
+            $syncData[$lainnyaId] = [
+                'scope' => $data['scope'],
+                'is_mandatory' => false,
+                'sort_order' => 9999,
+                'min_photos' => 0,
+                'max_photos' => null,
             ];
         }
 

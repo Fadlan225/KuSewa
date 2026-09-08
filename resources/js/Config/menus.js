@@ -41,7 +41,7 @@ export const getAdminMenu = (sidebarCounts) => [
     { label: 'Validasi Aset', route: route('admin.validasi-aset'), routeName: 'admin.validasi-aset', icon: CheckSquare },
     { isHeader: true, label: 'Konfigurasi Aset' },
     { label: 'Kategori & Tipe Aset', route: route('admin.konfigurasi-aset.kategori-tipe'), routeName: 'admin.konfigurasi-aset.kategori-tipe', icon: Building },
-    { label: 'Spesifikasi Aset', route: route('admin.konfigurasi-aset.spesifikasi'), routeName: 'admin.konfigurasi-aset.spesifikasi', icon: SlidersHorizontal },
+    { label: 'Spesifikasi Form', route: route('admin.konfigurasi-aset.spesifikasi'), routeName: 'admin.konfigurasi-aset.spesifikasi', icon: SlidersHorizontal },
     { label: 'Kategori Galeri', route: route('admin.konfigurasi-aset.galeri'), routeName: 'admin.konfigurasi-aset.galeri', icon: Images },
     { label: 'Fasilitas Aset', route: route('admin.konfigurasi-aset.fasilitas'), routeName: 'admin.konfigurasi-aset.fasilitas', icon: Layers },
     { divider: true },

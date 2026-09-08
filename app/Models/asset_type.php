@@ -109,7 +109,24 @@ class asset_type extends Model
             'asset_type_mandatory_categories',
             'asset_type_id',
             'facility_category_id'
-        )->wherePivot('scope', 'unit')->withPivot('scope')->withTimestamps();
+        )->wherePivot('scope', 'unit')
+         ->wherePivot('is_mandatory', true)
+         ->withPivot('scope', 'is_mandatory')
+         ->withTimestamps();
+    }
+
+    /** Kategori fasilitas opsional unit. */
+    public function optionalUnitFacilityCategories()
+    {
+        return $this->belongsToMany(
+            facility_category::class,
+            'asset_type_mandatory_categories',
+            'asset_type_id',
+            'facility_category_id'
+        )->wherePivot('scope', 'unit')
+         ->wherePivot('is_mandatory', false)
+         ->withPivot('scope', 'is_mandatory')
+         ->withTimestamps();
     }
 
     // ── Mandatory Gallery Categories ──────────────────────────────────────────
@@ -123,7 +140,7 @@ class asset_type extends Model
             'asset_type_id',
             'galery_category_id'
         )->wherePivot('scope', 'asset')
-         ->withPivot('scope', 'is_mandatory', 'sort_order')
+         ->withPivot('scope', 'is_mandatory', 'sort_order', 'description', 'min_photos', 'max_photos')
          ->orderByPivot('sort_order', 'asc')
          ->withTimestamps();
     }
@@ -137,7 +154,7 @@ class asset_type extends Model
             'asset_type_id',
             'galery_category_id'
         )->wherePivot('scope', 'unit')
-         ->withPivot('scope', 'is_mandatory', 'sort_order')
+         ->withPivot('scope', 'is_mandatory', 'sort_order', 'description', 'min_photos', 'max_photos')
          ->orderByPivot('sort_order', 'asc')
          ->withTimestamps();
     }

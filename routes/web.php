@@ -217,6 +217,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/konfigurasi-aset/{assetType}/fields', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'updateFields'])->name('konfigurasi-aset.fields');
     Route::put('/konfigurasi-aset/{assetType}/gallery', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'syncGallery'])->name('konfigurasi-aset.gallery');
 
+
     Route::get('/payment-system', fn() => Inertia::render('admin/PaymentSystem'))->name('payment-system');
     Route::get('/promo-diskon', fn() => Inertia::render('admin/PromoDiskon'))->name('promo-diskon');
     Route::get('/service-fee', fn() => Inertia::render('admin/ServiceFeeSanksi'))->name('service-fee');
