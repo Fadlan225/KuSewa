@@ -17,7 +17,7 @@ provide('initialAuthData', initialAuthData);
         <!-- Background Image -->
         <div
             class="absolute inset-0 bg-cover bg-center bg-no-repeat"
-            style="background-image: url('/public.png')"
+            style="background-image: url('/public.webp')"
         ></div>
 
         <!-- Dark overlay -->

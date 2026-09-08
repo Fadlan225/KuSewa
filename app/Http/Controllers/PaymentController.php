@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\payment;
 use App\Models\bank_account;
+use App\Services\ImageOptimizer;
 use Inertia\Inertia;
 
 class PaymentController extends Controller
@@ -43,7 +44,7 @@ class PaymentController extends Controller
         }
 
         // Simpan file bukti
-        $path = $request->file('proof_of_payment')->store('proofs', 'public');
+        $path = ImageOptimizer::process($request->file('proof_of_payment'), 'proofs');
 
         // Simpan nama bank sebagai payment_method (bukan ID)
         $bankName = null;

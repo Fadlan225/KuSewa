@@ -32,7 +32,7 @@ provide('initialAuthData', initialAuthData);
     <div class="relative min-h-screen flex items-center justify-center overflow-hidden">
 
         <!-- FULLSCREEN BACKGROUND -->
-        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('/public.png')"></div>
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('/public.webp')"></div>
         <div class="absolute inset-0 bg-gray-900/60 mix-blend-multiply"></div>
 
         <!-- KONTEN UTAMA (Di atas Background) -->

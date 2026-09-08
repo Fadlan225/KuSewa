@@ -11,6 +11,9 @@ use App\Models\asset_category;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
+use App\Services\ImageOptimizer;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
@@ -390,7 +393,7 @@ class ProfileController extends Controller
                 // Delete old photo
                 \Illuminate\Support\Facades\Storage::disk('public')->delete($user->profile_photo);
             }
-            $path = $request->file('photo')->store('profile_photos', 'public');
+            $path = ImageOptimizer::process($request->file('photo'), 'profile_photos', 800, 80);
             $user->profile_photo = $path;
             $user->save();
         }

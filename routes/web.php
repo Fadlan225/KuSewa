@@ -56,6 +56,13 @@ Route::get('/promosikan-properti', function () {
     return Inertia::render('Auth/ownerlanding');
 })->name('owner.landing');
 
+Route::get('/banned', function () {
+    if (auth()->check() && auth()->user()->status !== 'inactive') {
+        return redirect('/');
+    }
+    return Inertia::render('Auth/Banned');
+})->name('banned');
+
 Route::middleware('auth')->prefix('owner')->group(function () {
     Route::get('/register', [OwnerRegistrationController::class, 'index'])->name('owner.register');
     Route::get('/register-instant', [OwnerRegistrationController::class, 'instantIndex'])->name('owner.register.instant');

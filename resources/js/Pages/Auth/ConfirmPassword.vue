@@ -15,7 +15,7 @@ provide('initialAuthData', initialAuthData);
         <Head title="Konfirmasi Password" />
 
         <!-- Background Image -->
-        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('/public.png')"></div>
+        <div class="absolute inset-0 bg-cover bg-center bg-no-repeat" style="background-image: url('/public.webp')"></div>
 
         <!-- Dark overlay -->
         <div class="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-transparent"></div>

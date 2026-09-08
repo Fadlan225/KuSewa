@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use App\Services\ImageOptimizer;
 
 class AssetController extends Controller
 {
@@ -329,7 +330,7 @@ class AssetController extends Controller
             'file' => 'required|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        $path = $request->file('file')->store('uploads/temp', 'public');
+        $path = ImageOptimizer::process($request->file('file'), 'uploads/temp');
 
         return response()->json([
             'path' => $path,
@@ -646,7 +647,7 @@ class AssetController extends Controller
                         foreach ($files as $file) {
                             $path = null;
                             if ($file instanceof \Illuminate\Http\UploadedFile) {
-                                $path = $file->store('uploads/assets', 'public');
+                                $path = ImageOptimizer::process($file, 'uploads/assets');
                             } elseif (is_string($file) && str_starts_with($file, 'uploads/temp/')) {
                                 $newPath = str_replace('uploads/temp/', 'uploads/assets/', $file);
                                 if (Storage::disk('public')->exists($file)) {
@@ -669,7 +670,7 @@ class AssetController extends Controller
                     // Thumbnail unit
                     $thumbnailPath = null;
                     if ($request->hasFile("units.{$index}.thumbnail")) {
-                        $thumbnailPath = $request->file("units.{$index}.thumbnail")->store('uploads/assets/thumbnails', 'public');
+                        $thumbnailPath = ImageOptimizer::process($request->file("units.{$index}.thumbnail"), 'uploads/assets/thumbnails');
                     } elseif (isset($unitData['thumbnail']) && is_string($unitData['thumbnail']) && str_starts_with($unitData['thumbnail'], 'uploads/temp/')) {
                         $newPath = str_replace('uploads/temp/', 'uploads/assets/thumbnails/', $unitData['thumbnail']);
                         if (Storage::disk('public')->exists($unitData['thumbnail'])) {
@@ -705,7 +706,7 @@ class AssetController extends Controller
                 foreach ($files as $file) {
                     $path = null;
                     if ($file instanceof \Illuminate\Http\UploadedFile) {
-                        $path = $file->store('uploads/assets', 'public');
+                        $path = ImageOptimizer::process($file, 'uploads/assets');
                     } elseif (is_string($file) && str_starts_with($file, 'uploads/temp/')) {
                         $newPath = str_replace('uploads/temp/', 'uploads/assets/', $file);
                         if (Storage::disk('public')->exists($file)) {
@@ -728,7 +729,7 @@ class AssetController extends Controller
             // --- 6. Thumbnail Aset ---
             $mainThumbnailPath = null;
             if ($request->hasFile('thumbnail')) {
-                $mainThumbnailPath = $request->file('thumbnail')->store('uploads/assets/thumbnails', 'public');
+                $mainThumbnailPath = ImageOptimizer::process($request->file('thumbnail'), 'uploads/assets/thumbnails');
             } elseif (is_string($request->input('thumbnail')) && str_starts_with($request->input('thumbnail'), 'uploads/temp/')) {
                 $thumbnailString = $request->input('thumbnail');
                 $newPath = str_replace('uploads/temp/', 'uploads/assets/thumbnails/', $thumbnailString);
@@ -1186,7 +1187,7 @@ class AssetController extends Controller
 
         if (!empty($validated['new_images'])) {
             foreach ($validated['new_images'] as $imgData) {
-                $path = $imgData['file']->store('uploads/assets', 'public');
+                $path = ImageOptimizer::process($imgData['file'], 'uploads/assets');
                 $asset->images()->create([
                     'asset_unit_id' => $unit->id,
                     'gallery_category_id' => $imgData['category_id'],
@@ -1196,7 +1197,7 @@ class AssetController extends Controller
         }
 
         if ($request->hasFile('thumbnail')) {
-            $path = $request->file('thumbnail')->store('uploads/assets/thumbnails', 'public');
+            $path = ImageOptimizer::process($request->file('thumbnail'), 'uploads/assets/thumbnails');
             $asset->images()->create([
                 'asset_unit_id' => $unit->id,
                 'image' => $path,
@@ -1329,12 +1330,15 @@ class AssetController extends Controller
         // Handle new images
         if (!empty($validated['new_images'])) {
             foreach ($validated['new_images'] as $imgData) {
-                $path = $imgData['file']->store('uploads/assets', 'public');
-                $asset->images()->create([
-                    'asset_unit_id' => $unit->id,
-                    'gallery_category_id' => $imgData['category_id'],
-                    'image' => $path,
-                ]);
+                if (isset($imgData['file']) && $imgData['file'] instanceof \Illuminate\Http\UploadedFile) {
+                    $path = ImageOptimizer::process($imgData['file'], 'uploads/assets');
+                    asset_image::create([
+                        'asset_id' => $asset->id,
+                        'asset_unit_id' => $unit->id,
+                        'gallery_category_id' => $imgData['category_id'],
+                        'image' => $path,
+                    ]);
+                }
             }
         }
 

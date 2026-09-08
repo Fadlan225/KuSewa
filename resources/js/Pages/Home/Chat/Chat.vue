@@ -408,9 +408,13 @@ onMounted(() => {
   const { requestNotificationPermission } = usePermissionPrompt();
   requestNotificationPermission();
 
-  // Polling lambat hanya untuk fallback/update badge kalau ada pesan di chat lain
-  setInterval(() => {
-    fetchChats();
-  }, 10000);
+  // Polling dihapus untuk menghemat beban server
+  // Update realtime chat bergantung pada websocket/Echo
+  window.Echo?.private(`App.Models.User.${page.props.auth.user.id}`)
+      .notification((notification) => {
+          if (notification.type === 'chat_message') {
+              fetchChats();
+          }
+      });
 });
 </script>

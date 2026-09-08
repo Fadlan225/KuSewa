@@ -19,7 +19,7 @@ const {
     <div class="w-full px-3 pt-3 pb-6 sm:px-6 md:px-0 md:pt-0 md:pb-0 relative z-[90]">
 
         <!-- 2. HERO CONTAINER: rounded di mobile, lurus kembali (rounded-none) di desktop -->
-        <div class="relative w-full h-[360px] sm:h-[420px] md:h-[500px] lg:h-[540px] bg-cover bg-center rounded-2xl md:rounded-none overflow-hidden md:overflow-visible shadow-sm md:shadow-none transition-all duration-300" style="background-image: url('/public.png');">
+        <div class="relative w-full h-[360px] sm:h-[420px] md:h-[500px] lg:h-[540px] bg-cover bg-center rounded-2xl md:rounded-none overflow-hidden md:overflow-visible shadow-sm md:shadow-none transition-all duration-300" style="background-image: url('/public.webp');">
 
             <!-- Overlay gelap -->
             <div class="absolute inset-0 bg-black/50"></div>

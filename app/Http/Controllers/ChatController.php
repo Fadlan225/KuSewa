@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Events\MessageSent;
 use App\Notifications\NewChatMessage;
+use App\Services\ImageOptimizer;
 
 class ChatController extends Controller
 {
@@ -96,8 +97,8 @@ class ChatController extends Controller
 
         $messages = $room->messages()
             ->withTrashed()
-            ->with(['attachments', 'replyTo' => function($q){ 
-                $q->withTrashed()->with('sender'); 
+            ->with(['attachments', 'replyTo' => function($q){
+                $q->withTrashed()->with('sender');
             }])
             ->orderBy('created_at', 'asc')->get()->map(function($msg) use ($userId) {
             $hasAttachments = $msg->attachments->count() > 0;
@@ -210,7 +211,7 @@ class ChatController extends Controller
                 // Validasi File Manual (Hanya Gambar)
                 $extension = strtolower($file->getClientOriginalExtension());
                 $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-                
+
                 if (!in_array($extension, $allowedExtensions)) {
                     return response()->json(['error' => 'File melanggar kebijakan: Hanya menerima gambar (JPG, PNG, WebP).'], 422);
                 }
@@ -219,10 +220,10 @@ class ChatController extends Controller
                 }
 
                 $originalName = $file->getClientOriginalName();
-                $path = $file->storeAs('chat_attachments', time() . '_' . uniqid() . '_' . $originalName, 'public');
+                $path = ImageOptimizer::process($file, 'chat_attachments');
                 $uploadedPaths[] = $path;
             }
-            
+
             $messageType = 'image';
             if (empty($messageContent)) {
                 $messageContent = $uploadedPaths[0];

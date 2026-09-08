@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ImageOptimizer;
 use Inertia\Inertia;
 
 class MonthlyPaymentController extends Controller
@@ -123,8 +124,7 @@ class MonthlyPaymentController extends Controller
         }
 
         // Simpan file bukti bayar
-        $proofPath = $request->file('payment_proof')
-            ->store('billing-proofs/' . Auth::id(), 'public');
+        $proofPath = ImageOptimizer::process($request->file('payment_proof'), 'billing-proofs/' . Auth::id());
 
         $billing->update([
             'payment_method' => $request->payment_method,
