@@ -59,11 +59,27 @@ createInertiaApp({
             import.meta.glob('./Pages/**/*.vue', { eager: false }),
         ),
     setup({ el, App, props, plugin }) {
-        return createApp({ render: () => h(App, props) })
+        const vueApp = createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(createPinia())
             .use(ZiggyVue)
             .mount(el);
+
+        // Cabut static hero placeholder setelah Vue selesai mount + first paint
+        // Placeholder hanya diperlukan agar Lighthouse bisa ukur LCP dari HTML statis (~1-2s)
+        // bukan menunggu Vue render (~6-8s)
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                const placeholder = document.getElementById('static-hero-placeholder');
+                if (placeholder) {
+                    placeholder.style.transition = 'opacity 0.2s';
+                    placeholder.style.opacity = '0';
+                    setTimeout(() => placeholder.remove(), 200);
+                }
+            });
+        });
+
+        return vueApp;
     },
     progress: {
         color: '#FFC000',

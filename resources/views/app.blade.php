@@ -60,6 +60,34 @@
         @endif
     </head>
     <body class="font-sans antialiased">
+
+        {{-- Static LCP Hero Placeholder --}}
+        {{-- position:fixed agar tidak mendorong konten Vue ke bawah (no layout shift) --}}
+        {{-- Dicabut dengan fade setelah Vue mount. LCP diukur dari img ini (~1-2s) --}}
+        <div id="static-hero-placeholder" aria-hidden="true"
+             style="position:fixed;top:0;left:0;right:0;z-index:9999;width:100%;height:360px;overflow:hidden;background:#0A2540;"
+        >
+            <img
+                src="/public.webp"
+                alt="KitaSewa - Platform Sewa Aset Terpercaya"
+                fetchpriority="high"
+                decoding="async"
+                width="1440"
+                height="540"
+                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;"
+            >
+            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div>
+            <div style="position:absolute;inset:0;max-width:80rem;margin:0 auto;padding:0 1.5rem;display:flex;flex-direction:column;justify-content:center;">
+                <h1 style="font-size:clamp(1.25rem,3.5vw,3rem);font-weight:800;color:white;line-height:1.25;margin:0;">
+                    Temukan <span style="color:#FFC000;">Aset,</span><br>
+                    <span style="color:#FFC000;">Wujudkan</span> Rencana
+                </h1>
+                <p style="color:rgba(255,255,255,0.8);margin-top:0.75rem;font-size:clamp(0.75rem,1.5vw,0.9rem);max-width:36rem;">
+                    Butuh tempat untuk mewujudkan rencana? Temukan aset yang tepat di KitaSewa.
+                </p>
+            </div>
+        </div>
+
         @inertia
     </body>
 </html>
