@@ -25,10 +25,56 @@
         <style>
             *, *::before, *::after { box-sizing: border-box; }
             body { margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; background: #f9fafb; }
+            
+            /* Animasi Skeleton Pulse */
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+            .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+            .sk-box { background: rgba(255,255,255,0.25); border-radius: 8px; }
+
+            /* Splash Screen Full untuk menutupi proses render Vue */
             #static-hero-placeholder {
                 position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
-                width: 100%; height: 360px; overflow: hidden; background: #0A2540;
-                will-change: opacity; transition: opacity 0.2s ease-out;
+                width: 100%; height: 100vh; background: #f9fafb;
+                will-change: opacity; transition: opacity 0.3s ease-out; pointer-events: none;
+            }
+
+            /* Responsive Hero Layout (meniru class Tailwind di HeroSection.vue) */
+            .hero-wrapper { width: 100%; padding: 0.75rem 0.75rem 1.5rem; position: relative; }
+            .hero-container { position: relative; width: 100%; height: 360px; border-radius: 1rem; overflow: hidden; background: #0A2540; }
+            .hero-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 5; }
+            .hero-content { position: relative; z-index: 10; max-width: 80rem; margin: 0 auto; height: 100%; display: flex; flex-direction: column; justify-content: center; padding: 0 1.5rem; }
+            
+            /* Elemen Skeleton di dalam Hero */
+            .sk-title { width: 90%; height: 60px; max-width: 400px; margin: 0 auto 12px; }
+            .sk-subtitle { width: 80%; height: 20px; max-width: 350px; margin: 0 auto 24px; }
+            .sk-search { width: 100%; max-width: 384px; height: 44px; border-radius: 9999px; background: rgba(255,255,255,0.8); margin: 0 auto; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+            
+            /* Navbar Skeleton */
+            .nav-skeleton { position: absolute; top: 0; left: 0; right: 0; height: 64px; z-index: 20; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; max-width: 80rem; margin: 0 auto; }
+            .sk-logo { width: 120px; height: 32px; }
+            .sk-menu { display: none; }
+
+            /* Breakpoints */
+            @media (min-width: 640px) { /* sm */
+                .hero-wrapper { padding: 1.5rem 1.5rem 1.5rem; }
+                .hero-container { height: 420px; }
+                .nav-skeleton { padding: 0 2.5rem; }
+                .sk-title { height: 70px; max-width: 500px; }
+            }
+            @media (min-width: 768px) { /* md */
+                .hero-wrapper { padding: 0; }
+                .hero-container { height: 500px; border-radius: 0; }
+                .hero-content { padding: 0 2.5rem; align-items: flex-start; text-align: left; }
+                .sk-title { height: 90px; max-width: 600px; margin: 0 0 16px 0; }
+                .sk-subtitle { margin: 0 0 32px 0; max-width: 500px; }
+                .sk-search { margin: 0; max-width: 800px; height: 60px; }
+                .sk-menu { display: flex; gap: 20px; }
+                .sk-menu-item { width: 80px; height: 20px; }
+            }
+            @media (min-width: 1024px) { /* lg */
+                .hero-container { height: 540px; }
+                .hero-content { padding: 0 2rem; }
+                .nav-skeleton { padding: 0 2rem; }
             }
         </style>
 
@@ -77,29 +123,54 @@
     <body class="font-sans antialiased">
 
         {{-- Static LCP Hero Placeholder --}}
-        {{-- position:fixed agar tidak mendorong konten Vue ke bawah (no layout shift) --}}
-        {{-- Dicabut dengan fade setelah Vue mount. LCP diukur dari img ini (~1-2s) --}}
-        <div id="static-hero-placeholder" aria-hidden="true"
-             style="position:fixed;top:0;left:0;right:0;z-index:9999;width:100%;height:360px;overflow:hidden;background:#0A2540;"
-        >
-            <img
-                src="/public.webp"
-                alt="KitaSewa - Platform Sewa Aset Terpercaya"
-                fetchpriority="high"
-                decoding="async"
-                width="1440"
-                height="540"
-                style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;"
-            >
-            <div style="position:absolute;inset:0;background:rgba(0,0,0,0.5);"></div>
-            <div style="position:absolute;inset:0;max-width:80rem;margin:0 auto;padding:0 1.5rem;display:flex;flex-direction:column;justify-content:center;">
-                <h1 style="font-size:clamp(1.25rem,3.5vw,3rem);font-weight:800;color:white;line-height:1.25;margin:0;">
-                    Temukan <span style="color:#FFC000;">Aset,</span><br>
-                    <span style="color:#FFC000;">Wujudkan</span> Rencana
-                </h1>
-                <p style="color:rgba(255,255,255,0.8);margin-top:0.75rem;font-size:clamp(0.75rem,1.5vw,0.9rem);max-width:36rem;">
-                    Butuh tempat untuk mewujudkan rencana? Temukan aset yang tepat di KitaSewa.
-                </p>
+        {{-- Full height screen, dicabut dengan fade setelah Vue mount --}}
+        <div id="static-hero-placeholder" aria-hidden="true">
+            
+            <div class="hero-wrapper">
+                <div class="hero-container">
+                    
+                    <!-- LCP Image Indicator -->
+                    <img
+                        src="/public.webp"
+                        alt="Background"
+                        fetchpriority="high"
+                        decoding="async"
+                        width="1440"
+                        height="540"
+                        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;"
+                    >
+                    
+                    <div class="hero-overlay"></div>
+                    
+                    <!-- Navbar Skeleton -->
+                    <div class="nav-skeleton animate-pulse">
+                        <div class="sk-box sk-logo"></div>
+                        <div class="sk-menu">
+                            <div class="sk-box sk-menu-item"></div>
+                            <div class="sk-box sk-menu-item"></div>
+                            <div class="sk-box sk-menu-item"></div>
+                            <div class="sk-box sk-menu-item" style="width:100px; border-radius:9999px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Hero Content Skeleton -->
+                    <div class="hero-content animate-pulse">
+                        <div class="sk-box sk-title"></div>
+                        <div class="sk-box sk-subtitle"></div>
+                        <div class="sk-search"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bagian list aset di bawah (hanya kotak-kotak loading abu-abu) -->
+            <div style="max-w: 80rem; margin: 0 auto; padding: 2rem 1.5rem;" class="animate-pulse">
+                <div class="sk-box" style="width: 150px; height: 24px; margin-bottom: 2rem; background: #e5e7eb;"></div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <div class="sk-box" style="height: 300px; background: #e5e7eb; border-radius: 12px;"></div>
+                    <div class="sk-box" style="height: 300px; background: #e5e7eb; border-radius: 12px; display: none; @media(min-width: 640px){display: block;}"></div>
+                    <div class="sk-box" style="height: 300px; background: #e5e7eb; border-radius: 12px; display: none; @media(min-width: 768px){display: block;}"></div>
+                    <div class="sk-box" style="height: 300px; background: #e5e7eb; border-radius: 12px; display: none; @media(min-width: 1024px){display: block;}"></div>
+                </div>
             </div>
         </div>
 
