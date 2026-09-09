@@ -22,7 +22,7 @@ class KategoriFasilitasController extends Controller
         return Inertia::render('admin/KonfigurasiAset/KategoriTipeAset', [
             'allKategori'       => asset_category::orderBy('name')->get(['id','name']),
             'kategoriAset'      => asset_category::orderBy('name')->paginate(7, ['id','name','is_active'], 'kategori_page')->withQueryString(),
-            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->paginate(7, ['id','category_id','name','is_active','payment_countdown_minutes','allow_units'], 'tipe_page')->withQueryString(),
+            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->paginate(7, ['id','category_id','name','is_active','payment_countdown_minutes','allow_units','default_rental_unit'], 'tipe_page')->withQueryString(),
         ]);
     }
 
@@ -113,6 +113,7 @@ class KategoriFasilitasController extends Controller
             'is_active'   => 'boolean',
             'payment_countdown_minutes' => 'required|integer|min:1',
             'allow_units' => 'boolean',
+            'default_rental_unit' => 'required|in:hour,night,day,week,month',
         ]);
 
         asset_type::create($data);
@@ -127,6 +128,7 @@ class KategoriFasilitasController extends Controller
             'is_active'   => 'boolean',
             'payment_countdown_minutes' => 'required|integer|min:1',
             'allow_units' => 'boolean',
+            'default_rental_unit' => 'required|in:hour,night,day,week,month',
         ]);
 
         $jenisAset->update($data);

@@ -22,7 +22,7 @@ const popoverTop = ref(0);
 const popoverLeft = ref(0);
 
 const kategoriForm = ref({ id: null, name: '', is_active: true });
-const jenisForm = ref({ id: null, name: '', is_active: true, category_id: '', payment_countdown_minutes: 60, allow_units: false });
+const jenisForm = ref({ id: null, name: '', is_active: true, category_id: '', payment_countdown_minutes: 60, allow_units: false, default_rental_unit: 'month' });
 
 const kategoriOptions = computed(() => {
     return props.allKategori.map(cat => ({
@@ -62,9 +62,9 @@ const openPopover = (type, data = null, event) => {
     } else if (type === 'edit_kategori') {
         kategoriForm.value = { id: data.id, name: data.name, is_active: data.is_active };
     } else if (type === 'add_jenis') {
-        jenisForm.value = { id: null, name: '', is_active: true, category_id: props.allKategori.length > 0 ? props.allKategori[0].id : '', payment_countdown_minutes: 60, allow_units: false };
+        jenisForm.value = { id: null, name: '', is_active: true, category_id: props.allKategori.length > 0 ? props.allKategori[0].id : '', payment_countdown_minutes: 60, allow_units: false, default_rental_unit: 'month' };
     } else if (type === 'edit_jenis') {
-        jenisForm.value = { id: data.id, name: data.name, is_active: data.is_active, category_id: data.category_id, payment_countdown_minutes: data.payment_countdown_minutes || 60, allow_units: data.allow_units ? true : false };
+        jenisForm.value = { id: data.id, name: data.name, is_active: data.is_active, category_id: data.category_id, payment_countdown_minutes: data.payment_countdown_minutes || 60, allow_units: data.allow_units ? true : false, default_rental_unit: data.default_rental_unit || 'month' };
     }
 
     if (event && event.currentTarget) {
@@ -368,6 +368,21 @@ function executeDelete() {
                         <div>
                             <label class="text-[11px] uppercase font-bold text-slate-500 mb-1 block">Batas Pembayaran (Menit)</label>
                             <input v-model.number="jenisForm.payment_countdown_minutes" type="number" min="1" class="w-full text-sm font-semibold px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000]" placeholder="Contoh : 60" />
+                        </div>
+                        <div>
+                            <label class="text-[11px] uppercase font-bold text-slate-500 mb-1 block">Satuan Harga Dasar</label>
+                            <CustomSelect
+                                v-model="jenisForm.default_rental_unit"
+                                :options="[
+                                    { code: 'hour', name: 'Per Jam' },
+                                    { code: 'night', name: 'Per Malam' },
+                                    { code: 'day', name: 'Per Hari' },
+                                    { code: 'week', name: 'Per Minggu' },
+                                    { code: 'month', name: 'Per Bulan' },
+                                ]"
+                                placeholder="Pilih Satuan..."
+                                fullWidth
+                            />
                         </div>
                         <label class="flex items-center gap-2 cursor-pointer pt-1 group w-fit">
                             <input type="checkbox" v-model="jenisForm.allow_units" class="rounded border-slate-300 text-[#0A2540] focus:ring-[#FFC000]/30 transition-shadow" />

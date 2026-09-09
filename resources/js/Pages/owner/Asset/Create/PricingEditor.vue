@@ -40,7 +40,12 @@ const basePriceObj = computed(() => props.pricings[0]);
 
 const specialPriceOptions = computed(() => {
     const unit = props.assetTypeDetails?.rental_unit || 'month';
-    if (unit === 'day' || unit === 'night') {
+    if (unit === 'hour') {
+        return [
+            { duration: 4, rental_unit: 'hour', label: '4 Jam' },
+            { duration: 8, rental_unit: 'hour', label: '8 Jam (Full Day)' },
+        ];
+    } else if (unit === 'day' || unit === 'night') {
         return [
             { duration: 7, rental_unit: 'day', label: '1 Minggu' },
             { duration: 30, rental_unit: 'day', label: '1 Bulan' },
@@ -65,7 +70,8 @@ const specialOptionKeys = computed(() => specialPriceOptions.value.map(opt => `$
 const hasWeeklyPrice = ref(props.pricings.some((p, i) => i !== 0 && p.duration === 1 && p.rental_unit === 'week'));
 const hasDailyPrice = ref(props.pricings.some((p, i) => i !== 0 && p.duration === 1 && (p.rental_unit === 'day' || p.rental_unit === 'night')));
 const hasSpecialPrice = ref(props.pricings.some((p, i) => i !== 0 && specialOptionKeys.value.includes(`${p.duration}-${p.rental_unit}`)));
-const hasDeposit = ref(!!props.detail.dp_percentage || !!props.detail.deposit_amount);
+const hasDeposit = ref(!!props.detail.deposit_amount);
+const hasDp = ref(!!props.detail.dp_percentage);
 const hasAdditionalFees = ref(Array.isArray(props.detail.additional_fees) && props.detail.additional_fees.length > 0);
 
 const weeklyPricing = computed(() => props.pricings.find((p, i) => i !== 0 && p.duration === 1 && p.rental_unit === 'week'));
@@ -134,12 +140,18 @@ watch(hasSpecialPrice, (val) => {
     }
 });
 
-watch(hasDeposit, (val) => {
+watch(hasDp, (val) => {
     if (val) {
         if (!props.detail.dp_percentage) props.detail.dp_percentage = 10;
-        if (props.detail.deposit_amount === undefined) props.detail.deposit_amount = '';
     } else {
         delete props.detail.dp_percentage;
+    }
+});
+
+watch(hasDeposit, (val) => {
+    if (val) {
+        if (props.detail.deposit_amount === undefined) props.detail.deposit_amount = '';
+    } else {
         delete props.detail.deposit_amount;
     }
 });
@@ -195,8 +207,8 @@ const removeFee = (index) => {
             <h4 class="text-base font-bold text-slate-800 mb-4">Apakah Anda ingin:</h4>
             
             <div class="space-y-4">
-                <!-- Checkbox: Harga Per Minggu -->
-                <div v-if="assetTypeDetails?.rental_unit !== 'week'">
+                <!-- Checkbox: Harga Per Minggu — disembunyikan jika base unit adalah jam atau minggu -->
+                <div v-if="assetTypeDetails?.rental_unit !== 'week' && assetTypeDetails?.rental_unit !== 'hour'">
                     <label class="flex items-start gap-3 cursor-pointer group">
                         <div class="relative flex items-center justify-center w-6 h-6 shrink-0 mt-0.5">
                             <input type="checkbox" v-model="hasWeeklyPrice" class="peer appearance-none w-6 h-6 border border-slate-300 rounded cursor-pointer checked:bg-[#FFC000] checked:border-[#FFC000] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
@@ -273,18 +285,17 @@ const removeFee = (index) => {
                     </div>
                 </div>
 
-                <!-- Checkbox 2: Uang Jaminan -->
+                <!-- Checkbox: DP (Uang Muka) -->
                 <div>
                     <label class="flex items-start gap-3 cursor-pointer group">
                         <div class="relative flex items-center justify-center w-6 h-6 shrink-0 mt-0.5">
-                            <input type="checkbox" v-model="hasDeposit" class="peer appearance-none w-6 h-6 border border-slate-300 rounded cursor-pointer checked:bg-[#FFC000] checked:border-[#FFC000] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
+                            <input type="checkbox" v-model="hasDp" class="peer appearance-none w-6 h-6 border border-slate-300 rounded cursor-pointer checked:bg-[#FFC000] checked:border-[#FFC000] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                             <Check class="w-4 h-4 text-[#0A2540] absolute pointer-events-none opacity-0 peer-checked:opacity-100" />
                         </div>
-                        <span class="text-base text-slate-700 group-hover:text-slate-900 transition-colors">Menentukan uang jaminan?</span>
+                        <span class="text-base text-slate-700 group-hover:text-slate-900 transition-colors">Menetapkan DP (Uang Muka)?</span>
                     </label>
 
-                    <!-- Deposit Inputs -->
-                    <div v-if="hasDeposit" class="ml-9 mt-3 space-y-4">
+                    <div v-if="hasDp" class="ml-9 mt-3">
                         <div class="border border-slate-200 rounded-lg p-4 bg-white shadow-sm">
                             <h4 class="text-base font-bold text-slate-800 mb-1">DP (Uang Muka)</h4>
                             <p class="text-sm text-slate-600 mb-4">Uang muka/ DP akan diambil dari pembayaran sewa pertama penyewa.</p>
@@ -302,6 +313,20 @@ const removeFee = (index) => {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Checkbox: Deposit (Uang Jaminan) -->
+                <div>
+                    <label class="flex items-start gap-3 cursor-pointer group">
+                        <div class="relative flex items-center justify-center w-6 h-6 shrink-0 mt-0.5">
+                            <input type="checkbox" v-model="hasDeposit" class="peer appearance-none w-6 h-6 border border-slate-300 rounded cursor-pointer checked:bg-[#FFC000] checked:border-[#FFC000] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
+                            <Check class="w-4 h-4 text-[#0A2540] absolute pointer-events-none opacity-0 peer-checked:opacity-100" />
+                        </div>
+                        <span class="text-base text-slate-700 group-hover:text-slate-900 transition-colors">Menentukan deposit (uang jaminan)?</span>
+                    </label>
+
+                    <div v-if="hasDeposit" class="ml-9 mt-3">
                         <div class="border border-slate-200 rounded-lg p-4 bg-white shadow-sm">
                             <h4 class="text-base font-bold text-slate-800 mb-1">Deposit</h4>
                             <p class="text-sm text-slate-600 mb-4">Uang jaminan yang harus Anda kembalikan saat durasi sewa berakhir.</p>
@@ -319,8 +344,8 @@ const removeFee = (index) => {
                     </div>
                 </div>
 
-                <!-- Checkbox 3: Biaya Tambahan -->
-                <div>
+                <!-- Checkbox 3: Biaya Tambahan — hanya untuk tipe sewa bulanan/mingguan/harian -->
+                <div v-if="assetTypeDetails?.rental_unit !== 'hour'">
                     <label class="flex items-start gap-3 cursor-pointer group">
                         <div class="relative flex items-center justify-center w-6 h-6 shrink-0 mt-0.5">
                             <input type="checkbox" v-model="hasAdditionalFees" class="peer appearance-none w-6 h-6 border border-slate-300 rounded cursor-pointer checked:bg-[#FFC000] checked:border-[#FFC000] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />

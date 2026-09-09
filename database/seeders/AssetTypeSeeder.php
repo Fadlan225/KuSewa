@@ -244,6 +244,26 @@ class AssetTypeSeeder extends Seeder
             ],
         ];
 
+        // Default rental unit per tipe aset
+        $defaultRentalUnits = [
+            'Hotel'        => 'night',
+            'Villa'        => 'night',
+            'Apartemen'    => 'month',
+            'Homestay'     => 'night',
+            'Guest House'  => 'night',
+            'Kos'          => 'month',
+            'Resort'       => 'night',
+            'Kontrakan'    => 'month',
+            'Ruko'         => 'month',
+            'Gudang'       => 'month',
+            'Lahan'        => 'month',
+            'Gedung'       => 'day',
+            'Aula'         => 'day',
+            'Ruang Meeting'=> 'hour',
+            'Studio'       => 'hour',
+            'Baliho'       => 'month',
+        ];
+
         foreach ($types as $type) {
             $existing = DB::table('asset_types')
                 ->where('category_id', $categories[$type['category']])
@@ -252,6 +272,7 @@ class AssetTypeSeeder extends Seeder
 
             $updateData = [
                 'allow_units' => $type['allow_units'],
+                'default_rental_unit' => $defaultRentalUnits[$type['name']] ?? 'month',
                 'detail_fields' => json_encode($type['detail_fields']),
                 'unit_detail_fields' => json_encode($type['unit_detail_fields']),
                 'updated_at' => now(),

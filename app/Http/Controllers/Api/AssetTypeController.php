@@ -103,6 +103,7 @@ class AssetTypeController extends Controller
             'id'                   => $assetType->id,
             'name'                 => $assetType->name,
             'allow_units'          => (bool) $assetType->allow_units,
+            'rental_unit'          => $assetType->default_rental_unit ?? 'month',
             'facilities'           => $facilities,
             'unit_facilities'      => $unitFacilities,
             'gallery_categories'   => $galleryCategories,

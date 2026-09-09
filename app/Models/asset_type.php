@@ -13,6 +13,7 @@ class asset_type extends Model
         'is_active',
         'allow_units',
         'payment_countdown_minutes',
+        'default_rental_unit',
         'detail_fields',
         'unit_detail_fields',
     ];
