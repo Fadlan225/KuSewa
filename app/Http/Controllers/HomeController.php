@@ -472,7 +472,7 @@ class HomeController extends Controller
                 'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
                 'defaultPricing:id,asset_id,price,rental_unit',
                 'type:id,name,allow_units,category_id',
-                'type.category:id,name,icon',
+                'type.category:id,name',
                 'city:code,name',
                 'district:code,name',
                 'province:code,name',

@@ -843,7 +843,7 @@ class AssetController extends Controller
     {
         $asset = asset::with([
             'type:id,name,allow_units,category_id',
-            'type.category:id,name,icon',
+            'type.category:id,name',
             'images.gallery_category',
             'thumbnailImages',
             'faqs',
