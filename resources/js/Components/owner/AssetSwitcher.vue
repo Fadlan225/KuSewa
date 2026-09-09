@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted, nextTick } from 'vue';
 import { usePage, router, Link } from '@inertiajs/vue3';
 import { ChevronDown, Map, CheckCircle, Clock, FileEdit, Building } from 'lucide-vue-next';
 import NoImageIllustration from '@/Components/ui/Icons/NoImageIllustration.vue';
@@ -16,9 +16,27 @@ const ownerAssets = computed(() => page.props.ownerAssets || []);
 
 const isOpen = ref(false);
 const dropdownRef = ref(null);
+const triggerRef = ref(null);
+const dropdownStyle = ref({});
 
-const toggleDropdown = () => {
+const updateDropdownPosition = () => {
+    if (!triggerRef.value) return;
+    const rect = triggerRef.value.getBoundingClientRect();
+    dropdownStyle.value = {
+        position: 'fixed',
+        top: rect.bottom + 6 + 'px',
+        left: rect.left + 'px',
+        width: rect.width + 'px',
+        zIndex: 9999,
+    };
+};
+
+const toggleDropdown = async () => {
     isOpen.value = !isOpen.value;
+    if (isOpen.value) {
+        await nextTick();
+        updateDropdownPosition();
+    }
 };
 
 const closeDropdown = (e) => {
@@ -29,6 +47,8 @@ const closeDropdown = (e) => {
 
 onMounted(() => {
     document.addEventListener('click', closeDropdown);
+    window.addEventListener('scroll', () => { if (isOpen.value) updateDropdownPosition(); }, true);
+    window.addEventListener('resize', () => { if (isOpen.value) updateDropdownPosition(); });
 });
 
 onUnmounted(() => {
@@ -67,7 +87,8 @@ const switchAsset = (slug) => {
 <template>
     <div class="relative text-left w-full" ref="dropdownRef">
         <button 
-            @click="toggleDropdown" 
+            @click="toggleDropdown"
+            ref="triggerRef"
             class="flex items-center justify-between w-full gap-2.5 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 hover:border-[#FFC000] hover:shadow-sm transition-all focus:outline-none"
         >
             <!-- Mode: Semua Aset -->
@@ -100,15 +121,16 @@ const switchAsset = (slug) => {
             <ChevronDown class="w-4 h-4 text-slate-400 ml-1 transition-transform" :class="isOpen ? 'rotate-180' : ''" />
         </button>
 
-        <Transition
-            enter-active-class="transition duration-100 ease-out"
-            enter-from-class="transform scale-95 opacity-0"
-            enter-to-class="transform scale-100 opacity-100"
-            leave-active-class="transition duration-75 ease-in"
-            leave-from-class="transform scale-100 opacity-100"
-            leave-to-class="transform scale-95 opacity-0"
-        >
-            <div v-if="isOpen" class="absolute left-0 mt-2 w-full bg-white rounded-xl shadow-xl border border-slate-100 z-[100] overflow-hidden">
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition duration-100 ease-out"
+                enter-from-class="transform scale-95 opacity-0"
+                enter-to-class="transform scale-100 opacity-100"
+                leave-active-class="transition duration-75 ease-in"
+                leave-from-class="transform scale-100 opacity-100"
+                leave-to-class="transform scale-95 opacity-0"
+            >
+                <div v-if="isOpen" :style="dropdownStyle" class="bg-white rounded-xl shadow-xl border border-slate-100 overflow-hidden">
                 <div class="p-2 border-b border-slate-50">
                     <button 
                         @click="switchAsset(null)"
@@ -162,7 +184,8 @@ const switchAsset = (slug) => {
                     </Link>
                 </div>
             </div>
-        </Transition>
+            </Transition>
+        </Teleport>
     </div>
 </template>
 

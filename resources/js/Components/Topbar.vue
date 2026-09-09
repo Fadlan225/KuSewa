@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, useSlots } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import { Bell } from 'lucide-vue-next';
 import NotificationDropdown from '@/Components/ui/NotificationDropdown.vue';
@@ -11,6 +11,9 @@ defineProps({
     description: { type: String, default: '' },
     breadcrumbs: { type: Array, default: () => [] }
 });
+
+const slots = useSlots();
+const hasLeftContent = computed(() => !!slots.leftAction || route().current()?.startsWith('owner.'));
 
 const page = usePage();
 const { unreadCount, init: initNotifications } = useNotifications();
@@ -34,7 +37,7 @@ onMounted(() => {
             
             <AssetSwitcher v-if="route().current()?.startsWith('owner.')" :current-asset-slug="currentAssetSlug" class="flex-1 min-w-0" />
             
-            <div class="flex-1 w-full min-w-0 hidden md:block">
+            <div v-if="!hasLeftContent" class="flex-1 w-full min-w-0 hidden md:block">
                 <!-- BREADCRUMBS -->
                 <nav v-if="breadcrumbs && breadcrumbs.length" class="flex text-[10px] text-slate-400 font-medium mb-1 space-x-1.5">
                     <template v-for="(bc, idx) in breadcrumbs" :key="idx">
