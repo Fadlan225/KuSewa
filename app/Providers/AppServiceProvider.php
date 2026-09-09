@@ -20,6 +20,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Vite::prefetch(concurrency: 3);
+        // Hanya preload vendor/core chunks — jangan preload page-specific chunks
+        // yang tidak dibutuhkan di halaman saat ini (hemat 1.5MB+ di homepage)
+        Vite::usePreloadTagAttributes(function (string $src, string $url, array $chunk, array $manifest): array|false {
+            // Skip preload untuk page-specific chunks — akan dimuat lazy saat navigasi
+            if (preg_match('/pages-(account|booking|asset-detail|admin|auth|chat|owner)/', $src)) {
+                return false; // tidak inject <link rel="modulepreload"> untuk chunk ini
+            }
+            return []; // preload normal untuk vendor-core, vendor-misc, app, etc.
+        });
     }
 }

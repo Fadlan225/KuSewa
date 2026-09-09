@@ -241,7 +241,9 @@ const handleLogoutConfirm = () => {
                             <Link :href="route('Home')" class="flex items-center gap-2">
                                 <img
                                     src="/kitasewa-logo.png"
-                                    alt="logo"
+                                    alt="KitaSewa Logo"
+                                    width="32"
+                                    height="32"
                                     :class="[
                                         'h-8 w-auto object-contain transition-all duration-300',
                                         isCurrentlyTransparent ? 'brightness-0 invert' : 'brightness-100 invert-0'
@@ -341,7 +343,9 @@ const handleLogoutConfirm = () => {
                     <Link :href="route('Home')" class="flex items-center gap-2">
                         <img
                             src="/kitasewa-logo.png"
-                            alt="logo"
+                            alt="KitaSewa Logo"
+                            width="32"
+                            height="32"
                             :class="[
                                 'h-8 w-auto object-contain transition-all duration-300',
                                 isCurrentlyTransparent ? 'brightness-0 invert' : 'brightness-100 invert-0'

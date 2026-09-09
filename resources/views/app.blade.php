@@ -7,10 +7,15 @@
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
+        <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
         <link rel="icon" type="image/svg+xml" href="{{ asset('kitasewa-logo.png') }}">
+
+        <!-- Preload LCP hero image — browser fetch sebelum JS selesai render -->
+        <link rel="preload" as="image" href="/public.webp" fetchpriority="high">
+        <!-- Preload logo agar tidak CLS -->
+        <link rel="preload" as="image" href="/kitasewa-logo.png">
 
         <!-- Standard Meta -->
         <meta name="title" content="KitaSewa | Temukan Aset, Wujudkan Rencana">
@@ -36,15 +41,20 @@
         @vite('resources/js/app.js')
         @inertiaHead
 
-        <!-- Google Analytics 4 -->
+        <!-- Google Analytics 4 — dimuat setelah load event agar tidak blok render -->
         @if(config('services.google_analytics.measurement_id'))
-        <script async src="https://www.googletagmanager.com/gtag/js?id={{ config('services.google_analytics.measurement_id') }}"></script>
         <script>
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', '{{ config('services.google_analytics.measurement_id') }}', {
-                send_page_view: false
+            window.addEventListener('load', function() {
+                var gaMeasurementId = '{{ config('services.google_analytics.measurement_id') }}';
+                var script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://www.googletagmanager.com/gtag/js?id=' + gaMeasurementId;
+                document.head.appendChild(script);
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', gaMeasurementId, { send_page_view: false });
             });
         </script>
         @endif

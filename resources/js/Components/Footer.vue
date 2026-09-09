@@ -10,7 +10,7 @@ import { Link } from '@inertiajs/vue3';
                 <!-- Bagian Paling Kiri: Logo & Tagline -->
                 <div class="lg:col-span-2 pr-0 lg:pr-8">
                     <Link :href="route('Home')" class="flex items-center gap-2 mb-4">
-                        <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-8 w-auto object-contain" />
+                        <img src="/kitasewa-logo.png" alt="KitaSewa Logo" width="32" height="32" class="h-8 w-auto object-contain" />
                         <span class="font-bold text-lg text-[#0A2540]">
                             kitasewa<span class="text-[#FFC000]">.id</span>
                         </span>
