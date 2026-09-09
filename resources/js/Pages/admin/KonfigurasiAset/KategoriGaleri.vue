@@ -49,7 +49,7 @@ const openSettings = (idx, event) => {
     if (event && event.currentTarget) {
         const rect = event.currentTarget.getBoundingClientRect();
         // Limit bottom position so the modal doesn't go off-screen
-        popoverTop.value = Math.min(rect.top - 10, window.innerHeight - 450);
+        popoverTop.value = Math.max(16, Math.min(rect.top - 10, window.innerHeight - 450));
         // Position it exactly at the right edge of the list item, plus a tiny gap
         popoverLeft.value = rect.right + 12;
     }
@@ -401,7 +401,7 @@ function saveGallery() {
 <template>
     <Head title="Kategori Galeri - Admin Panel" />
 
-    <DashboardLayout role="Admin" title="Kategori Galeri" description="Kelola konfigurasi kategori galeri wajib per tipe aset." no-padding>
+    <DashboardLayout role="Admin" title="Kategori Galeri" description="Kelola konfigurasi kategori galeri wajib per tipe aset." no-padding hide-title>
         <template #leftAction>
             <div class="relative text-left w-full sm:w-[320px]" ref="dropdownRef">
                 <button

@@ -230,7 +230,7 @@ class AssetController extends Controller
             'assetView'     => $assetView,
             'nearbyPlaces'  => $nearbyPlaces,
             'similarAssets' => $similarAssets,
-            'allCategories' => \App\Models\asset_category::select(['id', 'name', 'icon'])
+            'allCategories' => \App\Models\asset_category::select(['id', 'name'])
                                 ->with(['types:id,category_id,name,allow_units'])
                                 ->get(),
         ]);

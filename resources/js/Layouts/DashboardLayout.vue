@@ -21,6 +21,7 @@ const props = defineProps({
     role: { type: String, required: true },
     breadcrumbs: { type: Array, default: () => [] },
     noPadding: { type: Boolean, default: false },
+    hideTitle: { type: Boolean, default: false },
 });
 
 const page = usePage();
@@ -124,7 +125,7 @@ onUnmounted(() => {
         ============================== -->
         <main class="flex-1 min-w-0 flex flex-col min-h-[calc(100vh-60px)] lg:min-h-screen">
             <!-- TOPBAR COMPONENT -->
-            <Topbar :title="title" :description="description" :breadcrumbs="breadcrumbs">
+            <Topbar :title="(hideTitle || $slots.leftAction) ? '' : title" :description="(hideTitle || $slots.leftAction) ? '' : description" :breadcrumbs="breadcrumbs">
                 <template #leftAction v-if="$slots.leftAction">
                     <slot name="leftAction" />
                 </template>

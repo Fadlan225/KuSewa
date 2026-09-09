@@ -20,15 +20,16 @@ class KategoriFasilitasController extends Controller
     public function kategoriTipe()
     {
         return Inertia::render('admin/KonfigurasiAset/KategoriTipeAset', [
-            'kategoriAset'      => asset_category::orderBy('name')->get(['id','name','description','icon','is_active']),
-            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->get(['id','category_id','name','description','is_active']),
+            'allKategori'       => asset_category::orderBy('name')->get(['id','name']),
+            'kategoriAset'      => asset_category::orderBy('name')->paginate(7, ['id','name','is_active'], 'kategori_page')->withQueryString(),
+            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->paginate(7, ['id','category_id','name','is_active','payment_countdown_minutes','allow_units'], 'tipe_page')->withQueryString(),
         ]);
     }
 
     public function fasilitas()
     {
         return Inertia::render('admin/KonfigurasiAset/KategoriFasilitas', [
-            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->get(['id','category_id','name','description','is_active','allow_units']),
+            'jenisAset'         => asset_type::with('category:id,name')->orderBy('name')->get(['id','category_id','name','is_active','allow_units']),
             'kategoriFasilitas' => facility_category::with('facilities')->orderBy('sort_order')->orderBy('name')->get(['id','name','slug','sort_order','is_active']),
             // Tipe aset beserta kategori fasilitas wajib yang sudah dipilih
             'tipeAsetMandatory' => asset_type::with([
@@ -38,11 +39,10 @@ class KategoriFasilitasController extends Controller
                                             'optionalUnitFacilityCategories:id,name'
                                         ])
                                         ->orderBy('name')
-                                        ->get(['id','name','description','allow_units'])
+                                        ->get(['id','name','allow_units'])
                                         ->map(fn($t) => [
                                             'id'          => $t->id,
                                             'name'        => $t->name,
-                                            'description' => $t->description,
                                             'allow_units' => $t->allow_units,
                                             'mandatory_ids' => $t->mandatoryFacilityCategories->pluck('id')->values(),
                                             'mandatory_names' => $t->mandatoryFacilityCategories->pluck('name')->values(),
@@ -64,7 +64,6 @@ class KategoriFasilitasController extends Controller
     {
         $data = $request->validate([
             'name'        => 'required|string|max:100|unique:asset_categories,name',
-            'description' => 'nullable|string|max:255',
             'is_active'   => 'boolean',
         ]);
 
@@ -76,7 +75,6 @@ class KategoriFasilitasController extends Controller
     {
         $data = $request->validate([
             'name'        => 'required|string|max:100|unique:asset_categories,name,' . $kategoriAset->id,
-            'description' => 'nullable|string|max:255',
             'is_active'   => 'boolean',
         ]);
 
@@ -112,8 +110,9 @@ class KategoriFasilitasController extends Controller
         $data = $request->validate([
             'category_id' => 'required|exists:asset_categories,id',
             'name'        => 'required|string|max:100',
-            'description' => 'nullable|string|max:255',
             'is_active'   => 'boolean',
+            'payment_countdown_minutes' => 'required|integer|min:1',
+            'allow_units' => 'boolean',
         ]);
 
         asset_type::create($data);
@@ -125,8 +124,9 @@ class KategoriFasilitasController extends Controller
         $data = $request->validate([
             'category_id' => 'required|exists:asset_categories,id',
             'name'        => 'required|string|max:100',
-            'description' => 'nullable|string|max:255',
             'is_active'   => 'boolean',
+            'payment_countdown_minutes' => 'required|integer|min:1',
+            'allow_units' => 'boolean',
         ]);
 
         $jenisAset->update($data);
@@ -154,6 +154,14 @@ class KategoriFasilitasController extends Controller
     // ═══════════════════════════════════════════════════════════════════════════
     // KATEGORI FASILITAS
     // ═══════════════════════════════════════════════════════════════════════════
+
+    public function resetKategoriTipe()
+    {
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\AssetCategorySeeder']);
+        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--class' => 'Database\\Seeders\\AssetTypeSeeder']);
+        
+        return back()->with('success', 'Kategori dan Tipe Aset berhasil di-reset ke default.');
+    }
 
     public function storeKategoriFasilitas(Request $request)
     {

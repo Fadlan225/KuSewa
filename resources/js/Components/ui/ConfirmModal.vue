@@ -20,8 +20,8 @@
                     <div v-if="show" class="bg-white rounded p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border border-slate-100 space-y-5 relative overflow-hidden" @click.stop>
                         
                         <slot name="icon">
-                            <div class="w-16 h-16 mx-auto bg-rose-50 rounded-full flex items-center justify-center text-rose-500 mb-2 shadow-sm border border-rose-100">
-                                <Trash2 class="w-8 h-8" />
+                            <div class="mx-auto mb-4 flex items-center justify-center">
+                                <TrashIllustration class="w-32 h-auto" />
                             </div>
                         </slot>
 
@@ -49,8 +49,7 @@
 </template>
 
 <script setup>
-import { Trash2 } from 'lucide-vue-next';
-
+import TrashIllustration from '@/Components/ui/Icons/TrashIllustration.vue';
 defineProps({
     show: {
         type: Boolean,

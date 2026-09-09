@@ -184,7 +184,7 @@ function openAddPopover(event) {
     masterForm.value = { id: null, name: '', is_active: true };
     if (event && event.currentTarget) {
         const rect = event.currentTarget.getBoundingClientRect();
-        popoverTop.value = Math.min(rect.top - 10, window.innerHeight - 200);
+        popoverTop.value = Math.max(16, Math.min(rect.top - 10, window.innerHeight - 280));
         popoverLeft.value = rect.right + 12;
     } else {
         popoverTop.value = window.innerHeight / 2 - 100;
@@ -197,7 +197,7 @@ function openEditCategory(catId, event) {
     activeEditCategoryId.value = catId;
     if (event && event.currentTarget) {
         const rect = event.currentTarget.getBoundingClientRect();
-        popoverTop.value = Math.min(rect.top - 10, window.innerHeight - 300);
+        popoverTop.value = Math.max(16, Math.min(rect.top - 10, window.innerHeight - 340));
         popoverLeft.value = rect.right + 12;
     }
 }
@@ -404,7 +404,7 @@ function openAddFasilitas(categoryId, event) {
 
     if (event && event.currentTarget) {
         const rect = event.currentTarget.getBoundingClientRect();
-        fasilitasPopoverTop.value = Math.min(rect.bottom + 8, window.innerHeight - 250);
+        fasilitasPopoverTop.value = Math.min(rect.bottom + 8, window.innerHeight - 320);
         
         const popoverWidth = 280;
         let leftPos = rect.left;
@@ -427,7 +427,7 @@ function openEditFasilitas(categoryId, fas, event) {
 
     if (event && event.currentTarget) {
         const rect = event.currentTarget.getBoundingClientRect();
-        fasilitasPopoverTop.value = Math.min(rect.bottom + 8, window.innerHeight - 250);
+        fasilitasPopoverTop.value = Math.min(rect.bottom + 8, window.innerHeight - 320);
         
         const popoverWidth = 280;
         let leftPos = rect.left;
@@ -463,7 +463,7 @@ function deleteFasilitas(id) {
 <template>
     <Head title="Fasilitas Aset - Admin Panel" />
 
-    <DashboardLayout role="Admin" title="Fasilitas Aset" description="Kelola pemetaan Kategori Fasilitas yang wajib diisi untuk tiap Tipe Aset." no-padding>
+    <DashboardLayout role="Admin" title="Fasilitas Aset" description="Kelola pemetaan Kategori Fasilitas yang wajib diisi untuk tiap Tipe Aset." no-padding hide-title>
         <template #leftAction>
             <div class="relative text-left w-full sm:w-[320px]" ref="dropdownRef">
                 <button

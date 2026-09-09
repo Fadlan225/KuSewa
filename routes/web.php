@@ -189,6 +189,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Fasilitas Aset
     Route::get('/konfigurasi-aset/fasilitas', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'fasilitas'])->name('konfigurasi-aset.fasilitas');
     // Kategori Aset
+    Route::post('/kategori-fasilitas/reset', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'resetKategoriTipe'])->name('kategori-aset.reset');
     Route::post('/kategori-fasilitas/kategori-aset', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'storeKategoriAset'])->name('kategori-aset.store');
     Route::put('/kategori-fasilitas/kategori-aset/{kategoriAset}', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'updateKategoriAset'])->name('kategori-aset.update');
     Route::patch('/kategori-fasilitas/kategori-aset/{kategoriAset}/toggle', [\App\Http\Controllers\Admin\KategoriFasilitasController::class, 'toggleKategoriAset'])->name('kategori-aset.toggle');

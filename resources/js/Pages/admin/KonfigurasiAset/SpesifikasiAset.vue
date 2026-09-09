@@ -52,7 +52,7 @@ const openSettings = (idx, event) => {
     if (event && event.currentTarget) {
         const rect = event.currentTarget.getBoundingClientRect();
         // Limit bottom position so the modal doesn't go off-screen
-        popoverTop.value = Math.min(rect.top - 10, window.innerHeight - 450);
+        popoverTop.value = Math.max(16, Math.min(rect.top - 10, window.innerHeight - 450));
         // Position it exactly at the right edge of the list item, plus a tiny gap
         popoverLeft.value = rect.right + 12;
     }
@@ -345,7 +345,7 @@ function saveFields() {
 <template>
     <Head title="Spesifikasi Form" />
 
-    <DashboardLayout role="Admin" title="Spesifikasi Form" description="Kelola konfigurasi field informasi spesifik per tipe aset." no-padding>
+    <DashboardLayout role="Admin" title="Spesifikasi Form" description="Kelola konfigurasi field informasi spesifik per tipe aset." no-padding hide-title>
         <template #leftAction>
             <div class="relative text-left w-full sm:w-[320px]" ref="dropdownRef">
                 <button
@@ -796,7 +796,7 @@ function saveFields() {
             <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm lg:hidden pointer-events-auto" @click="activeEditIndex = null"></div>
 
             <!-- Popover Content -->
-            <div class="relative bg-white rounded-lg shadow-lg border border-slate-200 w-[260px] sm:w-[280px] flex flex-col max-h-[90vh] lg:max-h-[calc(100vh-80px)] pointer-events-auto" @click.stop>
+            <div class="relative bg-white rounded-lg shadow-lg border border-slate-200 w-[260px] sm:w-[280px] flex flex-col pointer-events-auto overflow-hidden" :style="{ maxHeight: 'calc(100vh - ' + popoverTop + 'px - 24px)' }" @click.stop>
                 <div class="px-5 pt-5 pb-2 flex items-center justify-between">
                     <h3 class="font-bold text-[#0A2540] text-sm">Pengaturan Kolom</h3>
                     <button @click="activeEditIndex = null" class="text-slate-400 hover:text-slate-600 transition">

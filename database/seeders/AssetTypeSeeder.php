@@ -40,6 +40,7 @@ class AssetTypeSeeder extends Seeder
                 'category' => 'Hunian',
                 'name' => 'Hotel',
                 'allow_units' => true,
+                'payment_countdown_minutes' => 60,
                 'detail_fields' => [
                     ['key' => 'stars', 'label' => 'Bintang Hotel', 'type' => 'select', 'required' => false, 'options' => ['1', '2', '3', '4', '5']],
                     $f_floor,
@@ -94,6 +95,7 @@ class AssetTypeSeeder extends Seeder
                 'category' => 'Hunian',
                 'name' => 'Guest House',
                 'allow_units' => true,
+                'payment_countdown_minutes' => 60,
                 'detail_fields' => [
                     $f_building_area,
                     $f_land_area,
@@ -122,6 +124,7 @@ class AssetTypeSeeder extends Seeder
                 'category' => 'Hunian',
                 'name' => 'Resort',
                 'allow_units' => true,
+                'payment_countdown_minutes' => 60,
                 'detail_fields' => [
                     ['key' => 'stars', 'label' => 'Bintang Resort', 'type' => 'select', 'required' => false, 'options' => ['1', '2', '3', '4', '5']],
                     $f_floor,
@@ -209,6 +212,7 @@ class AssetTypeSeeder extends Seeder
                 'category' => 'Event',
                 'name' => 'Ruang Meeting',
                 'allow_units' => false,
+                'payment_countdown_minutes' => 60,
                 'detail_fields' => [$f_capacity, ['key' => 'building_area', 'label' => 'Luas Ruangan (m²)', 'type' => 'number', 'required' => false], ['key' => 'floor', 'label' => 'Berada di Lantai', 'type' => 'number', 'required' => false]],
                 'unit_detail_fields' => []
             ],
@@ -216,6 +220,7 @@ class AssetTypeSeeder extends Seeder
                 'category' => 'Event',
                 'name' => 'Studio',
                 'allow_units' => true,
+                'payment_countdown_minutes' => 60,
                 'detail_fields' => [$f_capacity, ['key' => 'building_area', 'label' => 'Luas Ruangan (m²)', 'type' => 'number', 'required' => false], ['key' => 'floor', 'label' => 'Berada di Lantai', 'type' => 'number', 'required' => false]],
                 'unit_detail_fields' => [
                     ['key' => 'room_size', 'label' => 'Ukuran Studio (m²)', 'type' => 'number', 'required' => false]
@@ -240,18 +245,32 @@ class AssetTypeSeeder extends Seeder
         ];
 
         foreach ($types as $type) {
-            DB::table('asset_types')->updateOrInsert(
-                [
+            $existing = DB::table('asset_types')
+                ->where('category_id', $categories[$type['category']])
+                ->where('name', $type['name'])
+                ->first();
+
+            $updateData = [
+                'allow_units' => $type['allow_units'],
+                'detail_fields' => json_encode($type['detail_fields']),
+                'unit_detail_fields' => json_encode($type['unit_detail_fields']),
+                'updated_at' => now(),
+            ];
+
+            if (!$existing) {
+                // Hanya set payment_countdown_minutes saat pertama kali insert agar tidak menimpa perubahan user di production
+                $updateData['payment_countdown_minutes'] = $type['payment_countdown_minutes'] ?? 60;
+                $updateData['created_at'] = now();
+                
+                DB::table('asset_types')->insert(array_merge([
                     'category_id' => $categories[$type['category']],
                     'name' => $type['name'],
-                ],
-                [
-                    'allow_units' => $type['allow_units'],
-                    'detail_fields' => json_encode($type['detail_fields']),
-                    'unit_detail_fields' => json_encode($type['unit_detail_fields']),
-                    'updated_at' => now(),
-                ]
-            );
+                ], $updateData));
+            } else {
+                DB::table('asset_types')
+                    ->where('id', $existing->id)
+                    ->update($updateData);
+            }
         }
 
         $this->command->info('✓ ' . count($types) . ' asset types berhasil dibuat!');

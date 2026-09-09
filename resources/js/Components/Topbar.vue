@@ -43,7 +43,8 @@ onMounted(() => {
                         <span v-if="idx < breadcrumbs.length - 1" class="text-slate-300">/</span>
                     </template>
                 </nav>
-                <!-- Removed title and description as requested by user -->
+                <h1 v-if="title" class="text-xl md:text-2xl font-black tracking-tight text-[#0A2540] truncate">{{ title }}</h1>
+                <p v-if="description" class="text-xs md:text-sm text-slate-500 font-medium truncate mt-0.5">{{ description }}</p>
             </div>
         </div>
 

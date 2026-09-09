@@ -374,7 +374,7 @@ class HomeController extends Controller
         $priceDistribution = $this->getPriceDistribution(); // Global distribution
         $dynamicPlaceholders = $this->getDynamicPlaceholders();
 
-        $allCategories = asset_category::select(['id', 'name', 'icon'])
+        $allCategories = asset_category::select(['id', 'name'])
             ->with(['types:id,category_id,name,allow_units'])
             ->withCount(['assets' => function($q) {
                 $q->where('status', 'approved');
@@ -599,7 +599,7 @@ class HomeController extends Controller
         $facilitiesByType = $this->getFacilitiesByType();
         $dynamicPlaceholders = $this->getDynamicPlaceholders();
 
-        $allCategories = asset_category::select(['id', 'name', 'icon'])
+        $allCategories = asset_category::select(['id', 'name'])
             ->with(['types:id,category_id,name,allow_units'])
             ->withCount(['assets' => function($q) {
                 $q->where('status', 'approved');
@@ -837,7 +837,6 @@ class HomeController extends Controller
                 'cities.name as city_name',
                 'provinces.code as province_code',
                 'provinces.name as province_name',
-                'asset_categories.icon as category_icon',
                 \DB::raw('COUNT(assets.id) as total_assets')
             )
             ->groupBy(
@@ -846,8 +845,7 @@ class HomeController extends Controller
                 'cities.code',
                 'cities.name',
                 'provinces.code',
-                'provinces.name',
-                'asset_categories.icon'
+                'provinces.name'
             )
             ->orderBy('cities.name')
             ->orderBy('asset_types.name')
@@ -877,7 +875,6 @@ class HomeController extends Controller
                         'type_name' => $combo->type_name,
                         'province_code' => $combo->province_code,
                         'province_name' => $combo->province_name,
-                        'category_icon' => $combo->category_icon,
                         'city_codes' => []
                     ];
                 }
@@ -914,7 +911,7 @@ class HomeController extends Controller
                     $sections[] = [
                         'id'     => 'type_city_' . $combo->type_id . '_' . $combo->city_code,
                         'title'  => 'Rekomendasi ' . $combo->type_name . ' di ' . $combo->city_name,
-                        'icon'   => $combo->category_icon ?? 'fa-solid fa-map-location-dot',
+                        'icon'   => 'fa-solid fa-map-location-dot',
                         'type'   => 'static',
                         'assets' => $categoryAssets
                     ];
@@ -937,7 +934,7 @@ class HomeController extends Controller
                     $sections[] = [
                         'id'     => 'type_prov_' . $group['type_id'] . '_' . $group['province_code'],
                         'title'  => 'Rekomendasi ' . $group['type_name'] . ' di ' . $group['province_name'],
-                        'icon'   => $group['category_icon'] ?? 'fa-solid fa-map-location-dot',
+                        'icon'   => 'fa-solid fa-map-location-dot',
                         'type'   => 'static',
                         'assets' => $categoryAssets
                     ];
