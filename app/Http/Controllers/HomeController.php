@@ -21,82 +21,84 @@ class HomeController extends Controller
      */
     private function getLocationSuggestions(): array
     {
-        $suggestions = [];
+        return Cache::remember('home.location_suggestions', now()->addHours(12), function () {
+            $suggestions = [];
 
-        // 1. Kota (Cities)
-        $cities = \App\Models\asset::where('status', 'approved')->whereNotNull('city_code')
-            ->join('cities', 'assets.city_code', '=', 'cities.code')
-            ->select('cities.name as city_name')
-            ->distinct()
-            ->orderBy('cities.name')
-            ->get();
-        foreach ($cities as $c) {
-            $suggestions[] = [
-                'id'        => $c->city_name,
-                'title'     => $c->city_name,
-                'desc'      => "Kota",
-                'icon'      => 'fa-solid fa-city',
-                'iconColor' => 'text-[#FFC000]',
-                'bg'        => 'bg-[#FFC000]/10',
-            ];
-        }
+            // 1. Kota (Cities)
+            $cities = \App\Models\asset::where('status', 'approved')->whereNotNull('city_code')
+                ->join('cities', 'assets.city_code', '=', 'cities.code')
+                ->select('cities.name as city_name')
+                ->distinct()
+                ->orderBy('cities.name')
+                ->get();
+            foreach ($cities as $c) {
+                $suggestions[] = [
+                    'id'        => $c->city_name,
+                    'title'     => $c->city_name,
+                    'desc'      => "Kota",
+                    'icon'      => 'fa-solid fa-city',
+                    'iconColor' => 'text-[#FFC000]',
+                    'bg'        => 'bg-[#FFC000]/10',
+                ];
+            }
 
-        // 2. Kecamatan (Districts)
-        $districts = \App\Models\asset::where('status', 'approved')->whereNotNull('district_code')
-            ->join('districts', 'assets.district_code', '=', 'districts.code')
-            ->join('cities', 'districts.city_code', '=', 'cities.code')
-            ->select('districts.name as district_name', 'cities.name as city_name')
-            ->distinct()
-            ->orderBy('districts.name')
-            ->get();
-        foreach ($districts as $d) {
-            $suggestions[] = [
-                'id'        => $d->district_name,
-                'title'     => $d->district_name,
-                'desc'      => "Kecamatan di {$d->city_name}",
-                'icon'      => 'fa-solid fa-map-location-dot',
-                'iconColor' => 'text-[#FFC000]',
-                'bg'        => 'bg-[#FFC000]/10',
-            ];
-        }
+            // 2. Kecamatan (Districts)
+            $districts = \App\Models\asset::where('status', 'approved')->whereNotNull('district_code')
+                ->join('districts', 'assets.district_code', '=', 'districts.code')
+                ->join('cities', 'districts.city_code', '=', 'cities.code')
+                ->select('districts.name as district_name', 'cities.name as city_name')
+                ->distinct()
+                ->orderBy('districts.name')
+                ->get();
+            foreach ($districts as $d) {
+                $suggestions[] = [
+                    'id'        => $d->district_name,
+                    'title'     => $d->district_name,
+                    'desc'      => "Kecamatan di {$d->city_name}",
+                    'icon'      => 'fa-solid fa-map-location-dot',
+                    'iconColor' => 'text-[#FFC000]',
+                    'bg'        => 'bg-[#FFC000]/10',
+                ];
+            }
 
-        // 3. Kelurahan (Villages)
-        $villages = \App\Models\asset::where('status', 'approved')->whereNotNull('village_code')
-            ->join('villages', 'assets.village_code', '=', 'villages.code')
-            ->join('districts', 'villages.district_code', '=', 'districts.code')
-            ->select('villages.name as village_name', 'districts.name as district_name')
-            ->distinct()
-            ->orderBy('villages.name')
-            ->get();
-        foreach ($villages as $v) {
-            $suggestions[] = [
-                'id'        => $v->village_name,
-                'title'     => $v->village_name,
-                'desc'      => "Kelurahan/Desa di {$v->district_name}",
-                'icon'      => 'fa-solid fa-location-dot',
-                'iconColor' => 'text-[#FFC000]',
-                'bg'        => 'bg-[#FFC000]/10',
-            ];
-        }
+            // 3. Kelurahan (Villages)
+            $villages = \App\Models\asset::where('status', 'approved')->whereNotNull('village_code')
+                ->join('villages', 'assets.village_code', '=', 'villages.code')
+                ->join('districts', 'villages.district_code', '=', 'districts.code')
+                ->select('villages.name as village_name', 'districts.name as district_name')
+                ->distinct()
+                ->orderBy('villages.name')
+                ->get();
+            foreach ($villages as $v) {
+                $suggestions[] = [
+                    'id'        => $v->village_name,
+                    'title'     => $v->village_name,
+                    'desc'      => "Kelurahan/Desa di {$v->district_name}",
+                    'icon'      => 'fa-solid fa-location-dot',
+                    'iconColor' => 'text-[#FFC000]',
+                    'bg'        => 'bg-[#FFC000]/10',
+                ];
+            }
 
-        // 4. Alamat Spesifik (Address)
-        $addresses = \App\Models\asset::where('status', 'approved')->whereNotNull('address')
-            ->select('address')
-            ->distinct()
-            ->orderBy('address')
-            ->get();
-        foreach ($addresses as $a) {
-            $suggestions[] = [
-                'id'        => $a->address,
-                'title'     => $a->address,
-                'desc'      => "Alamat Lengkap",
-                'icon'      => 'fa-solid fa-map-pin',
-                'iconColor' => 'text-[#FFC000]',
-                'bg'        => 'bg-[#FFC000]/10',
-            ];
-        }
+            // 4. Alamat Spesifik
+            $addresses = \App\Models\asset::where('status', 'approved')->whereNotNull('address')
+                ->select('address')
+                ->distinct()
+                ->orderBy('address')
+                ->get();
+            foreach ($addresses as $a) {
+                $suggestions[] = [
+                    'id'        => $a->address,
+                    'title'     => $a->address,
+                    'desc'      => "Alamat Lengkap",
+                    'icon'      => 'fa-solid fa-map-pin',
+                    'iconColor' => 'text-[#FFC000]',
+                    'bg'        => 'bg-[#FFC000]/10',
+                ];
+            }
 
-        return $suggestions;
+            return $suggestions;
+        });
     }
 
     /**
@@ -115,13 +117,16 @@ class HomeController extends Controller
                 ->toArray();
         }
 
-        $trending = search_log::select('keyword')
-            ->where('searched_at', '>=', now()->subWeek())
-            ->groupBy('keyword')
-            ->orderByRaw('COUNT(*) DESC')
-            ->limit(6)
-            ->pluck('keyword')
-            ->toArray();
+        // Cache trending 15 menit â€” berubah cukup sering tapi tidak perlu real-time
+        $trending = Cache::remember('home.trending_keywords', now()->addMinutes(15), function () {
+            return search_log::select('keyword')
+                ->where('searched_at', '>=', now()->subWeek())
+                ->groupBy('keyword')
+                ->orderByRaw('COUNT(*) DESC')
+                ->limit(6)
+                ->pluck('keyword')
+                ->toArray();
+        });
 
         return compact('searchHistory', 'trending');
     }
@@ -131,34 +136,38 @@ class HomeController extends Controller
      */
     private function getPriceDistribution($assetIds = null): array
     {
-        $query = asset_pricing::orderBy('id');
+        $cacheKey = $assetIds ? 'home.price_dist.' . md5(implode(',', $assetIds->toArray() ?? [])) : 'home.price_dist.global';
 
-        if ($assetIds !== null) {
-            $query->whereIn('asset_id', $assetIds);
-        } else {
-            $query->whereIn('asset_id', asset::where('status', 'approved')->pluck('id'));
-        }
+        return Cache::remember($cacheKey, now()->addMinutes(30), function () use ($assetIds) {
+            $query = asset_pricing::orderBy('id');
 
-        $prices = $query->get(['asset_id', 'price'])
-            ->unique('asset_id')
-            ->pluck('price');
-
-        $histogramBuckets = 30;
-        $histogramMax = 10000000;
-        $bucketSize = $histogramMax / $histogramBuckets;
-        $priceDistribution = array_fill(0, $histogramBuckets, 0);
-
-        foreach ($prices as $price) {
-            if ($price >= $histogramMax) {
-                $priceDistribution[$histogramBuckets - 1]++;
+            if ($assetIds !== null) {
+                $query->whereIn('asset_id', $assetIds);
             } else {
-                $idx = floor($price / $bucketSize);
-                if ($idx >= $histogramBuckets) $idx = $histogramBuckets - 1;
-                $priceDistribution[$idx]++;
+                $query->whereIn('asset_id', asset::where('status', 'approved')->pluck('id'));
             }
-        }
 
-        return $priceDistribution;
+            $prices = $query->get(['asset_id', 'price'])
+                ->unique('asset_id')
+                ->pluck('price');
+
+            $histogramBuckets = 30;
+            $histogramMax     = 10000000;
+            $bucketSize       = $histogramMax / $histogramBuckets;
+            $priceDistribution = array_fill(0, $histogramBuckets, 0);
+
+            foreach ($prices as $price) {
+                if ($price >= $histogramMax) {
+                    $priceDistribution[$histogramBuckets - 1]++;
+                } else {
+                    $idx = floor($price / $bucketSize);
+                    if ($idx >= $histogramBuckets) $idx = $histogramBuckets - 1;
+                    $priceDistribution[$idx]++;
+                }
+            }
+
+            return $priceDistribution;
+        });
     }
 
     /**
@@ -166,15 +175,17 @@ class HomeController extends Controller
      */
     private function getDynamicPlaceholders(): array
     {
-        $placeholders = collect([]);
+        // Cache popular assets â€” user-independent, 15 menit
+        $popular = Cache::remember('home.dynamic_placeholders.popular', now()->addMinutes(15), function () {
+            return asset::where('status', 'approved')
+                ->withCount(['views', 'reviews'])
+                ->orderByDesc('views_count')
+                ->limit(5)
+                ->pluck('title')
+                ->toArray();
+        });
 
-        // 1. Aset Populer
-        $popular = asset::where('status', 'approved')
-            ->withCount(['views', 'reviews'])
-            ->orderByDesc('views_count')
-            ->limit(5)
-            ->pluck('title');
-        $placeholders = $placeholders->merge($popular);
+        $placeholders = collect($popular);
 
         if (auth()->check()) {
             $userId = auth()->id();
@@ -205,20 +216,16 @@ class HomeController extends Controller
             $placeholders = $placeholders->merge($reviews);
         }
 
-        // Jika tidak ada data sama sekali, beri fallback
         if ($placeholders->isEmpty()) {
-            return [
-                "Mau sewa apa hari ini?"
-            ];
+            return ["Mau sewa apa hari ini?"];
         }
 
-        // Shuffle dan kembalikan array unik
         return $placeholders->unique()->shuffle()->take(10)->values()->toArray();
     }
 
     /**
      * Halaman beranda utama.
-     * Arsitektur baru: Category → Types → Assets.
+     * Arsitektur baru: Category â†’ Types â†’ Assets.
      * Homepage menampilkan per CATEGORY (Hunian, Komersial, Lahan, Event, Media Iklan)
      * masing-masing berisi max 12 aset terbaru dari semua types di bawahnya.
      */
@@ -251,16 +258,39 @@ class HomeController extends Controller
             return $asset;
         };
 
-        // 2. Populer Minggu Ini
-        $popularAssets = asset::where('status', 'approved')
-            ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
-            ->withCount(['bookings', 'views', 'favorites', 'reviews'])
-            ->withAvg('reviews as reviews_avg_rating', 'rating')
-            ->orderByRaw('((IFNULL(bookings_count, 0) * 5) + (IFNULL(views_count, 0) * 1) + (IFNULL(favorites_count, 0) * 3) + (IFNULL(reviews_count, 0) * 2) + (IFNULL(reviews_avg_rating, 0) * 2)) DESC')
-            ->limit(10)
-            ->withCommonRelations()
-            ->get()
-            ->map($mapAsset);
+        // 2. Populer Minggu Ini â€” simpan sebagai JSON string (100% aman di DB cache)
+        $popularJson = Cache::remember('home.popular.base', now()->addMinutes(10), function () {
+            $with = [
+                'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
+                'defaultPricing:id,asset_id,price,rental_unit',
+                'type:id,name,allow_units,category_id',
+                'city:code,name',
+                'district:code,name',
+                'province:code,name',
+            ];
+            $data = asset::where('status', 'approved')
+                ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
+                ->withCount(['bookings', 'views', 'favorites', 'reviews'])
+                ->withAvg('reviews as reviews_avg_rating', 'rating')
+                ->orderByRaw('((IFNULL(bookings_count, 0) * 5) + (IFNULL(views_count, 0) * 1) + (IFNULL(favorites_count, 0) * 3) + (IFNULL(reviews_count, 0) * 2) + (IFNULL(reviews_avg_rating, 0) * 2)) DESC')
+                ->limit(10)
+                ->with($with)
+                ->get()
+                ->toArray();
+            return json_encode($data); // â† simpan sebagai JSON string, bukan PHP object
+        });
+        $popularRaw = json_decode($popularJson, true) ?? []; // â† decode kembali ke plain array
+
+        // Batch-load favorites untuk popular (1 query, fresh per user)
+        $popularIds    = collect($popularRaw)->pluck('id');
+        $popularFavMap = collect();
+        if (auth()->check() && $popularIds->isNotEmpty()) {
+            $popularFavMap = \App\Models\favorite::where('user_id', auth()->id())
+                ->whereIn('asset_id', $popularIds)
+                ->select(['id', 'asset_id'])
+                ->get()->keyBy('asset_id');
+        }
+        $popularAssets = collect($popularRaw)->map(fn($a) => $this->mapFromArray($a, $popularFavMap));
 
         $sections[] = [
             'id'     => 'popular',
@@ -374,23 +404,37 @@ class HomeController extends Controller
         $priceDistribution = $this->getPriceDistribution(); // Global distribution
         $dynamicPlaceholders = $this->getDynamicPlaceholders();
 
-        $allCategories = asset_category::select(['id', 'name'])
-            ->with(['types:id,category_id,name,allow_units'])
-            ->withCount(['assets' => function($q) {
-                $q->where('status', 'approved');
-            }])
-            ->get();
+        // Cache allCategories + random images â€” 1 jam, simpan sebagai JSON string
+        $allCategoriesJson = Cache::remember('home.all_categories', now()->addHour(), function () {
+            $categories = asset_category::select(['id', 'name'])
+                ->with(['types:id,category_id,name,allow_units'])
+                ->withCount(['assets' => function ($q) {
+                    $q->where('status', 'approved');
+                }])
+                ->get();
 
-        foreach ($allCategories as $category) {
-            $randomImg = \App\Models\asset_image::whereHas('asset', function($q) use ($category) {
-                $q->where('status', 'approved')
-                  ->whereHas('type', function($q2) use ($category) {
-                      $q2->where('category_id', $category->id);
-                  });
-            })->inRandomOrder()->first();
+            $categoryIds = $categories->pluck('id');
+            $randomImages = \App\Models\asset_image::query()
+                ->select('asset_images.id', 'asset_images.image', 'asset_types.category_id')
+                ->join('assets', 'assets.id', '=', 'asset_images.asset_id')
+                ->join('asset_types', 'asset_types.id', '=', 'assets.asset_type_id')
+                ->where('assets.status', 'approved')
+                ->whereIn('asset_types.category_id', $categoryIds)
+                ->orderByRaw('RAND()')
+                ->get()
+                ->unique('category_id')
+                ->keyBy('category_id');
 
-            $category->random_image = $randomImg ? $randomImg->image_url : null;
-        }
+            foreach ($categories as $category) {
+                $img = $randomImages->get($category->id);
+                $category->random_image = $img
+                    ? \Illuminate\Support\Facades\Storage::url($img->image)
+                    : null;
+            }
+
+            return json_encode($categories->toArray()); // â† JSON string, selalu aman
+        });
+        $allCategories = json_decode($allCategoriesJson, true) ?? [];
 
         return inertia('Home/index', [
             'sections'            => $sections,
@@ -489,7 +533,7 @@ class HomeController extends Controller
             });
         }
 
-        // Filter jadwal — exclude aset yang sudah dipesan pada rentang tsb
+        // Filter jadwal â€” exclude aset yang sudah dipesan pada rentang tsb
         if ($dateStart && $dateEnd) {
             $parsedDateStart = \Carbon\Carbon::parse($dateStart);
             $parsedDateEnd = \Carbon\Carbon::parse($dateEnd)->endOfDay();
@@ -510,7 +554,7 @@ class HomeController extends Controller
                   });
             });
         } elseif ($dateStart) {
-            // Hanya tanggal mulai dipilih — cek overlap di hari itu
+            // Hanya tanggal mulai dipilih â€” cek overlap di hari itu
             $parsedDateStart = \Carbon\Carbon::parse($dateStart);
             $parsedDateEnd = \Carbon\Carbon::parse($dateStart)->endOfDay();
 
@@ -822,128 +866,183 @@ class HomeController extends Controller
     {
         $sections = [];
 
-        $combinations = \DB::table('assets')
-            ->where('assets.status', 'approved')
-            ->whereNotNull('assets.city_code')
-            ->whereNotNull('assets.province_code')
-            ->join('asset_types', 'assets.asset_type_id', '=', 'asset_types.id')
-            ->join('asset_categories', 'asset_types.category_id', '=', 'asset_categories.id')
-            ->join('cities', 'assets.city_code', '=', 'cities.code')
-            ->join('provinces', 'assets.province_code', '=', 'provinces.code')
-            ->select(
-                'asset_types.id as type_id',
-                'asset_types.name as type_name',
-                'cities.code as city_code',
-                'cities.name as city_name',
-                'provinces.code as province_code',
-                'provinces.name as province_name',
-                \DB::raw('COUNT(assets.id) as total_assets')
-            )
-            ->groupBy(
-                'asset_types.id',
-                'asset_types.name',
-                'cities.code',
-                'cities.name',
-                'provinces.code',
-                'provinces.name'
-            )
-            ->orderBy('cities.name')
-            ->orderBy('asset_types.name')
-            ->get();
+        // Cache combinations â€” simpan sebagai JSON string (bulletproof)
+        $combinationsJson = Cache::remember('home.dynamic_combinations', now()->addMinutes(30), function () {
+            $rows = \DB::table('assets')
+                ->where('assets.status', 'approved')
+                ->whereNotNull('assets.city_code')
+                ->whereNotNull('assets.province_code')
+                ->join('asset_types', 'assets.asset_type_id', '=', 'asset_types.id')
+                ->join('asset_categories', 'asset_types.category_id', '=', 'asset_categories.id')
+                ->join('cities', 'assets.city_code', '=', 'cities.code')
+                ->join('provinces', 'assets.province_code', '=', 'provinces.code')
+                ->select(
+                    'asset_types.id as type_id',
+                    'asset_types.name as type_name',
+                    'cities.code as city_code',
+                    'cities.name as city_name',
+                    'provinces.code as province_code',
+                    'provinces.name as province_name',
+                    \DB::raw('COUNT(assets.id) as total_assets')
+                )
+                ->groupBy(
+                    'asset_types.id', 'asset_types.name',
+                    'cities.code',    'cities.name',
+                    'provinces.code', 'provinces.name'
+                )
+                ->orderBy('cities.name')
+                ->orderBy('asset_types.name')
+                ->get()
+                ->map(fn($row) => (array) $row)
+                ->values()
+                ->all();
+            return json_encode($rows); // â† JSON string, selalu aman
+        });
+        $combinationsRaw = json_decode($combinationsJson, true) ?? []; // â† plain associative arrays
 
-        $qualifyingCities = $combinations->where('total_assets', '>=', 5);
-        $unqualifyingCities = $combinations->where('total_assets', '<', 5);
+        // Filter menggunakan array access
+        $qualifyingCities   = collect($combinationsRaw)->filter(fn($c) => $c['total_assets'] >= 5);
+        $unqualifyingCities = collect($combinationsRaw)->filter(fn($c) => $c['total_assets'] < 5);
 
         $groups = collect();
 
-        // a) Render kota yang memenuhi syarat (>= 5 aset)
         foreach ($qualifyingCities as $combo) {
-            $groups->push([
-                'type' => 'city',
-                'combo' => $combo
-            ]);
+            $groups->push(['type' => 'city', 'combo' => $combo]);
         }
 
-        // b) Gabungkan kota yang tidak memenuhi syarat (< 5 aset) ke level Provinsi
         if ($unqualifyingCities->isNotEmpty()) {
             $provinceGroups = [];
             foreach ($unqualifyingCities as $combo) {
-                $key = $combo->type_id . '_' . $combo->province_code;
+                $key = $combo['type_id'] . '_' . $combo['province_code'];
                 if (!isset($provinceGroups[$key])) {
                     $provinceGroups[$key] = [
-                        'type_id' => $combo->type_id,
-                        'type_name' => $combo->type_name,
-                        'province_code' => $combo->province_code,
-                        'province_name' => $combo->province_name,
-                        'city_codes' => []
+                        'type_id'       => $combo['type_id'],
+                        'type_name'     => $combo['type_name'],
+                        'province_code' => $combo['province_code'],
+                        'province_name' => $combo['province_name'],
+                        'city_codes'    => [],
                     ];
                 }
-                $provinceGroups[$key]['city_codes'][] = $combo->city_code;
+                $provinceGroups[$key]['city_codes'][] = $combo['city_code'];
             }
-
             foreach ($provinceGroups as $group) {
-                $groups->push([
-                    'type' => 'province',
-                    'group' => $group
-                ]);
+                $groups->push(['type' => 'province', 'group' => $group]);
             }
         }
 
-        // Apply pagination
         $pagedGroups = $groups->slice(($page - 1) * $perPage, $perPage);
+
+        // â”€â”€ Relasi yang aman di-cache (tanpa favorites) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        $cacheableWith = [
+            'thumbnailImages' => fn($q) => $q->select(['id', 'asset_id', 'image'])->orderBy('id')->limit(3),
+            'defaultPricing:id,asset_id,price,rental_unit',
+            'type:id,name,allow_units,category_id',
+            'city:code,name',
+            'district:code,name',
+            'province:code,name',
+        ];
+
+        $sectionsRaw    = [];
+        $allAssetArrays = [];
 
         foreach ($pagedGroups as $item) {
             if ($item['type'] === 'city') {
-                $combo = $item['combo'];
-                $categoryAssets = asset::where('asset_type_id', $combo->type_id)
-                    ->where('city_code', $combo->city_code)
-                    ->where('status', 'approved')
-                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
-                    ->withCommonRelations()
-                    ->withCount('reviews')
-                    ->withAvg('reviews as reviews_avg_rating', 'rating')
-                    ->latest('id')
-                    ->limit(10) // Limit to 10 for homepage
-                    ->get()
-                    ->map($mapAsset);
+                $combo    = $item['combo'];
+                $cacheKey = 'home.dynamic.city.' . $combo['type_id'] . '.' . $combo['city_code'];
 
-                if ($categoryAssets->isNotEmpty()) {
-                    $sections[] = [
-                        'id'     => 'type_city_' . $combo->type_id . '_' . $combo->city_code,
-                        'title'  => 'Rekomendasi ' . $combo->type_name . ' di ' . $combo->city_name,
+                $assetsJson = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($combo, $cacheableWith) {
+                    $data = asset::where('asset_type_id', $combo['type_id'])
+                        ->where('city_code', $combo['city_code'])
+                        ->where('status', 'approved')
+                        ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
+                        ->with($cacheableWith)
+                        ->withCount('reviews')
+                        ->withAvg('reviews as reviews_avg_rating', 'rating')
+                        ->latest('id')
+                        ->limit(10)
+                        ->get()
+                        ->toArray();
+                    return json_encode($data);
+                });
+                $assetsRaw = json_decode($assetsJson, true) ?? [];
+
+                if (!empty($assetsRaw)) {
+                    $allAssetArrays = array_merge($allAssetArrays, $assetsRaw);
+                    $sectionsRaw[] = [
+                        'id'     => 'type_city_' . $combo['type_id'] . '_' . $combo['city_code'],
+                        'title'  => 'Rekomendasi ' . $combo['type_name'] . ' di ' . $combo['city_name'],
                         'icon'   => 'fa-solid fa-map-location-dot',
                         'type'   => 'static',
-                        'assets' => $categoryAssets
+                        'assets' => $assetsRaw,
                     ];
                 }
             } else {
-                $group = $item['group'];
-                $categoryAssets = asset::where('asset_type_id', $group['type_id'])
-                    ->whereIn('city_code', $group['city_codes'])
-                    ->where('status', 'approved')
-                    ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
-                    ->withCommonRelations()
-                    ->withCount('reviews')
-                    ->withAvg('reviews as reviews_avg_rating', 'rating')
-                    ->latest('id')
-                    ->limit(10)
-                    ->get()
-                    ->map($mapAsset);
+                $group    = $item['group'];
+                $cacheKey = 'home.dynamic.prov.' . $group['type_id'] . '.' . $group['province_code'];
 
-                if ($categoryAssets->isNotEmpty()) {
-                    $sections[] = [
+                $assetsJson = Cache::remember($cacheKey, now()->addMinutes(10), function () use ($group, $cacheableWith) {
+                    $data = asset::where('asset_type_id', $group['type_id'])
+                        ->whereIn('city_code', $group['city_codes'])
+                        ->where('status', 'approved')
+                        ->select(['id', 'slug', 'asset_type_id', 'owner_profile_id', 'title', 'city_code', 'district_code', 'address', 'status', 'detail'])
+                        ->with($cacheableWith)
+                        ->withCount('reviews')
+                        ->withAvg('reviews as reviews_avg_rating', 'rating')
+                        ->latest('id')
+                        ->limit(10)
+                        ->get()
+                        ->toArray();
+                    return json_encode($data);
+                });
+                $assetsRaw = json_decode($assetsJson, true) ?? [];
+
+                if (!empty($assetsRaw)) {
+                    $allAssetArrays = array_merge($allAssetArrays, $assetsRaw);
+                    $sectionsRaw[] = [
                         'id'     => 'type_prov_' . $group['type_id'] . '_' . $group['province_code'],
                         'title'  => 'Rekomendasi ' . $group['type_name'] . ' di ' . $group['province_name'],
-                        'icon'   => 'fa-solid fa-map-location-dot',
+                        'icon'   => 'fa-solid fa-globe',
                         'type'   => 'static',
-                        'assets' => $categoryAssets
+                        'assets' => $assetsRaw,
                     ];
                 }
             }
         }
 
-        return $sections;
+        // â”€â”€ Batch-load favorites dalam SATU query untuk semua aset â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        $favoritesByAssetId = collect();
+        if (auth()->check() && !empty($allAssetArrays)) {
+            $allIds = collect($allAssetArrays)->pluck('id');
+            $favoritesByAssetId = \App\Models\favorite::where('user_id', auth()->id())
+                ->whereIn('asset_id', $allIds)
+                ->select(['id', 'asset_id'])
+                ->get()
+                ->keyBy('asset_id');
+        }
+
+        // â”€â”€ Apply mapping via mapFromArray â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+        foreach ($sectionsRaw as &$section) {
+            $section['assets'] = collect($section['assets'])
+                ->map(fn($a) => $this->mapFromArray($a, $favoritesByAssetId))
+                ->values();
+        }
+        unset($section);
+
+        return array_values($sectionsRaw);
+    }
+
+    /**
+     * Konversi plain array (dari JSON cache) ke stdClass siap kirim ke frontend.
+     * Favorites di-inject dari $favMap yang di-load secara batch.
+     */
+    private function mapFromArray(array $data, \Illuminate\Support\Collection $favMap): object
+    {
+        $fav = $favMap->get($data['id']);
+        $data['isFavorite']    = (bool) $fav;
+        $data['favorite_id']   = $fav ? $fav->id : null;
+        $data['city_name']     = $data['city']['name']     ?? '';
+        $data['district_name'] = $data['district']['name'] ?? '';
+        $data['province_name'] = $data['province']['name'] ?? '';
+        return (object) $data;
     }
 }
-
-

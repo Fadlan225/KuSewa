@@ -34,7 +34,10 @@ const props = defineProps({
 
 <template>
     <AppLayout transparentNavbar>
-        <Head title="Beranda" />
+        <Head title="Beranda">
+            <!-- Preload hero image — browser download mulai saat HTML di-parse, sebelum JS dieksekusi -->
+            <link rel="preload" href="/public.webp" as="image" type="image/webp" fetchpriority="high" />
+        </Head>
 
         <HeroSection />
 

@@ -1353,7 +1353,7 @@ class AssetController extends Controller
                 $oldThumbnail->delete();
             }
 
-            $path = $request->file('thumbnail')->store('uploads/assets/thumbnails', 'public');
+            $path = ImageOptimizer::process($request->file('thumbnail'), 'uploads/assets/thumbnails', 800, 80);
             $asset->images()->create([
                 'asset_unit_id' => $unit->id,
                 'image' => $path,
@@ -1391,7 +1391,7 @@ class AssetController extends Controller
                 $oldThumbnail->delete();
             }
 
-            $path = $request->file('thumbnail')->store('uploads/assets/thumbnails', 'public');
+            $path = ImageOptimizer::process($request->file('thumbnail'), 'uploads/assets/thumbnails', 800, 80);
             $asset->images()->create([
                 'image' => $path,
                 'is_thumbnail' => true,
@@ -1407,7 +1407,7 @@ class AssetController extends Controller
 
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                $path = $file->store('uploads/assets', 'public');
+                $path = ImageOptimizer::process($file, 'uploads/assets', 1920, 82);
 
                 $asset->images()->create([
                     'gallery_category_id' => $request->gallery_category_id,

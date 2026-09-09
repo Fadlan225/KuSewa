@@ -192,7 +192,7 @@ const handleSelect = (unit, pricing) => {
                      @touchend="(e) => onTouchEnd(e, () => nextListImage(unit), () => prevListImage(unit))">
 
                     <Transition name="fade">
-                        <img v-if="unit.images?.length > 0" :key="getListImageIndex(unit.id)" :src="unit.images[getListImageIndex(unit.id)].image_url" class="w-full h-full object-cover absolute inset-0 cursor-pointer" @click="openDetail(unit)" />
+                        <img v-if="unit.images?.length > 0" :key="getListImageIndex(unit.id)" :src="unit.images[getListImageIndex(unit.id)].image_url" class="w-full h-full object-cover absolute inset-0 cursor-pointer" @click="openDetail(unit)" loading="lazy" decoding="async" />
                         <div v-else class="w-full h-full flex items-center justify-center bg-slate-100 absolute inset-0 cursor-pointer" @click="openDetail(unit)">
                             <Image class="text-3xl text-gray-300" />
                         </div>
@@ -264,7 +264,7 @@ const handleSelect = (unit, pricing) => {
 
             <!-- DESKTOP: 1 Image (Left) -->
             <div class="hidden sm:block w-[180px] lg:w-[240px] h-[150px] lg:h-[180px] flex-shrink-0 relative bg-slate-100 overflow-hidden cursor-pointer" @click="openDetail(unit)">
-                <img v-if="getUnitImage(unit)" :src="getUnitImage(unit)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <img v-if="getUnitImage(unit)" :src="getUnitImage(unit)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                 <div v-else class="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-300">
                     <Image class="text-3xl mb-1" />
                 </div>

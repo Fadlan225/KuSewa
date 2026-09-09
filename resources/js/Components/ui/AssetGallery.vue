@@ -263,7 +263,7 @@ const closeGalleryModal = () => {
                         <Image class="text-6xl mb-3" />
                         <span class="font-medium text-sm">Tidak ada foto</span>
                     </div>
-                    <img v-else :src="allImages[currentMobileImageIndex]" class="w-full h-full object-cover relative z-10" @error="$event.target.style.display='none'" />
+                    <img v-else :src="allImages[currentMobileImageIndex]" class="w-full h-full object-cover relative z-10" @error="$event.target.style.display='none'" loading="lazy" decoding="async" />
                 </div>
             </transition>
             <!-- Indicator & Button -->
@@ -294,7 +294,7 @@ const closeGalleryModal = () => {
                     <Image class="text-6xl mb-3" />
                     <span class="font-medium text-sm">Tidak ada foto</span>
                 </div>
-                <img v-if="hasImages" :src="mainImage" class="w-full h-full object-cover relative z-10" alt="Main Image" @error="$event.target.style.display='none'" />
+                <img v-if="hasImages" :src="mainImage" class="w-full h-full object-cover relative z-10" alt="Main Image" @error="$event.target.style.display='none'" loading="eager" fetchpriority="high" decoding="async" />
             </div>
 
             <!-- Right Small Images Grid -->
@@ -304,7 +304,7 @@ const closeGalleryModal = () => {
                         <Image class="text-3xl mb-1" />
                         <span class="text-[10px] font-medium">No Image</span>
                     </div>
-                    <img :src="img" class="w-full h-full object-cover relative z-10 group-hover:scale-105 transition duration-500" :alt="`Gallery image ${index+1}`" @error="$event.target.style.display='none'" />
+                    <img :src="img" class="w-full h-full object-cover relative z-10 group-hover:scale-105 transition duration-500" :alt="`Gallery image ${index+1}`" @error="$event.target.style.display='none'" loading="lazy" decoding="async" />
                     <div v-if="index === 3 && allImages.length > 5" class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-lg z-20">
                         +{{ allImages.length - 5 }} Foto
                     </div>

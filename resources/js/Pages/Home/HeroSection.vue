@@ -19,7 +19,19 @@ const {
     <div class="w-full px-3 pt-3 pb-6 sm:px-6 md:px-0 md:pt-0 md:pb-0 relative z-[90]">
 
         <!-- 2. HERO CONTAINER: rounded di mobile, lurus kembali (rounded-none) di desktop -->
-        <div class="relative w-full h-[360px] sm:h-[420px] md:h-[500px] lg:h-[540px] bg-cover bg-center rounded-2xl md:rounded-none overflow-hidden md:overflow-visible shadow-sm md:shadow-none transition-all duration-300" style="background-image: url('/public.webp');">
+        <div class="relative w-full h-[360px] sm:h-[420px] md:h-[500px] lg:h-[540px] rounded-2xl md:rounded-none overflow-hidden md:overflow-visible shadow-sm md:shadow-none transition-all duration-300">
+
+            <!-- Hero Image sebagai <img> — fetchpriority tinggi agar LCP optimal -->
+            <img
+                src="/public.webp"
+                alt="KitaSewa - Platform Sewa Aset Terpercaya"
+                class="absolute inset-0 w-full h-full object-cover object-center"
+                fetchpriority="high"
+                loading="eager"
+                decoding="async"
+                width="1440"
+                height="540"
+            />
 
             <!-- Overlay gelap -->
             <div class="absolute inset-0 bg-black/50"></div>

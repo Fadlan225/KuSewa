@@ -3,8 +3,6 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import tailwindcss from '@tailwindcss/vite';
 
-// IP yang diisi oleh scripts/network.js lewat env variable.
-// Kalau tidak ada (mode dev lokal), fallback ke 127.0.0.1
 const hmrHost = process.env.VITE_HMR_HOST || '127.0.0.1';
 const hmrPort = parseInt(process.env.VITE_HMR_PORT || '5173');
 
@@ -26,12 +24,9 @@ export default defineConfig({
     ],
 
     server: {
-        // Selalu listen di semua interface agar bisa diakses dari luar
         host: '0.0.0.0',
         port: parseInt(process.env.VITE_PORT || '5173'),
         strictPort: true,
-
-        // CORS dinamis: izinkan origin dari IP saat ini + localhost
         cors: {
             origin: [
                 `http://${hmrHost}:8080`,
@@ -39,8 +34,6 @@ export default defineConfig({
                 'http://127.0.0.1:8080',
             ],
         },
-
-        // HMR dinamis: browser akan konek ke IP yang dikirim server
         hmr: {
             host: hmrHost,
             port: hmrPort,
@@ -48,52 +41,117 @@ export default defineConfig({
     },
 
     build: {
-        // Tingkatkan limit warning chunk size (default 500KB terlalu kecil)
-        chunkSizeWarningLimit: 1000,
+        chunkSizeWarningLimit: 600,
 
         rollupOptions: {
             output: {
-                // Manual chunk splitting untuk kontrol penuh
                 manualChunks(id) {
-                    // Vendor: Vue core + Inertia + Ziggy (jarang berubah → cache lama)
-                    if (id.includes('node_modules/vue/') ||
+                    // ─── VENDOR: Vue core + Inertia + Ziggy ───────────────────────────
+                    if (
+                        id.includes('node_modules/vue/') ||
                         id.includes('node_modules/@vue/') ||
                         id.includes('node_modules/@inertiajs/') ||
-                        id.includes('vendor/tightenco/ziggy')) {
+                        id.includes('vendor/tightenco/ziggy')
+                    ) {
                         return 'vendor-core';
                     }
 
-                    // Vendor UI utilities
+                    // ─── VENDOR: Lucide icons (besar, pisahkan) ───────────────────────
+                    if (id.includes('node_modules/lucide-vue-next')) {
+                        return 'vendor-icons';
+                    }
+
+                    // ─── VENDOR: Flatpickr date picker ────────────────────────────────
+                    if (
+                        id.includes('node_modules/flatpickr') ||
+                        id.includes('node_modules/vue-flatpickr-component')
+                    ) {
+                        return 'vendor-datepicker';
+                    }
+
+                    // ─── VENDOR: VueUse ───────────────────────────────────────────────
+                    if (id.includes('node_modules/@vueuse/')) {
+                        return 'vendor-vueuse';
+                    }
+
+                    // ─── VENDOR: Pinia ────────────────────────────────────────────────
+                    if (id.includes('node_modules/pinia')) {
+                        return 'vendor-pinia';
+                    }
+
+                    // ─── VENDOR: axios ────────────────────────────────────────────────
+                    if (id.includes('node_modules/axios')) {
+                        return 'vendor-axios';
+                    }
+
+                    // ─── VENDOR: Laravel Echo / Pusher / Reverb ───────────────────────
+                    if (
+                        id.includes('node_modules/laravel-echo') ||
+                        id.includes('node_modules/pusher-js')
+                    ) {
+                        return 'vendor-echo';
+                    }
+
+                    // ─── VENDOR: sisa library lainnya ─────────────────────────────────
                     if (id.includes('node_modules/')) {
                         return 'vendor-misc';
                     }
 
-                    // Halaman Home (besar, bisa di-split terpisah)
-                    if (id.includes('/Pages/Home/')) {
-                        return 'page-home';
+                    // ─── PAGES: Admin ─────────────────────────────────────────────────
+                    if (id.includes('/Pages/admin/')) {
+                        return 'pages-admin';
                     }
 
-                    // Halaman Assets/Search
+                    // ─── PAGES: Owner ─────────────────────────────────────────────────
+                    if (id.includes('/Pages/owner/')) {
+                        return 'pages-owner';
+                    }
+
+                    // ─── PAGES: Auth ──────────────────────────────────────────────────
+                    if (id.includes('/Pages/Auth/')) {
+                        return 'pages-auth';
+                    }
+
+                    // ─── PAGES: Chat (heavy: Echo, axios, realtime) ───────────────────
+                    if (id.includes('/Pages/Home/Chat/')) {
+                        return 'pages-chat';
+                    }
+
+                    // ─── PAGES: Booking & Payment ─────────────────────────────────────
+                    if (
+                        id.includes('/Pages/Home/Bookings/') ||
+                        id.includes('/Pages/Home/Payment')
+                    ) {
+                        return 'pages-booking';
+                    }
+
+                    // ─── PAGES: Asset detail & search ─────────────────────────────────
                     if (id.includes('/Pages/Home/Assets/')) {
-                        return 'page-assets';
+                        return 'pages-asset-detail';
                     }
 
-                    // UI Components (cards, dll)
-                    if (id.includes('/Components/UI/')) {
-                        return 'ui-components';
+                    // ─── PAGES: Activity, Notifications, Profile ──────────────────────
+                    if (
+                        id.includes('/Pages/Home/Activity/') ||
+                        id.includes('/Pages/Notifications/') ||
+                        id.includes('/Pages/Profile/')
+                    ) {
+                        return 'pages-account';
+                    }
+
+                    // ─── PAGES: Lainnya (Home index, Favorite, Reviews, Support) ──────
+                    if (id.includes('/Pages/Home/')) {
+                        return 'pages-home';
                     }
                 },
             },
         },
     },
 
-    // Pre-bundle dependensi untuk dev server lebih cepat
     optimizeDeps: {
         include: [
             'vue',
             '@inertiajs/vue3',
         ],
-        // Exclude file yang tidak perlu di-bundle oleh vite optimizer
-        exclude: [],
     },
 });
