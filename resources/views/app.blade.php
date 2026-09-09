@@ -17,6 +17,21 @@
         <!-- Preload logo agar tidak CLS -->
         <link rel="preload" as="image" href="/kitasewa-logo.png">
 
+        {{--
+            Critical CSS — inline agar browser bisa paint static-hero-placeholder
+            SEBELUM app.css selesai didownload (app.css adalah render-blocking).
+            Hanya berisi style minimal yang dibutuhkan oleh #static-hero-placeholder.
+        --}}
+        <style>
+            *, *::before, *::after { box-sizing: border-box; }
+            body { margin: 0; font-family: ui-sans-serif, system-ui, sans-serif; background: #f9fafb; }
+            #static-hero-placeholder {
+                position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+                width: 100%; height: 360px; overflow: hidden; background: #0A2540;
+                will-change: opacity; transition: opacity 0.2s ease-out;
+            }
+        </style>
+
         <!-- Standard Meta -->
         <meta name="title" content="KitaSewa | Temukan Aset, Wujudkan Rencana">
         <meta name="description" content="Butuh tempat untuk mewujudkan rencana? Temukan aset yang tepat di KitaSewa.">
