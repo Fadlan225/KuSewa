@@ -126,9 +126,23 @@ onMounted(() => {
 });
 
 // File upload preview
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ALLOWED_MIMES = ['image/jpeg', 'image/jpg', 'image/png'];
+
 const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
+        formStep3.clearErrors('ktp_photo');
+        if (!ALLOWED_MIMES.includes(file.type)) {
+            formStep3.setError('ktp_photo', 'Format file harus JPG, JPEG, atau PNG.');
+            event.target.value = '';
+            return;
+        }
+        if (file.size > MAX_FILE_SIZE) {
+            formStep3.setError('ktp_photo', 'Ukuran file tidak boleh lebih dari 5MB.');
+            event.target.value = '';
+            return;
+        }
         formStep3.ktp_photo = file;
         ktpPreview.value = URL.createObjectURL(file);
     }

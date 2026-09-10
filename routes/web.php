@@ -216,6 +216,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/konfigurasi-aset/spesifikasi', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'spesifikasiAset'])->name('konfigurasi-aset.spesifikasi');
     Route::get('/konfigurasi-aset/galeri', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'kategoriGaleri'])->name('konfigurasi-aset.galeri');
     Route::put('/konfigurasi-aset/{assetType}/fields', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'updateFields'])->name('konfigurasi-aset.fields');
+    Route::post('/konfigurasi-aset/{assetType}/reset-fields', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'resetFields'])->name('konfigurasi-aset.reset-fields');
     Route::put('/konfigurasi-aset/{assetType}/gallery', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'syncGallery'])->name('konfigurasi-aset.gallery');
 
 

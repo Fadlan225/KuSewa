@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             ServiceFeeSeeder::class,        // Service fee config
             AssetCategorySeeder::class,     // 5 kategori
             AssetTypeSeeder::class,         // 22 tipe aset
+            AssetTypeDefaultSpecSeeder::class, // Default spesifikasi form per tipe aset
 
             // ── Facilities ─────────────────────────────────────────────────
             FacilityCategorySeeder::class,  // 16 Master kategori fasilitas

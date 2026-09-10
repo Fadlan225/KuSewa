@@ -324,47 +324,68 @@ function resetToDefault() {
     showResetModal.value = true;
 }
 
-function executeReset() {
-    const assetTypeName = selectedType.value.name.toLowerCase();
-    let defaultDraft = [];
-    
-    if (assetTypeName.includes('rumah') || assetTypeName.includes('gedung') || assetTypeName.includes('ruko') || assetTypeName.includes('kost')) {
-        defaultDraft = [
-            { label: 'Luas Tanah', type: 'number', required: true, placeholder: 'Dalam meter persegi (m2)' },
-            { label: 'Luas Bangunan', type: 'number', required: true, placeholder: 'Dalam meter persegi (m2)' },
-            { label: 'Daya Listrik', type: 'number', required: false, placeholder: 'Dalam Watt (misal: 1300)' },
-            { label: 'Sertifikat', type: 'select', required: true, options: ['SHM (Sertifikat Hak Milik)', 'HGB (Hak Guna Bangunan)', 'Lainnya'] }
-        ];
-    } else if (assetTypeName.includes('kendaraan') || assetTypeName.includes('mobil') || assetTypeName.includes('motor')) {
-        defaultDraft = [
-            { label: 'Tahun Pembuatan', type: 'number', required: true, placeholder: 'Misal: 2020' },
-            { label: 'Transmisi', type: 'radio', required: true, options: ['Manual', 'Automatic'] },
-            { label: 'Kapasitas Mesin', type: 'number', required: false, placeholder: 'Dalam CC' },
-            { label: 'Warna', type: 'text', required: true, placeholder: 'Warna kendaraan' }
-        ];
-    } else if (assetTypeName.includes('alat') || assetTypeName.includes('mesin')) {
-        defaultDraft = [
-            { label: 'Merk / Brand', type: 'text', required: true, placeholder: 'Merk alat berat' },
-            { label: 'Tahun Pembuatan', type: 'number', required: true, placeholder: 'Tahun alat' },
-            { label: 'Kapasitas Beban', type: 'text', required: false, placeholder: 'Misal: 5 Ton' },
-        ];
-    } else {
-        defaultDraft = [
-            { label: 'Kondisi Barang', type: 'radio', required: true, options: ['Baru', 'Bekas'] },
-            { label: 'Deskripsi Tambahan', type: 'textarea', required: false, placeholder: 'Ketik keterangan tambahan di sini...' }
-        ];
-    }
-    
-    defaultDraft = defaultDraft.map((item) => ({
-        ...item,
-        key: generateKey(item.label)
-    }));
+const isResetting = ref(false);
 
-    draftFields.value = defaultDraft;
-    
+async function executeReset() {
+    if (!selectedType.value || isResetting.value) return;
+
+    isResetting.value = true;
     showResetModal.value = false;
-    toastState.value = { show: true, message: 'Berhasil dikembalikan ke pengaturan default.', type: 'success' };
-    setTimeout(() => toastState.value.show = false, 3000);
+
+    try {
+        const response = await fetch(
+            route('admin.konfigurasi-aset.reset-fields', selectedType.value.id),
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ scope: fieldScope.value }),
+            }
+        );
+
+        const json = await response.json();
+
+        if (!response.ok) {
+            toastState.value = {
+                show: true,
+                message: json.message ?? 'Gagal mereset ke default.',
+                type: 'error',
+            };
+            setTimeout(() => toastState.value.show = false, 3000);
+            return;
+        }
+
+        // Update draftFields dari server — tanpa memicu auto-save (gunakan isInitializing)
+        isInitializing.value = true;
+        draftFields.value = JSON.parse(JSON.stringify(json.fields ?? []));
+        activeEditIndex.value = null;
+
+        // Update local props reference agar konsisten
+        const t = props.assetTypes.find(a => a.id === selectedType.value.id);
+        if (t) {
+            if (fieldScope.value === 'asset') t.detail_fields = JSON.parse(JSON.stringify(json.fields ?? []));
+            else t.unit_detail_fields = JSON.parse(JSON.stringify(json.fields ?? []));
+        }
+
+        await nextTick();
+        isInitializing.value = false;
+
+        toastState.value = {
+            show: true,
+            message: json.message ?? 'Berhasil dikembalikan ke pengaturan default.',
+            type: 'success',
+        };
+        setTimeout(() => toastState.value.show = false, 3000);
+
+    } catch {
+        toastState.value = { show: true, message: 'Terjadi kesalahan saat mereset.', type: 'error' };
+        setTimeout(() => toastState.value.show = false, 3000);
+    } finally {
+        isResetting.value = false;
+    }
 }
 
 /* ── Save ─────────────────────────────────────────────────────────── */
@@ -621,8 +642,9 @@ function saveFields() {
 
                             <!-- Footer Save Button -->
                             <div class="p-5 bg-white border-t border-slate-200 mt-auto sticky bottom-0 z-20 shadow-[0_-15px_30px_-10px_rgba(0,0,0,0.08)] flex items-stretch gap-2">
-                                <button @click="resetToDefault" class="flex items-center justify-center w-11 shrink-0 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors shadow-sm" title="Kembalikan ke Default">
-                                    <RotateCcw :size="20" :stroke-width="2.5" />
+                                <button @click="resetToDefault" :disabled="isResetting" class="flex items-center justify-center w-11 shrink-0 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors shadow-sm disabled:opacity-50" title="Kembalikan ke Default">
+                                    <Loader2 v-if="isResetting" class="w-4 h-4 animate-spin" />
+                                    <RotateCcw v-else :size="20" :stroke-width="2.5" />
                                 </button>
                                 <button @click="saveFields" :disabled="isSaving" class="flex-1 rounded-lg bg-[#FFC000] px-5 py-3 text-sm font-bold text-[#0A2540] hover:bg-amber-400 transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-80">
                                     <Loader2 v-if="isSaving" class="w-4 h-4 animate-spin text-[#0A2540]" />

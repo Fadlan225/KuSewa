@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\asset_type;
 use App\Models\galery_category;
+use App\Services\DefaultSpecService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -77,24 +78,77 @@ class TemplateAsetController extends Controller
      */
     public function updateFields(Request $request, asset_type $assetType)
     {
-        $data = $request->validate([
-            'scope'              => 'required|in:asset,unit',
-            'fields'             => 'required|array',
-            'fields.*.key'       => 'required|string|max:64',
-            'fields.*.label'     => 'required|string|max:128',
-            'fields.*.type'      => 'required|in:text,textarea,number,counter,select,searchable_select,radio,checkbox_list,checkbox,date,time,room_size',
-            'fields.*.required'  => 'required|boolean',
-            'fields.*.options'   => 'nullable|array',
-            'fields.*.options.*' => 'string|max:64',
+        $validated = $request->validate([
+            'scope'                                     => 'required|in:asset,unit',
+            'fields'                                    => 'required|array',
+            'fields.*.key'                              => 'required|string|max:64',
+            'fields.*.label'                            => 'required|string|max:128',
+            'fields.*.type'                             => 'required|in:text,textarea,number,counter,select,searchable_select,radio,checkbox_list,checkbox,date,time,room_size',
+            'fields.*.required'                         => 'required|boolean',
+            'fields.*.options'                          => 'nullable|array',
+            'fields.*.options.*'                        => 'string|max:64',
+            // option_configs: konfigurasi input tambahan per opsi (mis. "Lainnya" pada Apartemen)
+            'fields.*.option_configs'                   => 'nullable|array',
+            'fields.*.option_configs.*.has_input'       => 'boolean',
+            'fields.*.option_configs.*.label'           => 'nullable|string|max:128',
+            'fields.*.option_configs.*.type'            => 'nullable|in:text,number,decimal',
+            'fields.*.option_configs.*.placeholder'     => 'nullable|string|max:255',
         ]);
 
-        if ($data['scope'] === 'asset') {
-            $assetType->update(['detail_fields' => $data['fields']]);
+        // Ambil fields tervalidasi dari request langsung (validator hanya memvalidasi kunci yang ada,
+        // namun kita perlu meneruskan semua kunci termasuk option_configs ke penyimpanan)
+        $fields = collect($request->input('fields', []))->map(function ($field) use ($validated) {
+            // Pastikan hanya kunci yang diizinkan yang disimpan
+            $allowed = ['key', 'label', 'type', 'required', 'options', 'option_configs', 'placeholder'];
+            $clean   = array_intersect_key($field, array_flip($allowed));
+
+            // Pastikan option_configs hanya untuk field tipe select
+            if (($clean['type'] ?? '') !== 'select') {
+                unset($clean['option_configs']);
+            }
+
+            return $clean;
+        })->values()->all();
+
+        if ($validated['scope'] === 'asset') {
+            $assetType->update(['detail_fields' => $fields]);
         } else {
-            $assetType->update(['unit_detail_fields' => $data['fields']]);
+            $assetType->update(['unit_detail_fields' => $fields]);
         }
 
         return back()->with('success', "Konfigurasi form {$assetType->name} berhasil disimpan.");
+    }
+
+    /**
+     * Reset detail_fields / unit_detail_fields ke konfigurasi default (dari DefaultSpecService).
+     * Payload: { scope: 'asset'|'unit' }
+     * Response JSON: { fields: [...], message: '...' }
+     */
+    public function resetFields(Request $request, asset_type $assetType)
+    {
+        $request->validate(['scope' => 'required|in:asset,unit']);
+
+        $spec = DefaultSpecService::forType($assetType->name);
+
+        if (!$spec) {
+            return response()->json([
+                'message' => "Konfigurasi default untuk tipe '{$assetType->name}' tidak tersedia.",
+            ], 404);
+        }
+
+        $scope  = $request->input('scope');
+        $fields = $scope === 'asset' ? $spec['asset'] : $spec['unit'];
+
+        if ($scope === 'asset') {
+            $assetType->update(['detail_fields' => $fields]);
+        } else {
+            $assetType->update(['unit_detail_fields' => $fields]);
+        }
+
+        return response()->json([
+            'message' => "Spesifikasi {$assetType->name} berhasil direset ke default.",
+            'fields'  => $fields,
+        ]);
     }
 
     /**

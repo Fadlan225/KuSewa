@@ -703,12 +703,15 @@ onMounted(() => {
   if (document.cookie.includes('XSRF-TOKEN')) {
       fetchContacts()
       // Polling lambat dihapus untuk menghemat beban server
-      window.Echo?.private(`App.Models.User.${usePage().props.auth.user.id}`)
-          .notification((notification) => {
-              if (notification.type === 'chat_message') {
-                  fetchContacts();
-              }
-          });
+      const userId = usePage().props.auth?.user?.id;
+      if (userId) {
+          window.Echo?.private(`App.Models.User.${userId}`)
+              .notification((notification) => {
+                  if (notification.type === 'chat_message') {
+                      fetchContacts();
+                  }
+              });
+      }
   }
 })
 
