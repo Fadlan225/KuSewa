@@ -147,6 +147,7 @@ const FIELD_TYPES = [
     { value: 'text', label: 'Teks Pendek' },
     { value: 'textarea', label: 'Teks Panjang (Textarea)' },
     { value: 'number', label: 'Angka Bebas' },
+    { value: 'year', label: 'Tahun (Angka)' },
     { value: 'counter', label: 'Penghitung (Tombol - / +)' },
     { value: 'select', label: 'Dropdown Pilihan' },
     { value: 'searchable_select', label: 'Dropdown dengan Pencarian' },
@@ -848,6 +849,11 @@ function saveFields() {
                                     </div>
                                 </div>
 
+                                <!-- Type: Year -->
+                                <div v-else-if="field.type === 'year'">
+                                    <input type="number" min="1900" max="2100" v-model="previewValues[field.key]" @keydown="['-', '+', 'e', 'E', '.', ','].includes($event.key) && $event.preventDefault()" :placeholder="field.placeholder || field.label || 'Misal: 2024'" class="w-full text-sm px-4 py-2.5 rounded-lg border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all placeholder:font-normal placeholder:text-slate-400" />
+                                </div>
+
                                 <!-- Type: Searchable Select -->
                                 <div v-else-if="field.type === 'searchable_select'">
                                     <SearchableSelect
@@ -956,7 +962,7 @@ function saveFields() {
                         </label>
 
                         <!-- Pengaturan Placeholder -->
-                        <div class="space-y-1.5" v-if="['text', 'textarea', 'number', 'select', 'searchable_select'].includes(draftFields[activeEditIndex].type)">
+                        <div class="space-y-1.5" v-if="['text', 'textarea', 'number', 'year', 'select', 'searchable_select'].includes(draftFields[activeEditIndex].type)">
                             <label class="block text-xs font-semibold text-slate-600">Teks Petunjuk (Placeholder)</label>
                             <input v-model="draftFields[activeEditIndex].placeholder" type="text" placeholder="Contoh: Masukkan data..." class="w-full text-sm font-medium text-slate-800 bg-slate-50/50 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:border-slate-300 transition-all placeholder:text-slate-400" />
                         </div>
