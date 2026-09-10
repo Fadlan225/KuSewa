@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { Search, X, Plus, Trash2, ChevronDown, GripVertical, Lock, Copy, ChevronLeft, ChevronRight, Building, Loader2, RotateCcw } from 'lucide-vue-next';
+import { Search, X, Plus, Trash2, ChevronDown, GripVertical, Lock, Copy, ChevronLeft, ChevronRight, Building, Loader2, RotateCcw, Settings } from 'lucide-vue-next';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import EmptyFieldIcon from '@/Components/ui/Icons/EmptyFieldIcon.vue';
 import SearchableSelect from '@/Components/ui/SearchableSelect.vue';
@@ -155,6 +155,7 @@ const FIELD_TYPES = [
     { value: 'checkbox', label: 'Toggle (Ya/Tidak)' },
     { value: 'date', label: 'Tanggal (Kalender)' },
     { value: 'time', label: 'Input Waktu / Jam' },
+    { value: 'time_range', label: 'Rentang Jam (Mulai - Selesai)' },
     { value: 'room_size', label: 'Dimensi (Panjang x Lebar)' },
 ];
 const hasOptions  = (type) => ['select', 'radio', 'searchable_select', 'room_size', 'checkbox_list'].includes(type);
@@ -174,13 +175,17 @@ const updateKey = (field) => {
 
 function addField() {
     const defaultLabel = 'Pertanyaan Baru';
-    draftFields.value.push({
+    draftFields.value.unshift({
         key: generateKey(defaultLabel),
         label: defaultLabel,
         type: 'text',
         required: false,
         options: ['A', 'B', 'C']
     });
+    
+    // Tutup popover pengaturan jika sedang terbuka,
+    // karena index berubah akibat penambahan di awal array
+    activeEditIndex.value = null;
 }
 
 // Remove a draft field
@@ -263,6 +268,52 @@ function addOption(field) {
 
 function removeOption(field, idx) {
     field.options.splice(idx, 1);
+}
+
+/* ── Options Extra Input Logic ────────────────────────────────────────── */
+const activeOptionConfig = ref(null);
+function toggleOptionConfig(idx, oidx) {
+    const key = `${idx}-${oidx}`;
+    activeOptionConfig.value = activeOptionConfig.value === key ? null : key;
+}
+const activeOptionData = computed(() => {
+    if (!activeOptionConfig.value) return null;
+    const parts = activeOptionConfig.value.split('-');
+    const idx = parseInt(parts[0]);
+    
+    // Pastikan modal input tambahan hanya muncul untuk kolom yang sedang aktif diedit
+    if (idx !== activeEditIndex.value) return null;
+    
+    const oidx = parseInt(parts[1]);
+    const field = draftFields.value[idx];
+    if (!field || !field.options) return null;
+    return { field, opt: field.options[oidx], oidx };
+});
+
+// Reset konfigurasi opsi saat berpindah kolom
+watch(activeEditIndex, () => {
+    activeOptionConfig.value = null;
+});
+function updateOption(field, oidx, newValue) {
+    const oldValue = field.options[oidx];
+    if (oldValue === newValue) return;
+    field.options[oidx] = newValue;
+    if (field.option_configs && field.option_configs[oldValue]) {
+        field.option_configs[newValue] = field.option_configs[oldValue];
+        delete field.option_configs[oldValue];
+    }
+}
+function initOptionConfig(field, optValue) {
+    if (!field.option_configs) field.option_configs = {};
+    if (!field.option_configs[optValue]) {
+        field.option_configs[optValue] = {
+            has_input: false,
+            label: '',
+            type: 'text',
+            placeholder: ''
+        };
+    }
+    return field.option_configs[optValue];
 }
 
 const showResetModal = ref(false);
@@ -475,8 +526,28 @@ function saveFields() {
                             </div>
 
                             <!-- Draggable Builder List -->
-                            <div class="flex-1 p-4 lg:p-5">
-                                <draggable v-model="draftFields" item-key="key" :animation="200" class="space-y-1.5 pb-2">
+                            <div class="flex-1 p-4 lg:p-5 flex flex-col gap-1.5">
+                                <!-- Top Locked Fields (Unit Scope) -->
+                                <template v-if="fieldScope === 'unit'">
+                                    <div class="relative z-10 rounded-lg border border-slate-200 bg-white">
+                                        <div class="flex items-center px-4 py-3 gap-3">
+                                            <div class="text-slate-300 p-0.5 -ml-1">
+                                                <Lock :size="16" />
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-[13px] font-bold text-[#0A2540]">
+                                                    Nama Tipe {{ selectedType?.unit_label || 'Unit' }}
+                                                    <span class="text-rose-500 ml-0.5 text-xs">*</span>
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center pr-1 text-slate-400">
+                                                <ChevronRight :size="16" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <draggable v-model="draftFields" item-key="key" :animation="200" class="space-y-1.5 pb-2" :class="fieldScope === 'unit' ? 'mt-1.5' : ''">
                                     <template #item="{ element: field, index: idx }">
                                         <div class="relative overflow-hidden rounded-lg">
                                             <!-- Delete Background -->
@@ -515,17 +586,36 @@ function saveFields() {
                                         </div>
                                     </template>
                                 </draggable>
-                            </div>
 
-                            <div v-if="draftFields.length === 0" class="text-center py-16 flex flex-col items-center justify-center gap-3">
-                                <EmptyFieldIcon :size="120" />
-                                <span class="text-[15px] font-bold text-slate-700">Belum Ada Kolom yang Dikonfigurasi</span>
-                                <span class="text-[13px] text-slate-500 text-center px-6 leading-relaxed max-w-sm">
-                                    Tambahkan spesifikasi tambahan untuk tipe aset ini seperti dimensi, fasilitas, aturan, atau detail lainnya.
-                                </span>
-                                <button @click.stop="addField" class="mt-4 bg-white border border-slate-200 hover:border-[#FFC000] hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm">
-                                    <Plus :size="16" class="text-[#FFC000]" /> Tambah Kolom
-                                </button>
+                                <!-- Bottom Locked Fields (Unit Scope) -->
+                                <template v-if="fieldScope === 'unit'">
+                                    <div class="relative z-10 rounded-lg border border-slate-200 bg-white">
+                                        <div class="flex items-center px-4 py-3 gap-3">
+                                            <div class="text-slate-300 p-0.5 -ml-1">
+                                                <Lock :size="16" />
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-[13px] font-bold text-[#0A2540]">
+                                                    Deskripsi {{ selectedType?.unit_label || 'Unit' }}
+                                                </p>
+                                            </div>
+                                            <div class="flex items-center pr-1 text-slate-400">
+                                                <ChevronRight :size="16" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+
+                                <div v-if="draftFields.length === 0" class="text-center py-16 flex flex-col items-center justify-center gap-3">
+                                    <EmptyFieldIcon :size="120" />
+                                    <span class="text-[15px] font-bold text-slate-700">Belum Ada Kolom yang Dikonfigurasi</span>
+                                    <span class="text-[13px] text-slate-500 text-center px-6 leading-relaxed max-w-sm">
+                                        Tambahkan spesifikasi tambahan untuk tipe aset ini seperti dimensi, fasilitas, aturan, atau detail lainnya.
+                                    </span>
+                                    <button @click.stop="addField" class="mt-4 bg-white border border-slate-200 hover:border-[#FFC000] hover:bg-slate-50 text-slate-700 font-semibold px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors shadow-sm">
+                                        <Plus :size="16" class="text-[#FFC000]" /> Tambah Kolom
+                                    </button>
+                                </div>
                             </div>
 
                             <!-- Footer Save Button -->
@@ -656,13 +746,40 @@ function saveFields() {
                                 </div>
 
                                 <!-- Type: Select -->
-                                <div v-else-if="field.type === 'select'" class="relative">
+                                <div v-else-if="field.type === 'select'" class="relative flex flex-col gap-3">
                                     <CustomSelect
                                         v-model="previewValues[field.key]"
                                         :options="field.options?.length ? field.options : ['A', 'B', 'C']"
                                         :placeholder="field.placeholder || `Pilih ${field.label || 'Opsi'}...`"
                                         :fullWidth="true"
                                     />
+                                    
+                                    <!-- Extra Input Preview -->
+                                    <div v-if="field.option_configs && field.option_configs[previewValues[field.key]]?.has_input" class="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-2 mt-1">
+                                        <label class="block text-sm font-bold text-slate-700 mb-2">
+                                            {{ field.option_configs[previewValues[field.key]].label || 'Input Tambahan' }}
+                                        </label>
+                                        
+                                        <div v-if="field.option_configs[previewValues[field.key]].type === 'time_range'" class="flex items-center gap-3">
+                                            <div class="flex-1 relative">
+                                                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Jam Mulai</label>
+                                                <input type="time" v-model="previewValues[`${field.key}_${previewValues[field.key]}_start`]" class="w-full text-sm px-3 py-2 rounded-md border border-slate-300 text-slate-800 bg-white focus:ring-2 focus:ring-[#FFC000] outline-none" />
+                                            </div>
+                                            <span class="text-slate-400 font-bold shrink-0 mt-4">-</span>
+                                            <div class="flex-1 relative">
+                                                <label class="block text-[10px] font-bold text-slate-500 mb-1 uppercase tracking-wider">Jam Selesai</label>
+                                                <input type="time" v-model="previewValues[`${field.key}_${previewValues[field.key]}_end`]" class="w-full text-sm px-3 py-2 rounded-md border border-slate-300 text-slate-800 bg-white focus:ring-2 focus:ring-[#FFC000] outline-none" />
+                                            </div>
+                                        </div>
+                                        
+                                        <div v-else>
+                                            <input :type="field.option_configs[previewValues[field.key]].type === 'number' || field.option_configs[previewValues[field.key]].type === 'decimal' ? 'number' : 'text'" 
+                                                   :step="field.option_configs[previewValues[field.key]].type === 'decimal' ? '0.01' : '1'"
+                                                   v-model="previewValues[`${field.key}_${previewValues[field.key]}`]" 
+                                                   :placeholder="field.option_configs[previewValues[field.key]].placeholder || 'Ketik jawaban...'" 
+                                                   class="w-full text-sm px-3 py-2 rounded-md border border-slate-300 text-slate-800 bg-white focus:ring-2 focus:ring-[#FFC000] outline-none" />
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <!-- Type: Counter -->
@@ -716,6 +833,19 @@ function saveFields() {
                                 <!-- Type: Time -->
                                 <div v-else-if="field.type === 'time'">
                                     <input type="time" v-model="previewValues[field.key]" class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all" />
+                                </div>
+                                
+                                <!-- Type: Time Range -->
+                                <div v-else-if="field.type === 'time_range'" class="flex items-center gap-3 w-full">
+                                    <div class="flex-1 relative">
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Jam Mulai</label>
+                                        <input type="time" v-model="previewValues[`${field.key}_start`]" class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all" />
+                                    </div>
+                                    <span class="text-slate-400 font-bold shrink-0 mt-6">-</span>
+                                    <div class="flex-1 relative">
+                                        <label class="block text-[11px] font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Jam Selesai</label>
+                                        <input type="time" v-model="previewValues[`${field.key}_end`]" class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all" />
+                                    </div>
                                 </div>
 
                                 <!-- Type: Searchable Select -->
@@ -839,13 +969,19 @@ function saveFields() {
                                     <Plus :size="14" />
                                 </button>
                             </div>
-                            <div class="space-y-2 max-h-[150px] overflow-y-auto pr-1 custom-scrollbar">
-                                <div v-for="(opt, oidx) in draftFields[activeEditIndex].options" :key="oidx" class="flex items-center gap-2 group">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></div>
-                                    <input type="text" v-model="draftFields[activeEditIndex].options[oidx]" class="flex-1 text-sm text-slate-700 bg-transparent border-0 border-b border-slate-200 px-1 py-1 focus:ring-0 focus:border-slate-400 transition-colors" placeholder="Ketik opsi..." />
-                                    <button @click="removeOption(draftFields[activeEditIndex], oidx)" class="text-slate-400 hover:text-rose-500 transition p-1 opacity-0 group-hover:opacity-100">
-                                        <X :size="14" />
-                                    </button>
+                            <div class="space-y-2 max-h-[220px] overflow-y-auto overflow-x-hidden pr-1 custom-scrollbar">
+                                <div v-for="(opt, oidx) in draftFields[activeEditIndex].options" :key="oidx" class="flex flex-col gap-1.5 w-full">
+                                    <div class="flex items-center gap-1.5 group w-full">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-slate-300 shrink-0"></div>
+                                        <input type="text" :value="opt" @input="(e) => updateOption(draftFields[activeEditIndex], oidx, e.target.value)" class="flex-1 min-w-0 text-sm text-slate-700 bg-transparent border-0 border-b border-slate-200 px-1 py-1 focus:ring-0 focus:border-slate-400 transition-colors" placeholder="Ketik opsi..." />
+                                        <button v-if="draftFields[activeEditIndex].type === 'select'" @click="toggleOptionConfig(activeEditIndex, oidx)" class="text-slate-400 hover:text-amber-500 transition p-1 shrink-0" title="Konfigurasi Tambahan">
+                                            <Settings :size="14" />
+                                        </button>
+                                        <button @click="removeOption(draftFields[activeEditIndex], oidx)" class="text-slate-400 hover:text-rose-500 transition p-1 opacity-0 group-hover:opacity-100 shrink-0" title="Hapus Opsi">
+                                            <X :size="14" />
+                                        </button>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -863,6 +999,75 @@ function saveFields() {
                     </button>
                 </div>
             </div>
+
+            <!-- Nested Popover (Side Panel) -->
+            <Transition
+                enter-active-class="transition ease-out duration-200"
+                enter-from-class="opacity-0 -translate-x-3"
+                enter-to-class="opacity-100 translate-x-0"
+                leave-active-class="transition ease-in duration-150"
+                leave-from-class="opacity-100 translate-x-0"
+                leave-to-class="opacity-0 -translate-x-3"
+            >
+                <div v-if="activeOptionData" class="absolute inset-x-4 top-1/2 -translate-y-1/2 lg:translate-y-0 lg:inset-x-auto lg:left-full lg:top-8 lg:ml-3 bg-white rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.1)] border border-slate-200 w-auto lg:w-[320px] flex flex-col pointer-events-auto z-10" @click.stop>
+                    <!-- Triangle Arrow (Desktop only) -->
+                    <div class="hidden lg:block absolute top-8 -left-[7px] w-3 h-3 bg-white border-l border-b border-slate-200 rotate-45"></div>
+                    
+                    <div class="relative z-10 bg-white rounded-xl overflow-hidden flex flex-col">
+                        <!-- Header -->
+                        <div class="px-5 py-4 flex items-center justify-between">
+                            <h3 class="font-bold text-[#0A2540] text-[15px]">Input Tambahan</h3>
+                            <button @click="activeOptionConfig = null" class="text-slate-400 hover:text-rose-500 transition">
+                                <X :size="18" />
+                            </button>
+                        </div>
+                        
+                        <!-- Body -->
+                        <div class="px-5 pb-5 space-y-5">
+                            <p class="text-[13px] text-slate-500 -mt-2 leading-relaxed">Atur konfigurasi input tambahan untuk opsi pilihan <span class="font-bold text-[#FFC000]">{{ activeOptionData.opt }}</span>.</p>
+                            
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <!-- Toggle UI (Kitasewa Style) -->
+                                <div class="relative inline-flex items-center shrink-0">
+                                    <input type="checkbox" v-model="initOptionConfig(activeOptionData.field, activeOptionData.opt).has_input" class="sr-only peer">
+                                    <div class="w-10 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[16px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#FFC000]"></div>
+                                </div>
+                                <span class="text-[13px] font-bold text-slate-700">Memiliki input tambahan?</span>
+                            </label>
+                            
+                            <div v-if="initOptionConfig(activeOptionData.field, activeOptionData.opt).has_input" class="space-y-4 pt-1">
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-slate-500">Label Input</label>
+                                    <input type="text" v-model="initOptionConfig(activeOptionData.field, activeOptionData.opt).label" placeholder="Misal: Masukkan keterangan" class="w-full text-[13px] px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-1 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none bg-white transition-all text-slate-800 font-medium" />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-slate-500">Tipe Input</label>
+                                    <CustomSelect
+                                        v-model="initOptionConfig(activeOptionData.field, activeOptionData.opt).type"
+                                        :options="[
+                                            { value: 'text', label: 'Teks' },
+                                            { value: 'number', label: 'Angka' },
+                                            { value: 'decimal', label: 'Desimal' }
+                                        ]"
+                                        placeholder="Pilih Tipe Input"
+                                        :fullWidth="true"
+                                    />
+                                </div>
+                                <div class="space-y-1.5">
+                                    <label class="block text-xs font-bold text-slate-500">Teks Petunjuk (Placeholder)</label>
+                                    <input type="text" v-model="initOptionConfig(activeOptionData.field, activeOptionData.opt).placeholder" placeholder="Teks petunjuk..." class="w-full text-[13px] px-3 py-2.5 border border-slate-200 rounded-lg focus:ring-1 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none bg-white transition-all text-slate-800 font-medium placeholder:font-normal" />
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Footer -->
+                        <div class="px-5 py-4 border-t border-slate-100 flex justify-end gap-2 bg-white">
+                            <button @click="activeOptionConfig = null" class="px-5 py-2 rounded-lg border border-slate-200 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">Batal</button>
+                            <button @click="activeOptionConfig = null" class="px-6 py-2 rounded-lg bg-[#FFC000] hover:bg-amber-400 text-[#0A2540] text-sm font-bold transition-colors">Simpan</button>
+                        </div>
+                    </div>
+                </div>
+            </Transition>
         </div>
     </Transition>
 </template>
