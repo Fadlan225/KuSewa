@@ -671,4 +671,4 @@ const monitoringCssVars = computed(() => {
         </div>
     </DashboardLayout>
 </template>
-
+    
