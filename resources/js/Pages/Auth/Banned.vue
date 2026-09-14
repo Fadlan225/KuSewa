@@ -1,6 +1,7 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import BannedIcon from '@/Components/ui/icon/BannedIcon.vue';
+import { ArrowLeft, Mail, ShieldAlert } from 'lucide-vue-next';
+import BannedIcon from '@/Components/ui/Icons/BannedIcon.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 </script>
 

@@ -74,10 +74,22 @@ class DashboardController extends Controller
         // Aksi Moderasi Cepat
         $moderationQueue = [];
         if ($pendingApprovals > 0) {
+            $firstPending = owner_profile::with('user')->where('status', 'pending')
+                ->orderBy('created_at', 'asc')
+                ->first();
+
             $moderationQueue[] = [
-                'title' => 'Validasi Identitas Pemilik',
+                'type'        => 'account_verification',
+                'title'       => 'Validasi Identitas Pemilik',
                 'description' => $pendingApprovals . ' akun menunggu verifikasi data diri.',
-                'link' => route('admin.account-management')
+                'link'        => $firstPending
+                    ? route('admin.pengajuan-akun.show', $firstPending->id)
+                    : route('admin.pengajuan-akun'),
+                'applicant'   => $firstPending ? [
+                    'name'   => $firstPending->user->name ?? 'Pengguna',
+                    'avatar' => $firstPending->user->avatar ?? null,
+                    'gender' => $firstPending->user->gender ?? null,
+                ] : null,
             ];
         }
 

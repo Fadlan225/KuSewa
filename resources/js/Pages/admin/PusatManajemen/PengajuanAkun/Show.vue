@@ -39,6 +39,7 @@ const handleReject = () => {
 };
 
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+const formatDateTime = (d) => d ? new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
 const statusClass = (s) => ({
     pending:  'bg-amber-50 text-amber-700 border-amber-200',
     verified: 'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -224,56 +225,50 @@ const translateGender = (gender) => {
             </div>
 
             <!-- RIWAYAT VERIFIKASI -->
-            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden mt-6">
                 <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                     <h3 class="text-sm font-bold text-slate-800">Riwayat Verifikasi</h3>
                 </div>
                 <div class="p-6">
-                    <div v-if="applicant.verification_logs?.length" class="relative pl-6 max-w-3xl">
-                        <!-- Garis vertikal -->
-                        <div class="absolute left-[13px] top-2 bottom-2 w-px bg-slate-200"></div>
-
+                    <div v-if="applicant.verification_logs?.length" class="space-y-4">
                         <div
                             v-for="(log, idx) in applicant.verification_logs"
                             :key="idx"
-                            class="relative mb-6 last:mb-0"
+                            class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 py-4 border-b border-slate-100 last:border-0 last:pb-0 first:pt-0"
                         >
-                            <!-- Dot -->
-                            <span :class="[
-                                'absolute -left-[30px] top-1 w-3 h-3 rounded-full border-2 border-white',
-                                log.action === 'submitted' ? 'bg-blue-400' :
-                                log.action === 'approved'  ? 'bg-emerald-500' : 'bg-rose-500'
-                            ]"></span>
-
-                            <div :class="[
-                                'rounded-xl p-4 border text-sm',
-                                log.action === 'submitted' ? 'bg-blue-50/40 border-blue-100' :
-                                log.action === 'approved'  ? 'bg-emerald-50/40 border-emerald-100' : 'bg-rose-50/40 border-rose-100'
-                            ]">
-                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
                                     <span :class="[
-                                        'font-bold capitalize flex items-center gap-1.5',
-                                        log.action === 'submitted' ? 'text-blue-700' :
-                                        log.action === 'approved'  ? 'text-emerald-700' : 'text-rose-700'
+                                        'font-bold text-sm capitalize',
+                                        log.action === 'submitted' ? 'text-slate-700' :
+                                        log.action === 'approved'  ? 'text-slate-700' : 'text-slate-700'
                                     ]">
-                                        {{ log.action === 'submitted' ? '📝 Pengajuan Dikirim' : log.action === 'approved' ? '✅ Pengajuan Disetujui' : '❌ Pengajuan Ditolak' }}
+                                        {{ log.action === 'submitted' ? 'Pengajuan Dikirim' : log.action === 'approved' ? 'Pengajuan Disetujui' : 'Pengajuan Ditolak' }}
                                     </span>
-                                    <span class="text-slate-500 text-xs font-medium">{{ formatDate(log.created_at) }}</span>
+                                     <span :class="[
+                                        'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
+                                        log.action === 'submitted' ? 'bg-slate-100 text-slate-500' :
+                                        log.action === 'approved'  ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+                                    ]">
+                                         {{ log.action === 'submitted' ? 'Info' : log.action === 'approved' ? 'Sukses' : 'Ditolak' }}
+                                     </span>
                                 </div>
-                                <p v-if="log.actor" class="text-slate-600 text-xs mt-1">
-                                    Oleh: <span class="font-semibold text-slate-800">{{ log.actor.name }}</span>
+                                <p v-if="log.actor" class="text-slate-500 text-xs font-medium">
+                                    Oleh: <span class="text-slate-800">{{ log.actor.name }}</span>
                                 </p>
-                                <p v-if="log.reason" class="mt-3 text-rose-700 text-xs font-medium bg-rose-100/50 rounded-lg px-3 py-2 border border-rose-200/50">
+                                <p v-if="log.reason" class="mt-2 text-slate-600 text-sm italic border-l-2 border-slate-200 pl-3 py-1">
                                     "{{ log.reason }}"
                                 </p>
                             </div>
+                             <div class="text-slate-400 text-xs font-medium whitespace-nowrap shrink-0 sm:mt-1">
+                                {{ formatDateTime(log.created_at) }}
+                            </div>
                         </div>
                     </div>
-                    <div v-else class="text-center py-12 flex flex-col items-center justify-center">
-                        <EmptyStateData class="w-32 h-32 mx-auto mb-4 opacity-80" />
-                        <h3 class="text-slate-800 font-bold text-base mb-2">Belum Ada Riwayat Verifikasi</h3>
-                        <p class="text-slate-500 font-medium text-xs max-w-md mx-auto leading-relaxed">
-                            Log aktivitas verifikasi untuk calon pemilik ini masih kosong. Setiap tindakan, seperti penyetujuan atau penolakan pengajuan akun, akan dicatat secara otomatis dan ditampilkan di bagian ini untuk memudahkan pelacakan.
+                    <div v-else class="text-center py-10 flex flex-col items-center justify-center border border-dashed border-slate-200 rounded-lg bg-slate-50/50">
+                        <h3 class="text-slate-700 font-bold text-sm mb-1">Belum Ada Riwayat</h3>
+                        <p class="text-slate-500 font-medium text-xs max-w-sm mx-auto leading-relaxed">
+                            Log aktivitas verifikasi untuk calon pemilik ini masih kosong.
                         </p>
                     </div>
                 </div>

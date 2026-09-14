@@ -218,6 +218,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/konfigurasi-aset/{assetType}/fields', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'updateFields'])->name('konfigurasi-aset.fields');
     Route::post('/konfigurasi-aset/{assetType}/reset-fields', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'resetFields'])->name('konfigurasi-aset.reset-fields');
     Route::put('/konfigurasi-aset/{assetType}/gallery', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'syncGallery'])->name('konfigurasi-aset.gallery');
+    Route::post('/konfigurasi-aset/{assetType}/reset-gallery', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'resetGallery'])->name('konfigurasi-aset.reset-gallery');
 
 
     Route::get('/payment-system', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'index'])->name('payment-system');

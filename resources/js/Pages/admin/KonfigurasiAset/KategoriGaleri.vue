@@ -289,71 +289,25 @@ function resetToDefault() {
 }
 
 function executeReset() {
-    // We get the master items for mandatory categories
-    const sampulUtamaMaster = props.galleryCategories.find(c => c.name === 'Sampul Utama');
-    const lainnyaMaster = props.galleryCategories.find(c => c.name === 'Lainnya');
-    
-    let defaultDraft = [];
-    
-    if (sampulUtamaMaster) {
-        defaultDraft.push({
-            id: sampulUtamaMaster.id,
-            name: sampulUtamaMaster.name,
-            description: sampulUtamaMaster.description,
-            is_mandatory: true,
-            min_photos: 1,
-            max_photos: null,
-            key: 'cat_' + sampulUtamaMaster.id
-        });
-    }
-    
-    // Hardcoded logic based on asset type
-    const assetTypeName = selectedType.value.name.toLowerCase();
-    let specificDefaults = [];
-    
-    if (assetTypeName.includes('rumah') || assetTypeName.includes('gedung') || assetTypeName.includes('ruko') || assetTypeName.includes('kost')) {
-        specificDefaults = ['Tampak Depan', 'Ruangan Dalam', 'Kamar Mandi'];
-    } else if (assetTypeName.includes('kendaraan') || assetTypeName.includes('mobil') || assetTypeName.includes('motor')) {
-        specificDefaults = ['Tampak Samping', 'Tampak Depan Kendaraan', 'Interior/Kabin'];
-    } else if (assetTypeName.includes('alat') || assetTypeName.includes('mesin')) {
-        specificDefaults = ['Kondisi Fisik', 'Spesifikasi Mesin'];
-    } else {
-        specificDefaults = ['Foto Detail'];
-    }
-    
-    // Add specific defaults if they exist in master
-    specificDefaults.forEach(defName => {
-        const masterItem = props.galleryCategories.find(c => c.name.toLowerCase() === defName.toLowerCase());
-        if (masterItem) {
-            defaultDraft.push({
-                id: masterItem.id,
-                name: masterItem.name,
-                description: masterItem.description || '',
-                is_mandatory: true,
-                min_photos: 1,
-                max_photos: null,
-                key: 'cat_' + masterItem.id + '_' + Date.now()
-            });
+    if (!selectedType.value) return;
+
+    router.post(route('admin.konfigurasi-aset.reset-gallery', selectedType.value.id), {
+        scope: galleryScope.value,
+    }, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showResetModal.value = false;
+            // Reload draft dari props yang sudah diperbarui server
+            const t = props.assetTypes.find(a => a.id === selectedType.value.id);
+            if (t) {
+                selectedType.value = t;
+                loadDraft();
+            }
+        },
+        onError: () => {
+            showResetModal.value = false;
         }
     });
-
-    if (lainnyaMaster) {
-        defaultDraft.push({
-            id: lainnyaMaster.id,
-            name: lainnyaMaster.name,
-            description: lainnyaMaster.description,
-            is_mandatory: false,
-            min_photos: null,
-            max_photos: null,
-            key: 'cat_' + lainnyaMaster.id
-        });
-    }
-
-    draftGallery.value = defaultDraft;
-    
-    showResetModal.value = false;
-    toastState.value = { show: true, message: 'Berhasil dikembalikan ke pengaturan default.', type: 'success' };
-    setTimeout(() => toastState.value.show = false, 3000);
 }
 
 /* ── Save ─────────────────────────────────────────────────────────── */

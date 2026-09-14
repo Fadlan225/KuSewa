@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\asset_type;
 use App\Models\galery_category;
 use App\Services\DefaultSpecService;
+use App\Services\DefaultGalleryCategoryService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -224,5 +225,91 @@ class TemplateAsetController extends Controller
         $relation->sync($syncData);
 
         return back()->with('success', "Kategori galeri wajib {$assetType->name} berhasil disimpan.");
+    }
+
+    /**
+     * Reset kategori galeri ke konfigurasi default dari DefaultGalleryCategoryService.
+     * Payload: { scope: 'asset'|'unit' }
+     *
+     * PERINGATAN: Ini akan menghapus semua konfigurasi custom untuk scope yang dipilih
+     * dan menggantinya dengan data default dari service.
+     * Tidak mempengaruhi foto/galeri yang sudah diupload oleh pemilik aset.
+     */
+    public function resetGallery(Request $request, asset_type $assetType)
+    {
+        $request->validate(['scope' => 'required|in:asset,unit']);
+
+        $scope = $request->input('scope');
+
+        $defaults = DefaultGalleryCategoryService::forType($assetType->name);
+
+        if ($defaults === null) {
+            return back()->with('error', "Konfigurasi default untuk tipe '{$assetType->name}' tidak tersedia.");
+        }
+
+        $categories = $defaults[$scope] ?? [];
+
+        // Pastikan semua kategori global ada di DB
+        $allNames = DefaultGalleryCategoryService::allCategoryNames();
+        $now = now();
+        foreach ($allNames as $name) {
+            galery_category::firstOrCreate(
+                ['name' => $name],
+                ['created_at' => $now, 'updated_at' => $now]
+            );
+        }
+
+        $categoryMap = galery_category::pluck('id', 'name');
+        $sampulId  = $categoryMap->get('Sampul Utama');
+        $lainnyaId = $categoryMap->get('Lainnya');
+
+        $relation = $scope === 'asset'
+            ? $assetType->galleryCategories()
+            : $assetType->unitGalleryCategories();
+
+        $syncData  = [];
+        $sortOrder = 1;
+
+        // Sampul Utama selalu di urutan pertama
+        if ($sampulId) {
+            $syncData[$sampulId] = [
+                'scope'        => $scope,
+                'is_mandatory' => true,
+                'sort_order'   => $sortOrder++,
+                'description'  => null,
+                'min_photos'   => 1,
+                'max_photos'   => null,
+            ];
+        }
+
+        foreach ($categories as $cat) {
+            $catId = $categoryMap->get($cat['name']);
+            if (!$catId) continue;
+
+            $syncData[$catId] = [
+                'scope'        => $scope,
+                'is_mandatory' => $cat['is_mandatory'],
+                'sort_order'   => $sortOrder++,
+                'description'  => null,
+                'min_photos'   => $cat['is_mandatory'] ? 1 : 0,
+                'max_photos'   => null,
+            ];
+        }
+
+        // Lainnya selalu di urutan terakhir
+        if ($lainnyaId) {
+            $syncData[$lainnyaId] = [
+                'scope'        => $scope,
+                'is_mandatory' => false,
+                'sort_order'   => $sortOrder++,
+                'description'  => null,
+                'min_photos'   => 0,
+                'max_photos'   => null,
+            ];
+        }
+
+        $relation->sync($syncData);
+
+        return back()->with('success', "Kategori galeri {$assetType->name} berhasil direset ke default.");
     }
 }

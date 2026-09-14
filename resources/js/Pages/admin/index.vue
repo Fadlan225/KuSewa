@@ -151,8 +151,7 @@ const realBrowserData = computed(() => {
         { name: 'Safari', count: safari },
         { name: 'Edge', count: edge },
         { name: 'Firefox', count: firefox },
-        { name: 'Opera', count: opera },
-        { name: 'Lainnya', count: lainnya }
+        { name: 'Opera', count: opera }
     ].sort((a, b) => b.count - a.count);
 });
 
@@ -631,13 +630,27 @@ const monitoringCssVars = computed(() => {
                         <div v-if="quickActions && quickActions.length > 0" class="space-y-2.5 text-xs">
                             <Link v-for="(action, idx) in quickActions" :key="idx" :href="action.link" class="w-full bg-slate-50 hover:bg-slate-100 border border-slate-200 p-3 rounded-xl flex items-center justify-between transition text-left group">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
-                                        <ShieldCheck class="" />
-                                    </div>
-                                    <div>
-                                        <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">{{ action.title }}</p>
-                                        <p class="text-[10px] text-slate-400">{{ action.description }}</p>
-                                    </div>
+                                    <template v-if="action.applicant">
+                                        <div class="w-9 h-9 rounded-full overflow-hidden shrink-0 border border-slate-200 bg-slate-50 flex items-center justify-center">
+                                            <img v-if="action.applicant.avatar" :src="action.applicant.avatar" :alt="action.applicant.name" class="w-full h-full object-cover" />
+                                            <AvatarMale v-else-if="action.applicant.gender === 'male'" class="w-full h-full" />
+                                            <AvatarFemale v-else-if="action.applicant.gender === 'female'" class="w-full h-full" />
+                                            <AvatarDefault v-else class="w-full h-full" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">{{ action.title }}</p>
+                                            <p class="text-[10px] text-slate-400 font-medium">Pengaju: <span class="font-bold text-slate-600">{{ action.applicant.name }}</span> • {{ action.description }}</p>
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <div class="w-7 h-7 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                                            <ShieldCheck class="" />
+                                        </div>
+                                        <div>
+                                            <p class="font-bold text-slate-800 group-hover:text-[#0A2540]">{{ action.title }}</p>
+                                            <p class="text-[10px] text-slate-400">{{ action.description }}</p>
+                                        </div>
+                                    </template>
                                 </div>
                                 <ChevronRight class="text-[10px] text-slate-400" />
                             </Link>
@@ -658,3 +671,4 @@ const monitoringCssVars = computed(() => {
         </div>
     </DashboardLayout>
 </template>
+
