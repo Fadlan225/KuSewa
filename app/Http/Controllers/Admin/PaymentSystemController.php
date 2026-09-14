@@ -33,7 +33,7 @@ class PaymentSystemController extends Controller
             ->orderBy('sort_order', 'asc')
             ->get();
 
-        return Inertia::render('admin/PaymentSystem', [
+        return Inertia::render('admin/PengaturanBiaya/Tarif', [
             'assetTypes'  => $assetTypes,
             'serviceFees' => $serviceFees,
         ]);

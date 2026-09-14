@@ -385,7 +385,7 @@ const assetChartSlices = computed(() => {
                                 <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors">
                                     <SelectValue placeholder="Periode" />
                                 </SelectTrigger>
-                                <SelectContent class="text-xs rounded-xl border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">
+                                <SelectContent :body-lock="false" class="text-xs rounded-xl border !border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">
                                     <SelectGroup>
                                         <SelectItem value="7days" class="focus:bg-[#FFC000]/20 cursor-pointer">7 Hari</SelectItem>
                                         <SelectItem value="30days" class="focus:bg-[#FFC000]/20 cursor-pointer">30 Hari</SelectItem>
@@ -490,7 +490,7 @@ const assetChartSlices = computed(() => {
                                 <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors">
                                     <SelectValue placeholder="Periode" />
                                 </SelectTrigger>
-                                <SelectContent class="text-xs rounded-xl border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">
+                                <SelectContent :body-lock="false" class="text-xs rounded-xl border !border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">
                                     <SelectGroup>
                                         <SelectItem value="7days" class="focus:bg-[#FFC000]/20 cursor-pointer">7 Hari</SelectItem>
                                         <SelectItem value="30days" class="focus:bg-[#FFC000]/20 cursor-pointer">30 Hari</SelectItem>

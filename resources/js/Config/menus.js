@@ -29,7 +29,7 @@ export const getOwnerMenu = (sidebarCounts, isProfileComplete = true) => [
 ];
 
 export const getAdminMenu = (sidebarCounts) => [
-    { label: 'Dashboard', route: route('admin.dashboard'), routeName: 'admin.dashboard', icon: Gauge },
+    { label: 'Overview', route: route('admin.dashboard'), routeName: 'admin.dashboard', icon: Gauge },
     // { label: 'Log Aktivitas', route: route('admin.activity-log'), routeName: 'admin.activity-log', icon: List },
     // { label: 'Laporan Pengguna', route: route('admin.user-reports'), routeName: 'admin.user-reports', icon: Flag },
     { divider: true },
@@ -45,6 +45,7 @@ export const getAdminMenu = (sidebarCounts) => [
     { label: 'Kategori Galeri', route: route('admin.konfigurasi-aset.galeri'), routeName: 'admin.konfigurasi-aset.galeri', icon: Images },
     { label: 'Fasilitas Aset', route: route('admin.konfigurasi-aset.fasilitas'), routeName: 'admin.konfigurasi-aset.fasilitas', icon: Layers },
     { divider: true },
+    { isHeader: true, label: 'Pengaturan Biaya' },
     { label: 'Biaya Platform', route: route('admin.payment-system'), routeName: 'admin.payment-system', icon: CreditCard },
     { label: 'Biaya & Sanksi', route: route('admin.service-fee'), routeName: 'admin.service-fee', icon: Scale },
     // { label: 'Promo & Diskon', route: route('admin.promo-diskon'), routeName: 'admin.promo-diskon', icon: Tags },

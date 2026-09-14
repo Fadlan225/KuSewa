@@ -64,13 +64,13 @@ const formatRupiah = (amount) => {
                 <!-- Akun Aktif -->
                 <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
                     <p class="text-[11px] font-semibold uppercase text-slate-400">Akun Aktif</p>
-                    <p class="mt-3 text-3xl font-extrabold text-emerald-600">{{ totals.active }}</p>
+                    <p class="mt-3 text-3xl font-extrabold text-[#0A2540]">{{ totals.active }}</p>
                 </div>
 
                 <!-- Disanksi / Nonaktif -->
                 <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
                     <p class="text-[11px] font-semibold uppercase text-slate-400">Disanksi / Nonaktif</p>
-                    <p class="mt-3 text-3xl font-extrabold text-rose-600">{{ totals.suspended }}</p>
+                    <p class="mt-3 text-3xl font-extrabold text-[#0A2540]">{{ totals.suspended }}</p>
                 </div>
             </div>
 
@@ -120,13 +120,7 @@ const formatRupiah = (amount) => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <tr v-for="owner in owners.data" :key="owner.id"
-                                    :class="[
-                                        'group hover:bg-slate-50/60 transition-colors',
-                                        owner.billing_status === 'Lancar' ? 'hover:shadow-[inset_3px_0_0_#0A2540]' : 
-                                        owner.billing_status === 'Menunggu Verifikasi' ? 'hover:shadow-[inset_3px_0_0_#f59e0b] bg-amber-50/10' : 
-                                        'hover:shadow-[inset_3px_0_0_#e11d48] bg-rose-50/10'
-                                    ]">
+                                <tr v-for="owner in owners.data" :key="owner.id" class="hover:bg-slate-50/60 transition-colors group">
 
                                     <!-- User Info -->
                                     <td class="py-4 px-6">

@@ -110,7 +110,7 @@ class OwnerBillingController extends Controller
             'suspended' => $owners->where('status', '!=', 'active')->count(),
         ];
 
-        return Inertia::render('admin/ServiceFeeSanksi', [
+        return Inertia::render('admin/PengaturanBiaya/Pantauan', [
             'owners' => $paginatedOwners,
             'totals' => $totals,
             'filters' => ['search' => $search, 'status' => $statusFilter]
