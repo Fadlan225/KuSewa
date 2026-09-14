@@ -12,14 +12,19 @@ class AssetValidationController extends Controller
     public function index(Request $request)
     {
         $query = asset::with([
-            'ownerProfile.user:id,name,email',
+            'ownerProfile' => function ($q) {
+                $q->withCount(['assets' => fn($q) => $q->where('status', 'approved')]);
+            },
+            'ownerProfile.user:id,name,email,phone,profile_photo,gender,created_at',
             'type:id,name',
             'city:code,name',
+            'district:code,name',
             'images',
             'pricings:id,asset_id,price,rental_unit',
         ])
         ->whereIn('status', ['pending', 'approved', 'rejected'])
         ->when($request->status && $request->status !== 'Semua', fn($q) => $q->where('status', strtolower($request->status)))
+        ->when($request->type_id, fn($q) => $q->where('asset_type_id', $request->type_id))
         ->when($request->search, fn($q) => $q->where(function ($q) use ($request) {
             $q->where('title', 'like', "%{$request->search}%")
               ->orWhereHas('ownerProfile.user', fn($q2) => $q2->where('name', 'like', "%{$request->search}%"))
@@ -27,7 +32,7 @@ class AssetValidationController extends Controller
         }))
         ->orderByRaw("FIELD(status, 'pending', 'approved', 'rejected')")
         ->orderBy('created_at', 'desc')
-        ->paginate(15)
+        ->paginate(7)
         ->withQueryString();
 
         $stats = [
@@ -37,10 +42,58 @@ class AssetValidationController extends Controller
             'total'    => asset::whereIn('status', ['pending', 'approved', 'rejected'])->count(),
         ];
 
-        return Inertia::render('admin/ValidasiAsetPengajuan', [
-            'assets'  => $query,
-            'stats'   => $stats,
-            'filters' => $request->only(['search', 'status']),
+        $categories = \App\Models\asset_category::with(['types:id,category_id,name'])->get();
+
+        return Inertia::render('admin/PusatManajemen/ValidasiAset/Index', [
+            'assets'     => $query,
+            'stats'      => $stats,
+            'categories' => $categories,
+            'filters'    => $request->only(['search', 'status', 'type_id']),
+        ]);
+    }
+
+    /**
+     * Tampilkan detail spesifik aset.
+     */
+    public function show($id)
+    {
+        $asset = asset::with([
+            'type:id,name,allow_units,category_id',
+            'type.category:id,name',
+            'images',
+            'thumbnailImages',
+            'pricings',
+            'city:code,name',
+            'province:code,name',
+            'district:code,name',
+            'village:code,name',
+            'ownerProfile',
+            'ownerProfile.user',
+            'facilities:id,name,facility_category_id',
+            'facilities.category:id,name,icon',
+            'units.pricings',
+            'units.images.gallery_category',
+            'units.facilities:id,name,facility_category_id',
+            'units.facilities.category:id,name,icon',
+            'policies',
+            'faqs',
+            'reviews.user',
+        ])->findOrFail($id);
+
+        $nearbyPlaces = [];
+        if ($asset->latitude && $asset->longitude) {
+            $nearbyPlaces = \App\Services\OpenStreetMapService::getNearbyPlaces(
+                $asset->latitude,
+                $asset->longitude,
+                $asset->id,
+                3000,
+                false
+            );
+        }
+
+        return Inertia::render('admin/PusatManajemen/ValidasiAset/Show', [
+            'asset'        => $asset,
+            'nearbyPlaces' => $nearbyPlaces,
         ]);
     }
 

@@ -52,13 +52,28 @@ class BookingController extends Controller
             }
         }
 
-        $serviceFeeRecord = DB::table('service_fees')->first();
+        $scope = ($asset->type?->allow_units && !empty($unitId)) ? 'unit' : 'asset';
+
+        $serviceFeeRecord = DB::table('service_fees')
+            ->where('asset_type_id', $asset->asset_type_id)
+            ->where('scope', $scope)
+            ->orderBy('sort_order', 'asc')
+            ->first();
+
+        if (!$serviceFeeRecord && $scope === 'unit') {
+            $serviceFeeRecord = DB::table('service_fees')
+                ->where('asset_type_id', $asset->asset_type_id)
+                ->where('scope', 'asset')
+                ->orderBy('sort_order', 'asc')
+                ->first();
+        }
+
         $serviceFee = $serviceFeeRecord ? [
             'type'  => $serviceFeeRecord->fee_type,
             'value' => (float) $serviceFeeRecord->fee_value
         ] : [
-            'type'  => 'percentage',
-            'value' => 5
+            'type'  => 'fixed',
+            'value' => 5000
         ];
 
         // Fetch bank accounts for the asset owner
@@ -240,9 +255,24 @@ class BookingController extends Controller
 
                 $subtotal = $pricing->price;
 
-                $serviceFeeRecord = DB::table('service_fees')->orderByDesc('id')->first();
-                $serviceFeeType = $serviceFeeRecord ? $serviceFeeRecord->fee_type : 'percentage';
-                $serviceFeeValue = $serviceFeeRecord ? (float) $serviceFeeRecord->fee_value : 5;
+                $scope = ($asset->type?->allow_units && !empty($pricing->asset_unit_id)) ? 'unit' : 'asset';
+
+                $serviceFeeRecord = DB::table('service_fees')
+                    ->where('asset_type_id', $asset->asset_type_id)
+                    ->where('scope', $scope)
+                    ->orderBy('sort_order', 'asc')
+                    ->first();
+
+                if (!$serviceFeeRecord && $scope === 'unit') {
+                    $serviceFeeRecord = DB::table('service_fees')
+                        ->where('asset_type_id', $asset->asset_type_id)
+                        ->where('scope', 'asset')
+                        ->orderBy('sort_order', 'asc')
+                        ->first();
+                }
+
+                $serviceFeeType = $serviceFeeRecord ? $serviceFeeRecord->fee_type : 'fixed';
+                $serviceFeeValue = $serviceFeeRecord ? (float) $serviceFeeRecord->fee_value : 5000;
 
                 if ($serviceFeeType === 'fixed') {
                     $serviceFee = $serviceFeeValue;

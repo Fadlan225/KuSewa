@@ -282,7 +282,7 @@ class BookingController extends Controller
         if (!$ownerUserId) return;
 
         // Ambil tarif biaya layanan aktif
-        $serviceFee = ServiceFee::orderByDesc('id')->first();
+        $serviceFee = ServiceFee::orderBy('sort_order', 'asc')->first();
         if (!$serviceFee) return;
 
         $now   = Carbon::now();

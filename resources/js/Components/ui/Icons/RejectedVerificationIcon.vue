@@ -1,5 +1,5 @@
 <template>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 586.47858 659.29778" xmlns:xlink="http://www.w3.org/1999/xlink" role="img" class="w-full h-full">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 586.47858 659.29778" xmlns:xlink="http://www.w3.org/1999/xlink" role="img">
         <circle cx="332.47856" cy="254" r="254.00001" fill="#f2f2f2"/>
         <path d="M498.46363,113.58835H33.17063c-.99774-.02133-1.78931-.84746-1.76797-1.84521,.02069-.96771,.80026-1.74727,1.76797-1.76796H498.46363c.99774,.02133,1.78931,.84746,1.76794,1.84521-.02069,.96771-.80023,1.74727-1.76794,1.76796Z" fill="#cacaca"/>
         <rect x="193.77441" y="174.47256" width="163.61147" height="34.98639" rx="17.49318" ry="17.49318" fill="#fff"/>

@@ -19,7 +19,7 @@ const owners = ref([
 // Filter Data
 const filteredOwners = computed(() => {
     return owners.value.filter(owner => {
-        return owner.name.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+        return owner.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                owner.email.toLowerCase().includes(searchQuery.value.toLowerCase());
     });
 });
@@ -51,7 +51,7 @@ const totals = computed(() => ({
 
             <!-- Page Content -->
             <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto pb-24">
-                
+
                 <!-- Modern Stats Cards (3 Kolom Sederhana) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div class="bg-white rounded-2xl border border-slate-200/70 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
@@ -88,12 +88,12 @@ const totals = computed(() => ({
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <tr v-for="owner in filteredOwners" :key="owner.id" 
+                                <tr v-for="owner in filteredOwners" :key="owner.id"
                                     :class="[
                                         'group hover:bg-slate-50/80 transition-all duration-200',
                                         owner.status === 'Aktif' ? 'hover:shadow-[inset_3px_0_0_#0A2540]' : 'hover:shadow-[inset_3px_0_0_#e11d48] bg-rose-50/10'
                                     ]">
-                                    
+
                                     <!-- User Info -->
                                     <td class="py-4 px-6">
                                         <div class="flex items-center gap-3">

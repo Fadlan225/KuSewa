@@ -220,19 +220,26 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/konfigurasi-aset/{assetType}/gallery', [\App\Http\Controllers\Admin\TemplateAsetController::class, 'syncGallery'])->name('konfigurasi-aset.gallery');
 
 
-    Route::get('/payment-system', fn() => Inertia::render('admin/PaymentSystem'))->name('payment-system');
+    Route::get('/payment-system', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'index'])->name('payment-system');
+    Route::post('/payment-system', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'store'])->name('payment-system.store');
+    Route::put('/payment-system/{id}', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'update'])->name('payment-system.update');
+    Route::delete('/payment-system/{id}', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'destroy'])->name('payment-system.destroy');
+    Route::post('/payment-system/reorder', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'reorder'])->name('payment-system.reorder');
+    Route::post('/payment-system/{id}/reset', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'resetToDefault'])->name('payment-system.reset');
     Route::get('/promo-diskon', fn() => Inertia::render('admin/PromoDiskon'))->name('promo-diskon');
     Route::get('/service-fee', fn() => Inertia::render('admin/ServiceFeeSanksi'))->name('service-fee');
     Route::get('/system-notifications', fn() => Inertia::render('admin/SystemNotifications'))->name('system-notifications');
     Route::get('/user-reports', fn() => Inertia::render('admin/UserReports'))->name('user-reports');
 
-    // ── Akun Penyewa & Pemilik ──────────────────────────────────────────
+    // 🏢🏢 Akun Penyewa & Pemilik 🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢🏢
     Route::get('/user-management', [\App\Http\Controllers\Admin\UserController::class, 'index'])->name('user-management');
+    Route::get('/user-management/{user}', [\App\Http\Controllers\Admin\UserController::class, 'show'])->name('user-management.show');
     Route::patch('/user-management/{user}/toggle-status', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('user-management.toggle-status');
     Route::delete('/user-management/{user}', [\App\Http\Controllers\Admin\UserController::class, 'destroy'])->name('user-management.destroy');
 
     // ── Pengajuan Akun Owner ────────────────────────────────────────────
     Route::get('/pengajuan-akun', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'index'])->name('pengajuan-akun');
+    Route::get('/pengajuan-akun/{id}', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'show'])->name('pengajuan-akun.show');
     Route::patch('/pengajuan-akun/{id}/approve', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'approve'])->name('pengajuan-akun.approve');
     Route::patch('/pengajuan-akun/{id}/reject', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'reject'])->name('pengajuan-akun.reject');
     Route::get('/ktp-photo/{id}', [\App\Http\Controllers\Admin\OwnerVerificationController::class, 'serveKtpPhoto'])->name('ktp-photo');
@@ -242,6 +249,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     // ── Validasi Aset ───────────────────────────────────────────────────
     Route::get('/validasi-aset', [\App\Http\Controllers\Admin\AssetValidationController::class, 'index'])->name('validasi-aset');
+    Route::get('/validasi-aset/{id}', [\App\Http\Controllers\Admin\AssetValidationController::class, 'show'])->name('validasi-aset.show');
     Route::patch('/validasi-aset/{id}/approve', [\App\Http\Controllers\Admin\AssetValidationController::class, 'approve'])->name('validasi-aset.approve');
     Route::patch('/validasi-aset/{id}/reject', [\App\Http\Controllers\Admin\AssetValidationController::class, 'reject'])->name('validasi-aset.reject');
 });

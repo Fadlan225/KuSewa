@@ -168,6 +168,30 @@ import FasilitasModal from './Fasilitas.vue';
 // Sistem BARU: fasilitas dari relasi belongsToMany (asset_facilities pivot)
 const assetFacilities = computed(() => props.asset.facilities || []);
 
+const navSections = computed(() => {
+    const s = [
+        { id: 'foto', label: 'Foto Aset' },
+        { id: 'informasi', label: 'Informasi Umum' }
+    ];
+    
+    if (assetFacilities.value.length > 0) {
+        s.push({ id: 'fasilitas', label: 'Fasilitas Aset' });
+    }
+    
+    s.push({ id: 'lokasi', label: 'Lokasi' });
+    
+    const hasPolicies = props.asset.policies && props.asset.policies.length > 0;
+    const hasFaqs = props.asset.faqs && props.asset.faqs.length > 0;
+    if (hasPolicies || hasFaqs) {
+        s.push({ id: 'kebijakan', label: hasPolicies ? 'Kebijakan' : 'FAQ' });
+    }
+    
+    s.push({ id: 'ulasan', label: 'Ulasan' });
+    s.push({ id: 'pemilik', label: 'Pemilik Aset' });
+    
+    return s;
+});
+
 const showFasilitasModal = ref(false);
 const showPricingModal = ref(false);
 const showFullDescription = ref(false);
@@ -695,7 +719,7 @@ onUnmounted(() => {
         <div class="absolute w-full left-0 top-full overflow-hidden pointer-events-none z-10">
             <div class="transition-transform duration-300 ease-out shadow-md bg-white pointer-events-auto"
                  :class="showDetailNav ? 'translate-y-0' : '-translate-y-full'">
-                <DetailNavbar :isFavorited="asset.isFavorite" @favorite="handleFavorite" :showBackButton="true" :mobileBackOnly="true" class="!shadow-none !border-b-0" />
+                <DetailNavbar :sections="navSections" :isFavorited="asset.isFavorite" @favorite="handleFavorite" :showBackButton="true" :mobileBackOnly="true" class="!shadow-none !border-b-0" />
             </div>
         </div>
     </div>

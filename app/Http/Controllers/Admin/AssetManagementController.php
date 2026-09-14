@@ -38,7 +38,7 @@ class AssetManagementController extends Controller
             'draft'    => asset::where('status', 'draft')->count(),
         ];
 
-        return Inertia::render('admin/AsetProperti', [
+        return Inertia::render('admin/PusatManajemen/AsetProperti', [
             'assets'     => $query,
             'assetTypes' => $assetTypes,
             'stats'      => $stats,

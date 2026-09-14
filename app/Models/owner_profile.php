@@ -42,4 +42,9 @@ class owner_profile extends Model
     public function roomChats(){
         return $this->hasMany(room_chat::class);
     }
+
+    public function verificationLogs()
+    {
+        return $this->hasMany(OwnerVerificationLog::class)->orderBy('created_at', 'asc');
+    }
 }

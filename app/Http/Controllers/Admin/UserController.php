@@ -21,24 +21,44 @@ class UserController extends Controller
                 if ($request->role === 'Pemilik') {
                     $q->whereHas('ownerProfile');
                 } elseif ($request->role === 'Penyewa') {
-                    $q->whereDoesntHave('ownerProfile');
+                    $q->where('role', 'customer')->whereDoesntHave('ownerProfile');
+                } elseif ($request->role === 'Admin') {
+                    $q->where('role', 'admin');
                 }
             })
             ->with('ownerProfile')
             ->orderBy('created_at', 'desc')
-            ->paginate(15)
+            ->paginate(7)
             ->withQueryString();
 
         $stats = [
             'total'    => User::count(),
-            'active'   => User::where('status', 'active')->count(),
-            'inactive' => User::where('status', 'inactive')->count(),
+            'owner'    => User::whereHas('ownerProfile')->count(),
+            'customer' => User::where('role', 'customer')->whereDoesntHave('ownerProfile')->count(),
         ];
 
-        return Inertia::render('admin/UserAccountManagement', [
+        return Inertia::render('admin/PusatManajemen/Pengguna/Index', [
             'users'   => $query,
             'stats'   => $stats,
             'filters' => $request->only(['search', 'role']),
+        ]);
+    }
+
+    /**
+     * Tampilkan halaman detail pengguna.
+     */
+    public function show(User $user)
+    {
+        $user->load(['ownerProfile' => function ($query) {
+            $query->withCount([
+                'assets as total_assets_count',
+                'assets as active_assets_count' => fn($q) => $q->where('status', 'approved'),
+                'assets as pending_assets_count' => fn($q) => $q->where('status', 'pending')
+            ]);
+        }]);
+        
+        return Inertia::render('admin/PusatManajemen/Pengguna/Show', [
+            'user' => $user
         ]);
     }
 

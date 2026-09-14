@@ -59,6 +59,10 @@ const props = defineProps({
     selectedUnitId: {
         type: [Number, String],
         default: null,
+    },
+    isBookingMode: {
+        type: Boolean,
+        default: true,
     }
 });
 
@@ -249,21 +253,28 @@ const handleSelect = (unit, pricing) => {
 
                         <!-- Action Button -->
                         <div class="flex flex-col items-end mt-4 gap-1">
-                            <button @click="getAvailableQuantity(unit) !== 0 ? handleSelect(unit, getLowestPricing(unit)) : null"
-                                    :disabled="getAvailableQuantity(unit) === 0"
-                                    :class="['font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform', 
-                                    getAvailableQuantity(unit) === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' :
-                                    (selectedUnitId === unit.id ? 'bg-[#0A2540] text-white active:scale-95' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] active:scale-95')]">
-                                {{ getAvailableQuantity(unit) === 0 ? 'Kamar Penuh' : (selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar') }}
-                            </button>
-                            <span v-if="getAvailableQuantity(unit) === 0" class="text-[9px] text-red-500 font-medium text-right leading-tight max-w-[120px]">Ubah jadwal atau pilih unit lain</span>
+                            <template v-if="isBookingMode">
+                                <button @click="getAvailableQuantity(unit) !== 0 ? handleSelect(unit, getLowestPricing(unit)) : null"
+                                        :disabled="getAvailableQuantity(unit) === 0"
+                                        :class="['font-extrabold py-2 px-8 rounded-full text-xs shadow-sm transition-transform', 
+                                        getAvailableQuantity(unit) === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' :
+                                        (selectedUnitId === unit.id ? 'bg-[#0A2540] text-white active:scale-95' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] active:scale-95')]">
+                                    {{ getAvailableQuantity(unit) === 0 ? 'Kamar Penuh' : (selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar') }}
+                                </button>
+                                <span v-if="getAvailableQuantity(unit) === 0" class="text-[9px] text-red-500 font-medium text-right leading-tight max-w-[120px]">Ubah jadwal atau pilih unit lain</span>
+                            </template>
+                            <template v-else>
+                                <button @click="openDetail(unit)" class="font-extrabold py-2 px-6 rounded-full text-xs shadow-sm transition-transform bg-white border border-gray-200 text-[#0A2540] hover:bg-gray-50 active:scale-95">
+                                    Lihat Detail Unit
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- DESKTOP: 1 Image (Left) -->
-            <div class="hidden sm:block w-[180px] lg:w-[240px] h-[150px] lg:h-[180px] flex-shrink-0 relative bg-slate-100 overflow-hidden cursor-pointer" @click="openDetail(unit)">
+            <div class="hidden sm:block w-[160px] md:w-[180px] xl:w-[240px] h-[150px] xl:h-[180px] flex-shrink-0 relative bg-slate-100 overflow-hidden cursor-pointer" @click="openDetail(unit)">
                 <img v-if="getUnitImage(unit)" :src="getUnitImage(unit)" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
                 <div v-else class="w-full h-full flex flex-col items-center justify-center bg-slate-100 text-slate-300">
                     <Image class="text-3xl mb-1" />
@@ -320,9 +331,9 @@ const handleSelect = (unit, pricing) => {
                 </div>
 
                 <!-- Price & Button (Take cheapest pricing for unit) -->
-                <div class="w-[200px] shrink-0 flex flex-col justify-between border-l border-[#6C757D]/20 pl-4 min-w-0">
+                <div class="min-w-[140px] lg:min-w-[160px] xl:min-w-[200px] shrink-0 flex flex-col justify-between border-l border-[#6C757D]/20 pl-3 md:pl-4 min-w-0">
                     <div class="text-left">
-                        <div class="font-extrabold text-xl text-[#e65c00] leading-tight truncate">
+                        <div class="font-extrabold text-lg xl:text-xl text-[#e65c00] leading-tight truncate">
                             {{ formatRupiah(getLowestPricing(unit).price) }}
                             <span class="text-[10px] font-normal text-[#0A2540] inline">
                                 /{{ rentalUnitLabel }}
@@ -330,14 +341,21 @@ const handleSelect = (unit, pricing) => {
                         </div>
                         <!-- Action Button -->
                         <div class="mt-4 flex flex-col items-center gap-1.5 w-full">
-                            <button @click="getAvailableQuantity(unit) !== 0 ? handleSelect(unit, getLowestPricing(unit)) : null"
-                                    :disabled="getAvailableQuantity(unit) === 0"
-                                    :class="['w-full font-extrabold py-2 px-8 rounded text-xs shadow-sm transition-transform', 
-                                    getAvailableQuantity(unit) === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 
-                                    (selectedUnitId === unit.id ? 'bg-[#0A2540] text-white active:scale-95' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] active:scale-95')]">
-                                {{ getAvailableQuantity(unit) === 0 ? 'Kamar Penuh' : (selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar') }}
-                            </button>
-                            <span v-if="getAvailableQuantity(unit) === 0" class="text-[10px] text-red-500 font-medium text-center leading-tight">Ubah jadwal atau pilih unit lain</span>
+                            <template v-if="isBookingMode">
+                                <button @click="getAvailableQuantity(unit) !== 0 ? handleSelect(unit, getLowestPricing(unit)) : null"
+                                        :disabled="getAvailableQuantity(unit) === 0"
+                                        :class="['w-full font-extrabold py-2 px-8 rounded text-xs shadow-sm transition-transform', 
+                                        getAvailableQuantity(unit) === 0 ? 'bg-gray-200 text-gray-400 cursor-not-allowed' : 
+                                        (selectedUnitId === unit.id ? 'bg-[#0A2540] text-white active:scale-95' : 'bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] active:scale-95')]">
+                                    {{ getAvailableQuantity(unit) === 0 ? 'Kamar Penuh' : (selectedUnitId === unit.id ? 'Kamar Terpilih' : 'Pilih Kamar') }}
+                                </button>
+                                <span v-if="getAvailableQuantity(unit) === 0" class="text-[10px] text-red-500 font-medium text-center leading-tight">Ubah jadwal atau pilih unit lain</span>
+                            </template>
+                            <template v-else>
+                                <button @click="openDetail(unit)" class="w-full font-extrabold py-2 px-8 rounded text-xs shadow-sm transition-transform bg-white border border-gray-200 text-[#0A2540] hover:bg-gray-50 active:scale-95">
+                                    Lihat Detail Unit
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </div>
@@ -444,7 +462,7 @@ const handleSelect = (unit, pricing) => {
                                 <span class="text-xs font-normal text-[#0A2540]">/{{ rentalUnitLabel }}</span>
                             </div>
                         </div>
-                        <button @click="handleSelect(selectedDetailUnit, getLowestPricing(selectedDetailUnit)); closeDetail()" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold py-3 px-8 rounded-xl transition-all shadow-sm">
+                        <button v-if="isBookingMode" @click="handleSelect(selectedDetailUnit, getLowestPricing(selectedDetailUnit)); closeDetail()" class="bg-[#FFC000] hover:bg-[#e6ad00] active:scale-95 text-[#0A2540] font-extrabold py-3 px-8 rounded-xl transition-all shadow-sm">
                             Pesan Kamar Ini
                         </button>
                     </div>
@@ -528,7 +546,7 @@ const handleSelect = (unit, pricing) => {
                             <span class="text-[10px] font-normal text-[#0A2540]">/{{ rentalUnitLabel }}</span>
                         </div>
                     </div>
-                    <button @click="handleSelect(selectedDetailUnit, getLowestPricing(selectedDetailUnit)); closeDetail()" class="bg-[#FFC000] active:bg-[#e6ad00] text-[#0A2540] font-extrabold py-3 px-6 rounded-xl transition-all shadow-sm text-sm shrink-0">
+                    <button v-if="isBookingMode" @click="handleSelect(selectedDetailUnit, getLowestPricing(selectedDetailUnit)); closeDetail()" class="bg-[#FFC000] active:bg-[#e6ad00] text-[#0A2540] font-extrabold py-3 px-6 rounded-xl transition-all shadow-sm text-sm shrink-0">
                         Pesan
                     </button>
                 </div>

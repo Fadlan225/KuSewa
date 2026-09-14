@@ -287,31 +287,54 @@ const closeGalleryModal = () => {
         </div>
 
         <!-- HERO GALLERY GRID (Desktop Only) -->
-        <div class="hidden md:flex relative rounded-2xl overflow-hidden mb-12 h-[200px] sm:h-[300px] md:h-[350px] gap-2">
-            <!-- Left Large Image -->
-            <div class="w-full md:w-1/2 h-full cursor-pointer hover:opacity-95 transition bg-gray-100 flex items-center justify-center relative overflow-hidden" @click="hasImages && (showGalleryModal = true)">
+        <div class="hidden md:grid grid-cols-4 grid-rows-2 relative rounded-2xl overflow-hidden mb-12 h-[200px] sm:h-[300px] md:h-[350px] gap-2">
+            <!-- Left Large Image (Image 1) -->
+            <div class="col-span-2 row-span-2 cursor-pointer hover:opacity-95 transition bg-gray-100 flex items-center justify-center relative overflow-hidden group" @click="hasImages && (showGalleryModal = true)">
                 <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-400 z-0">
                     <Image class="text-6xl mb-3" />
                     <span class="font-medium text-sm">Tidak ada foto</span>
                 </div>
-                <img v-if="hasImages" :src="mainImage" class="w-full h-full object-cover relative z-10" alt="Main Image" @error="$event.target.style.display='none'" loading="eager" fetchpriority="high" decoding="async" />
+                <img v-if="allImages[0]" :src="allImages[0]" class="w-full h-full object-cover relative z-10 transition duration-500 group-hover:scale-105" alt="Main Image" @error="$event.target.style.display='none'" loading="eager" fetchpriority="high" decoding="async" />
             </div>
 
-            <!-- Right Small Images Grid -->
-            <div class="hidden md:grid w-1/2 h-full grid-cols-2 grid-rows-2 gap-2">
-                <div v-for="(img, index) in gridImages" :key="index" class="relative h-full w-full cursor-pointer overflow-hidden group bg-gray-100" @click="showGalleryModal = true">
-                    <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-0">
-                        <Image class="text-3xl mb-1" />
-                        <span class="text-[10px] font-medium">No Image</span>
-                    </div>
-                    <img :src="img" class="w-full h-full object-cover relative z-10 group-hover:scale-105 transition duration-500" :alt="`Gallery image ${index+1}`" @error="$event.target.style.display='none'" loading="lazy" decoding="async" />
-                    <div v-if="index === 3 && allImages.length > 5" class="absolute inset-0 bg-black/40 flex items-center justify-center text-white font-bold text-lg z-20">
-                        +{{ allImages.length - 5 }} Foto
-                    </div>
+            <!-- Image 2 -->
+            <div class="col-span-1 row-span-1 relative cursor-pointer overflow-hidden group bg-gray-100" @click="allImages[1] && (showGalleryModal = true)">
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-0">
+                    <Image class="text-3xl mb-1" />
+                </div>
+                <img v-if="allImages[1]" :src="allImages[1]" class="w-full h-full object-cover relative z-10 transition duration-500 group-hover:scale-105" alt="Gallery image 2" @error="$event.target.style.display='none'" loading="lazy" decoding="async" />
+            </div>
+
+            <!-- Image 3 (Top Right Corner) -->
+            <div class="col-span-1 row-span-1 relative cursor-pointer overflow-hidden group bg-gray-100" @click="allImages[2] && (showGalleryModal = true)">
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-0">
+                    <Image class="text-3xl mb-1" />
+                </div>
+                <img v-if="allImages[2]" :src="allImages[2]" class="w-full h-full object-cover relative z-10 transition duration-500 group-hover:scale-105" alt="Gallery image 3" @error="$event.target.style.display='none'" loading="lazy" decoding="async" />
+            </div>
+
+            <!-- Image 4 -->
+            <div class="col-span-1 row-span-1 relative cursor-pointer overflow-hidden group bg-gray-100" @click="allImages[3] && (showGalleryModal = true)">
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-0">
+                    <Image class="text-3xl mb-1" />
+                </div>
+                <img v-if="allImages[3]" :src="allImages[3]" class="w-full h-full object-cover relative z-10 transition duration-500 group-hover:scale-105" alt="Gallery image 4" @error="$event.target.style.display='none'" loading="lazy" decoding="async" />
+            </div>
+
+            <!-- Image 5 (Bottom Right Corner) -->
+            <div class="col-span-1 row-span-1 relative cursor-pointer overflow-hidden group bg-gray-100" @click="allImages[4] && (showGalleryModal = true)">
+                <div class="absolute inset-0 flex flex-col items-center justify-center text-gray-300 z-0">
+                    <Image class="text-3xl mb-1" />
+                </div>
+                <img v-if="allImages[4]" :src="allImages[4]" class="w-full h-full object-cover relative z-10 transition duration-500 group-hover:scale-105" alt="Gallery image 5" @error="$event.target.style.display='none'" loading="lazy" decoding="async" />
+                
+                <!-- Overlay for more photos -->
+                <div v-if="allImages.length > 5" class="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg z-20 hover:bg-black/40 transition">
+                    +{{ allImages.length - 5 }} Foto
                 </div>
             </div>
 
-            <button v-if="hasImages" @click="showGalleryModal = true" class="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl text-sm font-bold shadow-lg border border-gray-200 hover:bg-gray-50 transition z-10 flex items-center gap-2">
+            <button v-if="hasImages" @click="showGalleryModal = true" class="absolute bottom-4 right-4 bg-white/95 backdrop-blur-sm px-4 py-2 rounded-xl text-sm font-bold shadow-lg border border-gray-200 hover:bg-gray-50 transition z-30 flex items-center gap-2">
                 <Images class="" /> Tampilkan semua foto
             </button>
         </div>

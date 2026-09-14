@@ -59,6 +59,11 @@ class asset_type extends Model
         return $this->hasMany(review_tag::class);
     }
 
+    public function serviceFees()
+    {
+        return $this->hasMany(service_fee::class, 'asset_type_id')->orderBy('sort_order', 'asc');
+    }
+
     // ── Mandatory Facility Categories ─────────────────────────────────────────
 
     /** Kategori fasilitas wajib aset. */

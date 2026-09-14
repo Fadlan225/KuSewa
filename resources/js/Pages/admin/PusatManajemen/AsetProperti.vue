@@ -3,6 +3,8 @@ import { Search, X, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import { ref } from 'vue';
 import { Head, router, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import CustomSelect from '@/Components/ui/CustomSelect.vue';
+import AssetStatusEmptyIllustration from '@/Components/ui/Icons/AssetStatusEmptyIllustration.vue';
 
 const props = defineProps({
     assets:     { type: Object, default: () => ({ data: [] }) },
@@ -149,8 +151,12 @@ const statusClass = (s) => ({
                                     </td>
                                 </tr>
                                 <tr v-if="assets.data.length === 0">
-                                    <td colspan="7" class="py-12 text-center text-slate-400">
-                                        Tidak ada properti sesuai filter.
+                                    <td colspan="7" class="py-16 text-center">
+                                        <AssetStatusEmptyIllustration class="w-32 h-32 mx-auto mb-4 opacity-80" />
+                                        <h3 class="text-slate-800 font-bold text-base mb-1">Belum Ada Data Aset</h3>
+                                        <p class="text-slate-500 font-medium text-xs max-w-md mx-auto">
+                                            Data aset properti masih kosong atau tidak ada yang sesuai dengan pencarian Anda. Aset yang telah didaftarkan dan disetujui akan muncul di sini. Silakan ubah filter untuk mencari data lain.
+                                        </p>
                                     </td>
                                 </tr>
                             </tbody>

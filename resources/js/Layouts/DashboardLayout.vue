@@ -7,6 +7,7 @@ import ConfirmModal from '@/Components/ui/ConfirmModal.vue';
 import LogoutIllustrationIcon from '@/Components/ui/Icons/LogoutIllustrationIcon.vue';
 import Topbar from '@/Components/Topbar.vue';
 import ProfileIncompleteModal from '@/Components/ui/ProfileIncompleteModal.vue';
+import Toast from '@/Components/ui/Toast.vue';
 
 import { getOwnerMenu, getAdminMenu } from '@/Config/menus';
 import NotificationToast from '@/Components/ui/NotificationToast.vue';
@@ -32,6 +33,26 @@ const sidebarCounts = computed(() => page.props.sidebarCounts || {});
 // Menu yang dipakai bergantung pada role yang diberikan dari props
 const isProfileComplete = computed(() => page.props.isProfileComplete);
 const menu = computed(() => props.role === 'Admin' ? getAdminMenu(sidebarCounts.value) : getOwnerMenu(sidebarCounts.value, isProfileComplete.value));
+
+// ==========================================
+// FLASH MESSAGES TOAST
+// ==========================================
+const flashToast = ref({ show: false, message: '', type: 'success' });
+let flashTimeout = null;
+
+watch(() => page.props.flash, (flash) => {
+    if (flash?.success || flash?.error) {
+        clearTimeout(flashTimeout);
+        flashToast.value = {
+            show: true,
+            message: flash.success || flash.error,
+            type: flash.success ? 'success' : 'error'
+        };
+        flashTimeout = setTimeout(() => {
+            flashToast.value.show = false;
+        }, 3000);
+    }
+}, { deep: true, immediate: true });
 
 // ==========================================
 // MOBILE SIDEBAR BEHAVIOR
@@ -148,6 +169,9 @@ onUnmounted(() => {
         
         <!-- Toast Notifikasi Real-time -->
         <NotificationToast ref="toastRef" />
+
+        <!-- Toast Flash Messages -->
+        <Toast :show="flashToast.show" :message="flashToast.message" :type="flashToast.type" />
 
         <!-- Logout Confirmation Modal -->
         <ConfirmModal

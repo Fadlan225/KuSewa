@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\owner_profile;
+use App\Models\OwnerVerificationLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -12,7 +13,7 @@ class OwnerVerificationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = owner_profile::with('user')
+        $query = owner_profile::with(['user', 'verificationLogs.actor'])
             ->when($request->status && $request->status !== 'Semua', fn($q) => $q->where('status', $request->status))
             ->when($request->search, fn($q) => $q
                 ->where('national_id', 'like', "%{$request->search}%")
@@ -23,7 +24,7 @@ class OwnerVerificationController extends Controller
             )
             ->orderByRaw("FIELD(status, 'pending', 'verified', 'rejected')")
             ->orderBy('created_at', 'desc')
-            ->paginate(15)
+            ->paginate(7)
             ->withQueryString();
 
         $query->getCollection()->transform(function ($p) {
@@ -40,10 +41,26 @@ class OwnerVerificationController extends Controller
             'rejected' => owner_profile::where('status', 'rejected')->count(),
         ];
 
-        return Inertia::render('admin/KelolaPengajuanAkun', [
+        return Inertia::render('admin/PusatManajemen/PengajuanAkun/Index', [
             'applicants' => $query,
             'stats'      => $stats,
             'filters'    => $request->only(['search', 'status']),
+        ]);
+    }
+
+    /**
+     * Tampilkan halaman detail pengajuan.
+     */
+    public function show($id)
+    {
+        $profile = owner_profile::with(['user', 'verificationLogs.actor'])->findOrFail($id);
+        
+        $profile->ktp_url = $profile->ktp_photo
+            ? route('admin.ktp-photo', $profile->id)
+            : null;
+
+        return Inertia::render('admin/PusatManajemen/PengajuanAkun/Show', [
+            'applicant' => $profile
         ]);
     }
 
@@ -81,6 +98,12 @@ class OwnerVerificationController extends Controller
             'verification_at' => now(),
         ]);
 
+        OwnerVerificationLog::create([
+            'owner_profile_id' => $profile->id,
+            'actor_id'         => auth()->id(),
+            'action'           => 'approved',
+        ]);
+
         return back()->with('success', "Pengajuan {$profile->user->name} telah disetujui.");
     }
 
@@ -99,6 +122,13 @@ class OwnerVerificationController extends Controller
             'status'           => 'rejected',
             'rejection_reason' => $request->reason,
             'verification_at'  => now(),
+        ]);
+
+        OwnerVerificationLog::create([
+            'owner_profile_id' => $profile->id,
+            'actor_id'         => auth()->id(),
+            'action'           => 'rejected',
+            'reason'           => $request->reason,
         ]);
 
         return back()->with('success', "Pengajuan {$profile->user->name} telah ditolak.");

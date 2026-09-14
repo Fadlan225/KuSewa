@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\User;
 use App\Models\owner_profile;
+use App\Models\OwnerVerificationLog;
 use App\Http\Requests\ProcessKtpOcrRequest;
 use App\Http\Requests\StoreOwnerDataRequest;
 use App\Http\Requests\StoreOwnerRegistrationStep1Request;
@@ -208,7 +209,7 @@ class OwnerRegistrationController extends Controller
         }
 
         // --- Simpan/update owner_profile ---
-        owner_profile::updateOrCreate(
+        $profile = owner_profile::updateOrCreate(
             ['user_id' => $user->id],
             [
                 'national_id'    => $request->national_id,
@@ -227,6 +228,13 @@ class OwnerRegistrationController extends Controller
                 'verification_at' => null,
             ]
         );
+
+        // --- Catat log submit ---
+        OwnerVerificationLog::create([
+            'owner_profile_id' => $profile->id,
+            'actor_id'         => $user->id,
+            'action'           => 'submitted',
+        ]);
 
         return redirect()->route('owner.verification');
     }
@@ -296,10 +304,17 @@ class OwnerRegistrationController extends Controller
             $data['ktp_photo'] = $path;
         }
 
-        owner_profile::updateOrCreate(
+        $profile = owner_profile::updateOrCreate(
             ['user_id' => $user->id],
             $data
         );
+
+        // --- Catat log submit (legacy flow) ---
+        OwnerVerificationLog::create([
+            'owner_profile_id' => $profile->id,
+            'actor_id'         => $user->id,
+            'action'           => 'submitted',
+        ]);
 
         return redirect()->route('owner.verification');
     }

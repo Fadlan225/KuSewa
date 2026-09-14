@@ -163,7 +163,7 @@ class AssetTypeMandatorySeeder extends Seeder
             ],
         ];
 
-        DB::table('asset_type_mandatory_gallery_categories')->truncate();
+        DB::table('asset_type_gallery_categories')->truncate();
 
         $galleryRows = [];
         foreach ($mandatoryGallery as $typeName => $scopes) {
@@ -178,6 +178,7 @@ class AssetTypeMandatorySeeder extends Seeder
                         'asset_type_id'      => $typeId,
                         'galery_category_id' => $catId,
                         'scope'              => $scope,
+                        'is_mandatory'       => true,
                         'created_at'         => now(),
                         'updated_at'         => now(),
                     ];
@@ -186,7 +187,7 @@ class AssetTypeMandatorySeeder extends Seeder
         }
 
         if (!empty($galleryRows)) {
-            DB::table('asset_type_mandatory_gallery_categories')->insert($galleryRows);
+            DB::table('asset_type_gallery_categories')->insert($galleryRows);
         }
 
         $this->command->info('✓ Mandatory facility categories: ' . count($facilityRows) . ' rows');

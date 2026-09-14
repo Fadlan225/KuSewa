@@ -160,13 +160,28 @@ class AssetController extends Controller
             // Abaikan jika gagal mendeteksi
         }
 
-        $serviceFeeRecord = DB::table('service_fees')->first();
+        $scope = $asset->type?->allow_units ? 'unit' : 'asset';
+
+        $serviceFeeRecord = DB::table('service_fees')
+            ->where('asset_type_id', $asset->asset_type_id)
+            ->where('scope', $scope)
+            ->orderBy('sort_order', 'asc')
+            ->first();
+
+        if (!$serviceFeeRecord && $scope === 'unit') {
+            $serviceFeeRecord = DB::table('service_fees')
+                ->where('asset_type_id', $asset->asset_type_id)
+                ->where('scope', 'asset')
+                ->orderBy('sort_order', 'asc')
+                ->first();
+        }
+
         $serviceFee = $serviceFeeRecord ? [
             'type'  => $serviceFeeRecord->fee_type,
             'value' => (float) $serviceFeeRecord->fee_value
         ] : [
-            'type'  => 'percentage',
-            'value' => 5
+            'type'  => 'fixed',
+            'value' => 5000
         ];
 
         // Fetch booked dates for the calendar on Detail page.

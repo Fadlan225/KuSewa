@@ -74,13 +74,12 @@ const handleLogout = () => {
     <aside :class="[isCollapsed ? 'w-20' : 'w-60', 'h-full max-h-screen bg-white border-r border-slate-200/80 flex flex-col p-3 md:p-4 shrink-0 transition-all duration-300 relative z-40']">
         <!-- Brand Logo -->
         <div class="flex items-center px-2 py-1 mb-6 shrink-0 transition-all duration-300 group cursor-pointer relative" :class="isCollapsed ? 'justify-center' : 'justify-between'" @click="toggleCollapse" title="Sembunyikan/Tampilkan Menu">
-            <div class="flex items-center gap-2 overflow-hidden">
+            <div class="flex items-center gap-2 overflow-hidden w-full">
                 <!-- Logo with Hover Icon (Desktop) -->
                 <div class="relative w-6 h-6 shrink-0 hidden lg:flex items-center justify-center">
-                    <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain transition-opacity duration-200 group-hover:opacity-0" />
-                    <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <PanelLeftClose v-if="!isCollapsed" class="w-5 h-5 text-slate-600" />
-                        <PanelLeftOpen v-else class="w-5 h-5 text-slate-600" />
+                    <img src="/kitasewa-logo.png" alt="KitaSewa Logo" class="h-6 w-auto object-contain transition-opacity duration-200" :class="isCollapsed ? 'group-hover:opacity-0' : ''" />
+                    <div v-if="isCollapsed" class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <PanelLeftOpen class="w-5 h-5 text-slate-600" />
                     </div>
                 </div>
 
@@ -91,16 +90,21 @@ const handleLogout = () => {
 
                 <!-- Brand Name acts as home link -->
                 <Link v-if="!isCollapsed" :href="route('Home') || '/'" class="transition-transform hover:scale-[1.02] duration-200" @click.stop>
-                    <span class="font-black text-lg tracking-tight text-[#0A2540] mt-0.5 whitespace-nowrap transition-opacity duration-300 group-hover:text-slate-600">
+                    <span class="font-black text-lg tracking-tight text-[#0A2540] mt-0.5 whitespace-nowrap transition-opacity duration-300">
                         kitasewa<span class="text-[#FFC000]">.id</span>
                     </span>
                 </Link>
+
+                <!-- Expanded Toggle Button (Far Right) -->
+                <div v-if="!isCollapsed" class="hidden lg:flex items-center justify-center shrink-0 w-7 h-7 rounded hover:bg-slate-100 text-slate-400 hover:text-[#0A2540] transition-colors ml-auto">
+                    <PanelLeftClose class="w-[18px] h-[18px]" />
+                </div>
             </div>
         </div>
 
             <!-- Profile Switcher -->
             <div class="relative mb-6 shrink-0" ref="profileMenuRef">
-                <button @click="toggleProfileMenu" type="button" class="w-full flex items-center p-2 rounded-xl border border-slate-100 bg-slate-50/50 hover:bg-slate-100 transition focus:outline-none" :class="isCollapsed ? 'justify-center' : 'justify-between'">
+                <button @click="toggleProfileMenu" type="button" class="w-full flex items-center p-2 rounded-xl hover:bg-slate-100 transition-colors focus:outline-none" :class="isCollapsed ? 'justify-center' : 'justify-between'">
                     <div class="flex items-center gap-2.5 min-w-0" :class="isCollapsed ? 'justify-center' : ''">
                         <div class="relative shrink-0">
                             <!-- Cek foto profil atau avatar (sesuai struktur standar Laravel/SaaS) -->
@@ -168,12 +172,12 @@ const handleLogout = () => {
                     <nav class="space-y-1 text-sm px-2">
                     <template v-for="(item, idx) in menu" :key="idx">
                         <!-- Jika ada item divider -->
-                        <div v-if="item.divider" class="pt-4 pb-2 px-3">
-                            <div class="h-px bg-slate-200/80"></div>
+                        <div v-if="item.divider" class="pt-4 pb-1">
+                            <!-- Removed hr for cleaner look -->
                         </div>
 
                         <div v-else-if="item.isHeader" class="pt-3 pb-1 px-3">
-                            <span v-if="!isCollapsed" class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{{ item.label }}</span>
+                            <span v-if="!isCollapsed" class="text-[11px] font-semibold text-slate-400/80 tracking-wide capitalize">{{ item.label.toLowerCase() }}</span>
                         </div>
 
                         <!-- Otomatis mendeteksi status aktif dari rute laravel menggunakan routeName -->
@@ -183,19 +187,19 @@ const handleLogout = () => {
                                 :title="isCollapsed ? item.label : ''"
                                 :class="[
                                     route().current(item.routeName) 
-                                        ? 'bg-[#FFF8E6] text-[#0A2540] font-bold shadow-sm ring-1 ring-[#FFC000]/20' 
-                                        : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 font-medium', 
-                                    'flex items-center px-3 py-2 rounded-lg transition-all duration-200 w-full', 
+                                        ? 'bg-slate-200/70 text-slate-900 font-bold' 
+                                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 font-medium', 
+                                    'flex items-center px-3 py-2 rounded-xl transition-all duration-200 w-full', 
                                     isCollapsed ? 'justify-center' : 'justify-between'
                                 ]"
                             >
-                                <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-2.5">
                                     <component 
                                         v-if="typeof item.icon !== 'string'" 
                                         :is="item.icon" 
                                         :stroke-width="2.5"
                                         :class="[
-                                            route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-500', 
+                                            route().current(item.routeName) ? 'text-slate-900' : 'text-slate-500', 
                                             'w-5 h-5 text-center transition-colors'
                                         ]" 
                                     />
@@ -203,7 +207,7 @@ const handleLogout = () => {
                                         v-else 
                                         :iconClass="item.icon" 
                                         :class="[
-                                            route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-500', 
+                                            route().current(item.routeName) ? 'text-slate-900' : 'text-slate-500', 
                                             'w-5 h-5 text-center transition-colors'
                                         ]" 
                                     />
@@ -226,22 +230,27 @@ const handleLogout = () => {
             </div>
 
         <!-- Bottom Navigation Links -->
-        <div v-if="bottomMenu && bottomMenu.length" class="shrink-0 pt-4 mt-auto">
-            <hr class="border-slate-100 mb-4" />
-            <nav class="space-y-2 text-base">
+        <div v-if="bottomMenu && bottomMenu.length" class="shrink-0 pt-4 mt-auto pb-2 px-2">
+            <nav class="space-y-1 text-sm">
                 <template v-for="(item, idx) in bottomMenu" :key="idx">
-                    <div v-if="item.divider" class="pt-2 pb-1">
-                        <hr class="border-slate-100 border-dashed" />
+                    <div v-if="item.divider" class="pt-3 pb-1">
+                        <!-- Removed hr for cleaner look -->
                     </div>
                     <Link
                         v-else
                         :href="item.route"
                         :title="isCollapsed ? item.label : ''"
-                        :class="[route().current(item.routeName) ? 'text-[#0A2540] font-bold border-l-[4px] border-[#FFC000] bg-slate-50/50 rounded-r-lg' : 'text-slate-600 hover:bg-slate-50 font-medium border-l-[4px] border-transparent rounded-r-lg', 'flex items-center px-3 py-2.5 transition-all duration-200 w-full', isCollapsed ? 'justify-center' : 'justify-between']"
+                        :class="[
+                            route().current(item.routeName) 
+                                ? 'bg-slate-200/70 text-slate-900 font-bold' 
+                                : 'text-slate-600 hover:bg-slate-100/80 font-medium', 
+                            'flex items-center px-3 py-2.5 rounded-xl transition-all duration-200 w-full', 
+                            isCollapsed ? 'justify-center' : 'justify-between'
+                        ]"
                     >
-                        <div class="flex items-center gap-3">
-                            <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400'" class="w-6 h-6 text-center" />
-                            <component v-else :is="item.icon" :stroke-width="2.5" :class="[route().current(item.routeName) ? 'text-[#FFC000]' : 'text-slate-400', 'w-6 h-6 text-center']" />
+                        <div class="flex items-center gap-2.5">
+                            <AppIcon v-if="typeof item.icon === 'string'" :iconClass="item.icon" :class="route().current(item.routeName) ? 'text-slate-900' : 'text-slate-400'" class="w-6 h-6 text-center" />
+                            <component v-else :is="item.icon" :stroke-width="2.5" :class="[route().current(item.routeName) ? 'text-slate-900' : 'text-slate-400', 'w-6 h-6 text-center']" />
                             <span v-if="!isCollapsed" class="whitespace-nowrap">{{ item.label }}</span>
                         </div>
                         <template v-if="!isCollapsed && (item.badge || item.badgeIcon)">

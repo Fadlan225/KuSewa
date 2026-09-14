@@ -37,7 +37,7 @@ const props = defineProps({
                             <!-- Left: Illustration -->
                             <div class="w-full max-w-[320px] md:max-w-none md:flex-1 mx-auto mb-8 md:mb-0 animate-fade-in">
                                 <div class="w-full aspect-[4/3] flex items-center justify-center">
-                                    <WaitingVerificationIcon />
+                                    <WaitingVerificationIcon class="w-full h-full" />
                                 </div>
                             </div>
 
@@ -93,7 +93,7 @@ const props = defineProps({
                             <!-- Left: Illustration -->
                             <div class="w-full max-w-[320px] md:max-w-none md:flex-1 mx-auto mb-8 md:mb-0 animate-fade-in">
                                 <div class="w-full aspect-[4/3] flex items-center justify-center">
-                                    <VerifiedVerificationIcon />
+                                    <VerifiedVerificationIcon class="w-full h-full" />
                                 </div>
                             </div>
 
@@ -120,7 +120,7 @@ const props = defineProps({
                             <!-- Left: Illustration -->
                             <div class="w-full max-w-[320px] md:max-w-none md:flex-1 mx-auto mb-8 md:mb-0 animate-fade-in">
                                 <div class="w-full aspect-[4/3] flex items-center justify-center">
-                                    <RejectedVerificationIcon />
+                                    <RejectedVerificationIcon class="w-full h-full" />
                                 </div>
                             </div>
 

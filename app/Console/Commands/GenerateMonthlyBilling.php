@@ -39,7 +39,7 @@ class GenerateMonthlyBilling extends Command
         $this->info("📋 Generating billing untuk periode: " . $this->getPeriodLabel($month, $year));
 
         // Ambil tarif biaya layanan dari tabel service_fees (ambil yang aktif / terakhir)
-        $serviceFeeRecord = ServiceFee::orderByDesc('id')->first();
+        $serviceFeeRecord = ServiceFee::orderBy('sort_order', 'asc')->first();
         if (!$serviceFeeRecord) {
             $this->error('Tidak ada data service fee di database! Tambahkan dulu di tabel service_fees.');
             return Command::FAILURE;
