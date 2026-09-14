@@ -1,0 +1,53 @@
+{
+    "$schema": "https://www.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@inertiajs/vue3": "^2.0.0",
+        "@laravel/echo-vue": "^2.4.0",
+        "@playwright/test": "^1.63.0",
+        "@tailwindcss/forms": "^0.5.3",
+        "@tailwindcss/vite": "^4.3.2",
+        "@vitejs/plugin-vue": "^6.0.0",
+        "browserslist": "^4.28.8",
+        "concurrently": "^9.0.1",
+        "laravel-echo": "^2.4.0",
+        "laravel-vite-plugin": "^3.1",
+        "pusher-js": "^8.6.0",
+        "shadcn-vue": "^2.8.1",
+        "vite": "^8.0.0",
+        "vue": "^3.4.0"
+    },
+    "dependencies": {
+        "@headlessui/vue": "^1.7.23",
+        "@lucide/vue": "^1.31.0",
+        "@unovis/ts": "^1.6.7",
+        "@unovis/vue": "^1.6.7",
+        "@vueuse/core": "^14.4.0",
+        "canvas-confetti": "^1.9.4",
+        "class-variance-authority": "^0.7.1",
+        "clsx": "^2.1.1",
+        "cropperjs": "^1.6.2",
+        "flatpickr": "^4.6.13",
+        "gridstack": "^13.0.2",
+        "html-to-image": "^1.11.13",
+        "html2canvas": "^1.4.1",
+        "jsbarcode": "^3.12.3",
+        "jspdf": "^4.2.1",
+        "leaflet": "^1.9.4",
+        "leaflet.markercluster": "^1.5.3",
+        "lucide-vue-next": "^1.0.0",
+        "pinia": "^4.0.2",
+        "qrcode": "^1.5.4",
+        "radix-vue": "^1.9.17",
+        "reka-ui": "^2.10.1",
+        "tailwind-merge": "^3.6.0",
+        "tailwindcss": "^4.3.2",
+        "vue-flatpickr-component": "^12.0.0",
+        "vuedraggable": "^4.1.0"
+    }
+}

@@ -1,163 +1,233 @@
 <script setup>
-import { Search, AlertCircle } from 'lucide-vue-next';
-import { ref, computed } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { Search, AlertCircle, Eye, ShieldAlert, CheckCircle, Clock, ChevronLeft, ChevronRight } from 'lucide-vue-next';
+import { ref, watch } from 'vue';
+import { Head, router, Link } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
+import CustomSelect from '@/Components/ui/CustomSelect.vue';
+import EmptyStateIcon from '@/Components/ui/Icons/EmptyStateIcon.vue';
+import AvatarMale from '@/Components/ui/Icons/AvatarMale.vue';
+import AvatarFemale from '@/Components/ui/Icons/AvatarFemale.vue';
+import AvatarDefault from '@/Components/ui/Icons/AvatarDefault.vue';
 
-// Pencarian
-const searchQuery = ref('');
-
-// Data Akun Owner
-const owners = ref([
-    { id: 1, name: 'Budi Santoso', email: 'budi.santoso@example.com', properties: 4, status: 'Aktif', violation: '-' },
-    { id: 2, name: 'Siti Aminah', email: 'siti.aminah@example.com', properties: 2, status: 'Dinonaktifkan', violation: 'Menunggak Pembayaran > 30 Hari' },
-    { id: 3, name: 'Agus Pratama', email: 'agus.pratama@example.com', properties: 7, status: 'Aktif', violation: '-' },
-    { id: 4, name: 'Diana Wijaya', email: 'diana.wijaya@example.com', properties: 1, status: 'Dinonaktifkan', violation: 'Manipulasi Data / Penipuan' },
-    { id: 5, name: 'Reza Rahadian', email: 'reza.rahadian@example.com', properties: 3, status: 'Aktif', violation: '-' },
-]);
-
-// Filter Data
-const filteredOwners = computed(() => {
-    return owners.value.filter(owner => {
-        return owner.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-               owner.email.toLowerCase().includes(searchQuery.value.toLowerCase());
-    });
+const props = defineProps({
+    owners: { type: Object, default: () => ({ data: [] }) },
+    totals: { type: Object, default: () => ({ all: 0, active: 0, suspended: 0 }) },
+    filters: { type: Object, default: () => ({ search: '', status: 'Semua' }) }
 });
 
-// Perhitungan Statistik
-const totals = computed(() => ({
-    all: owners.value.length,
-    active: owners.value.filter(o => o.status === 'Aktif').length,
-    suspended: owners.value.filter(o => o.status === 'Dinonaktifkan').length,
-}));
+const activeFilter = ref(props.filters.status || 'Semua');
+const searchQuery = ref(props.filters.search || '');
+
+let searchTimer = null;
+
+watch(activeFilter, (newStatus) => {
+    router.get(route('admin.service-fee'), {
+        search: searchQuery.value || undefined,
+        status: newStatus !== 'Semua' ? newStatus : undefined,
+    }, { preserveState: true, replace: true });
+});
+
+const applySearch = () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
+        router.get(route('admin.service-fee'), {
+            search: searchQuery.value || undefined,
+            status: activeFilter.value !== 'Semua' ? activeFilter.value : undefined,
+        }, { preserveState: true, replace: true });
+    }, 400);
+};
+
+// Formatting Helper
+const formatRupiah = (amount) => {
+    return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+};
 </script>
 
 <template>
-    <Head title="Manajemen Akun Owner - Admin Panel" />
+    <Head title="Pantauan Pembayaran & Sanksi - Admin Panel" />
 
-    <DashboardLayout role="Admin" title="Daftar Akun Owner" description="Kelola status dan sanksi pemilik aset.">
-        <template #header-actions>
-            <!-- Search Bar di Header -->
-            <div class="flex items-center gap-3 w-64 bg-slate-50 hover:bg-slate-100 px-4 py-2.5 rounded-xl border border-transparent focus-within:bg-white focus-within:border-slate-300 focus-within:shadow-sm transition-all duration-300">
-                <Search class="text-slate-400 text-[13px]" />
-                <input
-                    type="text"
-                    v-model="searchQuery"
-                    placeholder="Cari nama atau email..."
-                    class="w-full text-[13px] bg-transparent border-none focus:ring-0 p-0 placeholder-slate-400 text-slate-700 font-medium"
-                />
-            </div>
-        </template>
+    <DashboardLayout 
+        role="Admin" 
+        title="Pantauan Pembayaran & Sanksi" 
+        description="Kelola status pembayaran biaya platform dan sanksi pemilik aset."
+    >
+        <div class="space-y-6 mt-6">
 
-            <!-- Page Content -->
-            <div class="p-8 space-y-6 max-w-[1400px] w-full mx-auto pb-24">
-
-                <!-- Modern Stats Cards (3 Kolom Sederhana) -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                    <div class="bg-white rounded-2xl border border-slate-200/70 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        <p class="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Total Owner</p>
-                        <p class="mt-2 text-3xl font-extrabold text-slate-900">{{ totals.all }}</p>
-                    </div>
-                    <div class="bg-white rounded-2xl border border-slate-200/70 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        <p class="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Akun Aktif</p>
-                        <p class="mt-2 text-3xl font-extrabold text-emerald-600">{{ totals.active }}</p>
-                    </div>
-                    <div class="bg-white rounded-2xl border border-slate-200/70 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
-                        <p class="text-[11px] font-bold uppercase text-slate-400 tracking-wider">Disanksi / Nonaktif</p>
-                        <p class="mt-2 text-3xl font-extrabold text-rose-600">{{ totals.suspended }}</p>
-                    </div>
+            <!-- METRIC SUMMARY STATS -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+                <!-- Total Owner -->
+                <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
+                    <p class="text-[11px] font-semibold uppercase text-slate-400">Total Owner</p>
+                    <p class="mt-3 text-3xl font-extrabold text-[#0A2540]">{{ totals.all }}</p>
                 </div>
 
-                <!-- Single Main Table -->
-                <section class="bg-white rounded-2xl border border-slate-200/70 shadow-sm overflow-hidden flex flex-col">
-                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white">
-                        <div>
-                            <h2 class="text-[15px] font-extrabold text-slate-900">Manajemen Akses & Sanksi</h2>
-                            <p class="text-[12px] text-slate-500 mt-0.5">Pantau pelanggaran dan kontrol akses masuk ke platform.</p>
-                        </div>
+                <!-- Akun Aktif -->
+                <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
+                    <p class="text-[11px] font-semibold uppercase text-slate-400">Akun Aktif</p>
+                    <p class="mt-3 text-3xl font-extrabold text-emerald-600">{{ totals.active }}</p>
+                </div>
+
+                <!-- Disanksi / Nonaktif -->
+                <div class="rounded-3xl bg-white border border-slate-100 p-5 shadow-sm">
+                    <p class="text-[11px] font-semibold uppercase text-slate-400">Disanksi / Nonaktif</p>
+                    <p class="mt-3 text-3xl font-extrabold text-rose-600">{{ totals.suspended }}</p>
+                </div>
+            </div>
+
+            <!-- FILTER BAR & SEARCH -->
+            <div class="bg-white border border-slate-200/60 shadow-sm rounded-xl p-4 md:p-5 space-y-4 relative z-20">
+                <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    
+                    <!-- Search Box -->
+                    <div class="relative w-full lg:max-w-sm flex-1">
+                        <Search class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm" />
+                        <input
+                            v-model="searchQuery"
+                            @input="applySearch"
+                            type="text"
+                            placeholder="Cari nama atau email..."
+                            class="w-full bg-slate-50 border border-slate-200 text-sm pl-10 pr-4 py-2.5 rounded focus:outline-none focus:bg-white hover:border-[#FFC000] focus:border-[#FFC000] focus:ring-2 focus:ring-[#FFC000]/20 transition-all text-slate-700 placeholder:text-slate-400"
+                        />
                     </div>
+
+                    <!-- Dropdowns -->
+                    <div class="flex items-center gap-3 w-full lg:w-auto justify-between lg:justify-end flex-wrap sm:flex-nowrap">
+                        <CustomSelect
+                            v-model="activeFilter"
+                            :options="[
+                                { label: 'Semua Status', value: 'Semua' },
+                                { label: 'Menunggak', value: 'Menunggak' },
+                                { label: 'Menunggu Verifikasi', value: 'Menunggu Verifikasi' },
+                                { label: 'Lancar', value: 'Lancar' }
+                            ]"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLE -->
+            <div>
+                <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-[13px] whitespace-nowrap">
+                        <table class="min-w-[600px] w-full text-left text-sm border-collapse">
                             <thead>
-                                <tr class="border-b border-slate-100 bg-slate-50/50 text-slate-500 font-bold uppercase text-[10px] tracking-wider">
+                                <tr class="bg-slate-50/80 border-b border-slate-200/80 text-slate-500 uppercase font-bold text-xs tracking-wider">
                                     <th class="py-4 px-6">Informasi Owner</th>
-                                    <th class="py-4 px-5 text-center">Total Properti</th>
-                                    <th class="py-4 px-5">Catatan Pelanggaran</th>
-                                    <th class="py-4 px-5">Status Akun</th>
+                                    <th class="py-4 px-4 text-center">Properti Aktif</th>
+                                    <th class="py-4 px-4">Tagihan Belum Lunas</th>
+                                    <th class="py-4 px-4">Status Pembayaran</th>
                                     <th class="py-4 px-6 text-right">Tindakan</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <tr v-for="owner in filteredOwners" :key="owner.id"
+                                <tr v-for="owner in owners.data" :key="owner.id"
                                     :class="[
-                                        'group hover:bg-slate-50/80 transition-all duration-200',
-                                        owner.status === 'Aktif' ? 'hover:shadow-[inset_3px_0_0_#0A2540]' : 'hover:shadow-[inset_3px_0_0_#e11d48] bg-rose-50/10'
+                                        'group hover:bg-slate-50/60 transition-colors',
+                                        owner.billing_status === 'Lancar' ? 'hover:shadow-[inset_3px_0_0_#0A2540]' : 
+                                        owner.billing_status === 'Menunggu Verifikasi' ? 'hover:shadow-[inset_3px_0_0_#f59e0b] bg-amber-50/10' : 
+                                        'hover:shadow-[inset_3px_0_0_#e11d48] bg-rose-50/10'
                                     ]">
 
                                     <!-- User Info -->
                                     <td class="py-4 px-6">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-[12px] font-bold text-slate-600">
-                                                {{ owner.name.charAt(0) }}
+                                            <div v-if="owner.avatar" class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200">
+                                                <img :src="owner.avatar" :alt="owner.name" class="w-full h-full object-cover" />
+                                            </div>
+                                            <div v-else class="w-10 h-10 rounded-full overflow-hidden shrink-0 border border-slate-200 bg-slate-50 flex items-center justify-center">
+                                                <AvatarMale v-if="owner.gender === 'male'" class="w-full h-full" />
+                                                <AvatarFemale v-else-if="owner.gender === 'female'" class="w-full h-full" />
+                                                <AvatarDefault v-else class="w-full h-full" />
                                             </div>
                                             <div>
                                                 <p class="font-bold text-slate-900">{{ owner.name }}</p>
-                                                <p class="text-[11px] font-medium text-slate-500 mt-0.5">{{ owner.email }}</p>
+                                                <p class="text-[10px] text-slate-400 mt-0.5">{{ owner.email }}</p>
                                             </div>
                                         </div>
                                     </td>
 
                                     <!-- Properti -->
-                                    <td class="py-4 px-5 text-center">
-                                        <span class="inline-flex items-center justify-center bg-slate-100 text-slate-700 w-7 h-7 rounded-lg font-bold text-[11px]">
+                                    <td class="py-4 px-4 text-center">
+                                        <span class="inline-flex items-center justify-center bg-slate-100 text-slate-700 w-7 h-7 rounded-lg font-bold text-xs">
                                             {{ owner.properties }}
                                         </span>
                                     </td>
 
-                                    <!-- Pelanggaran -->
-                                    <td class="py-4 px-5 text-slate-600">
-                                        <span v-if="owner.violation !== '-'" class="font-semibold text-rose-600 text-[12px]">
-                                            <AlertCircle class="text-[10px] mr-1" /> {{ owner.violation }}
+                                    <!-- Tagihan Belum Lunas -->
+                                    <td class="py-4 px-4">
+                                        <span class="font-bold text-slate-800">
+                                            {{ formatRupiah(owner.total_unpaid) }}
                                         </span>
-                                        <span v-else class="text-slate-400 italic">Bersih</span>
                                     </td>
 
                                     <!-- Status Badge -->
-                                    <td class="py-4 px-5">
+                                    <td class="py-4 px-4 whitespace-nowrap">
                                         <div :class="[
                                             'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset',
-                                            owner.status === 'Aktif' ? 'bg-emerald-50 text-emerald-700 ring-emerald-500/20' : 'bg-rose-50 text-rose-700 ring-rose-500/20'
+                                            owner.billing_status === 'Lancar' ? 'bg-emerald-50 text-emerald-700 ring-emerald-500/20' : 
+                                            owner.billing_status === 'Menunggu Verifikasi' ? 'bg-amber-50 text-amber-700 ring-amber-500/20' : 
+                                            'bg-rose-50 text-rose-700 ring-rose-500/20'
                                         ]">
-                                            <div :class="['w-1.5 h-1.5 rounded-full', owner.status === 'Aktif' ? 'bg-emerald-500' : 'bg-rose-500']"></div>
-                                            {{ owner.status }}
+                                            <CheckCircle v-if="owner.billing_status === 'Lancar'" class="w-3.5 h-3.5" />
+                                            <Clock v-else-if="owner.billing_status === 'Menunggu Verifikasi'" class="w-3.5 h-3.5" />
+                                            <AlertCircle v-else class="w-3.5 h-3.5" />
+                                            {{ owner.billing_status }}
                                         </div>
                                     </td>
 
                                     <!-- Aksi -->
-                                    <td class="py-4 px-6 text-right">
-                                        <button v-if="owner.status === 'Aktif'" class="text-[12px] font-bold text-slate-500 bg-white border border-slate-200 shadow-sm px-4 py-1.5 rounded-lg group-hover:bg-rose-600 group-hover:text-white group-hover:border-transparent transition-all active:scale-95">
-                                            Nonaktifkan
+                                    <td class="py-4 px-6 text-right whitespace-nowrap space-x-2">
+                                        <button class="inline-block rounded bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-600 transition group-hover:bg-slate-200 group-hover:text-slate-900 border border-slate-200">
+                                            Detail
                                         </button>
-                                        <button v-else class="text-[12px] font-bold text-slate-500 bg-white border border-slate-200 shadow-sm px-4 py-1.5 rounded-lg group-hover:bg-emerald-600 group-hover:text-white group-hover:border-transparent transition-all active:scale-95">
-                                            Pulihkan Akun
+                                        
+                                        <button v-if="owner.account_status === 'active' && owner.billing_status === 'Menunggak'" class="inline-flex items-center rounded bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-600 transition border border-rose-200 hover:bg-rose-600 hover:text-white hover:border-transparent">
+                                            <ShieldAlert class="w-3.5 h-3.5 mr-1" /> Nonaktifkan
+                                        </button>
+                                        <button v-else-if="owner.account_status !== 'active'" class="inline-block rounded bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-600 transition border border-emerald-200 hover:bg-emerald-600 hover:text-white hover:border-transparent">
+                                            Pulihkan
                                         </button>
                                     </td>
                                 </tr>
 
-                                <!-- Empty State Pencarian -->
-                                <tr v-if="filteredOwners.length === 0">
+                                <tr v-if="owners.data.length === 0">
                                     <td colspan="5" class="py-16 text-center">
-                                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-50 text-slate-400 mb-3">
-                                            <Search class="text-xl" />
-                                        </div>
-                                        <p class="text-[13px] font-semibold text-slate-500">Tidak ada akun yang sesuai dengan pencarian.</p>
+                                        <EmptyStateIcon class="w-32 h-32 mx-auto mb-4 opacity-80" />
+                                        <h3 class="text-slate-800 font-bold text-base mb-1">Belum Ada Data Owner</h3>
+                                        <p class="text-slate-500 font-medium text-xs max-w-md mx-auto">
+                                            Data pantauan tagihan masih kosong atau tidak ada owner yang cocok dengan filter saat ini.
+                                        </p>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                </section>
-
+                </div>
             </div>
+
+            <!-- Pagination -->
+            <div v-if="owners.last_page > 1" class="flex items-center justify-between text-xs text-slate-500 pt-2">
+                <span>Menampilkan {{ owners.from }}–{{ owners.to }} dari {{ owners.total }} owner</span>
+                <div class="flex items-center gap-1">
+                    <Link
+                        v-if="owners.prev_page_url"
+                        :href="owners.prev_page_url"
+                        preserve-state
+                        class="rounded border border-slate-200 px-3 py-1.5 hover:bg-slate-50 hover:text-slate-700 transition flex items-center gap-1 font-semibold"
+                    >
+                        <ChevronLeft class="w-3.5 h-3.5" /> Prev
+                    </Link>
+                    <span class="px-3 py-1.5 font-bold text-[#0A2540]">{{ owners.current_page }} / {{ owners.last_page }}</span>
+                    <Link
+                        v-if="owners.next_page_url"
+                        :href="owners.next_page_url"
+                        preserve-state
+                        class="rounded border border-slate-200 px-3 py-1.5 hover:bg-slate-50 hover:text-slate-700 transition flex items-center gap-1 font-semibold"
+                    >
+                        Next <ChevronRight class="w-3.5 h-3.5" />
+                    </Link>
+                </div>
+            </div>
+        </div>
     </DashboardLayout>
 </template>

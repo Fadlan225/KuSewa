@@ -227,7 +227,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/payment-system/reorder', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'reorder'])->name('payment-system.reorder');
     Route::post('/payment-system/{id}/reset', [\App\Http\Controllers\Admin\PaymentSystemController::class, 'resetToDefault'])->name('payment-system.reset');
     Route::get('/promo-diskon', fn() => Inertia::render('admin/PromoDiskon'))->name('promo-diskon');
-    Route::get('/service-fee', fn() => Inertia::render('admin/ServiceFeeSanksi'))->name('service-fee');
+    Route::get('/service-fee', [\App\Http\Controllers\Admin\OwnerBillingController::class, 'index'])->name('service-fee');
     Route::get('/system-notifications', fn() => Inertia::render('admin/SystemNotifications'))->name('system-notifications');
     Route::get('/user-reports', fn() => Inertia::render('admin/UserReports'))->name('user-reports');
 
