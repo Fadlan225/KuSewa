@@ -54,9 +54,12 @@ const openConfirmToggle = (user) => {
 
 const executeToggleStatus = () => {
     if (!confirmToggle.value) return;
-    router.patch(route('admin.user-management.toggle-status', confirmToggle.value.id), {}, {
+    router.post(route('admin.user-management.toggle-status', confirmToggle.value.id), {
+        _method: 'patch',
+    }, {
         preserveScroll: true,
-        onSuccess: () => { 
+        onSuccess: () => { confirmToggle.value = null; },
+        onError: () => { 
             confirmToggle.value = null; 
         },
     });
@@ -75,7 +78,9 @@ const handleDeleteClick = (user) => {
 const deleteUser = () => {
     if (!confirmDelete.value) return;
     isDeleting.value = true;
-    router.delete(route('admin.user-management.destroy', confirmDelete.value.id), {
+    router.post(route('admin.user-management.destroy', confirmDelete.value.id), {
+        _method: 'delete',
+    }, {
         preserveScroll: true,
         onSuccess: () => { confirmDelete.value = null; isDeleting.value = false; },
         onError:   () => { isDeleting.value = false; },

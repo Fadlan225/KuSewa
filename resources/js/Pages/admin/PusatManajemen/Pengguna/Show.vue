@@ -21,7 +21,9 @@ const confirmToggle  = ref(false);
 const isDeleting     = ref(false);
 
 const executeToggleStatus = () => {
-    router.patch(route('admin.user-management.toggle-status', props.user.id), {}, {
+    router.post(route('admin.user-management.toggle-status', props.user.id), {
+        _method: 'patch'
+    }, {
         preserveScroll: true,
         onSuccess: () => { confirmToggle.value = false; },
     });
@@ -29,7 +31,9 @@ const executeToggleStatus = () => {
 
 const deleteUser = () => {
     isDeleting.value = true;
-    router.delete(route('admin.user-management.destroy', props.user.id), {
+    router.post(route('admin.user-management.destroy', props.user.id), {
+        _method: 'delete'
+    }, {
         onSuccess: () => {
             router.get(route('admin.user-management'));
         },
