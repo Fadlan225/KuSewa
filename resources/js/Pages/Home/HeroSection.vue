@@ -24,6 +24,8 @@ const {
             <!-- Hero Image sebagai <img> — fetchpriority tinggi agar LCP optimal -->
             <img
                 src="/public.webp"
+                srcset="/public-480.webp 480w, /public-768.webp 768w, /public-1200.webp 1200w, /public.webp 1440w"
+                sizes="100vw"
                 alt="KitaSewa - Platform Sewa Aset Terpercaya"
                 class="absolute inset-0 w-full h-full object-cover object-center"
                 fetchpriority="high"

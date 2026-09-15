@@ -23,3 +23,34 @@
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ index.php [L]
 </IfModule>
+
+
+# ============================================================
+# Cache-Control Headers — Fix #8 Lighthouse Performance
+# ============================================================
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Aset Vite build (JS/CSS) — nama file mengandung hash → aman cache 1 tahun
+    <FilesMatch "\.(js|css|mjs)$">
+        ExpiresDefault "access plus 1 year"
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # Gambar & Font
+    <FilesMatch "\.(webp|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$">
+        ExpiresDefault "access plus 1 year"
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+
+    # Hero image statis (tidak ada hash) — cache 7 hari
+    <FilesMatch "^public(-\d+)?\.webp$">
+        ExpiresDefault "access plus 7 days"
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+</IfModule>

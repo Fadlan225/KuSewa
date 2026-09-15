@@ -6,16 +6,23 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
+        <!-- Fonts: non-blocking agar tidak delay render/FCP -->
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link
+            href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap"
+            rel="stylesheet"
+            media="print"
+            onload="this.media='all'"
+        >
+        <noscript>
+            <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet">
+        </noscript>
 
         <link rel="icon" type="image/svg+xml" href="{{ asset('kitasewa-logo.png') }}">
 
         <!-- Preload LCP hero image — browser fetch sebelum JS selesai render -->
         <link rel="preload" as="image" href="/public.webp" fetchpriority="high">
-        <!-- Preload logo agar tidak CLS -->
-        <link rel="preload" as="image" href="/kitasewa-logo.png">
+        <!-- Logo preload dihapus — cukup kecil, tidak perlu preload eksplisit -->
 
         {{--
             Critical CSS — inline agar browser bisa paint static-hero-placeholder
@@ -129,10 +136,12 @@
             <div class="hero-wrapper">
                 <div class="hero-container">
                     
-                    <!-- LCP Image Indicator -->
+                    <!-- LCP Image — srcset agar mobile tidak muat 1440px full -->
                     <img
                         src="/public.webp"
-                        alt="Background"
+                        srcset="/public-480.webp 480w, /public-768.webp 768w, /public-1200.webp 1200w, /public.webp 1440w"
+                        sizes="100vw"
+                        alt="KitaSewa hero"
                         fetchpriority="high"
                         decoding="async"
                         width="1440"

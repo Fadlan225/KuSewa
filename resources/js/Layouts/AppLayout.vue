@@ -1,18 +1,20 @@
 <script setup>
-import { ref, provide } from 'vue';
+import { ref, provide, defineAsyncComponent } from 'vue';
 
 import Navbar from '@/Components/Navbar.vue';
 import Bottombar from '@/Components/Bottombar.vue';
 import Footer from '@/Components/Footer.vue';
 import GlobalLoading from "@/Components/GlobalLoading.vue";
-import FloatingChat from '@/Components/ui/FloatingChat.vue';
-import AuthModal from '@/Components/Auth/AuthModal.vue';
-import AuthFeedbackModal from '@/Components/Auth/AuthFeedbackModal.vue';
-import PermissionModal from '@/Components/ui/PermissionModal.vue';
-import NotificationToast from '@/Components/ui/NotificationToast.vue';
 import { useAuthModalStore } from '@/Stores/AuthModalStore';
 import { useAuthFeedbackStore } from '@/Stores/AuthFeedbackStore';
 import { storeToRefs } from 'pinia';
+
+// Komponen kondisional — lazy load agar tidak di-parse saat halaman pertama dimuat
+const FloatingChat      = defineAsyncComponent(() => import('@/Components/ui/FloatingChat.vue'));
+const AuthModal         = defineAsyncComponent(() => import('@/Components/Auth/AuthModal.vue'));
+const AuthFeedbackModal = defineAsyncComponent(() => import('@/Components/Auth/AuthFeedbackModal.vue'));
+const PermissionModal   = defineAsyncComponent(() => import('@/Components/ui/PermissionModal.vue'));
+const NotificationToast = defineAsyncComponent(() => import('@/Components/ui/NotificationToast.vue'));
 
 defineProps({
     transparentNavbar: {

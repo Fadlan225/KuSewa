@@ -1,6 +1,6 @@
 import '../css/app.css';
 import './bootstrap';
-import './echo';
+// echo.js di-lazy load hanya untuk user yang sudah login (lihat setup() di bawah)
 
 import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
@@ -65,17 +65,17 @@ createInertiaApp({
             .use(ZiggyVue)
             .mount(el);
 
+        // Lazy-init Echo + Pusher HANYA untuk user yang sudah login
+        // Menghemat ~80-120 KB JS parse untuk tamu (mayoritas traffic)
+        if (props.initialPage?.props?.auth?.user) {
+            import('./echo').catch(() => {});
+        }
+
         // Cabut static hero placeholder setelah Vue selesai mount + first paint
-        // Placeholder hanya diperlukan agar Lighthouse bisa ukur LCP dari HTML statis (~1-2s)
-        // bukan menunggu Vue render (~6-8s)
+        // Langsung remove tanpa fade — mencegah overlap DOM yang menyebabkan LCP bergeser
         requestAnimationFrame(() => {
             requestAnimationFrame(() => {
-                const placeholder = document.getElementById('static-hero-placeholder');
-                if (placeholder) {
-                    placeholder.style.transition = 'opacity 0.2s';
-                    placeholder.style.opacity = '0';
-                    setTimeout(() => placeholder.remove(), 200);
-                }
+                document.getElementById('static-hero-placeholder')?.remove();
             });
         });
 
