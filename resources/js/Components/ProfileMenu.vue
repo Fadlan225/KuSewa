@@ -125,7 +125,7 @@ const checkIsActive = (item) => {
 <template>
     <div class="space-y-6 w-full">
         <!-- Grup Menu 'Akun Saya' -->
-        <div class="bg-white p-6 shadow-md rounded-2xl space-y-2">
+        <div class="bg-white p-6 shadow-md rounded-lg space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Akun Saya</h3>
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 
@@ -135,7 +135,7 @@ const checkIsActive = (item) => {
                     v-if="item.routeDesktop && (item.show === undefined || item.show())"
                     :href="item.routeDesktop"
                     :class="[
-                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
                         checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
                     ]"
                 >
@@ -143,8 +143,9 @@ const checkIsActive = (item) => {
                     <div class="flex items-center space-x-4">
                         <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D]' : 'text-[#6C757D] group-hover:text-[#FFC000]']" />
                         <span :class="['text-sm sm:text-base font-semibold transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#0A2540]' : 'text-[#0A2540] group-hover:text-[#FFC000]']">{{ item.label }}</span>
-                        <!-- Red Dot for Profil Bisnis -->
-                        <div v-if="item.label === 'Profil Bisnis' && page.props.isProfileComplete === false" class="w-2 h-2 bg-red-500 rounded-full ml-1"></div>
+                        <!-- Red Dots -->
+                        <div v-if="item.label === 'Profil Saya' && page.props.auth.badges?.incomplete_profile" class="w-2 h-2 bg-red-500 rounded-full ml-1 shadow-sm"></div>
+                        <div v-if="item.label === 'Profil Bisnis' && page.props.isProfileComplete === false" class="w-2 h-2 bg-red-500 rounded-full ml-1 shadow-sm"></div>
                     </div>
                     <ChevronRight :class="['text-sm transition-all duration-200', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D] md:translate-x-1' : 'text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]']" />
                 </Link>
@@ -153,11 +154,14 @@ const checkIsActive = (item) => {
                 <Link
                     v-if="item.routeMobile && (item.show === undefined || item.show())"
                     :href="item.routeMobile"
-                    class="flex md:hidden items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative hover:bg-[#F8F9FA]"
+                    class="flex md:hidden items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative hover:bg-[#F8F9FA]"
                 >
                     <div class="flex items-center space-x-4">
                         <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors text-[#6C757D] group-hover:text-[#FFC000]']" />
                         <span class="text-sm sm:text-base font-semibold transition-colors text-[#0A2540] group-hover:text-[#FFC000]">{{ item.label }}</span>
+                        <!-- Red Dots -->
+                        <div v-if="item.label === 'Profil Saya' && page.props.auth.badges?.incomplete_profile" class="w-2 h-2 bg-red-500 rounded-full ml-1 shadow-sm"></div>
+                        <div v-if="item.label === 'Profil Bisnis' && page.props.isProfileComplete === false" class="w-2 h-2 bg-red-500 rounded-full ml-1 shadow-sm"></div>
                     </div>
                     <ChevronRight class="text-sm transition-all duration-200 text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]" />
                 </Link>
@@ -167,7 +171,7 @@ const checkIsActive = (item) => {
                     v-if="!item.routeDesktop && !item.routeMobile && (item.show === undefined || item.show())"
                     :href="item.route"
                     :class="[
-                        'flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        'flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
                         checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
                     ]"
                 >
@@ -184,7 +188,7 @@ const checkIsActive = (item) => {
             <Link
                 v-if="user"
                 :href="mitraRoute"
-                class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group relative overflow-hidden"
+                class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-md transition-colors duration-150 group relative overflow-hidden"
             >
                 <div class="flex items-center space-x-4">
                     <Briefcase class="text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors" />
@@ -197,7 +201,7 @@ const checkIsActive = (item) => {
         </div>
 
         <!-- Grup Menu 'Pusat Aktivitas' (Hanya tampil di Desktop karena isinya hanya rute desktop) -->
-        <div class="hidden md:block bg-white p-6 shadow-md rounded-2xl space-y-2">
+        <div class="hidden md:block bg-white p-6 shadow-md rounded-lg space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Pusat Aktivitas</h3>
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 
@@ -207,7 +211,7 @@ const checkIsActive = (item) => {
                     v-if="item.routeDesktop"
                     :href="item.routeDesktop"
                     :class="[
-                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
                         checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
                     ]"
                 >
@@ -222,7 +226,7 @@ const checkIsActive = (item) => {
         </div>
 
         <!-- Grup Menu 'Bantuan & Lainnya' -->
-        <div class="bg-white p-6 shadow-md rounded-2xl space-y-2">
+        <div class="bg-white p-6 shadow-md rounded-lg space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Bantuan & Lainnya</h3>
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 
@@ -230,7 +234,7 @@ const checkIsActive = (item) => {
                 <button
                     v-if="item.action === 'logout'"
                     @click="showLogoutModal = true"
-                    class="w-full flex items-center justify-between py-3 border-b border-gray-50 hover:bg-red-50 px-3 rounded-xl transition-colors duration-150 group"
+                    class="w-full flex items-center justify-between py-3 border-b border-gray-50 hover:bg-red-50 px-3 rounded-md transition-colors duration-150 group"
                 >
                     <div class="flex items-center space-x-4">
                         <AppIcon :iconClass="[item.icon, 'text-lg text-[#6C757D] group-hover:text-red-500 w-6 text-center transition-colors']" />
@@ -242,7 +246,7 @@ const checkIsActive = (item) => {
                     v-else
                     :href="item.route"
                     :class="[
-                        'w-full flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        'w-full flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
                         checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
                     ]"
                 >

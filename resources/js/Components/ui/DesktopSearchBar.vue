@@ -210,15 +210,15 @@ onUnmounted(() => {
                     </div>
 
                     <h3 class="text-[11px] font-bold text-[#6C757D] mb-3 uppercase tracking-wider">Disarankan</h3>
-                    <div class="space-y-2 max-h-[200px] overflow-y-auto pr-2">
+                    <div class="space-y-2 max-h-[200px] overflow-y-auto pr-2 pb-2 -mx-2 px-2">
                         <!-- Gunakan Lokasi Saat Ini -->
-                        <div @click="initUserLocation(true); desktopActiveMenu = 'jadwal'" class="flex gap-3 items-center cursor-pointer group hover:bg-blue-50 p-2 -mx-2 rounded-xl transition border border-transparent hover:border-blue-100">
-                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-blue-100 text-blue-600">
+                        <div @click="initUserLocation(true); desktopActiveMenu = 'jadwal'" class="flex gap-3 items-center cursor-pointer group hover:bg-[#FFC000]/10 p-2 -mx-2 rounded-xl transition border border-transparent hover:border-[#FFC000]/30">
+                            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[#FFC000]/20 text-[#FFC000]">
                                 <Locate class="text-sm" />
                             </div>
                             <div class="border-b border-[#6C757D]/10 pb-2 pt-1 w-full group-last:border-0">
-                                <h4 class="font-bold text-[13px] text-blue-700">Dekat lokasi Anda saat ini</h4>
-                                <p class="text-[11px] text-blue-600/70 mt-0.5 truncate">Gunakan GPS / Lokasi Anda</p>
+                                <h4 class="font-bold text-[13px] text-[#FFC000]">Dekat lokasi Anda saat ini</h4>
+                                <p class="text-[11px] text-[#FFC000]/80 mt-0.5 truncate">Gunakan GPS / Lokasi Anda</p>
                             </div>
                         </div>
 
@@ -245,7 +245,7 @@ onUnmounted(() => {
                     <div class="space-y-4 max-h-[250px] overflow-y-auto pr-2 overscroll-contain">
                         <div v-if="!assetSearchQuery" class="space-y-2">
                             <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
-                                <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.length === 0}">
+                                <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#FFC000] border-[#FFC000]': selectedAssets.length === 0}">
                                     <Check v-if="selectedAssets.length === 0" class="text-white text-[10px]" />
                                 </div>
                                 <span class="text-sm font-bold text-[#0A2540]">Semua</span>
@@ -256,7 +256,7 @@ onUnmounted(() => {
                             <h3 class="text-xs font-bold text-[#6C757D] mb-2">{{ cat.name }}</h3>
                             <div class="space-y-2">
                                 <label v-for="item in cat.items" :key="item" class="flex items-center gap-3 cursor-pointer group p-1">
-                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(item)}">
+                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#FFC000] border-[#FFC000]': selectedAssets.includes(item)}">
                                         <Check v-if="selectedAssets.includes(item)" class="text-white text-[10px]" />
                                     </div>
                                     <span class="text-sm font-medium text-[#0A2540]">{{ item }}</span>

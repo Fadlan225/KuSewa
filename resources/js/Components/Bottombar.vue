@@ -120,9 +120,12 @@ const openAuthModal = inject('openAuthModal', () => { console.log('AuthModal not
                 :class="isAuthActive ? 'text-[#FFC000]' : 'text-[#6A7282] hover:text-[#FFC000]'">
 
                 <template v-if="isLoggedIn">
-                    <img v-if="page.props.auth.user.avatar" :src="page.props.auth.user.avatar" alt="Profil" class="w-[22px] h-[22px] rounded-full object-cover relative z-10 border border-gray-200" />
-                    <div v-else class="w-[22px] h-[22px] rounded-full bg-[#f8f9fa] flex items-center justify-center overflow-hidden relative z-10 border border-gray-200">
-                        <UserAvatar :user="page.props.auth.user" />
+                    <div class="relative">
+                        <img v-if="page.props.auth.user.avatar" :src="page.props.auth.user.avatar" alt="Profil" class="w-[22px] h-[22px] rounded-full object-cover relative z-10 border border-gray-200" />
+                        <div v-else class="w-[22px] h-[22px] rounded-full flex items-center justify-center overflow-hidden relative z-10 border border-gray-200 bg-[#f8f9fa]">
+                            <UserAvatar :user="page.props.auth.user" />
+                        </div>
+                        <div v-if="page.props.auth.badges?.incomplete_profile" class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-white z-20 shadow-sm pointer-events-none"></div>
                     </div>
                 </template>
                 <User v-else class="text-xl relative z-10" />

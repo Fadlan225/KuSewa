@@ -39,7 +39,7 @@ const form = useForm({
                     <input
                         id="national_id"
                         type="text"
-                        class="block w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 text-[15px] text-gray-500 cursor-not-allowed"
+                        class="block w-full border border-gray-200 bg-gray-50 rounded-md px-4 py-3 text-[15px] text-gray-500 cursor-not-allowed"
                         :value="props.owner_profile?.national_id"
                         disabled
                         placeholder="Belum diatur"
@@ -51,14 +51,14 @@ const form = useForm({
                     <label for="address" class="block text-sm text-[#333333] mb-1.5">Alamat Domisili</label>
                     <textarea
                         id="address"
-                        class="block w-full border border-gray-200 bg-gray-50 rounded-xl px-4 py-3 text-[15px] text-gray-500 cursor-not-allowed min-h-[100px] resize-y"
+                        class="block w-full border border-gray-200 bg-gray-50 rounded-md px-4 py-3 text-[15px] text-gray-500 cursor-not-allowed min-h-[100px] resize-y"
                         :value="props.owner_profile?.address"
                         disabled
                         placeholder="Belum diatur"
                     ></textarea>
                 </div>
                 
-                <div class="mt-4 p-4 bg-blue-50 rounded-xl flex items-start gap-3">
+                <div class="mt-4 p-4 bg-blue-50 rounded-md flex items-start gap-3">
                     <i class="fa-solid fa-circle-info text-blue-500 mt-0.5"></i>
                     <p class="text-sm text-blue-800">
                         Informasi bisnis Anda bersifat permanen dan digunakan untuk keperluan verifikasi identitas. Jika Anda perlu mengubah data ini, silakan hubungi tim dukungan kami.

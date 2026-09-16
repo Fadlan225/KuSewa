@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\EmailChangeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -177,6 +178,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('/profile/bisnis', [ProfileController::class, 'bisnis'])->name('profile.bisnis');
     Route::get('/profile/security', [ProfileController::class, 'security'])->name('profile.security');
+    Route::get('/profile/security/password', [ProfileController::class, 'securityPassword'])->name('profile.security.password');
+    
+    // Email Change Routes
+    Route::post('/profile/email/send-old-otp', [EmailChangeController::class, 'sendOldOtp'])->name('profile.email.send-old-otp');
+    Route::post('/profile/email/verify-old', [EmailChangeController::class, 'verifyOldEmail'])->name('profile.email.verify-old');
+    Route::post('/profile/email/send-new-otp', [EmailChangeController::class, 'sendNewOtp'])->name('profile.email.send-new-otp');
+    Route::post('/profile/email/verify-new', [EmailChangeController::class, 'verifyNewEmail'])->name('profile.email.verify-new');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

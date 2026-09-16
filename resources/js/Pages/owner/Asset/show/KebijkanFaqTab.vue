@@ -132,12 +132,12 @@ const deletePolicy = (policyId) => {
                 <div>
                     <label class="text-xs font-bold text-slate-600 block mb-1">Pertanyaan <span class="text-rose-500">*</span></label>
                     <input v-model="newFaq.question" type="text" maxlength="300" placeholder="Contoh: Apakah ada biaya tambahan?"
-                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-0 transition" />
+                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-[#FFC000] focus:ring-0 transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-600 block mb-1">Jawaban <span class="text-rose-500">*</span></label>
                     <textarea v-model="newFaq.answer" rows="3" maxlength="2000" placeholder="Tulis jawaban yang jelas..."
-                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-0 transition resize-none"></textarea>
+                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-[#FFC000] focus:ring-0 transition resize-none focus:outline-none focus:ring-2 focus:ring-[#FFC000]"></textarea>
                 </div>
                 <div class="flex gap-2">
                     <button @click="submitFaq" :disabled="isSavingFaq || !newFaq.question.trim() || !newFaq.answer.trim()"
@@ -178,9 +178,9 @@ const deletePolicy = (policyId) => {
                     <!-- Edit Mode -->
                     <div v-else class="p-4 bg-indigo-50/30 space-y-3">
                         <input v-model="editingFaq.question" type="text" maxlength="300"
-                            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-0 transition" />
+                            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-[#FFC000] focus:ring-0 transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                         <textarea v-model="editingFaq.answer" rows="3" maxlength="2000"
-                            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-indigo-500 focus:ring-0 transition resize-none"></textarea>
+                            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-[#FFC000] focus:ring-0 transition resize-none focus:outline-none focus:ring-2 focus:ring-[#FFC000]"></textarea>
                         <div class="flex gap-2">
                             <button @click="submitEditFaq(faq.id)"
                                 class="flex-1 px-3 py-1.5 bg-[#FFC000] text-slate-900 text-xs font-bold rounded-lg transition">
@@ -227,12 +227,12 @@ const deletePolicy = (policyId) => {
                 <div>
                     <label class="text-xs font-bold text-slate-600 block mb-1">Judul Kebijakan <span class="text-rose-500">*</span></label>
                     <input v-model="newPolicy.title" type="text" maxlength="200" placeholder="Contoh: Tidak Merokok di Dalam Ruangan"
-                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-amber-500 focus:ring-0 transition" />
+                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-[#FFC000] focus:ring-0 transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                 </div>
                 <div>
                     <label class="text-xs font-bold text-slate-600 block mb-1">Deskripsi (Opsional)</label>
                     <textarea v-model="newPolicy.description" rows="2" maxlength="2000" placeholder="Penjelasan lebih detail tentang kebijakan ini..."
-                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-amber-500 focus:ring-0 transition resize-none"></textarea>
+                        class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-[#FFC000] focus:ring-0 transition resize-none focus:outline-none focus:ring-2 focus:ring-[#FFC000]"></textarea>
                 </div>
                 <div class="flex gap-2">
                     <button @click="submitPolicy" :disabled="isSavingPolicy || !newPolicy.title.trim()"
@@ -278,9 +278,9 @@ const deletePolicy = (policyId) => {
                     <!-- Edit Mode -->
                     <div v-else class="p-4 bg-amber-50/30 space-y-3">
                         <input v-model="editingPolicy.title" type="text" maxlength="200"
-                            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-amber-500 focus:ring-0 transition" />
+                            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-[#FFC000] focus:ring-0 transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                         <textarea v-model="editingPolicy.description" rows="2" maxlength="2000"
-                            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-amber-500 focus:ring-0 transition resize-none"></textarea>
+                            class="w-full text-sm border border-slate-300 rounded-lg px-3 py-2 focus:border-[#FFC000] focus:ring-0 transition resize-none focus:outline-none focus:ring-2 focus:ring-[#FFC000]"></textarea>
                         <div class="flex gap-2">
                             <button @click="submitEditPolicy(policy.id)"
                                 class="flex-1 px-3 py-1.5 bg-[#FFC000] text-slate-900 text-xs font-bold rounded-lg transition">

@@ -378,7 +378,7 @@ const handleGoogleLogin = () => {
                         <TextInput
                             id="email"
                             type="email"
-                            class="mt-1 p-2 block w-full bg-[#F8F9FA] border-[#6C757D]/20 focus:border-[#FFC000] focus:ring-[#FFC000] text-sm"
+                            class="mt-1 p-2 block w-full bg-[#F8F9FA] border-[#6C757D]/20 focus:border-[#FFC000] focus:ring-[#FFC000] text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                             v-model="form.email"
                             required
                             placeholder="example@gmail.com"
@@ -536,7 +536,7 @@ const handleGoogleLogin = () => {
                         v-model="form.otp"
                         type="text"
                         maxlength="6"
-                        class="text-center text-3xl font-extrabold tracking-[0.5em] w-48 bg-[#F8F9FA] p-2 border-[#6C757D]/30 focus:border-[#FFC000] focus:ring-[#FFC000]"
+                        class="text-center text-3xl font-extrabold tracking-[0.5em] w-48 bg-[#F8F9FA] p-2 border-[#6C757D]/30 focus:border-[#FFC000] focus:ring-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                         placeholder="••••••"
                         @input="form.otp.length === 6 && verifyOtp()"
                         :disabled="loading"

@@ -211,7 +211,7 @@ import BottomSheet from '@/Components/ui/BottomSheet.vue';
                                         <div v-if="!assetSearchQuery">
                                             <div class="space-y-2">
                                                 <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
-                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.length === 0}">
+                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#FFC000] border-[#FFC000]': selectedAssets.length === 0}">
                                                         <Check v-if="selectedAssets.length === 0" class="text-white text-[10px]" />
                                                     </div>
                                                     <span class="text-sm font-bold text-[#0A2540]">Semua</span>
@@ -228,7 +228,7 @@ import BottomSheet from '@/Components/ui/BottomSheet.vue';
                                             </h3>
                                             <div class="space-y-2">
                                                 <label v-for="item in cat.items" :key="item" class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
-                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(item)}">
+                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#FFC000] border-[#FFC000]': selectedAssets.includes(item)}">
                                                         <Check v-if="selectedAssets.includes(item)" class="text-white text-[10px]" />
                                                     </div>
                                                     <span class="text-sm font-medium text-[#0A2540]">{{ item }}</span>
@@ -443,7 +443,7 @@ import BottomSheet from '@/Components/ui/BottomSheet.vue';
                                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                             <Search class="text-gray-400 text-xs" />
                                         </div>
-                                        <input type="text" v-model="facilitySearchMobile" placeholder="Cari fasilitas..." class="w-full text-sm border-gray-200 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl pl-9 py-2.5 bg-slate-50 transition" />
+                                        <input type="text" v-model="facilitySearchMobile" placeholder="Cari fasilitas..." class="w-full text-sm border-gray-200 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl pl-9 py-2.5 bg-slate-50 transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                                     </div>
 
                                     <!-- Grouped Facilities (Accordion) -->

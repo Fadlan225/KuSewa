@@ -283,7 +283,7 @@ onMounted(() => {
                     required
                     placeholder="Deskripsikan keunggulan spesifik unit ini (misal: Pemandangan kota, dekat tangga)..."
                     class="w-full text-sm px-4 py-2.5 rounded-md border focus:outline-none focus:ring-2 transition resize-none"
-                    :class="(unit.description || '').length > 0 && (unit.description || '').length < 100 ? 'border-rose-300 focus:ring-rose-500 focus:border-transparent' : 'border-slate-300 focus:ring-[#FFC000] focus:border-transparent'"
+                    :class="(unit.description || '').length > 0 && (unit.description || '').length < 100 ? 'border-rose-300 focus:ring-rose-500 focus:border-transparent' : 'border-slate-300 focus:ring-[#FFC000] focus:border-transparent' focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                 ></textarea>
                 <div class="mt-1.5 flex justify-between items-center text-[11px]">
                     <span :class="(unit.description || '').length > 0 && (unit.description || '').length < 100 ? 'text-rose-500' : 'text-slate-500'">

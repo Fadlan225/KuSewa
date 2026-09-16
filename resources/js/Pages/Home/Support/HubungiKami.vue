@@ -145,7 +145,7 @@ const submitMasalah = () => {
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <User class="text-gray-400" />
                                             </div>
-                                            <input type="text" v-model="formAdmin.nama" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] text-sm" placeholder="Masukkan nama Anda">
+                                            <input type="text" v-model="formAdmin.nama" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000] text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Masukkan nama Anda">
                                         </div>
                                     </div>
                                     <div>
@@ -154,7 +154,7 @@ const submitMasalah = () => {
                                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                                 <Mail class="text-gray-400" />
                                             </div>
-                                            <input type="email" v-model="formAdmin.email" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] text-sm" placeholder="nama@email.com">
+                                            <input type="email" v-model="formAdmin.email" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000] text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="nama@email.com">
                                         </div>
                                     </div>
                                 </div>
@@ -165,13 +165,13 @@ const submitMasalah = () => {
                                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                             <MessageSquareMore class="text-gray-400" />
                                         </div>
-                                        <input type="text" v-model="formAdmin.subjek" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] text-sm" placeholder="Topik pesan Anda">
+                                        <input type="text" v-model="formAdmin.subjek" required class="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000] text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Topik pesan Anda">
                                     </div>
                                 </div>
                                 
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-1">Pesan <span class="text-red-500">*</span></label>
-                                    <textarea v-model="formAdmin.pesan" required rows="5" class="block w-full p-3 border border-gray-300 rounded-lg focus:ring-[var(--color-primary)] focus:border-[var(--color-primary)] text-sm" placeholder="Tuliskan pesan Anda secara detail..."></textarea>
+                                    <textarea v-model="formAdmin.pesan" required rows="5" class="block w-full p-3 border border-gray-300 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000] text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Tuliskan pesan Anda secara detail..."></textarea>
                                 </div>
                                 
                                 <button type="submit" class="w-full bg-[#0A2540] hover:bg-blue-900 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">

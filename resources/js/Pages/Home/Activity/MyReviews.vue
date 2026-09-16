@@ -61,7 +61,7 @@ const getImageUrl = (imgObj) => {
                 </div>
 
             <!-- Empty State -->
-            <div v-if="!reviews.data || reviews.data.length === 0" class="bg-white rounded-[1.5rem] border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
+            <div v-if="!reviews.data || reviews.data.length === 0" class="bg-white rounded-md border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
                 <EmptyReviewsIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
                 <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada ulasan</h2>
                 <p class="text-sm text-[#6C757D] mb-6">Anda belum pernah memberikan ulasan untuk penyewaan apa pun.</p>
@@ -75,14 +75,14 @@ const getImageUrl = (imgObj) => {
                 <div
                     v-for="review in reviews.data"
                     :key="review.id"
-                    class="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-4 sm:p-5 hover:shadow-md transition-shadow"
+                    class="bg-white rounded-md shadow-sm border border-slate-100 p-4 sm:p-5 hover:shadow-md transition-shadow"
                 >
                     <!-- Asset Info -->
                     <div
                         class="flex items-center gap-4 mb-4 pb-4 border-b border-slate-100 cursor-pointer group"
                         @click="router.get(route('assets.show', review.booking?.asset?.slug || review.booking?.asset?.id))"
                     >
-                        <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden shrink-0 bg-slate-100">
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-md overflow-hidden shrink-0 bg-slate-100">
                             <img :src="getImageUrl(review.booking?.asset?.first_image || review.booking?.asset?.firstImage)" class="w-full h-full object-cover group-hover:scale-105 transition-transform" />
                         </div>
                         <div class="min-w-0">

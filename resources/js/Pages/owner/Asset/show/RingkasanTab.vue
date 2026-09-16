@@ -82,7 +82,7 @@ const handleNumberInput = (e, key) => {
                             :type="isTimeField(key) ? 'time' : (isNumberField(key) ? 'number' : 'text')" 
                             :min="isNumberField(key) ? '0' : null"
                             @keydown="handleNumberInput($event, key)"
-                            class="text-sm font-semibold text-slate-800 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-1.5 w-full text-right bg-white transition shadow-sm" 
+                            class="text-sm font-semibold text-slate-800 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-1.5 w-full text-right bg-white transition shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]" 
                             :class="{ 'pr-9': getSuffix(key) }"
                         />
                         <span v-if="getSuffix(key)" class="absolute right-3 text-slate-400 text-xs font-bold pointer-events-none">{{ getSuffix(key) }}</span>
@@ -105,7 +105,7 @@ const handleNumberInput = (e, key) => {
                     ref="descTextarea"
                     v-model="form.description" 
                     @input="resizeTextarea"
-                    class="text-sm text-slate-700 w-full bg-slate-50 hover:bg-white border border-slate-200 group-hover:border-slate-300 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-500/10 rounded-xl p-4 resize-none overflow-hidden leading-relaxed placeholder-slate-400 transition-all duration-300 block shadow-sm" 
+                    class="text-sm text-slate-700 w-full bg-slate-50 hover:bg-white border border-slate-200 group-hover:border-slate-300 focus:border-[#FFC000] focus:bg-white focus:ring-4 focus:ring-[#FFC000]/10 rounded-xl p-4 resize-none overflow-hidden leading-relaxed placeholder-slate-400 transition-all duration-300 block shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]" 
                     placeholder="Tuliskan deskripsi menarik tentang properti Anda..."></textarea>
                 
                 <!-- Fade out effect when collapsed -->

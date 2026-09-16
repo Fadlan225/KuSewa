@@ -49,7 +49,7 @@ const form = useForm({
                     <input
                         id="account_number"
                         type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
+                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                         v-model="form.account_number"
                         placeholder="Contoh: 1234567890"
                     />
@@ -62,7 +62,7 @@ const form = useForm({
                     <input
                         id="account_holder"
                         type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
+                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                         v-model="form.account_holder"
                         placeholder="Sesuai buku tabungan"
                     />

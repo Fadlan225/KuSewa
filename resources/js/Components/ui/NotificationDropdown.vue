@@ -1,10 +1,15 @@
     <script setup>
-import { onMounted, ref } from 'vue';
+import { onMounted, ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Bell, Check, CheckCheck, Loader2, ChevronRight } from 'lucide-vue-next';
 import { useNotifications } from '@/Composables/useNotifications';
+import * as LucideIcons from 'lucide-vue-next';
 
 const { notifications, unreadCount, isLoading, isDropdownOpen, fetchNotifications, markAsRead, markAllAsRead } = useNotifications();
+
+const hasRealUnread = computed(() => {
+    return notifications.value.some(n => !n.read_at && n.id !== 'virtual-profile-completion');
+});
 
 const emit = defineEmits(['close']);
 
@@ -48,7 +53,7 @@ const formatTime = (dateString) => {
                 </span>
             </div>
             <button
-                v-if="unreadCount > 0"
+                v-if="hasRealUnread"
                 @click="markAllAsRead"
                 class="flex items-center gap-1 text-[11px] text-[#466080] hover:text-[#0A2540] font-semibold transition-colors"
                 title="Tandai semua sudah dibaca"
@@ -73,22 +78,24 @@ const formatTime = (dateString) => {
             </div>
 
             <!-- List -->
-            <template v-else>
-                <component
-                    :is="n.data?.action_url ? Link : 'div'"
-                    v-for="n in notifications.slice(0, 8)"
-                    :key="n.id"
-                    :href="n.data?.action_url || undefined"
-                    @click="handleNotificationClick(n)"
-                    class="flex gap-3 px-4 py-3.5 cursor-pointer transition-colors hover:bg-gray-50 border-b border-gray-50 last:border-0"
-                    :class="!n.read_at ? 'bg-blue-50/40 hover:bg-blue-50/60' : ''"
-                >
-                    <!-- Logo / Ikon -->
-                    <div class="flex-shrink-0 mt-0.5">
-                        <div class="w-9 h-9 rounded-full bg-[#FFC000]/10 flex items-center justify-center">
-                            <img src="/kitasewa-logo.png" alt="KitaSewa" class="w-6 h-6 object-contain" />
+            <div class="px-2 py-2 flex flex-col gap-2">
+                <template v-if="!isLoading && notifications.length > 0">
+                    <component
+                        :is="n.data?.action_url ? Link : 'div'"
+                        v-for="n in notifications.slice(0, 8)"
+                        :key="n.id"
+                        :href="n.data?.action_url || undefined"
+                        @click="handleNotificationClick(n)"
+                        class="flex items-center gap-3 p-3.5 cursor-pointer transition-all border border-gray-200 rounded-md shadow-sm hover:border-gray-300 hover:shadow-md"
+                        :class="!n.read_at ? 'bg-white' : 'bg-gray-50/50'"
+                    >
+                        <!-- Logo / Ikon -->
+                        <div class="flex-shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center border border-gray-100">
+                                <component v-if="n.data?.icon" :is="LucideIcons[n.data.icon]" class="w-5 h-5 text-[#0A2540]" />
+                                <img v-else src="/kitasewa-logo.png" alt="KitaSewa" class="w-6 h-6 object-contain" />
+                            </div>
                         </div>
-                    </div>
 
                     <!-- Konten -->
                     <div class="flex-1 min-w-0">
@@ -104,12 +111,12 @@ const formatTime = (dateString) => {
                     </div>
 
                     <!-- Indikator belum dibaca -->
-                    <div class="flex-shrink-0 flex items-start pt-1.5">
-                        <div v-if="!n.read_at" class="w-2 h-2 rounded-full bg-[#FFC000]"></div>
-                        <div v-else class="w-2 h-2"></div>
+                    <div class="flex-shrink-0 flex items-center">
+                        <div v-if="!n.read_at" class="w-2 h-2 rounded-full bg-red-500"></div>
                     </div>
                 </component>
-            </template>
+                </template>
+            </div>
         </div>
 
         <!-- Footer: Lihat Semua -->

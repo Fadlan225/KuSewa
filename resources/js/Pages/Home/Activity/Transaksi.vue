@@ -434,7 +434,7 @@ const processCancellation = () => {
           <div class="relative">
               <button
                   @click="isSortOpenMobile = !isSortOpenMobile"
-                  class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
+                  class="flex items-center gap-2 rounded-md bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
               >
                   <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
                   {{ sort }}
@@ -449,7 +449,7 @@ const processCancellation = () => {
                   leave-from-class="transform opacity-100 scale-100"
                   leave-to-class="transform opacity-0 scale-95"
               >
-                  <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+                  <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
                       <div class="py-1">
                           <button
                               v-for="option in sortOptions"
@@ -474,7 +474,7 @@ const processCancellation = () => {
               v-for="tab in filterTabs"
               :key="tab.name"
               @click="activeFilter = tab.name"
-              class="px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 flex items-center gap-1.5"
+              class="px-3.5 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 flex items-center gap-1.5"
               :class="activeFilter === tab.name
                   ? 'bg-[#FFC000] text-[#0A2540] shadow-xs font-semibold'
                   : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'"
@@ -493,7 +493,7 @@ const processCancellation = () => {
       <div class="grid grid-cols-12 gap-5 lg:gap-8">
           <!-- SIDEBAR FILTER (Desktop Only) -->
           <aside v-if="!isComponent" class="hidden lg:block lg:col-span-3">
-              <div class="bg-white backdrop-blur-xl rounded-[1.5rem] border border-slate-100 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-24 space-y-6">
+              <div class="bg-white backdrop-blur-xl rounded-md border border-slate-100 p-5 shadow-[0_4px_20px_rgba(0,0,0,0.02)] sticky top-24 space-y-6">
                   <!-- Kategori Filter -->
                   <div>
                       <h3 class="font-medium text-xs text-slate-400 uppercase tracking-wider px-1 mb-2">Status Pesanan</h3>
@@ -502,7 +502,7 @@ const processCancellation = () => {
                               v-for="tab in filterTabs"
                               :key="tab.name"
                               @click="activeFilter = tab.name"
-                              class="w-full rounded-xl px-3 py-2 text-left text-xs font-medium transition-all duration-200 flex items-center justify-between group"
+                              class="w-full rounded-md px-3 py-2 text-left text-xs font-medium transition-all duration-200 flex items-center justify-between group"
                               :class="activeFilter === tab.name
                                   ? 'bg-[#FFC000] text-[#0A2540] shadow-sm'
                                   : 'text-slate-600 hover:bg-slate-100/80'"
@@ -527,7 +527,7 @@ const processCancellation = () => {
                       <div class="relative">
                           <button
                               @click="isSortOpenDesktop = !isSortOpenDesktop"
-                              class="w-full flex items-center justify-between rounded-xl bg-slate-100/80 hover:bg-slate-200/60 border-0 px-3 py-2 text-xs font-medium text-[#1D1D1F] transition-colors"
+                              class="w-full flex items-center justify-between rounded-md bg-slate-100/80 hover:bg-slate-200/60 border-0 px-3 py-2 text-xs font-medium text-[#1D1D1F] transition-colors"
                           >
                               <div class="flex items-center gap-2">
                                   <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 w-3 text-center"></i>
@@ -545,7 +545,7 @@ const processCancellation = () => {
                               leave-from-class="transform opacity-100 scale-100"
                               leave-to-class="transform opacity-0 scale-95"
                           >
-                              <div v-if="isSortOpenDesktop" class="absolute z-50 left-0 right-0 mt-2 w-full origin-top-left rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+                              <div v-if="isSortOpenDesktop" class="absolute z-50 left-0 right-0 mt-2 w-full origin-top-left rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
                                   <div class="py-1">
                                       <button
                                           v-for="option in sortOptions"
@@ -582,7 +582,7 @@ const processCancellation = () => {
                       <div class="block lg:hidden relative ml-auto">
                         <button
                             @click="isSortOpenMobile = !isSortOpenMobile"
-                            class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
+                            class="flex items-center gap-2 rounded-md bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
                         >
                             <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
                             {{ sort }}
@@ -597,7 +597,7 @@ const processCancellation = () => {
                             leave-from-class="transform opacity-100 scale-100"
                             leave-to-class="transform opacity-0 scale-95"
                         >
-                            <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden border border-slate-100">
+                            <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden border border-slate-100">
                                 <div class="py-1">
                                     <button
                                         v-for="option in sortOptions"
@@ -616,7 +616,7 @@ const processCancellation = () => {
                   </div>
               </div>
 
-              <div v-if="groupedActivities.length === 0" class="bg-white rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 py-12 sm:py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
+              <div v-if="groupedActivities.length === 0" class="bg-white rounded-md sm:rounded-md border border-slate-200/60 py-12 sm:py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
                 <EmptyStateIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
                 <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada pesanan? Yuk, mulai cari!</h2>
                 <p class="text-sm text-[#6C757D] mb-6">Temukan aset yang sesuai kebutuhanmu dan pesan dengan mudah di KitaSewa.</p>
@@ -640,7 +640,7 @@ const processCancellation = () => {
                       v-for="item in group.items"
                       :key="item.id"
                       @click="router.get(`/booking/${item.id}`)"
-                      class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col overflow-hidden group p-2.5 md:p-3 gap-2 select-none cursor-pointer [-webkit-touch-callout:none]"
+                      class="bg-white rounded-md shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col overflow-hidden group p-2.5 md:p-3 gap-2 select-none cursor-pointer [-webkit-touch-callout:none]"
                     >
                       <!-- Bagian Atas: Info Aset -->
                       <div class="flex items-center gap-3 md:gap-4 w-full">
@@ -709,7 +709,7 @@ const processCancellation = () => {
 
       <!-- POP-UP PEMBATALAN -->
       <div v-if="isCancelModalOpen" class="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-0 sm:p-4">
-        <div class="bg-white w-full sm:w-[450px] max-h-[90vh] overflow-y-auto rounded-t-3xl sm:rounded-2xl shadow-xl transform transition-transform animate-slide-up sm:animate-fade-in">
+        <div class="bg-white w-full sm:w-[450px] max-h-[90vh] overflow-y-auto rounded-t-md sm:rounded-md shadow-xl transform transition-transform animate-slide-up sm:animate-fade-in">
           <div class="p-5 md:p-6 border-b border-gray-100 flex items-center gap-3">
             <div class="w-10 h-10 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-xl shrink-0">
               <AlertTriangle class="" />
@@ -720,7 +720,7 @@ const processCancellation = () => {
           <div class="p-5 md:p-6 text-sm">
             <p class="text-gray-600 mb-4">Anda akan membatalkan penyewaan berikut:</p>
 
-            <div class="bg-gray-50 border border-gray-200 rounded-xl p-3 flex items-center gap-3 mb-6">
+            <div class="bg-gray-50 border border-gray-200 rounded-md p-3 flex items-center gap-3 mb-6">
               <template v-if="selectedAssetToCancel?.images && selectedAssetToCancel?.images.length > 0">
                 <img :src="selectedAssetToCancel?.images[0]" class="w-14 h-14 rounded-lg object-cover border border-gray-200" alt="Asset" onerror="this.src='https://placehold.co/100x100?text=No+Image'" />
               </template>
@@ -746,7 +746,7 @@ const processCancellation = () => {
             <div class="mb-2">
               <label class="block font-bold text-gray-800 mb-2">Alasan Pembatalan <span class="text-red-500">*</span></label>
               <div class="relative">
-                <select v-model="cancelReason" class="w-full appearance-none bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-xl leading-tight focus:outline-none focus:border-[#FFC000] focus:ring-2 focus:ring-[#FFC000]/20 transition-all">
+                <select v-model="cancelReason" class="w-full appearance-none bg-white border border-gray-300 text-gray-700 py-3 px-4 pr-8 rounded-md leading-tight focus:outline-none focus:border-[#FFC000] focus:ring-2 focus:ring-[#FFC000]/20 transition-all">
                   <option value="" disabled selected>Pilih alasan...</option>
                   <option value="salah_tanggal">Salah pilih tanggal/jadwal</option>
                   <option value="nemu_lain">Menemukan opsi penyewaan lain</option>
@@ -762,17 +762,17 @@ const processCancellation = () => {
               <!-- Input text for 'Lainnya' -->
               <transition name="fade">
                 <div v-if="cancelReason === 'lainnya'" class="mt-3">
-                  <input type="text" v-model="cancelReasonOther" placeholder="Tuliskan alasan spesifik..." class="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-xl focus:outline-none focus:border-[#FFC000] focus:ring-2 focus:ring-[#FFC000]/20 transition-all text-sm" />
+                  <input type="text" v-model="cancelReasonOther" placeholder="Tuliskan alasan spesifik..." class="w-full bg-white border border-gray-300 text-gray-700 py-3 px-4 rounded-md focus:outline-none focus:border-[#FFC000] focus:ring-2 focus:ring-[#FFC000]/20 transition-all text-sm" />
                 </div>
               </transition>
             </div>
           </div>
 
           <div class="p-5 md:p-6 border-t border-gray-100 flex gap-3 flex-col-reverse sm:flex-row">
-            <button @click="closeCancelModal" :disabled="isCancelling" class="flex-1 py-3 px-4 bg-white border border-gray-300 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed">
+            <button @click="closeCancelModal" :disabled="isCancelling" class="flex-1 py-3 px-4 bg-white border border-gray-300 text-gray-700 font-bold rounded-md hover:bg-gray-50 transition-colors text-center disabled:opacity-50 disabled:cursor-not-allowed">
               Kembali
             </button>
-            <button @click="processCancellation" :disabled="!cancelReason || (cancelReason === 'lainnya' && !cancelReasonOther.trim()) || isCancelling" :class="['flex-1 py-3 px-4 font-bold rounded-xl transition-colors text-center shadow-sm flex items-center justify-center gap-2', (cancelReason && (cancelReason !== 'lainnya' || cancelReasonOther.trim())) && !isCancelling ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-200 text-white cursor-not-allowed']">
+            <button @click="processCancellation" :disabled="!cancelReason || (cancelReason === 'lainnya' && !cancelReasonOther.trim()) || isCancelling" :class="['flex-1 py-3 px-4 font-bold rounded-md transition-colors text-center shadow-sm flex items-center justify-center gap-2', (cancelReason && (cancelReason !== 'lainnya' || cancelReasonOther.trim())) && !isCancelling ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-red-200 text-white cursor-not-allowed']">
               <Loader2 v-if="isCancelling" class="animate-spin" />
               {{ isCancelling ? 'Membatalkan...' : 'Batalkan Penyewaan' }}
             </button>

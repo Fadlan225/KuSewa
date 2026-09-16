@@ -251,7 +251,7 @@ const executeDelete = () => {
               v-for="tab in filterTabs"
               :key="tab.name"
               @click="activeFilter = tab.name"
-              class="px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 flex items-center gap-1.5"
+              class="px-3.5 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 flex items-center gap-1.5"
               :class="activeFilter === tab.name
                   ? 'bg-[#FFC000] text-[#0A2540] shadow-xs font-semibold'
                   : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'"
@@ -286,7 +286,7 @@ const executeDelete = () => {
               <template v-if="views.length > 0">
                   <button
                       @click="toggleSelectionMode"
-                      class="text-xs font-semibold px-4 py-2 rounded-xl transition-colors border w-full sm:w-auto"
+                      class="text-xs font-semibold px-4 py-2 rounded-md transition-colors border w-full sm:w-auto"
                       :class="isSelectionMode ? 'bg-[#FFC000] text-[#0A2540] border-[#FFC000]' : 'bg-white border-slate-200 hover:bg-slate-50 text-slate-700'"
                   >
                       {{ isSelectionMode ? 'Batal Pilih' : 'Pilih Aset' }}
@@ -304,10 +304,10 @@ const executeDelete = () => {
           leave-from-class="opacity-100 translate-y-0"
           leave-to-class="opacity-0 translate-y-4"
       >
-          <div v-if="isSelectionMode" class="bg-white rounded-xl shadow-lg border border-slate-200 p-3 sm:px-5 sm:py-3 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 sticky top-24 z-40">
+          <div v-if="isSelectionMode" class="bg-white rounded-md shadow-lg border border-slate-200 p-3 sm:px-5 sm:py-3 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 sticky top-24 z-40">
               <div class="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
                   <label class="flex items-center gap-2 cursor-pointer pl-1">
-                      <input type="checkbox" v-model="isSelectAll" class="w-4 h-4 rounded text-[#FFC000] border-slate-300 focus:ring-[#FFC000]">
+                      <input type="checkbox" v-model="isSelectAll" class="w-4 h-4 rounded text-[#FFC000] border-slate-300 focus:ring-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]">
                       <span class="text-sm font-semibold text-slate-700">Pilih Semua</span>
                   </label>
                   <span class="text-xs text-slate-400 font-medium">({{ selectedIds.length }} dipilih)</span>
@@ -333,7 +333,7 @@ const executeDelete = () => {
       </transition>
 
       <!-- Empty State -->
-      <div v-if="views.length === 0" class="bg-white rounded-[1.5rem] border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
+      <div v-if="views.length === 0" class="bg-white rounded-md border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
         <EmptyStateIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
         <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada aset yang dilihat</h2>
         <p class="text-sm text-[#6C757D] mb-6">Yuk, jelajahi berbagai aset di KitaSewa. Siapa tahu ada yang cocok untuk kebutuhanmu.</p>
@@ -347,12 +347,12 @@ const executeDelete = () => {
         <div
           v-for="item in filteredViews"
           :key="item.id"
-          class="bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-row group p-3 items-center gap-4 select-none relative"
+          class="bg-white rounded-md shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-row group p-3 items-center gap-4 select-none relative"
           :class="{ 'border-[#FFC000] ring-1 ring-[#FFC000]/30 bg-amber-50/10': selectedIds.includes(item.id) }"
         >
           <!-- Selection Checkbox -->
           <div v-if="isSelectionMode" class="pl-2">
-              <input type="checkbox" :value="item.id" v-model="selectedIds" class="w-4 h-4 rounded text-[#FFC000] border-slate-300 focus:ring-[#FFC000]">
+              <input type="checkbox" :value="item.id" v-model="selectedIds" class="w-4 h-4 rounded text-[#FFC000] border-slate-300 focus:ring-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]">
           </div>
 
           <!-- Gambar -->
@@ -395,7 +395,7 @@ const executeDelete = () => {
                 leave-from-class="transform scale-100 opacity-100"
                 leave-to-class="transform scale-95 opacity-0"
             >
-                <div v-if="activeMenuId === item.id" class="absolute right-0 top-10 mt-1 w-32 bg-white rounded-xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 py-1.5 z-[100]" @click.stop>
+                <div v-if="activeMenuId === item.id" class="absolute right-0 top-10 mt-1 w-32 bg-white rounded-md shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] border border-slate-100 py-1.5 z-[100]" @click.stop>
                     <button
                         @click="confirmDeleteSingle(item.id); activeMenuId = null"
                         type="button"
@@ -417,7 +417,7 @@ const executeDelete = () => {
 
       <!-- POP-UP HAPUS RIWAYAT -->
       <div v-if="isDeleteModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-4">
-        <div class="bg-white w-full sm:w-[400px] max-h-[90vh] overflow-y-auto rounded-2xl shadow-xl transform transition-transform animate-fade-in">
+        <div class="bg-white w-full sm:w-[400px] max-h-[90vh] overflow-y-auto rounded-md shadow-xl transform transition-transform animate-fade-in">
           <div class="p-5 md:p-6 text-center">
             <div class="w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-2xl mx-auto mb-4">
               <Trash2 class="" />
@@ -430,10 +430,10 @@ const executeDelete = () => {
             </p>
 
             <div class="flex gap-3 w-full">
-                <button @click="closeDeleteModal" class="flex-1 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors">
+                <button @click="closeDeleteModal" class="flex-1 py-2.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-md hover:bg-gray-50 transition-colors">
                   Batal
                 </button>
-                <button @click="executeDelete" class="flex-1 py-2.5 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-colors shadow-sm">
+                <button @click="executeDelete" class="flex-1 py-2.5 bg-red-500 text-white font-bold rounded-md hover:bg-red-600 transition-colors shadow-sm">
                   Ya, Hapus
                 </button>
             </div>

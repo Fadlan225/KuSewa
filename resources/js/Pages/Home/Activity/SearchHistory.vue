@@ -88,7 +88,7 @@ const timeAgo = (dateString) => {
             <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 text-[#1D1D1F] min-h-[70vh]">
 
             <!-- Empty State -->
-            <div v-if="!searchLogs.data || searchLogs.data.length === 0" class="bg-white rounded-[1.5rem] border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
+            <div v-if="!searchLogs.data || searchLogs.data.length === 0" class="bg-white rounded-md border border-slate-200/60 py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center mt-6">
                 <EmptyStateIcon class="w-48 h-48 object-contain mb-6 opacity-80" />
                 <h2 class="text-xl font-bold text-[#0A2540] mb-2">Belum ada riwayat pencarian</h2>
                 <p class="text-sm text-[#6C757D] mb-6">Cari aset yang kamu butuhkan dan temukan berbagai pilihan menarik di KitaSewa.</p>
@@ -98,7 +98,7 @@ const timeAgo = (dateString) => {
             </div>
 
             <!-- List -->
-            <div v-else class="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 overflow-hidden">
+            <div v-else class="bg-white rounded-md shadow-sm border border-slate-100 overflow-hidden">
                 <ul class="divide-y divide-slate-100">
                     <li
                         v-for="log in searchLogs.data"

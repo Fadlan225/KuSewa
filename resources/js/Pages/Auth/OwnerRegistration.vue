@@ -325,8 +325,8 @@ const getProgressWidth = (mStep) => {
                             </div>
 
                             <div>
-                                <label class="block text-xs font-bold text-[#0A2540] mb-2">Nomor HP / WhatsApp <span class="text-red-500">*</span></label>
-                                <input type="text" v-model="formStep1.phone" placeholder="0812xxxxxxxx" class="w-full h-[44px] border border-slate-200 rounded-xl px-4 text-xs text-[#0A2540] placeholder-slate-400 focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-colors outline-none bg-white font-semibold" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep1.errors.phone }" />
+                                <label class="block text-xs font-bold text-[#0A2540] mb-2">Nomor HP <span class="text-red-500">*</span></label>
+                                <input type="text" v-model="formStep1.phone" placeholder="081234567890" class="w-full h-[44px] border border-slate-200 rounded-xl px-4 text-xs text-[#0A2540] placeholder-slate-400 focus:border-[#FFC000] focus:ring-1 focus:ring-[#FFC000] transition-colors outline-none bg-white font-semibold" :class="{ 'border-red-500 focus:border-red-500 focus:ring-red-500': formStep1.errors.phone }" />
                                 <p v-if="formStep1.errors.phone" class="text-red-500 text-xxs mt-1 font-medium">{{ formStep1.errors.phone }}</p>
                             </div>
 

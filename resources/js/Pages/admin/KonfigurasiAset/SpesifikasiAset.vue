@@ -979,7 +979,7 @@ function saveFields() {
                         </div>
 
                         <label class="flex items-center gap-3 cursor-pointer py-1">
-                            <input type="checkbox" v-model="draftFields[activeEditIndex].required" class="w-4 h-4 rounded border-slate-300 text-[#0A2540] focus:ring-[#0A2540] cursor-pointer">
+                            <input type="checkbox" v-model="draftFields[activeEditIndex].required" class="w-4 h-4 rounded border-slate-300 text-[#FFC000] focus:ring-[#FFC000] cursor-pointer">
                             <span class="text-sm font-medium text-slate-700">Wajib Diisi</span>
                         </label>
 

@@ -60,6 +60,9 @@ class ProfileController extends Controller
                 'date_of_birth' => $user->date_of_birth,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'gender' => $user->gender,
+                'marital_status' => $user->marital_status,
+                'occupation' => $user->occupation,
+                'nationality' => $user->nationality,
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
@@ -118,6 +121,9 @@ class ProfileController extends Controller
                 'date_of_birth' => $user->date_of_birth,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'gender' => $user->gender,
+                'marital_status' => $user->marital_status,
+                'occupation' => $user->occupation,
+                'nationality' => $user->nationality,
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
@@ -137,6 +143,14 @@ class ProfileController extends Controller
             'total_assets_rented' => $totalAssetsRented,
             'banks' => bank::orderBy('name')->get(['code', 'name']),
         ]);
+    }
+
+    /**
+     * Display the user's password change form (Mobile only).
+     */
+    public function securityPassword(Request $request): Response
+    {
+        return Inertia::render('Profile/SecurityPassword');
     }
 
     /**
@@ -251,6 +265,9 @@ class ProfileController extends Controller
                 'date_of_birth' => $user->date_of_birth,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'gender' => $user->gender,
+                'marital_status' => $user->marital_status,
+                'occupation' => $user->occupation,
+                'nationality' => $user->nationality,
                 'avatar' => $avatarUrl,
                 'profile_photo' => $avatarUrl,
                 'is_owner' => $isOwner || $user->role === 'admin',
@@ -340,11 +357,13 @@ class ProfileController extends Controller
 
         $user->fill([
             'name' => $validated['name'],
-            'email' => $validated['email'],
             'phone' => array_key_exists('phone', $validated) ? $validated['phone'] : $user->phone,
             'date_of_birth' => array_key_exists('date_of_birth', $validated) ? $validated['date_of_birth'] : $user->date_of_birth,
             'place_of_birth_code' => array_key_exists('place_of_birth_code', $validated) ? $validated['place_of_birth_code'] : $user->place_of_birth_code,
             'gender' => array_key_exists('gender', $validated) ? $validated['gender'] : $user->gender,
+            'marital_status' => array_key_exists('marital_status', $validated) ? $validated['marital_status'] : $user->marital_status,
+            'occupation' => array_key_exists('occupation', $validated) ? $validated['occupation'] : $user->occupation,
+            'nationality' => array_key_exists('nationality', $validated) ? $validated['nationality'] : $user->nationality,
         ]);
 
         if ($user->isDirty('email')) {

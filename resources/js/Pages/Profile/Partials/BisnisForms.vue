@@ -19,7 +19,7 @@ const activeTab = ref('bisnis');
 <template>
     <div class="space-y-6">
         <!-- Tabs Nav -->
-        <div class="flex space-x-1 bg-gray-100 p-1 rounded-xl">
+        <div class="flex space-x-1 bg-gray-100 p-1 rounded-lg">
             <button
                 @click="activeTab = 'bisnis'"
                 :class="[
@@ -43,7 +43,7 @@ const activeTab = ref('bisnis');
             </button>
         </div>
 
-        <div class="p-5 sm:p-6 border border-gray-200/80 rounded-2xl shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] bg-white transition-all hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]">
+        <div class="p-5 sm:p-6 border border-gray-200/80 rounded-lg shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] bg-white transition-all hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]">
             <template v-if="activeTab === 'bisnis'">
                 <h3 class="text-lg font-bold text-[#1D1D1F] mb-6">Informasi Bisnis</h3>
                 <UpdateBisnisInformationForm

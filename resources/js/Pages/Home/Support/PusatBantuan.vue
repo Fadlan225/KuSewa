@@ -52,7 +52,7 @@ const toggleFaq = (index) => {
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Search class="text-gray-400" />
                     </div>
-                    <input type="text" class="block w-full pl-12 pr-4 py-4 rounded-xl border-0 ring-4 ring-white/20 focus:ring-[var(--color-primary)] bg-white text-gray-900 placeholder-gray-500 shadow-lg text-lg transition-all" placeholder="Cari topik bantuan (contoh: cara bayar, refund)...">
+                    <input type="text" class="block w-full pl-12 pr-4 py-4 rounded-xl border-0 ring-4 ring-white/20 focus:ring-[#FFC000] bg-white text-gray-900 placeholder-gray-500 shadow-lg text-lg transition-all focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Cari topik bantuan (contoh: cara bayar, refund)...">
                     <button class="absolute inset-y-2 right-2 bg-[var(--color-primary)] hover:bg-yellow-400 text-[#0A2540] px-6 rounded-lg font-semibold transition-colors">
                         Cari
                     </button>

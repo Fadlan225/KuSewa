@@ -16,7 +16,7 @@ class KtpFieldParser
         'rt_rw',          // RT/RW
         'village',        // Kel/Desa
         'district',       // Kecamatan
-        'religion',       // Agama
+
         'marital_status', // Status Perkawinan
         'occupation',     // Pekerjaan
         'nationality',    // Kewarganegaraan
@@ -51,7 +51,7 @@ class KtpFieldParser
             'address'        => $this->parseAddress($lines),   // sudah termasuk RT/RW
             'village'        => $this->parseFieldByLabel($lines, ['KEL/DESA', 'KEL / DESA', 'KELURAHAN', 'DESA']),
             'district'       => $this->parseDistrict($lines),
-            'religion'       => $this->parseReligion($lines),
+
             'marital_status' => $this->parseMaritalStatus($lines),
             'occupation'     => $this->parseOccupation($lines),
             'nationality'    => $this->parseNationality($lines),
@@ -481,24 +481,6 @@ class KtpFieldParser
         // Ambil kata-kata pure huruf saja
         $words = array_filter(explode(' ', $val), fn($w) => preg_match('/^[A-Z]+$/i', $w));
         return implode(' ', array_slice($words, 0, 5));
-    }
-
-    // =========================================================================
-    // Agama
-    // =========================================================================
-
-    private function parseReligion(array $lines): ?string
-    {
-        $value = $this->parseFieldByLabel($lines, ['AGAMA']);
-        if (!$value) return null;
-
-        $knownReligions = ['ISLAM', 'KRISTEN', 'PROTESTAN', 'KATOLIK', 'HINDU', 'BUDHA', 'BUDDHA', 'KONGHUCU'];
-        foreach ($knownReligions as $r) {
-            if (str_starts_with(strtoupper($value), $r)) return $r;
-        }
-        // Ambil kata pertama yang valid
-        $first = explode(' ', trim($value))[0];
-        return strlen($first) >= 3 ? strtoupper($first) : null;
     }
 
     // =========================================================================

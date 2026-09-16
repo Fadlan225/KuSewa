@@ -45,12 +45,6 @@
         <div class="skeleton-input w-1/2"></div>
       </div>
 
-      <!-- Agama -->
-      <div class="space-y-2">
-        <div class="skeleton-label w-16"></div>
-        <div class="skeleton-input w-2/3"></div>
-      </div>
-
       <!-- Status Perkawinan -->
       <div class="space-y-2">
         <div class="skeleton-label w-36"></div>

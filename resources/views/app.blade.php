@@ -10,7 +10,7 @@
         <link rel="preconnect" href="https://fonts.bunny.net" crossorigin>
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <link rel="icon" type="image/svg+xml" href="{{ asset('kitasewa-logo.png') }}">
+        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
 
         <!-- Preload LCP hero image — browser fetch sebelum JS selesai render -->
         <link rel="preload" as="image" href="/public.webp" fetchpriority="high">

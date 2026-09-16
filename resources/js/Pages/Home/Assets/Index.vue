@@ -317,7 +317,7 @@ const formatIDR = (val) => new Intl.NumberFormat('id-ID').format(val);
                             <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
                                 <Search class="text-gray-400 text-xs" />
                             </div>
-                            <input type="text" v-model="facilitySearch" placeholder="Cari fasilitas..." class="w-full text-sm border-gray-200 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl pl-9 py-2 bg-slate-50 transition" />
+                            <input type="text" v-model="facilitySearch" placeholder="Cari fasilitas..." class="w-full text-sm border-gray-200 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl pl-9 py-2 bg-slate-50 transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                         </div>
                     </div>
 
