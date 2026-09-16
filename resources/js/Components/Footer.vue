@@ -38,10 +38,10 @@ import { Link } from '@inertiajs/vue3';
                     <h3 class="font-bold text-[#0A2540] text-sm uppercase tracking-wider mb-5">Menu Bantuan</h3>
                     <ul class="flex flex-col space-y-4">
                         <li>
-                            <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Pusat Bantuan</Link>
+                            <Link :href="route('bantuan.index')" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Pusat Bantuan</Link>
                         </li>
                         <li>
-                            <Link href="#" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Hubungi Kami</Link>
+                            <Link :href="route('hubungi-kami')" class="text-sm text-gray-500 hover:text-[#FFC000] transition-colors">Hubungi Kami</Link>
                         </li>
                     </ul>
                 </div>
@@ -65,19 +65,19 @@ import { Link } from '@inertiajs/vue3';
                     <ul class="flex flex-col space-y-4">
                         <li>
                             <a href="https://www.instagram.com/kitasewa.web.id/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <Instagram class="w-4 text-center text-lg" />
+                                <Instagram class="w-4 h-4" />
                                 kitasewa.web.id
                             </a>
                         </li>
                         <li>
                             <a href="mailto:kitasewa.web.id@gmail.com" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <Mail class="w-4 text-center text-lg" />
+                                <Mail class="w-4 h-4" />
                                 kitasewa.web.id@gmail.com
                             </a>
                         </li>
                         <li>
                             <a href="https://wa.me/6285151241588" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <MessageCircle class="w-4 text-center text-lg" />
+                                <MessageCircle class="w-4 h-4" />
                                 0851-5124-1588
                             </a>
                         </li>

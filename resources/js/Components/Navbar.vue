@@ -717,7 +717,7 @@ const handleLogoutConfirm = () => {
                     <!-- Bantuan -->
                     <Link
                         v-if="!page.props.auth.user"
-                        :href="route('bantuan')"
+                        :href="route('bantuan.index')"
                         :class="[
                             'relative h-full flex items-center text-sm transition-colors duration-300 group',
                             isBantuan ? 'font-bold' : 'font-semibold',
@@ -878,7 +878,7 @@ const handleLogoutConfirm = () => {
                                     class="absolute top-[130%] right-0 w-[320px] sm:w-[340px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 origin-top-right text-[#0A2540]"
                                 >
                                     <!-- 1. Pusat Bantuan -->
-                                    <Link :href="route('bantuan')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
+                                    <Link :href="route('bantuan.index')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
                                         <HelpCircle class="text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                                         <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pusat Bantuan</span>
                                     </Link>
@@ -985,7 +985,7 @@ const handleLogoutConfirm = () => {
                                             @click="isUserMenuOpen = false"
                                             class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1 block"
                                         >
-                                            <!-- Ilustrasi (Ditempatkan di sudut kanan) --> 
+                                            <!-- Ilustrasi (Ditempatkan di sudut kanan) -->
                                             <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
                                                 <div class="w-full h-full flex items-center justify-end pr-4 text-[#0A2540] opacity-10 group-hover:opacity-20 transition-opacity">
                                                     <PieChart class="text-5xl" />

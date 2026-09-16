@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EmailChangeController;
+use App\Http\Controllers\HelpCenterController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -46,9 +47,13 @@ Route::get('/api/asset-type/{id}/details', [AssetTypeController::class, 'details
 
 Route::resource('assets', AssetController::class)->only(['show']);
 
-Route::get('/bantuan', function () {
-    return Inertia::render('Home/Support/PusatBantuan');
-})->name('bantuan');
+Route::prefix('bantuan')->name('bantuan.')->group(function () {
+    Route::get('/', [HelpCenterController::class, 'index'])->name('index');
+    Route::get('/search', [HelpCenterController::class, 'search'])->name('search');
+    Route::get('/kategori/{id}', [HelpCenterController::class, 'category'])->name('category');
+    Route::get('/artikel/{slug}', [HelpCenterController::class, 'article'])->name('article');
+    Route::post('/artikel/{id}/feedback', [HelpCenterController::class, 'submitFeedback'])->name('feedback');
+});
 
 Route::get('/hubungi-kami', function () {
     return Inertia::render('Home/Support/HubungiKami');

@@ -99,7 +99,7 @@ const settingsMenuItems = [];
 
 
 const helpMenuItems = [
-    { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: route('bantuan'), routeNames: ['bantuan'] },
+    { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: route('bantuan.index'), routeNames: ['bantuan.index'] },
     { label: 'Hubungi Kami', icon: 'fa-solid fa-headset', route: route('hubungi-kami'), routeNames: ['hubungi-kami'] },
     { label: 'Keluar', icon: 'fa-solid fa-arrow-right-from-bracket text-red-500', action: 'logout' },
 ];

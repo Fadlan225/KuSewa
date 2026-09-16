@@ -24,7 +24,7 @@
     },
     "dependencies": {
         "@headlessui/vue": "^1.7.23",
-        "@lucide/vue": "^1.31.0",
+        "@lucide/vue": "^1.46.0",
         "@unovis/ts": "^1.6.7",
         "@unovis/vue": "^1.6.7",
         "@vueuse/core": "^14.4.0",
@@ -43,7 +43,7 @@
         "pinia": "^4.0.2",
         "qrcode": "^1.5.4",
         "radix-vue": "^1.9.17",
-        "reka-ui": "^2.10.1",
+        "reka-ui": "^2.10.4",
         "tailwind-merge": "^3.6.0",
         "tailwindcss": "^4.3.2",
         "vue-flatpickr-component": "^12.0.0",
