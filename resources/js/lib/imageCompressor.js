@@ -1,14 +1,14 @@
 /**
  * Kompresi gambar menggunakan Canvas API → WebP
- * Resize ke maxWidth maksimal 1920px, kompresi hingga target < maxBytes (default 4.5MB)
+ * Resize ke maxWidth maksimal 1280px, kompresi hingga target < maxBytes (default 1MB)
  *
  * @param {File} file - File gambar input
- * @param {number} maxWidth - Lebar maksimal (default 1920)
- * @param {number} quality - Kualitas awal WebP 0-1 (default 0.82)
- * @param {number} maxBytes - Batas ukuran dalam bytes (default 4.5MB)
+ * @param {number} maxWidth - Lebar maksimal (default 1280)
+ * @param {number} quality - Kualitas awal WebP 0-1 (default 0.75)
+ * @param {number} maxBytes - Batas ukuran dalam bytes (default 1MB)
  * @returns {Promise<File>} - File terkompresi dalam format WebP
  */
-export async function compressImage(file, maxWidth = 1920, quality = 0.82, maxBytes = 4.5 * 1024 * 1024) {
+export async function compressImage(file, maxWidth = 1280, quality = 0.75, maxBytes = 1 * 1024 * 1024) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (e) => {
