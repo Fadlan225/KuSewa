@@ -126,9 +126,17 @@ onMounted(() => {
 const ensureCategories = (photosArray) => {
     if (!photosArray) return;
 
+    // Hapus kategori yang namanya mengandung "sampul" jika sudah terlanjur ada untuk menghindari duplikat
+    for (let i = photosArray.length - 1; i >= 0; i--) {
+        if (photosArray[i].gallery_category_name?.toLowerCase().includes('sampul')) {
+            photosArray.splice(i, 1);
+        }
+    }
+
     // 1. Ensure all mandatory categories exist
     const mandatoryCategories = props.assetTypeDetails?.mandatory_unit_categories || [];
     mandatoryCategories.forEach(cat => {
+        if (cat.name.toLowerCase().includes('sampul')) return;
         const exists = photosArray.find(p => p.gallery_category_id === cat.id);
         if (!exists) {
             photosArray.unshift({
@@ -200,7 +208,8 @@ watch(galleryCategoriesAsset, (newVal) => {
                 <!-- THUMBNAIL UNIT -->
                 <div>
                     <label class="block text-sm font-semibold text-slate-700 mb-3">
-                        Foto Sampul {{ unitLabel || 'Unit' }}
+                        Foto Sampul {{ unitLabel || 'Unit' }} <span class="text-rose-500">*</span>
+                        <span class="text-xs text-slate-500 font-normal ml-1">(Akan ditampilkan paling depan)</span>
                     </label>
 
                     <div v-if="!unit.thumbnail_preview" class="bg-slate-50/50 hover:bg-slate-50 w-full py-8 flex flex-col items-center justify-center transition cursor-pointer relative" style="border-radius: 8px; background-image: url('data:image/svg+xml,%3csvg width=\'100%25\' height=\'100%25\' xmlns=\'http://www.w3.org/2000/svg\'%3e%3crect width=\'100%25\' height=\'100%25\' fill=\'none\' rx=\'8\' ry=\'8\' stroke=\'%2394a3b8\' stroke-width=\'2\' stroke-dasharray=\'8%2c 6\' stroke-dashoffset=\'0\' stroke-linecap=\'square\'/%3e%3c/svg%3e');">

@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
+use App\Models\bank;
+
 class ProfileController extends Controller
 {
     /**
@@ -70,11 +72,12 @@ class ProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
             'total_assets_rented' => $totalAssetsRented,
+            'banks' => bank::orderBy('name')->get(['code', 'name']),
         ]);
     }
 
@@ -127,11 +130,12 @@ class ProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
             'total_assets_rented' => $totalAssetsRented,
+            'banks' => bank::orderBy('name')->get(['code', 'name']),
         ]);
     }
 
@@ -179,10 +183,11 @@ class ProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
+            'banks' => bank::orderBy('name')->get(['code', 'name']),
         ]);
     }
 
@@ -259,7 +264,7 @@ class ProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
@@ -356,17 +361,17 @@ class ProfileController extends Controller
                 'date_of_birth' => $validated['date_of_birth'] ?? $user->ownerProfile->date_of_birth,
             ]);
 
-            if (isset($validated['bank_name']) || isset($validated['account_number']) || isset($validated['account_holder'])) {
+            if (isset($validated['bank_code']) || isset($validated['account_number']) || isset($validated['account_holder'])) {
                 $bankAccount = $user->ownerProfile->bankAccounts()->first();
                 if ($bankAccount) {
                     $bankAccount->update([
-                        'bank_name' => $validated['bank_name'] ?? $bankAccount->bank_name,
+                        'bank_code' => $validated['bank_code'] ?? $bankAccount->bank_code,
                         'account_number' => $validated['account_number'] ?? $bankAccount->account_number,
                         'account_holder' => $validated['account_holder'] ?? $bankAccount->account_holder,
                     ]);
                 } else {
                     $user->ownerProfile->bankAccounts()->create([
-                        'bank_name' => $validated['bank_name'],
+                        'bank_code' => $validated['bank_code'],
                         'account_number' => $validated['account_number'],
                         'account_holder' => $validated['account_holder'],
                     ]);

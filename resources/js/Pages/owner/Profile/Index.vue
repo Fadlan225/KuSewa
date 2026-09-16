@@ -27,7 +27,8 @@ const props = defineProps({
     lastSeen: { type: Object, default: () => ({}) },
     reviews: { type: Object, default: () => ({}) },
     initialFavorites: { type: Array, default: () => [] },
-    categoriesList: { type: Array, default: () => ['Semua'] }
+    categoriesList: { type: Array, default: () => ['Semua'] },
+    banks: { type: Array, default: () => [] }
 });
 
 const getTitle = computed(() => {
@@ -182,6 +183,7 @@ const requestLocationPermission = () => {
                 :user="user"
                 :owner_profile="owner_profile"
                 :bank_account="bank_account"
+                :banks="banks"
             />
             <SecurityForms
                 v-if="tab === 'keamanan'"

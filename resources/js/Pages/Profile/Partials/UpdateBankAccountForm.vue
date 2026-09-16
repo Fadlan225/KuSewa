@@ -1,11 +1,16 @@
 <script setup>
 import { Loader2 } from 'lucide-vue-next';
 import { useForm, usePage } from '@inertiajs/vue3';
+import SearchableSelect from '@/Components/ui/SearchableSelect.vue';
 
 const props = defineProps({
     bank_account: {
         type: Object,
         default: null,
+    },
+    banks: {
+        type: Array,
+        default: () => [],
     },
 });
 
@@ -14,7 +19,7 @@ const user = usePage().props.auth.user;
 const form = useForm({
     name: user.name, // Required by backend
     email: user.email, // Required by backend
-    bank_name: props.bank_account?.bank_name || '',
+    bank_code: props.bank_account?.bank_code || '',
     account_number: props.bank_account?.account_number || '',
     account_holder: props.bank_account?.account_holder || '',
 });
@@ -29,15 +34,13 @@ const form = useForm({
             <div class="space-y-5">
                 <!-- Bank Name -->
                 <div>
-                    <label for="bank_name" class="block text-sm text-[#333333] mb-1.5">Nama Bank</label>
-                    <input
-                        id="bank_name"
-                        type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors uppercase"
-                        v-model="form.bank_name"
+                    <label for="bank_code" class="block text-sm text-[#333333] mb-1.5">Nama Bank</label>
+                    <SearchableSelect
+                        v-model="form.bank_code"
+                        :options="banks"
                         placeholder="BCA, MANDIRI, BRI, dll"
                     />
-                    <p v-if="form.errors.bank_name" class="mt-1.5 text-sm text-red-600">{{ form.errors.bank_name }}</p>
+                    <p v-if="form.errors.bank_code" class="mt-1.5 text-sm text-red-600">{{ form.errors.bank_code }}</p>
                 </div>
 
                 <!-- Account Number -->

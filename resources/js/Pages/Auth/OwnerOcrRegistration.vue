@@ -49,6 +49,8 @@ onMounted(() => {
     fetchProvinces();
 });
 
+const serverErrors = ref({});
+
 const cancelOcrFlow = () => {
     router.get(route('owner.register'));
 };
@@ -89,12 +91,16 @@ const handleConfirmedOcr = async (formData) => {
     };
 
     router.post(route('owner.register.submit'), payload, {
+        onBefore: () => {
+            serverErrors.value = {};
+        },
         onSuccess: () => {
             isSubmittingOcr.value = false;
         },
         onError: (errs) => {
             isSubmittingOcr.value = false;
             console.error('Submit errors:', errs);
+            serverErrors.value = errs;
         },
         onFinish: () => {
             isSubmittingOcr.value = false;
@@ -265,6 +271,7 @@ const handleNavbarBack = () => {
                         :all-cities="allCities"
                         :provinces="provinces"
                         :is-manual="false"
+                        :server-errors="serverErrors"
                         @confirmed="handleConfirmedOcr"
                     />
                 </div>

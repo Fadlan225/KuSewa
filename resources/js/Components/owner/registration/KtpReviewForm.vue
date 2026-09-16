@@ -9,6 +9,7 @@ const props = defineProps({
   allCities:   { type: Array, default: () => [] },
   provinces:   { type: Array, default: () => [] },
   isManual:    { type: Boolean, default: false }, // true jika user pilih isi manual
+  serverErrors:{ type: Object, default: () => ({}) },
 });
 
 const emit = defineEmits(['confirmed']);
@@ -169,6 +170,22 @@ const validateForm = () => {
 };
 
 const isSubmitting = ref(false);
+
+watch(() => props.serverErrors, (newVal) => {
+  if (newVal && Object.keys(newVal).length > 0) {
+    Object.keys(newVal).forEach(key => {
+      errors[key] = newVal[key];
+    });
+    isSubmitting.value = false;
+    nextTick(() => {
+      const firstError = document.querySelector('.border-red-500');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstError.focus({ preventScroll: true });
+      }
+    });
+  }
+}, { deep: true, immediate: true });
 
 const submit = () => {
   if (!validateForm()) {

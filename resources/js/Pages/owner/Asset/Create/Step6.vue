@@ -140,9 +140,17 @@ const validateAndUploadThumbnail = (event) => {
 const ensureCategories = (photosArray) => {
     if (!photosArray) return;
 
+    // Hapus kategori yang namanya mengandung "sampul" jika sudah terlanjur ada untuk menghindari duplikat
+    for (let i = photosArray.length - 1; i >= 0; i--) {
+        if (photosArray[i].gallery_category_name?.toLowerCase().includes('sampul')) {
+            photosArray.splice(i, 1);
+        }
+    }
+
     // 1. Ensure all mandatory categories exist
     const mandatoryCategories = props.assetTypeDetails?.mandatory_categories || [];
     mandatoryCategories.forEach(cat => {
+        if (cat.name.toLowerCase().includes('sampul')) return;
         const exists = photosArray.find(p => p.gallery_category_id === cat.id);
         if (!exists) {
             photosArray.unshift({

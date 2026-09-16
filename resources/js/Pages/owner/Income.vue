@@ -1,11 +1,16 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { Receipt, Building, Calculator, DoorOpen, Calendar } from 'lucide-vue-next';
+import { Receipt, Building, Calculator, DoorOpen, Calendar, Wallet } from 'lucide-vue-next';
 import { ref, computed, onMounted } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import { Card, CardHeader, CardTitle, CardContent } from '@/Components/ui/card';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem, SelectGroup } from '@/Components/ui/select';
+import IncomeEmptyIllustration from '@/Components/ui/Icons/IncomeEmptyIllustration.vue';
+import SpreadEmptyIllustration from '@/Components/ui/Icons/SpreadEmptyIllustration.vue';
+import BookingEmptyIllustration from '@/Components/ui/Icons/BookingEmptyIllustration.vue';
+import AssetStatusEmptyIllustration from '@/Components/ui/Icons/AssetStatusEmptyIllustration.vue';
+
 import { VisXYContainer, VisAxis, VisStackedBar, VisCrosshair, VisTooltip, VisLine } from '@unovis/vue';
 
 const props = defineProps({
@@ -15,6 +20,8 @@ const props = defineProps({
     assetIncomeData: Array,
     unitBreakdowns: Object,
     recentTransactions: Array,
+    isGlobal: Boolean,
+    hasUnits: Boolean,
 });
 
 const selectedPeriod = ref(props.initialPeriod || 'bulan_ini');
@@ -61,6 +68,8 @@ const chartData = computed(() => {
         x: i
     }));
 });
+
+const chartTotalSum = computed(() => chartData.value.reduce((acc, curr) => acc + curr.income, 0));
 
 // Unovis Helpers
 const x = (d) => d.x;
@@ -152,117 +161,122 @@ const getStatusClass = (status) => {
             </Select>
         </template>
 
-        <!-- SUMMARY CARDS -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            
-            <!-- TOTAL PENDAPATAN (DOMINAN) -->
-            <Card class="col-span-2 md:col-span-1 bg-[#0A2540] border-transparent shadow-lg rounded-2xl overflow-hidden flex flex-col justify-center text-white relative group">
-                <div class="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <CardContent class="p-5 flex flex-col justify-center h-full gap-3 relative z-10">
-                    <div class="flex items-start justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[10px] md:text-xs text-slate-300 font-medium uppercase tracking-wider truncate">Total Pendapatan</p>
-                            <p class="text-xl sm:text-2xl lg:text-3xl font-black text-white mt-1 truncate tracking-tight">{{ formatCurrency(summaryData.totalPendapatan) }}</p>
-                        </div>
+        <!-- SUMMARY CARDS - Clean Panel Design -->
+        <div class="bg-white border border-slate-200/80 rounded-xl shadow-sm mb-6 mt-6">
+            <div class="grid grid-cols-2 xl:grid-cols-4 border-slate-100">
+                <!-- Total Pendapatan -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-b xl:border-b-0 border-slate-100">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                            <Wallet class="text-slate-400 w-3.5 h-3.5" /> <span>Total Pendapatan</span>
+                        </p>
                     </div>
-                    <div class="flex items-center gap-1.5 text-xs font-semibold" :class="props.summaryData.pendapatanGrowth >= 0 ? 'text-emerald-400' : 'text-rose-400'">
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540] truncate">{{ formatCurrency(summaryData.totalPendapatan) }}</p>
+                    <div class="flex items-center gap-1.5 text-xs font-semibold mt-2" :class="props.summaryData.pendapatanGrowth >= 0 ? 'text-emerald-500' : 'text-rose-500'">
                         <AppIcon iconClass="fa-solid" :class="props.summaryData.pendapatanGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'" />
                         <span>{{ Math.abs(props.summaryData.pendapatanGrowth) }}% <span class="text-slate-400 font-normal">dari periode lalu</span></span>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
 
-            <Card class="hover:border-blue-500/50 transition-colors group border-slate-200/80 shadow-md rounded-2xl overflow-hidden flex flex-col justify-center">
-                <CardContent class="p-4 flex flex-col justify-center h-full gap-2">
-                    <div class="flex items-start justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Total Transaksi</p>
-                            <p class="text-lg lg:text-xl font-black text-slate-800 mt-1 truncate">{{ summaryData.totalTransaksi }} Transaksi</p>
-                        </div>
-                        <div class="w-8 h-8 rounded-xl bg-blue-50 flex shrink-0 items-center justify-center text-blue-500 group-hover:bg-blue-100 transition-colors">
-                            <Receipt class="text-xs" />
-                        </div>
+                <!-- Total Transaksi -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-b xl:border-b-0 xl:border-r border-slate-100">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                            <Receipt class="text-slate-400 w-3.5 h-3.5" /> <span>Total Transaksi</span>
+                        </p>
                     </div>
-                    <div class="flex items-center gap-1.5 text-[10px] font-semibold" :class="props.summaryData.transaksiGrowth >= 0 ? 'text-emerald-500' : 'text-rose-500'">
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ summaryData.totalTransaksi }} <span class="text-sm font-bold text-slate-400">Trx</span></p>
+                    <div class="flex items-center gap-1.5 text-[10px] font-semibold mt-2" :class="props.summaryData.transaksiGrowth >= 0 ? 'text-emerald-500' : 'text-rose-500'">
                         <AppIcon iconClass="fa-solid" :class="props.summaryData.transaksiGrowth >= 0 ? 'fa-arrow-up' : 'fa-arrow-down'" />
-                        <span>{{ Math.abs(props.summaryData.transaksiGrowth) }} transaksi <span class="text-slate-400 font-normal">dari periode lalu</span></span>
+                        <span>{{ Math.abs(props.summaryData.transaksiGrowth) }} trx <span class="text-slate-400 font-normal">dari periode lalu</span></span>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
 
-            <Card class="hover:border-[#FFC000]/50 transition-colors group border-slate-200/80 shadow-md rounded-2xl overflow-hidden flex flex-col justify-center">
-                <CardContent class="p-4 flex flex-col justify-center h-full gap-2">
-                    <div class="flex items-start justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Aset Terbaik</p>
-                            <p class="text-base font-black text-slate-800 mt-1 truncate leading-tight">{{ summaryData.asetTerbaik }}</p>
-                        </div>
-                        <div class="w-8 h-8 rounded-xl bg-amber-50 flex shrink-0 items-center justify-center text-amber-500 group-hover:bg-amber-100 transition-colors">
-                            <Building class="text-xs" />
-                        </div>
+                <!-- Aset / Unit Terbaik -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center border-r border-slate-100">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                            <Building class="text-slate-400 w-3.5 h-3.5" /> 
+                            <span>{{ isGlobal ? 'Aset Terbaik' : 'Unit Terbaik' }}</span>
+                        </p>
                     </div>
-                    <div class="flex flex-col gap-0.5 mt-1">
-                        <span class="text-xs font-bold text-slate-700">{{ formatCurrency(summaryData.asetTerbaikIncome) }}</span>
-                        <span class="text-[10px] text-slate-400 font-normal">{{ summaryData.asetTerbaikPercent }}% dari total pendapatan</span>
-                    </div>
-                </CardContent>
-            </Card>
+                    <template v-if="isGlobal || hasUnits">
+                        <p class="text-lg lg:text-xl font-black text-[#0A2540] truncate leading-tight">{{ summaryData.asetTerbaik }}</p>
+                        <div class="flex flex-col gap-0.5 mt-2">
+                            <span class="text-xs font-bold text-slate-700">{{ formatCurrency(summaryData.asetTerbaikIncome) }}</span>
+                            <span class="text-[10px] text-slate-400 font-normal">{{ summaryData.asetTerbaikPercent }}% dari total pendapatan</span>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <p class="text-lg lg:text-xl font-black text-[#0A2540] truncate leading-tight">-</p>
+                        <div class="flex flex-col gap-0.5 mt-2">
+                            <span class="text-xs font-bold text-slate-700">Rp 0</span>
+                            <span class="text-[10px] text-slate-400 font-normal">Tidak ada unit</span>
+                        </div>
+                    </template>
+                </div>
 
-            <Card class="hover:border-purple-500/50 transition-colors group border-slate-200/80 shadow-md rounded-2xl overflow-hidden flex flex-col justify-center">
-                <CardContent class="p-4 flex flex-col justify-center h-full gap-2">
-                    <div class="flex items-start justify-between">
-                        <div class="min-w-0 pr-2">
-                            <p class="text-[10px] text-slate-400 font-medium uppercase tracking-wider truncate">Rata-rata per Transaksi</p>
-                            <p class="text-lg lg:text-xl font-black text-slate-800 mt-1 truncate">{{ formatCurrency(summaryData.avgTransaksi) }}</p>
-                        </div>
-                        <div class="w-8 h-8 rounded-xl bg-purple-50 flex shrink-0 items-center justify-center text-purple-500 group-hover:bg-purple-100 transition-colors">
-                            <Calculator class="text-xs" />
-                        </div>
+                <!-- Rata-rata per Transaksi -->
+                <div class="p-4 lg:p-5 xl:p-6 flex flex-col justify-center">
+                    <div class="flex justify-between items-start mb-1">
+                        <p class="text-xs text-slate-500 font-medium tracking-wide flex items-center gap-2">
+                            <Calculator class="text-slate-400 w-3.5 h-3.5" /> <span>Rata-rata Transaksi</span>
+                        </p>
                     </div>
-                    <div class="flex items-center gap-1.5 text-[10px] font-medium text-slate-400 mt-1">
+                    <p class="text-2xl lg:text-3xl font-black text-[#0A2540]">{{ formatCurrency(summaryData.avgTransaksi) }}</p>
+                    <div class="flex items-center gap-1.5 text-[10px] font-medium text-slate-400 mt-2">
                         Diukur dari pendapatan bersih
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
             
-            <!-- TREN PENDAPATAN (Line Chart) -->
-            <Card class="lg:col-span-2 border-slate-200/80 shadow-md rounded-2xl overflow-hidden flex flex-col">
-                <CardHeader class="p-5 border-b border-slate-100 flex flex-row items-center justify-between pb-4">
-                    <div>
-                        <CardTitle class="text-base font-bold text-slate-800">Tren Pendapatan</CardTitle>
-                        <p class="text-xs text-slate-500 mt-1">Pendapatan meningkat 18,4% dibanding periode sebelumnya.</p>
-                    </div>
-                    <!-- Mini filter / Toggle -->
-                    <div class="flex items-center bg-slate-100 rounded-lg p-1 hidden sm:flex">
-                        <button class="px-3 py-1 text-[11px] font-bold bg-white text-slate-800 rounded shadow-sm">Pendapatan</button>
-                        <button class="px-3 py-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 transition">Transaksi</button>
+            <!-- TREN PENDAPATAN CHART -->
+            <Card :class="isGlobal || hasUnits ? 'lg:col-span-2' : 'lg:col-span-3'" class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-2">
+                <CardHeader class="relative z-20 flex flex-col items-stretch p-4 sm:flex-row pb-6">
+                    <div class="flex flex-1 flex-col justify-center gap-1 text-left">
+                        <CardTitle class="text-base font-black text-slate-800 tracking-tight">Tren Pendapatan</CardTitle>
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Menampilkan pendapatan {{ periodLabel }}.
+                        </p>
                     </div>
                 </CardHeader>
-                <CardContent class="p-4 sm:p-6 pb-2 flex-1 min-h-[300px]">
-                    <div v-if="chartData.length" class="w-full h-[260px] relative unovis-chart-container text-xs">
-                        <VisXYContainer :data="chartData" :height="260" :duration="800" :padding="{ top: 10, right: 10, left: 10, bottom: 0 }">
-                            <VisLine :x="x" :y="y" color="#FFC000" :lineWidth="3" />
-                            <VisAxis type="x" :tickFormat="tickFormatX" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400 font-medium" />
-                            <VisAxis type="y" :tickFormat="tickFormatY" :gridLine="true" :tickLine="false" :domainLine="false" class="text-slate-400 font-medium" />
+                <CardContent class="p-4 pt-0 flex-1 min-h-[320px] relative z-0">
+                    <div v-if="chartData.length > 0 && chartTotalSum > 0" class="w-full h-full relative text-xs unovis-chart-container z-0">
+                        <VisXYContainer :data="chartData" :height="300" :duration="800">
+                            <!-- Bar Tipis Kotak, Warna Navy sebagai warna data utama -->
+                            <VisStackedBar :x="x" :y="y" color="#0A2540" :roundedCorners="2" :barPadding="0.4" />
+                            <VisAxis type="x" :tickFormat="tickFormatX" :gridLine="false" :tickLine="false" :domainLine="false" class="text-slate-400" />
+                            <VisAxis type="y" :tickFormat="tickFormatY" :gridLine="true" :tickLine="false" :domainLine="false" class="text-slate-400" />
                             <VisTooltip />
                             <VisCrosshair :template="tooltipTemplate" color="#0A2540" />
                         </VisXYContainer>
                     </div>
+                    <div v-else class="w-full h-full min-h-[300px] flex flex-col items-center justify-center text-slate-400 pt-6 pb-2">
+                        <div class="w-32 h-auto mb-4 opacity-60 pointer-events-none">
+                            <IncomeEmptyIllustration class="w-full h-auto drop-shadow-sm" />
+                        </div>
+                        <p class="text-base font-black text-[#0A2540] tracking-tight mb-1">Aset Anda siap menghasilkan</p>
+                        <p class="text-sm text-slate-500 mb-5 text-center font-medium max-w-[280px]">Dapatkan penyewa pertama dan mulai lihat pendapatan Anda di sini.</p>
+                        <Link :href="route('owner.asset.index')" class="px-5 py-2.5 bg-[#FFC000] hover:bg-[#e5ac00] text-[#0A2540] shadow-sm hover:shadow rounded text-xs font-bold transition-all">
+                            Lihat Aset
+                        </Link>
+                    </div>
                 </CardContent>
             </Card>
 
-            <!-- PENDAPATAN BERDASARKAN ASET (Donut) -->
-            <Card class="border-slate-200/80 shadow-md rounded-2xl overflow-hidden flex flex-col">
+            <!-- PENDAPATAN BERDASARKAN ASET / UNIT (Donut) -->
+            <Card v-if="isGlobal || hasUnits" class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col p-2">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4">
-                    <CardTitle class="text-base font-bold text-slate-800">Sumber Pendapatan</CardTitle>
-                    <p class="text-xs text-slate-500 mt-1">Kontribusi masing-masing aset terhadap total pendapatan.</p>
+                    <CardTitle class="text-base font-bold text-slate-800">{{ isGlobal ? 'Sumber Pendapatan' : 'Kontribusi Unit' }}</CardTitle>
+                    <p class="text-xs text-slate-500 mt-1">{{ isGlobal ? 'Kontribusi masing-masing aset terhadap total pendapatan.' : 'Kontribusi masing-masing unit terhadap pendapatan.' }}</p>
                 </CardHeader>
                 <CardContent class="p-5 flex-1 flex flex-col items-center justify-center">
-                    <!-- Donut Chart -->
-                    <div class="relative w-48 h-48 mb-6">
+                    <template v-if="donutChartTotal > 0">
+                        <!-- Donut Chart -->
+                        <div class="relative w-48 h-48 mb-6">
                         <svg viewBox="0 0 100 100" class="w-full h-full transform -rotate-90">
                             <circle v-for="slice in donutSlices" :key="slice.name"
                                     cx="50" cy="50" r="40"
@@ -281,8 +295,8 @@ const getStatusClass = (status) => {
                             <span class="text-sm font-black text-slate-800 leading-none">{{ formatCompactCurrency(donutChartTotal) }}</span>
                         </div>
                     </div>
-                    <!-- Legend -->
-                    <div class="w-full space-y-3 px-1">
+                        <!-- Legend -->
+                        <div class="w-full space-y-3 px-1">
                         <div v-for="item in donutSlices" :key="item.name" 
                              @mouseenter="activeAssetHover = item.name; selectedAssetForUnit = item.name"
                              @mouseleave="activeAssetHover = null"
@@ -299,6 +313,14 @@ const getStatusClass = (status) => {
                             <div class="text-slate-600 font-black text-xs">{{ item.percent }}%</div>
                         </div>
                     </div>
+                    </template>
+                    <div v-else class="w-full h-full min-h-[250px] flex flex-col items-center justify-center text-slate-400 py-6">
+                        <div class="w-32 h-auto mb-4 opacity-60 pointer-events-none">
+                            <SpreadEmptyIllustration class="w-full h-auto drop-shadow-sm" />
+                        </div>
+                        <p class="text-base font-black text-[#0A2540] tracking-tight mb-1">Belum ada pendapatan</p>
+                        <p class="text-sm text-slate-500 mb-5 text-center font-medium max-w-[280px]">Daftarkan aset dan biarkan calon penyewa menemukannya.</p>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -307,7 +329,7 @@ const getStatusClass = (status) => {
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6 pb-12">
             
             <!-- KONTRIBUSI UNIT -->
-            <Card class="border-slate-200/80 shadow-md rounded-2xl overflow-hidden flex flex-col">
+            <Card v-if="isGlobal || hasUnits" class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4">
                     <CardTitle class="text-base font-bold text-slate-800">Kontribusi Unit</CardTitle>
                     <p class="text-xs text-slate-500 mt-1">
@@ -315,7 +337,7 @@ const getStatusClass = (status) => {
                     </p>
                 </CardHeader>
                 <CardContent class="p-0">
-                    <div class="divide-y divide-slate-100 min-h-[200px]">
+                    <div v-if="activeUnitBreakdown.length > 0" class="divide-y divide-slate-100 min-h-[200px]">
                         <div v-for="(unit, idx) in activeUnitBreakdown" :key="idx" class="p-5 hover:bg-slate-50 transition-colors flex items-center justify-between">
                             <div class="flex items-center gap-4">
                                 <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center text-amber-500 shrink-0">
@@ -335,11 +357,18 @@ const getStatusClass = (status) => {
                             </div>
                         </div>
                     </div>
+                    <div v-else class="w-full h-full min-h-[200px] flex flex-col items-center justify-center text-slate-400 py-6">
+                        <div class="w-24 h-auto mb-4 opacity-60 pointer-events-none">
+                            <AssetStatusEmptyIllustration class="w-full h-auto drop-shadow-sm" />
+                        </div>
+                        <p class="text-sm font-black text-[#0A2540] tracking-tight mb-1">Belum ada unit yang disewa</p>
+                        <p class="text-xs text-slate-500 text-center font-medium max-w-[240px]">Unit pada aset ini belum menghasilkan pendapatan.</p>
+                    </div>
                 </CardContent>
             </Card>
 
             <!-- TRANSAKSI TERBARU -->
-            <Card class="border-slate-200/80 shadow-md rounded-2xl overflow-hidden flex flex-col">
+            <Card :class="isGlobal || hasUnits ? '' : 'lg:col-span-2'" class="bg-white border border-slate-200/60 shadow-sm hover:shadow-md transition-all rounded-xl overflow-hidden flex flex-col">
                 <CardHeader class="p-5 border-b border-slate-100 pb-4 flex flex-row items-center justify-between">
                     <div>
                         <CardTitle class="text-base font-bold text-slate-800">Transaksi Terbaru</CardTitle>
@@ -350,7 +379,7 @@ const getStatusClass = (status) => {
                     </Link>
                 </CardHeader>
                 <CardContent class="p-0">
-                    <div class="divide-y divide-slate-100 min-h-[200px]">
+                    <div v-if="recentTransactions.length > 0" class="divide-y divide-slate-100 min-h-[200px]">
                         <div v-for="trx in recentTransactions" :key="trx.id" class="p-4 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-3 cursor-pointer">
                             <div class="flex flex-col gap-1">
                                 <div class="flex items-center gap-2">
@@ -367,6 +396,13 @@ const getStatusClass = (status) => {
                             </div>
                         </div>
                     </div>
+                    <div v-else class="w-full h-full min-h-[200px] flex flex-col items-center justify-center text-slate-400 py-6">
+                        <div class="w-24 h-auto mb-4 opacity-60 pointer-events-none">
+                            <BookingEmptyIllustration class="w-full h-auto drop-shadow-sm" />
+                        </div>
+                        <p class="text-sm font-black text-[#0A2540] tracking-tight mb-1">Belum ada transaksi</p>
+                        <p class="text-xs text-slate-500 text-center font-medium max-w-[240px]">Riwayat pembayaran akan muncul di sini.</p>
+                    </div>
                 </CardContent>
             </Card>
 
@@ -378,5 +414,16 @@ const getStatusClass = (status) => {
 <style scoped>
 .unovis-chart-container {
     transition: all 0.3s ease;
+}
+</style>
+
+<style scoped>
+/* CSS Override untuk merubah warna Unovis Bar saat di-hover */
+.unovis-chart-container rect {
+    transition: fill 0.2s ease, opacity 0.2s ease;
+}
+.unovis-chart-container rect:hover {
+    fill: #FFC000 !important; /* Kuning KitaSewa saat hover */
+    opacity: 1 !important;
 }
 </style>

@@ -64,14 +64,25 @@ const fetchAssetTypeDetails = async (typeId, isReset = false) => {
             form.custom_policies = [];
 
             if (data.mandatory_categories && data.mandatory_categories.length > 0) {
-                form.photos = data.mandatory_categories.map(cat => ({
-                    _id: Date.now() + Math.random(),
-                    gallery_category_id: cat.id,
-                    gallery_category_name: cat.name,
-                    is_mandatory: true,
-                    files: [],
-                    previews: [],
-                }));
+                const filteredCats = data.mandatory_categories.filter(cat => !cat.name.toLowerCase().includes('sampul'));
+                if (filteredCats.length > 0) {
+                    form.photos = filteredCats.map(cat => ({
+                        _id: Date.now() + Math.random(),
+                        gallery_category_id: cat.id,
+                        gallery_category_name: cat.name,
+                        is_mandatory: true,
+                        files: [],
+                        previews: [],
+                    }));
+                } else {
+                    form.photos = [{
+                        _id: Date.now(),
+                        gallery_category_id: null,
+                        is_mandatory: false,
+                        files: [],
+                        previews: [],
+                    }];
+                }
             } else {
                 form.photos = [{
                     _id: Date.now(),

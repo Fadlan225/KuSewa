@@ -10,6 +10,7 @@ const props = defineProps({
     user: Object,
     owner_profile: { type: Object, default: null },
     bank_account: { type: Object, default: null },
+    banks: { type: Array, default: () => [] },
 });
 
 const activeTab = ref('bisnis');
@@ -55,6 +56,7 @@ const activeTab = ref('bisnis');
                 <h3 class="text-lg font-bold text-[#1D1D1F] mb-6">Informasi Rekening Bank</h3>
                 <UpdateBankAccountForm
                     :bank_account="bank_account"
+                    :banks="banks"
                 />
             </template>
         </div>

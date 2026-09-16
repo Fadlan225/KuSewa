@@ -353,22 +353,55 @@ class AssetController extends Controller
             $request->session()->forget('active_asset_slug');
         }
 
+        // Jika ada slug, cek status aset terlebih dahulu
+        $targetAsset = null;
+        if ($request->asset_slug) {
+            $ownerProfile = auth()->user()->ownerProfile;
+            if ($ownerProfile) {
+                $targetAsset = \App\Models\asset::where('owner_profile_id', $ownerProfile->id)
+                    ->where(function ($q) use ($request) {
+                        $q->where('slug', $request->asset_slug)
+                          ->orWhere('id', $request->asset_slug);
+                    })
+                    ->first();
+
+                // Aset masih draft → arahkan ke halaman register/edit draft
+                if ($targetAsset && $targetAsset->status === 'draft') {
+                    return redirect()->route('owner.asset.edit-draft', $targetAsset->id);
+                }
+            }
+        }
+
         $referer = url()->previous();
+
+        // Deteksi route referer dengan aman (gunakan GET agar tidak gagal pada POST-only routes)
         try {
-            $refererRequest = \Illuminate\Http\Request::create($referer);
+            $refererRequest = \Illuminate\Http\Request::create($referer, 'GET');
             $route = app('router')->getRoutes()->match($refererRequest);
             $routeName = $route->getName();
 
-            // Jika sedang berada di halaman detail/edit aset, arahkan dengan benar sesuai konteks baru
-            if (in_array($routeName, ['owner.asset.show', 'owner.asset.edit', 'owner.asset.update', 'owner.asset.destroy'])) {
-                if ($request->asset_slug) {
-                    return redirect()->route('owner.asset.show', $request->asset_slug);
-                } else {
-                    return redirect()->route('owner.asset.index');
+            // Jika sedang di halaman detail/edit aset, arahkan sesuai konteks baru
+            if (in_array($routeName, ['owner.asset.show', 'owner.asset.edit', 'owner.asset.edit-draft'])) {
+                if ($request->asset_slug && $targetAsset) {
+                    return redirect()->route('owner.asset.show', $targetAsset->slug);
                 }
+                return redirect()->route('owner.asset.index');
+            }
+
+            // Jika referer adalah halaman create/register form, redirect ke dashboard
+            if (str_contains($routeName ?? '', 'owner.register') || $routeName === 'owner.asset.create') {
+                if ($request->asset_slug && $targetAsset) {
+                    return redirect()->route('owner.asset.show', $targetAsset->slug);
+                }
+                return redirect()->route('owner.dashboard');
             }
         } catch (\Exception $e) {
-            // Jika rute tidak ditemukan atau error, abaikan dan gunakan back()
+            // Rute tidak dapat di-match via GET (kemungkinan POST-only, misal register/create)
+            // Arahkan ke halaman yang aman
+            if ($request->asset_slug && $targetAsset) {
+                return redirect()->route('owner.asset.show', $targetAsset->slug);
+            }
+            return redirect()->route('owner.dashboard');
         }
 
         return redirect()->back();
@@ -887,6 +920,11 @@ class AssetController extends Controller
         $ownerProfile = $request->user()->ownerProfile;
         if (!$ownerProfile || $asset->owner_profile_id !== $ownerProfile->id) {
             abort(403, 'Anda tidak berhak mengakses aset ini.');
+        }
+
+        // Jika aset masih draft, jangan boleh akses halaman show → arahkan ke form edit draft
+        if ($asset->status === 'draft') {
+            return redirect()->route('owner.asset.edit-draft', $asset->id);
         }
 
         // For owner page, we might want to calculate the summary

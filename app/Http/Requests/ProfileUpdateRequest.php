@@ -32,7 +32,7 @@ class ProfileUpdateRequest extends FormRequest
             'place_of_birth_code' => ['nullable', 'string', 'exists:cities,code'],
             'date_of_birth' => ['nullable', 'date'],
             'gender' => ['nullable', 'in:male,female'],
-            'bank_name' => ['nullable', 'string', 'max:255'],
+            'bank_code' => ['nullable', 'string', 'exists:banks,code'],
             'account_number' => ['nullable', 'string', 'max:50'],
             'account_holder' => ['nullable', 'string', 'max:255'],
         ];
