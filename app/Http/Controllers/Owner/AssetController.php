@@ -327,7 +327,7 @@ class AssetController extends Controller
     public function uploadTemp(Request $request)
     {
         $request->validate([
-            'file' => 'required|image|mimes:jpeg,png,jpg|max:5120',
+            'file' => 'required|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
         $path = ImageOptimizer::process($request->file('file'), 'uploads/temp');
