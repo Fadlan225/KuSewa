@@ -353,7 +353,7 @@ class ProfileController extends Controller
             $activities = AccountActivity::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
             $data['accountActivities'] = $activities->map(function ($activity) {
                 $activity->province = \App\Models\Province::where('code', $activity->province_code)->first();
-                $activity->city = \App\Models\city::where('code', $activity->regency_code)->first();
+                $activity->city = \App\Models\City::where('code', $activity->regency_code)->first();
                 return $activity;
             });
         }

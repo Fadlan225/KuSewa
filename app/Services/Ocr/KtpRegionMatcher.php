@@ -2,9 +2,9 @@
 
 namespace App\Services\Ocr;
 
-use App\Models\city;
+use App\Models\City;
 use App\Models\district;
-use App\Models\province;
+use App\Models\Province;
 use App\Models\village;
 use Illuminate\Support\Facades\Cache;
 
@@ -165,10 +165,10 @@ class KtpRegionMatcher
         $districtRec = district::where('code', $districtCode)->first();
         if (!$districtRec) return null;
 
-        $cityRec = city::where('code', $districtRec->city_code)->first();
+        $cityRec = City::where('code', $districtRec->city_code)->first();
         if (!$cityRec) return null;
 
-        $provinceRec = province::where('code', $cityRec->province_code)->first();
+        $provinceRec = Province::where('code', $cityRec->province_code)->first();
         if (!$provinceRec) return null;
 
         return array_merge([
