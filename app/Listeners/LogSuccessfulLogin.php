@@ -9,7 +9,7 @@ use App\Models\AccountActivity;
 use Jenssegers\Agent\Agent;
 use Illuminate\Support\Facades\Http;
 use App\Models\Province;
-use App\Models\city; // model name is lowercase city based on previous check
+use App\Models\City;
 use Illuminate\Support\Facades\Log;
 
 class LogSuccessfulLogin
@@ -58,7 +58,7 @@ class LogSuccessfulLogin
 
                     // Try to match City
                     if ($cityName) {
-                        $city = city::where('name', 'like', '%' . $cityName . '%')->first();
+                        $city = City::where('name', 'like', '%' . $cityName . '%')->first();
                         if ($city) {
                             $regencyCode = $city->code;
                         }
