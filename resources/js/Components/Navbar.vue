@@ -733,7 +733,7 @@ const handleLogoutConfirm = () => {
 
                     <!-- Aktivitas -->
                     <Link
-                        v-if="page.props.auth.user"
+                        v-if="page.props.auth.user && !isAdmin"
                         :href="route('profile.edit', { tab: 'transaksi' })"
                         :class="[
                             'relative h-full flex items-center text-sm transition-colors duration-300 group',

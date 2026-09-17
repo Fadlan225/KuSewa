@@ -1001,19 +1001,25 @@ onUnmounted(() => {
                             </div>
                         </div>
 
-                        <button
-                            v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
-                            @click="scrollToUnit"
-                            class="w-full py-3 md:py-3.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[14px] md:text-[15px] mb-4">
-                            Pilih Unit
-                        </button>
-                        <button
-                            v-else
-                            @click="submitBooking"
-                            :disabled="asset.status !== 'approved' || !lowestPrice || !startDate || durationCount === 0"
-                            class="w-full py-3 md:py-3.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[14px] md:text-[15px] disabled:opacity-50 disabled:cursor-not-allowed mb-4">
-                            Booking Sekarang
-                        </button>
+                        <!-- Block Booking for Admins -->
+                        <div v-if="page.props.auth?.user?.role === 'admin'" class="w-full py-3 md:py-3.5 bg-gray-200 text-gray-500 font-extrabold rounded-lg text-center shadow-sm text-[14px] md:text-[15px] mb-4">
+                            Pratinjau Administrator
+                        </div>
+                        <template v-else>
+                            <button
+                                v-if="asset.units && asset.units.length > 0 && !form.pricing_id"
+                                @click="scrollToUnit"
+                                class="w-full py-3 md:py-3.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[14px] md:text-[15px] mb-4">
+                                Pilih Unit
+                            </button>
+                            <button
+                                v-else
+                                @click="submitBooking"
+                                :disabled="asset.status !== 'approved' || !lowestPrice || !startDate || durationCount === 0"
+                                class="w-full py-3 md:py-3.5 bg-[#FFC000] hover:bg-[#e6ad00] text-[#0A2540] font-extrabold rounded-lg transition-all shadow-sm flex justify-center items-center gap-1.5 text-[14px] md:text-[15px] disabled:opacity-50 disabled:cursor-not-allowed mb-4">
+                                Booking Sekarang
+                            </button>
+                        </template>
 
                         <p v-if="asset.status !== 'approved'" class="text-center text-red-500 text-xs font-bold mb-3 mt-[-10px]">Aset ini sedang tidak tersedia.</p>
 
@@ -1113,8 +1119,8 @@ onUnmounted(() => {
         :durationLabel="rentalUnitLabel(activeScheduleMode)"
         :formattedDateRange="formattedDateRange"
         :periodLabel="rentalUnitLabel(activeScheduleMode)"
-        :disabled="asset.status !== 'approved' || (!asset.pricings?.length && !asset.units?.length) || !startDate || durationCount === 0"
-        :buttonText="(asset.units && asset.units.length > 0 && !selectedUnitId) ? 'Pilih Unit' : 'Ajukan Sewa'"
+        :disabled="page.props.auth?.user?.role === 'admin' || asset.status !== 'approved' || (!asset.pricings?.length && !asset.units?.length) || !startDate || durationCount === 0"
+        :buttonText="page.props.auth?.user?.role === 'admin' ? 'Mode Pratinjau' : ((asset.units && asset.units.length > 0 && !selectedUnitId) ? 'Pilih Unit' : 'Ajukan Sewa')"
         @submit="handleBottomBarSubmit"
         @tanya-pemilik="startChat"
     />

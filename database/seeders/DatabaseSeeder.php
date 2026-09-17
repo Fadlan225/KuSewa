@@ -27,6 +27,7 @@ class DatabaseSeeder extends Seeder
 
             // ── Users & Profiles ───────────────────────────────────────────
             AdminSeeder::class,             // 1 akun admin khusus
+            SocialMediaLinkSeeder::class,   // Tautan media sosial platform default
             // UsersSeeder::class,             // 1 admin + 5 owner + 5 customer
             // OwnerProfileSeeder::class,      // 5 profil owner (verified)
             // BankAccountSeeder::class,       // 25 Rekening bank owner

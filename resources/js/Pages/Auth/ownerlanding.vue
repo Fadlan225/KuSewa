@@ -58,7 +58,7 @@ const getRegistrationRoute = computed(() => {
                     </span>
                 </Link>
 
-                <Link :href="getRegistrationRoute" class="px-5 py-2 text-sm md:text-base font-semibold text-slate-900 hover:text-slate-600 transition-colors">
+                <Link v-if="page.props.auth?.user?.role !== 'admin'" :href="getRegistrationRoute" class="px-5 py-2 text-sm md:text-base font-semibold text-slate-900 hover:text-slate-600 transition-colors">
                     Daftarkan Aset
                 </Link>
             </div>
@@ -75,9 +75,12 @@ const getRegistrationRoute = computed(() => {
                         <p class="text-lg md:text-xl text-slate-600 mb-10 leading-relaxed">
                             Daftarkan aset Anda dan kelola penyewaan dari satu tempat.
                         </p>
-                        <Link :href="getRegistrationRoute" class="inline-flex items-center justify-center px-8 py-4 bg-slate-900 text-white font-medium rounded-md hover:bg-slate-800 transition-colors">
+                        <Link v-if="page.props.auth?.user?.role !== 'admin'" :href="getRegistrationRoute" class="inline-flex items-center justify-center px-8 py-4 bg-slate-900 text-white font-medium rounded-md hover:bg-slate-800 transition-colors">
                             Daftarkan Aset
                         </Link>
+                        <div v-else class="inline-flex items-center justify-center px-8 py-4 bg-gray-200 text-gray-500 font-medium rounded-md cursor-not-allowed">
+                            Akun Administrator tidak dapat mendaftar
+                        </div>
                     </div>
                     <!-- Area untuk visual (Foto nyata/arsitektur/aset asli). Jika kosong, ini akan memberikan whitespace yang bagus. -->
                     <div class="hidden lg:block bg-slate-100 rounded-xl aspect-[4/3] w-full border border-slate-200">
@@ -217,9 +220,12 @@ const getRegistrationRoute = computed(() => {
                         <p class="text-lg text-slate-600 mb-10">
                             Mulai dengan mendaftarkannya di KitaSewa.
                         </p>
-                        <Link :href="getRegistrationRoute" class="inline-flex items-center justify-center px-8 py-4 bg-slate-900 text-white font-medium rounded-md hover:bg-slate-800 transition-colors w-full sm:w-auto">
+                        <Link v-if="page.props.auth?.user?.role !== 'admin'" :href="getRegistrationRoute" class="inline-flex items-center justify-center px-8 py-4 bg-slate-900 text-white font-medium rounded-md hover:bg-slate-800 transition-colors w-full sm:w-auto">
                             Daftarkan Aset
                         </Link>
+                        <div v-else class="inline-flex items-center justify-center px-8 py-4 bg-gray-200 text-gray-500 font-medium rounded-md cursor-not-allowed w-full sm:w-auto text-center">
+                            Akun Administrator tidak dapat mendaftar
+                        </div>
                     </div>
                 </div>
             </section>

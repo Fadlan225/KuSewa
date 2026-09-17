@@ -1,6 +1,24 @@
 <script setup>
-import { Instagram, Mail, MessageCircle } from 'lucide-vue-next';
-import { Link } from '@inertiajs/vue3';
+import { computed } from 'vue';
+import { Instagram, Mail, MessageCircle, Facebook, Twitter, Youtube, Linkedin, Github, Globe } from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+
+const page = usePage();
+const socialLinks = computed(() => Object.values(page.props.socialLinks || {}).filter(l => l.is_active));
+
+const getIconComponent = (url) => {
+    if (!url) return Globe;
+    url = url.toLowerCase();
+    if (url.includes('instagram.com')) return Instagram;
+    if (url.includes('wa.me') || url.includes('whatsapp.com')) return MessageCircle;
+    if (url.includes('facebook.com') || url.includes('fb.com')) return Facebook;
+    if (url.includes('twitter.com') || url.includes('x.com')) return Twitter;
+    if (url.includes('youtube.com')) return Youtube;
+    if (url.includes('linkedin.com')) return Linkedin;
+    if (url.includes('github.com')) return Github;
+    if (url.includes('mailto:') || (url.includes('@') && !url.includes('/'))) return Mail;
+    return Globe;
+};
 </script>
 
 <template>
@@ -63,22 +81,10 @@ import { Link } from '@inertiajs/vue3';
                 <div>
                     <h3 class="font-bold text-[#0A2540] text-sm uppercase tracking-wider mb-5">Ikuti Kami</h3>
                     <ul class="flex flex-col space-y-4">
-                        <li>
-                            <a href="https://www.instagram.com/kitasewa.web.id/" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <Instagram class="w-4 h-4" />
-                                kitasewa.web.id
-                            </a>
-                        </li>
-                        <li>
-                            <a href="mailto:kitasewa.web.id@gmail.com" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <Mail class="w-4 h-4" />
-                                kitasewa.web.id@gmail.com
-                            </a>
-                        </li>
-                        <li>
-                            <a href="https://wa.me/6285151241588" target="_blank" rel="noopener noreferrer" class="flex items-center gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
-                                <MessageCircle class="w-4 h-4" />
-                                0851-5124-1588
+                        <li v-for="link in socialLinks" :key="link.id">
+                            <a :href="link.url" target="_blank" rel="noopener noreferrer" class="flex items-start gap-3 text-sm text-gray-500 hover:text-[#FFC000] transition-colors">
+                                <component :is="getIconComponent(link.url)" class="w-4 h-4 shrink-0 mt-0.5" />
+                                <span class="break-words">{{ link.platform_name }}</span>
                             </a>
                         </li>
                     </ul>

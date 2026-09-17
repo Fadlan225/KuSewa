@@ -178,6 +178,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Social Media Links (Admin only)
+    Route::post('/profile/social-media/reorder', [\App\Http\Controllers\SocialMediaLinkController::class, 'reorder'])->name('profile.social-media.reorder');
+    Route::post('/profile/social-media', [\App\Http\Controllers\SocialMediaLinkController::class, 'store'])->name('profile.social-media.store');
+    Route::put('/profile/social-media/{socialMediaLink}', [\App\Http\Controllers\SocialMediaLinkController::class, 'update'])->name('profile.social-media.update');
+    Route::delete('/profile/social-media/{socialMediaLink}', [\App\Http\Controllers\SocialMediaLinkController::class, 'destroy'])->name('profile.social-media.destroy');
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
     Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');

@@ -58,7 +58,16 @@ const accountMenuItems = [
         label: 'Aktivitas',
         icon: 'fa-solid fa-chart-line',
         routeMobile: route('aktivitas.hub'),
-        isActive: () => route().current('aktivitas.*') || route().current('last-seen.*') || route().current('favorites.*')
+        isActive: () => route().current('aktivitas.*') || route().current('last-seen.*') || route().current('favorites.*'),
+        show: () => page.props.auth?.user?.role !== 'admin'
+    },
+    {
+        label: 'Media Sosial',
+        icon: 'fa-solid fa-share-nodes',
+        routeDesktop: route('profile.edit', { tab: 'media-sosial' }),
+        routeMobile: route('profile.edit', { tab: 'media-sosial' }),
+        isActive: () => route().current('profile.edit') && route().params.tab === 'media-sosial',
+        show: () => page.props.auth?.user?.role === 'admin'
     },
 ];
 
@@ -186,7 +195,7 @@ const checkIsActive = (item) => {
 
             <!-- Profile Bisnis / Pusat Mitra -->
             <Link
-                v-if="user"
+                v-if="user && user.role !== 'admin'"
                 :href="mitraRoute"
                 class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-md transition-colors duration-150 group relative overflow-hidden"
             >
@@ -201,7 +210,7 @@ const checkIsActive = (item) => {
         </div>
 
         <!-- Grup Menu 'Pusat Aktivitas' (Hanya tampil di Desktop karena isinya hanya rute desktop) -->
-        <div class="hidden md:block bg-white p-6 shadow-md rounded-lg space-y-2">
+        <div v-if="user?.role !== 'admin'" class="hidden md:block bg-white p-6 shadow-md rounded-lg space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Pusat Aktivitas</h3>
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 

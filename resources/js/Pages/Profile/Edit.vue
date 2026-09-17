@@ -10,6 +10,7 @@ import SearchHistory from '@/Pages/Home/Activity/SearchHistory.vue';
 import LastSeen from '@/Pages/Home/LastSeen.vue';
 import MyReviews from '@/Pages/Home/Activity/MyReviews.vue';
 import Favorite from '@/Pages/Home/Favorite.vue';
+import UpdateSocialMediaForm from './Partials/UpdateSocialMediaForm.vue';
 import { ref, onMounted, computed } from 'vue';
 
 const props = defineProps({
@@ -96,7 +97,7 @@ const requestLocationPermission = () => {
         </div>
 
         <!-- Bagian Ringkasan Pesanan -->
-        <div class="bg-white p-6 shadow-md rounded-md">
+        <div v-if="user.role !== 'admin'" class="bg-white p-6 shadow-md rounded-md">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg sm:text-xl font-bold text-[#0A2540]">Pesanan Saya</h2>
                 <!-- Mobile Link -->
@@ -169,7 +170,7 @@ const requestLocationPermission = () => {
         </div>
 
         <!-- Inline Alert Profil (Khusus Tab Profil) -->
-        <div v-if="tab === 'profil' && !isProfileComplete" class="bg-white p-4 shadow-sm rounded-md border border-gray-100 flex items-center gap-3">
+        <div v-if="tab === 'profil' && !isProfileComplete && user.role !== 'admin'" class="bg-white p-4 shadow-sm rounded-md border border-gray-100 flex items-center gap-3">
             <div class="bg-[#FFC000] rounded-full w-8 h-8 flex items-center justify-center shrink-0">
                 <CircleAlert class="w-5 h-5 text-white" />
             </div>
@@ -227,6 +228,10 @@ const requestLocationPermission = () => {
                 :initialFavorites="initialFavorites"
                 :categoriesList="categoriesList"
             />
+            
+            <div v-if="tab === 'media-sosial' && user.role === 'admin'" class="bg-white p-6 shadow-md rounded-md">
+                <UpdateSocialMediaForm />
+            </div>
         </div>
     </ProfileLayout>
 </template>

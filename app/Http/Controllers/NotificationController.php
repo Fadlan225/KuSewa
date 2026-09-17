@@ -46,7 +46,7 @@ class NotificationController extends Controller
             $filledFields++;
         }
 
-        if ($filledFields < 10) {
+        if ($filledFields < 10 && $user->role !== 'admin') {
             $unreadCount += 1;
             $virtualNotification = [
                 'id' => 'virtual-profile-completion',
@@ -72,7 +72,7 @@ class NotificationController extends Controller
             'meta' => [
                 'current_page' => $dbNotifications->currentPage(),
                 'last_page'    => $dbNotifications->lastPage(),
-                'total'        => $dbNotifications->total() + ($filledFields < 10 ? 1 : 0),
+                'total'        => $dbNotifications->total() + (($filledFields < 10 && $user->role !== 'admin') ? 1 : 0),
             ],
             'unread_count' => $unreadCount,
         ]);
@@ -129,7 +129,7 @@ class NotificationController extends Controller
             $filledFields++;
         }
 
-        if ($filledFields < 10) {
+        if ($filledFields < 10 && $user->role !== 'admin') {
             $unreadCount += 1;
         }
 

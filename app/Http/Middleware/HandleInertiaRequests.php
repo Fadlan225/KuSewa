@@ -129,7 +129,7 @@ class HandleInertiaRequests extends Middleware
                 $filledFields++;
             }
             
-            $isProfileIncomplete = $filledFields < 10;
+            $isProfileIncomplete = ($filledFields < 10) && ($user->role !== 'admin');
 
             // Hitung notifikasi database yang belum dibaca
             $dbNotificationsCount = $user->unreadNotifications()->count();
@@ -147,6 +147,9 @@ class HandleInertiaRequests extends Middleware
                 ]
             ],
             'active_asset_slug' => $request->session()->get('active_asset_slug'),
+            'socialLinks' => \Illuminate\Support\Facades\Cache::remember('social_links', 3600, function() {
+                return \App\Models\SocialMediaLink::orderBy('order')->get()->toArray();
+            }),
             'ownerAssets' => $ownerAssets,
             'sidebarCounts' => $sidebarCounts,
             'globalPriceRange' => $globalPriceRange,

@@ -261,7 +261,7 @@ const requestLocationPermission = () => {
                     </h1>
 
                     <!-- Progress Bar Kelengkapan Profil -->
-                    <div v-if="profileCompletion.percentage < 100" class="flex flex-col mt-5 w-full mx-auto max-w-sm px-4">
+                    <div v-if="profileCompletion.percentage < 100 && user.role !== 'admin'" class="flex flex-col mt-5 w-full mx-auto max-w-sm px-4">
                         <div class="w-full max-w-[280px] mx-auto">
                             <!-- Bar -->
                             <div class="w-full bg-gray-200 h-1.5">
@@ -423,7 +423,7 @@ const requestLocationPermission = () => {
                             <img :src="user.avatar" alt="Foto Profil" class="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl">
                         </template>
                         <div v-else class="w-64 h-64 sm:w-[400px] sm:h-[400px] rounded-full bg-[#f8f9fa] flex items-center justify-center shadow-2xl overflow-hidden select-none">
-                            <UserAvatar :user="user" class="scale-[2.5] sm:scale-[4]" />
+                            <UserAvatar :user="user" />
                         </div>
                     </div>
                 </div>

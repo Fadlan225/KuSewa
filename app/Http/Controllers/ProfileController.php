@@ -66,6 +66,7 @@ class ProfileController extends Controller
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+                'role' => $user->role,
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,
@@ -127,6 +128,7 @@ class ProfileController extends Controller
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+                'role' => $user->role,
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,
@@ -188,6 +190,7 @@ class ProfileController extends Controller
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+                'role' => $user->role,
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,
@@ -272,6 +275,7 @@ class ProfileController extends Controller
                 'profile_photo' => $avatarUrl,
                 'is_owner' => $isOwner || $user->role === 'admin',
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+                'role' => $user->role,
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,

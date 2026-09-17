@@ -44,7 +44,11 @@ const occupationOptions = [
     { label: 'Lainnya', value: 'Lainnya' },
 ];
 
-const predefinedOccupations = ['Mahasiswa / Pelajar', 'Karyawan'];
+if (user.role === 'admin') {
+    occupationOptions.unshift({ label: 'ADMINISTRATOR', value: 'ADMINISTRATOR' });
+}
+
+const predefinedOccupations = ['Mahasiswa / Pelajar', 'Karyawan', 'ADMINISTRATOR'];
 let initialOccupationDropdown = '';
 let initialOccupationCustom = '';
 
@@ -156,7 +160,7 @@ const resetForm = () => {
                 </div>
 
                 <!-- Kelamin -->
-                <div>
+                <div v-if="user.role !== 'admin'">
                     <label class="block text-sm text-[#333333] mb-1.5">Jenis kelamin</label>
                     <CustomSelect
                         v-model="form.gender"
@@ -178,7 +182,7 @@ const resetForm = () => {
                 </div>
 
                 <!-- Status Perkawinan -->
-                <div>
+                <div v-if="user.role !== 'admin'">
                     <label class="block text-sm text-[#333333] mb-1.5">Status Perkawinan</label>
                     <CustomSelect
                         v-model="form.marital_status"
