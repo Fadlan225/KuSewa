@@ -106,6 +106,14 @@ const activityMenuItems = [
 
 const settingsMenuItems = [];
 
+const accountHistoryMenuItems = [
+    {
+        label: 'Riwayat Akun',
+        icon: 'fa-solid fa-clock-rotate-left', // or clock-history
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'riwayat-akun' }) : route('profile.edit', { tab: 'riwayat-akun' }),
+        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'riwayat-akun') : (route().current('profile.edit') && route().params.tab === 'riwayat-akun')
+    }
+];
 
 const helpMenuItems = [
     { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: route('bantuan.index'), routeNames: ['bantuan.index'] },
@@ -215,6 +223,31 @@ const checkIsActive = (item) => {
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 
             <template v-for="(item, index) in activityMenuItems" :key="index">
+                <!-- Desktop Link -->
+                <Link
+                    v-if="item.routeDesktop"
+                    :href="item.routeDesktop"
+                    :class="[
+                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
+                        checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
+                    ]"
+                >
+                    <div v-if="checkIsActive(item)" class="hidden md:block absolute left-0 top-0 bottom-0 w-1 bg-[#FFC000]"></div>
+                    <div class="flex items-center space-x-4">
+                        <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D]' : 'text-[#6C757D] group-hover:text-[#FFC000]']" />
+                        <span :class="['text-sm sm:text-base font-semibold transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#0A2540]' : 'text-[#0A2540] group-hover:text-[#FFC000]']">{{ item.label }}</span>
+                    </div>
+                    <ChevronRight :class="['text-sm transition-all duration-200', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D] md:translate-x-1' : 'text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]']" />
+                </Link>
+            </template>
+        </div>
+
+        <!-- Grup Menu 'Aktivitas Akun' (Tampil untuk semua pengguna) -->
+        <div class="hidden md:block bg-white p-6 shadow-md rounded-lg space-y-2">
+            <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Aktivitas Keamanan</h3>
+            <div class="border-t border-[#F8F9FA] mb-2"></div>
+
+            <template v-for="(item, index) in accountHistoryMenuItems" :key="index">
                 <!-- Desktop Link -->
                 <Link
                     v-if="item.routeDesktop"

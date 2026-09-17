@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { AlertTriangle, ClipboardList, Wallet, Heart, ChevronRight, CircleAlert } from 'lucide-vue-next';
+import { AlertTriangle, ClipboardList, Wallet, Heart, ChevronRight, CircleAlert, ShieldCheck, CheckSquare, Users } from 'lucide-vue-next';
 import ProfileLayout from '@/Layouts/ProfileLayout.vue';
 import SettingsForms from './Partials/SettingsForms.vue';
 import SecurityForms from './Partials/SecurityForms.vue';
@@ -11,6 +11,7 @@ import LastSeen from '@/Pages/Home/LastSeen.vue';
 import MyReviews from '@/Pages/Home/Activity/MyReviews.vue';
 import Favorite from '@/Pages/Home/Favorite.vue';
 import UpdateSocialMediaForm from './Partials/UpdateSocialMediaForm.vue';
+import AccountHistory from './Partials/AccountHistory.vue';
 import { ref, onMounted, computed } from 'vue';
 
 const props = defineProps({
@@ -18,6 +19,8 @@ const props = defineProps({
     bookings_count: { type: Number, default: 0 },
     unpaid_bookings_count: { type: Number, default: 0 },
     favorite_assets_count: { type: Number, default: 0 },
+    pending_accounts_count: { type: Number, default: 0 },
+    pending_assets_count: { type: Number, default: 0 },
     mustVerifyEmail: Boolean,
     status: String,
     owner_profile: { type: Object, default: null },
@@ -29,7 +32,8 @@ const props = defineProps({
     reviews: { type: Object, default: () => ({}) },
     initialFavorites: { type: Array, default: () => [] },
     categoriesList: { type: Array, default: () => ['Semua'] },
-    banks: { type: Array, default: () => [] }
+    banks: { type: Array, default: () => [] },
+    accountActivities: { type: Array, default: () => [] }
 });
 
 const locationDenied = ref(false);
@@ -96,8 +100,8 @@ const requestLocationPermission = () => {
             </button>
         </div>
 
-        <!-- Bagian Ringkasan Pesanan -->
-        <div v-if="user.role !== 'admin'" class="bg-white p-6 shadow-md rounded-md">
+        <!-- Bagian Ringkasan Pesanan (Non-Admin) -->
+        <div v-if="user.role !== 'admin'" class="bg-white p-6 shadow-md rounded-md mb-6">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg sm:text-xl font-bold text-[#0A2540]">Pesanan Saya</h2>
                 <!-- Mobile Link -->
@@ -169,6 +173,48 @@ const requestLocationPermission = () => {
             </div>
         </div>
 
+        <!-- Pusat Kendali Admin -->
+        <div v-else class="bg-white p-6 shadow-md rounded-md mb-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-lg sm:text-xl font-bold text-[#0A2540]">Pusat Kendali Admin</h2>
+                <Link
+                    :href="route('admin.dashboard')"
+                    class="text-xs sm:text-sm font-semibold text-[#466080] hover:text-[#0A2540] transition-colors flex items-center space-x-1"
+                >
+                    <span>Ke Dashboard Admin</span>
+                    <ChevronRight class="text-[10px] ml-1 text-[#6C757D]" />
+                </Link>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 sm:gap-6 text-center">
+                <!-- Pengajuan Akun -->
+                <Link :href="route('admin.pengajuan-akun')" class="flex flex-col items-center group cursor-pointer">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-blue-50 transition-colors duration-200">
+                        <ShieldCheck class="w-6 h-6 text-[#0A2540] group-hover:text-blue-500 transition-colors" />
+                        <span v-if="pending_accounts_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ pending_accounts_count }}</span>
+                    </div>
+                    <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-blue-500 transition-colors">Pengajuan Akun</p>
+                </Link>
+
+                <!-- Validasi Aset -->
+                <Link :href="route('admin.validasi-aset')" class="flex flex-col items-center group cursor-pointer">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-emerald-50 transition-colors duration-200">
+                        <CheckSquare class="w-6 h-6 text-[#0A2540] group-hover:text-emerald-500 transition-colors" />
+                        <span v-if="pending_assets_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ pending_assets_count }}</span>
+                    </div>
+                    <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-emerald-500 transition-colors">Validasi Aset</p>
+                </Link>
+
+                <!-- Manajemen Pengguna -->
+                <Link :href="route('admin.user-management')" class="flex flex-col items-center group cursor-pointer">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-purple-50 transition-colors duration-200">
+                        <Users class="w-6 h-6 text-[#0A2540] group-hover:text-purple-500 transition-colors" />
+                    </div>
+                    <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-purple-500 transition-colors">Pengguna</p>
+                </Link>
+            </div>
+        </div>
+
         <!-- Inline Alert Profil (Khusus Tab Profil) -->
         <div v-if="tab === 'profil' && !isProfileComplete && user.role !== 'admin'" class="bg-white p-4 shadow-sm rounded-md border border-gray-100 flex items-center gap-3">
             <div class="bg-[#FFC000] rounded-full w-8 h-8 flex items-center justify-center shrink-0">
@@ -232,6 +278,11 @@ const requestLocationPermission = () => {
             <div v-if="tab === 'media-sosial' && user.role === 'admin'" class="bg-white p-6 shadow-md rounded-md">
                 <UpdateSocialMediaForm />
             </div>
+
+            <AccountHistory
+                v-if="tab === 'riwayat-akun'"
+                :accountActivities="accountActivities"
+            />
         </div>
     </ProfileLayout>
 </template>

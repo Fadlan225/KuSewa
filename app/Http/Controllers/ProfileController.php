@@ -8,6 +8,7 @@ use App\Models\search_log;
 use App\Models\AssetView;
 use App\Models\review;
 use App\Models\asset_category;
+use App\Models\AccountActivity;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -293,6 +294,8 @@ class ProfileController extends Controller
             'bookings_count' => $bookingsCount,
             'unpaid_bookings_count' => $unpaidBookingsCount,
             'favorite_assets_count' => $favoriteAssetsCount,
+            'pending_accounts_count' => $user->role === 'admin' ? \App\Models\owner_profile::where('status', 'pending')->count() : 0,
+            'pending_assets_count' => $user->role === 'admin' ? \App\Models\asset::where('status', 'pending')->count() : 0,
             'tab' => $tab,
         ];
 
@@ -346,6 +349,13 @@ class ProfileController extends Controller
             })->filter()->values();
             
             $data['categoriesList'] = collect(['Semua'])->merge(asset_category::pluck('name'))->values();
+        } elseif ($tab === 'riwayat-akun') {
+            $activities = AccountActivity::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
+            $data['accountActivities'] = $activities->map(function ($activity) {
+                $activity->province = \App\Models\Province::where('code', $activity->province_code)->first();
+                $activity->city = \App\Models\city::where('code', $activity->regency_code)->first();
+                return $activity;
+            });
         }
 
         return Inertia::render('Profile/Edit', $data);
