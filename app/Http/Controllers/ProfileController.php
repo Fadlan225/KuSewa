@@ -157,6 +157,25 @@ class ProfileController extends Controller
     }
 
     /**
+     * Display the user's account history form (Mobile only).
+     */
+    public function accountHistory(Request $request): Response
+    {
+        $user = $request->user();
+        
+        $activities = \App\Models\AccountActivity::where('user_id', $user->id)->orderBy('created_at', 'desc')->get();
+        $accountActivities = $activities->map(function ($activity) {
+            $activity->province = \App\Models\Province::where('code', $activity->province_code)->first();
+            $activity->city = \App\Models\City::where('code', $activity->regency_code)->first();
+            return $activity;
+        });
+
+        return Inertia::render('Profile/AccountHistoryPage', [
+            'accountActivities' => $accountActivities
+        ]);
+    }
+
+    /**
      * Display the user's business form (Mobile only).
      */
     public function bisnis(Request $request): Response

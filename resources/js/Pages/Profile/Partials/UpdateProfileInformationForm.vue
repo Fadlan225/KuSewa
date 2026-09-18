@@ -1,7 +1,7 @@
 <script setup>
-import { ChevronDown, Loader2 } from 'lucide-vue-next';
+import { ChevronDown, Loader2, CircleAlert } from 'lucide-vue-next';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch, onMounted, computed } from 'vue';
 import LocationSelect from '@/Components/ui/LocationSelect.vue';
 import CustomSelect from '@/Components/ui/CustomSelect.vue';
 const props = defineProps({
@@ -15,6 +15,20 @@ const props = defineProps({
 
 const user = usePage().props.auth.user;
 const isOwner = usePage().props.user?.is_owner || false;
+
+const isProfileComplete = computed(() => {
+    let filled = 0;
+    const fields = [
+        'name', 'email', 'phone', 'gender',
+        'date_of_birth', 'place_of_birth_code', 'marital_status',
+        'occupation', 'nationality'
+    ];
+    fields.forEach(field => {
+        if (user && user[field]) filled++;
+    });
+    if (user && (user.profile_photo || user.avatar)) filled++;
+    return filled === 10;
+});
 
 const dob_day = ref('');
 const dob_month = ref('');
@@ -124,6 +138,16 @@ const resetForm = () => {
 
 <template>
     <section>
+        <!-- Inline Alert Profil -->
+        <div v-if="!isProfileComplete && user.role !== 'admin'" class="bg-white p-4 shadow-sm rounded-md border border-gray-100 flex items-center gap-3 mb-6">
+            <div class="bg-[#FFC000] rounded-full w-8 h-8 flex items-center justify-center shrink-0">
+                <CircleAlert class="w-5 h-5 text-white" />
+            </div>
+            <p class="text-[13px] sm:text-sm font-medium text-gray-700 leading-relaxed">
+                Pastikan profil Anda jelas dan lengkap agar lebih disukai oleh pemilik aset.
+            </p>
+        </div>
+
         <form
             @submit.prevent="form.patch(route('profile.update'))"
             class="space-y-5"

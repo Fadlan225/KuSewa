@@ -215,15 +215,6 @@ const requestLocationPermission = () => {
             </div>
         </div>
 
-        <!-- Inline Alert Profil (Khusus Tab Profil) -->
-        <div v-if="tab === 'profil' && !isProfileComplete && user.role !== 'admin'" class="bg-white p-4 shadow-sm rounded-md border border-gray-100 flex items-center gap-3">
-            <div class="bg-[#FFC000] rounded-full w-8 h-8 flex items-center justify-center shrink-0">
-                <CircleAlert class="w-5 h-5 text-white" />
-            </div>
-            <p class="text-[13px] sm:text-sm font-medium text-gray-700 leading-relaxed">
-                Pastikan profil Anda jelas dan lengkap agar lebih disukai oleh pemilik aset.
-            </p>
-        </div>
 
         <!-- Bagian Settings Forms (Desktop Only) -->
         <div class="hidden md:block">

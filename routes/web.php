@@ -190,6 +190,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/bisnis', [ProfileController::class, 'bisnis'])->name('profile.bisnis');
     Route::get('/profile/security', [ProfileController::class, 'security'])->name('profile.security');
     Route::get('/profile/security/password', [ProfileController::class, 'securityPassword'])->name('profile.security.password');
+    Route::get('/profile/account-history', [ProfileController::class, 'accountHistory'])->name('profile.account-history');
     
     // Email Change Routes
     Route::post('/profile/email/send-old-otp', [EmailChangeController::class, 'sendOldOtp'])->name('profile.email.send-old-otp');

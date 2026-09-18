@@ -73,8 +73,8 @@ const groupedActivities = computed(() => {
 </script>
 
 <template>
-    <div class="bg-white p-6 shadow-md rounded-md">
-        <h2 class="text-xl font-bold text-[#0A2540] mb-6">Riwayat Akun</h2>
+    <div class="bg-transparent p-0 shadow-none md:bg-white md:p-6 md:shadow-md md:rounded-md">
+        <h2 class="hidden md:block text-xl font-bold text-[#0A2540] mb-6">Riwayat Akun</h2>
 
         <div v-if="Object.keys(groupedActivities).length === 0" class="flex flex-col items-center justify-center py-10">
             <EmptyActivityIllustration class="w-48 sm:w-64 h-auto opacity-70 mb-6" />

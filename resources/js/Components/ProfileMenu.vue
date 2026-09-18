@@ -111,7 +111,8 @@ const accountHistoryMenuItems = [
         label: 'Riwayat Akun',
         icon: 'fa-solid fa-clock-rotate-left', // or clock-history
         routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'riwayat-akun' }) : route('profile.edit', { tab: 'riwayat-akun' }),
-        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'riwayat-akun') : (route().current('profile.edit') && route().params.tab === 'riwayat-akun')
+        routeMobile: route('profile.account-history'),
+        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'riwayat-akun') : (route().current('profile.account-history') || (route().current('profile.edit') && route().params.tab === 'riwayat-akun'))
     }
 ];
 
@@ -243,7 +244,7 @@ const checkIsActive = (item) => {
         </div>
 
         <!-- Grup Menu 'Aktivitas Akun' (Tampil untuk semua pengguna) -->
-        <div class="hidden md:block bg-white p-6 shadow-md rounded-lg space-y-2">
+        <div class="bg-white p-6 shadow-md rounded-lg space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Aktivitas Keamanan</h3>
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 
@@ -263,6 +264,19 @@ const checkIsActive = (item) => {
                         <span :class="['text-sm sm:text-base font-semibold transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#0A2540]' : 'text-[#0A2540] group-hover:text-[#FFC000]']">{{ item.label }}</span>
                     </div>
                     <ChevronRight :class="['text-sm transition-all duration-200', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D] md:translate-x-1' : 'text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]']" />
+                </Link>
+
+                <!-- Mobile Link -->
+                <Link
+                    v-if="item.routeMobile"
+                    :href="item.routeMobile"
+                    class="flex md:hidden items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative hover:bg-[#F8F9FA]"
+                >
+                    <div class="flex items-center space-x-4">
+                        <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors text-[#6C757D] group-hover:text-[#FFC000]']" />
+                        <span class="text-sm sm:text-base font-semibold transition-colors text-[#0A2540] group-hover:text-[#FFC000]">{{ item.label }}</span>
+                    </div>
+                    <ChevronRight class="text-sm transition-all duration-200 text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]" />
                 </Link>
             </template>
         </div>
