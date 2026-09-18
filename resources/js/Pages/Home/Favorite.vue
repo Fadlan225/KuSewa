@@ -109,7 +109,7 @@ const filteredFavorites = computed(() => {
                 <div class="relative">
                     <button
                         @click="isSortOpenMobile = !isSortOpenMobile"
-                        class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
+                        class="flex items-center gap-2 rounded-md bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
                     >
                         <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
                         {{ sort }}
@@ -124,7 +124,7 @@ const filteredFavorites = computed(() => {
                         leave-from-class="transform opacity-100 scale-100"
                         leave-to-class="transform opacity-0 scale-95"
                     >
-                        <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
+                        <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden">
                             <div class="py-1">
                                 <button
                                     v-for="option in sortOptions"
@@ -150,7 +150,7 @@ const filteredFavorites = computed(() => {
                         v-for="item in categories"
                         :key="item"
                         @click="selectedCategory = item"
-                        class="px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 flex items-center gap-1.5"
+                        class="px-3.5 py-2 rounded-md text-xs font-medium whitespace-nowrap transition-all duration-200 flex-shrink-0 flex items-center gap-1.5"
                         :class="selectedCategory === item
                             ? 'bg-[#FFC000] text-[#0A2540] shadow-xs font-semibold'
                             : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'"
@@ -186,7 +186,7 @@ const filteredFavorites = computed(() => {
                             <div class="block lg:hidden relative ml-auto">
                                 <button
                                     @click="isSortOpenMobile = !isSortOpenMobile"
-                                class="flex items-center gap-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
+                                class="flex items-center gap-2 rounded-md bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 text-xs font-medium text-[#1D1D1F] transition-colors shadow-xs"
                             >
                                 <i :class="sortOptions.find(o => o.label === sort)?.icon || 'fa-solid fa-clock-rotate-left'" class="text-slate-500 text-[10px]"></i>
                                 {{ sort }}
@@ -202,7 +202,7 @@ const filteredFavorites = computed(() => {
                                 leave-from-class="transform opacity-100 scale-100"
                                 leave-to-class="transform opacity-0 scale-95"
                             >
-                                <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-xl bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden border border-slate-100">
+                                <div v-if="isSortOpenMobile" class="absolute z-50 right-0 mt-2 w-48 origin-top-right rounded-md bg-white shadow-xl ring-1 ring-black ring-opacity-5 focus:outline-none overflow-hidden border border-slate-100">
                                     <div class="py-1">
                                         <button
                                             v-for="option in sortOptions"
@@ -224,7 +224,7 @@ const filteredFavorites = computed(() => {
                     <!-- EMPTY STATES -->
                     <div
                         v-if="filteredFavorites.length === 0"
-                        class="bg-white rounded-2xl sm:rounded-[1.5rem] border border-slate-200/60 py-12 sm:py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center"
+                        class="bg-white rounded-md sm:rounded-md border border-slate-200/60 py-12 sm:py-16 px-4 text-center shadow-xs flex flex-col items-center justify-center"
                     >
                         <NotFoundIcon class="w-48 h-48 object-contain mb-6" />
 

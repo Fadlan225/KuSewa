@@ -1,6 +1,6 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
-import { CheckCircle, Clock, Hourglass, Info, HelpCircle, Headset, ArrowRight, CloudUpload, Loader2, FolderOpen } from 'lucide-vue-next';
+import { CheckCircle, Clock, Hourglass, Info, HelpCircle, Headset, ArrowRight, CloudUpload, Loader2, FolderOpen, CalendarClock, Wallet } from 'lucide-vue-next';
 import { ref, computed } from 'vue';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -84,22 +84,34 @@ const canPay = computed(() => props.billInfo?.canPay === true);
             {{ successMessage }}
         </div>
 
-        <!-- TIDAK ADA TAGIHAN AKTIF -->
-        <div v-if="!billInfo" class="flex flex-col items-center justify-center py-24 text-center">
-            <div class="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-500 mb-4">
-                <CheckCircle class="text-3xl" />
-            </div>
-            <h2 class="text-xl font-black text-slate-800 mb-2">Semua Tagihan Lunas!</h2>
-            <p class="text-sm text-slate-500 max-w-xs">Tidak ada tagihan aktif saat ini. Tagihan periode berikutnya akan muncul di awal bulan mendatang.</p>
-        </div>
-
-        <!-- ADA TAGIHAN AKTIF -->
-        <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- MAIN CONTENT -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
             <!-- LEFT COLUMN: Detail Tagihan & Metode Pembayaran (7 Cols) -->
             <div class="lg:col-span-7 space-y-5">
 
-                <!-- Card Ringkasan Tagihan -->
+                <!-- JIKA TIDAK ADA TAGIHAN SAMA SEKALI -->
+                <Card v-if="!billInfo" class="bg-gradient-to-br from-indigo-50/50 to-white rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
+                    <CardContent class="p-8 flex flex-col items-center text-center">
+                        <div class="w-20 h-20 rounded-full bg-indigo-100/50 flex items-center justify-center mb-5">
+                            <div class="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600">
+                                <Wallet class="w-7 h-7" />
+                            </div>
+                        </div>
+                        <h2 class="text-lg font-black text-[#0A2540] mb-2">Belum Ada Tagihan Bulan Ini</h2>
+                        <p class="text-xs text-slate-500 max-w-sm leading-relaxed mb-6">
+                            Anda belum memiliki tagihan layanan saat ini. Tagihan akan otomatis diakumulasikan di sini setiap kali Anda berhasil menyelesaikan transaksi penyewaan. Semakin banyak transaksi, semakin besar keuntungan Anda!
+                        </p>
+                        <Link :href="route('owner.dashboard')" class="inline-flex items-center justify-center gap-2 bg-[#0A2540] text-white text-xs font-bold py-2.5 px-5 rounded-xl hover:bg-slate-800 transition shadow-sm">
+                            Kembali ke Dashboard
+                            <ArrowRight class="w-4 h-4" />
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                <!-- JIKA ADA TAGIHAN AKTIF -->
+                <template v-else>
+                    <!-- Card Ringkasan Tagihan -->
                 <Card class="bg-white rounded-2xl border border-slate-200/70 shadow-sm">
                     <CardContent class="p-5 space-y-4">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3">
@@ -194,13 +206,14 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                     </div>
                 </div>
 
+                </template>
             </div>
 
             <!-- RIGHT COLUMN: QR Code / Info Transfer + Upload Bukti (5 Cols) -->
             <div class="lg:col-span-5 space-y-5">
 
-                <!-- Panel Info & FAQ — tampil saat masih bulan berjalan -->
-                <template v-if="isCurrentMonth">
+                <!-- Panel Info & FAQ — tampil saat tidak ada bill atau saat masih bulan berjalan -->
+                <template v-if="!billInfo || isCurrentMonth">
                     <!-- Kartu: Apa itu Biaya Layanan? -->
                     <Card class="bg-white rounded-2xl border border-slate-200/70 shadow-sm">
                         <CardContent class="p-5 space-y-4">
@@ -255,15 +268,15 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                             <h3 class="text-sm font-black">Butuh Bantuan?</h3>
                         </div>
                         <p class="text-xs text-white/70 leading-relaxed">Jika ada pertanyaan mengenai tagihan atau pembayaran, tim kami siap membantu Anda.</p>
-                        <a :href="route('owner.help')" class="inline-flex items-center gap-2 text-xs font-bold bg-white/10 hover:bg-white/20 transition px-4 py-2.5 rounded-xl">
+                        <a href="#" class="inline-flex items-center gap-2 text-xs font-bold bg-white/10 hover:bg-white/20 transition px-4 py-2.5 rounded-xl">
                             <ArrowRight class="" />
                             Hubungi Tim KitaSewa
                         </a>
                     </div>
                 </template>
 
-                <!-- Panel pembayaran — tampil saat bukan bulan berjalan & belum lunas -->
-                <template v-if="!isAlreadyPaid && !isCurrentMonth">
+                <!-- Panel pembayaran — tampil saat ada tagihan, bukan bulan berjalan & belum lunas -->
+                <template v-if="billInfo && !isAlreadyPaid && !isCurrentMonth">
 
                 <!-- Tampilan QRIS -->
                 <Card v-if="selectedMethod === 'qris'" class="bg-white rounded-2xl border border-slate-200/70 shadow-sm text-center">
@@ -335,10 +348,11 @@ const canPay = computed(() => props.billInfo?.canPay === true);
         </div>
 
         <!-- RIWAYAT TAGIHAN -->
-        <Card v-if="billingHistory.length > 0" class="bg-white rounded-2xl border border-slate-200/70 shadow-sm mt-6 mb-8">
+        <Card class="bg-white rounded-2xl border border-slate-200/70 shadow-sm mt-6 mb-8">
             <CardContent class="p-5 space-y-4">
             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Riwayat Tagihan Bulanan</h3>
-            <div class="overflow-x-auto">
+            
+            <div v-if="billingHistory.length > 0" class="overflow-x-auto">
                 <table class="w-full text-xs">
                     <thead>
                         <tr class="text-left text-slate-400 border-b border-slate-100">
@@ -366,15 +380,18 @@ const canPay = computed(() => props.billInfo?.canPay === true);
                     </tbody>
                 </table>
             </div>
+
+            <!-- Belum ada riwayat -->
+            <div v-else class="text-center py-10">
+                <div class="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-3">
+                    <FolderOpen class="text-slate-400 w-6 h-6" />
+                </div>
+                <p class="text-xs font-bold text-slate-600">Belum Ada Riwayat Tagihan</p>
+                <p class="text-[10px] text-slate-400 mt-1">Riwayat pembayaran Anda di bulan-bulan sebelumnya akan tampil di sini.</p>
+            </div>
+
             </CardContent>
         </Card>
-
-        <!-- Belum ada riwayat -->
-        <div v-else-if="!billInfo" class="hidden"></div>
-        <div v-else class="mt-6 mb-8 text-center py-8 text-xs text-slate-400">
-            <FolderOpen class="text-2xl mb-2 block" />
-            Belum ada riwayat tagihan.
-        </div>
 
     </DashboardLayout>
 </template>

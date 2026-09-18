@@ -21,6 +21,7 @@ const props = defineProps({
     documents:       { type: Array,  default: () => [] },
     user:            { type: Object, default: () => ({}) },
     faqs:            { type: Array,  default: () => [] },
+    isGlobal:        { type: Boolean, default: true },
 });
 
 // ========== FILTER STATUS ==========
@@ -231,7 +232,7 @@ const filterTime = ref('daily');
                         ></div>
 
                         <!-- Filter Kategori -->
-                        <div class="flex items-center gap-2 relative z-50">
+                        <div v-if="isGlobal" class="flex items-center gap-2 relative z-50">
                             <label class="text-xs font-bold text-slate-600">Kategori</label>
                             <div class="relative">
                                 <button
@@ -268,7 +269,7 @@ const filterTime = ref('daily');
                         </div>
 
                         <!-- Filter Jenis -->
-                        <div class="flex items-center gap-2 relative z-50">
+                        <div v-if="isGlobal" class="flex items-center gap-2 relative z-50">
                             <label class="text-xs font-bold text-slate-600">Jenis</label>
                             <div class="relative">
                                 <button
@@ -304,7 +305,7 @@ const filterTime = ref('daily');
                             </div>
                         </div>
 
-                        <div class="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
+                        <div v-if="isGlobal" class="w-px h-6 bg-slate-200 mx-1 hidden sm:block"></div>
 
                         <!-- Filter Tanggal -->
                         <div class="flex items-center gap-2">

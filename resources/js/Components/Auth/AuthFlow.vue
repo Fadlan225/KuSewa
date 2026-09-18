@@ -71,6 +71,50 @@ watch([dob_year, dob_month, dob_day], ([y, m, d]) => {
 const purpose = ref('');
 const verifiedToken = ref('');
 
+const otpCode = ref(['', '', '', '', '', '']);
+const otpInputs = ref([]);
+
+const handleOtpInput = (index, event) => {
+    const value = event.target.value;
+    if (value && !/^\d$/.test(value)) {
+        otpCode.value[index] = '';
+        return;
+    }
+    if (value && index < 5) {
+        otpInputs.value[index + 1]?.focus();
+    }
+    
+    form.value.otp = otpCode.value.join('');
+    if (form.value.otp.length === 6) {
+        verifyOtp();
+    }
+};
+
+const handleOtpKeydown = (index, event) => {
+    if (event.key === 'Backspace' && !otpCode.value[index] && index > 0) {
+        otpInputs.value[index - 1]?.focus();
+    } else if (event.key === 'Enter' && form.value.otp.length === 6) {
+        verifyOtp();
+    }
+};
+
+const handleOtpPaste = (event) => {
+    event.preventDefault();
+    const pastedData = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (pastedData) {
+        pastedData.split('').forEach((char, i) => {
+            if (i < 6) otpCode.value[i] = char;
+        });
+        const nextIndex = Math.min(pastedData.length, 5);
+        otpInputs.value[nextIndex]?.focus();
+        
+        form.value.otp = otpCode.value.join('');
+        if (form.value.otp.length === 6) {
+            verifyOtp();
+        }
+    }
+};
+
 const clearError = () => {
     error.value = '';
     successMsg.value = '';
@@ -141,6 +185,8 @@ const checkEmail = async () => {
         if (status === 'not_registered') {
             purpose.value = 'register';
             await sendOtp(false); // false means don't show resend success msg yet
+            otpCode.value = ['', '', '', '', '', ''];
+            form.value.otp = '';
             step.value = 'otp';
         } else if (status === 'registered_with_password') {
             step.value = 'password';
@@ -327,6 +373,8 @@ const submitForgotPasswordEmail = async () => {
     loading.value = true;
     try {
         await sendOtp(false);
+        otpCode.value = ['', '', '', '', '', ''];
+        form.value.otp = '';
         step.value = 'otp';
     } catch (err) {
     } finally {
@@ -378,7 +426,7 @@ const handleGoogleLogin = () => {
                         <TextInput
                             id="email"
                             type="email"
-                            class="mt-1 p-2 block w-full bg-[#F8F9FA] border-[#6C757D]/20 focus:border-[#FFC000] focus:ring-[#FFC000] text-sm"
+                            class="mt-1 p-2 block w-full bg-[#F8F9FA] border-[#6C757D]/20 focus:border-[#FFC000] focus:ring-[#FFC000] text-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                             v-model="form.email"
                             required
                             placeholder="example@gmail.com"
@@ -531,15 +579,19 @@ const handleGoogleLogin = () => {
                 <h3 class="text-xl font-extrabold mb-2">Cek Email Anda</h3>
                 <p class="text-sm text-[#6C757D] mb-6">Kami telah mengirim 6 digit kode OTP ke <span class="font-bold text-[#0A2540]">{{ form.email }}</span>. Anda juga dapat menggunakan Magic Link di email tersebut.</p>
 
-                <div class="flex justify-center mb-6">
-                    <TextInput
-                        v-model="form.otp"
+                <div class="flex justify-center gap-2 mt-6 mb-6" @paste="handleOtpPaste">
+                    <input
+                        v-for="(_, index) in 6"
+                        :key="index"
+                        :ref="el => otpInputs[index] = el"
+                        v-model="otpCode[index]"
                         type="text"
-                        maxlength="6"
-                        class="text-center text-3xl font-extrabold tracking-[0.5em] w-48 bg-[#F8F9FA] p-2 border-[#6C757D]/30 focus:border-[#FFC000] focus:ring-[#FFC000]"
-                        placeholder="••••••"
-                        @input="form.otp.length === 6 && verifyOtp()"
+                        inputmode="numeric"
+                        maxlength="1"
                         :disabled="loading"
+                        class="w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] focus:outline-none transition-all disabled:opacity-50"
+                        @input="handleOtpInput(index, $event)"
+                        @keydown="handleOtpKeydown(index, $event)"
                     />
                 </div>
 

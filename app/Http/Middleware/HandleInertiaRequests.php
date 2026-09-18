@@ -107,13 +107,49 @@ class HandleInertiaRequests extends Middleware
                 });
         }
 
+        $isProfileIncomplete = false;
+        $dbNotificationsCount = 0;
+
+        if ($user) {
+            // Hitung kelengkapan profil (berdasarkan 10 field di ProfileLayout)
+            $filledFields = 0;
+            $profileFields = [
+                'name', 'email', 'phone', 'gender',
+                'date_of_birth', 'place_of_birth_code', 'marital_status',
+                'occupation', 'nationality'
+            ];
+            
+            foreach ($profileFields as $field) {
+                if (!empty($user->{$field})) {
+                    $filledFields++;
+                }
+            }
+            
+            if (!empty($user->profile_photo) || !empty($user->avatar)) {
+                $filledFields++;
+            }
+            
+            $isProfileIncomplete = ($filledFields < 10) && ($user->role !== 'admin');
+
+            // Hitung notifikasi database yang belum dibaca
+            $dbNotificationsCount = $user->unreadNotifications()->count();
+        }
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $user,
-                'unreadCount' => $unreadCount,
+                'unreadCount' => $unreadCount, // Ini untuk Chat
+                'badges' => [
+                    'notifications' => $dbNotificationsCount,
+                    'incomplete_profile' => $isProfileIncomplete,
+                    'total' => $dbNotificationsCount + ($isProfileIncomplete ? 1 : 0),
+                ]
             ],
             'active_asset_slug' => $request->session()->get('active_asset_slug'),
+            'socialLinks' => \Illuminate\Support\Facades\Cache::remember('social_links', 3600, function() {
+                return \App\Models\SocialMediaLink::orderBy('order')->get()->toArray();
+            }),
             'ownerAssets' => $ownerAssets,
             'sidebarCounts' => $sidebarCounts,
             'globalPriceRange' => $globalPriceRange,

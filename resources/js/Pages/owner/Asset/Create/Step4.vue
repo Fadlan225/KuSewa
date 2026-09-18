@@ -180,25 +180,25 @@ onMounted(() => {
                 <!-- KOS: KAPASITAS PENGHUNI -->
                 <div class="mb-6">
                     <label class="block text-base font-bold text-slate-800 mb-1.5">Kapasitas Penghuni</label>
-                    <div class="flex items-center gap-3">
-                        <button type="button" @click="unit.detail.kapasitas_penghuni = (unit.detail.kapasitas_penghuni || 1) > 1 ? (unit.detail.kapasitas_penghuni || 1) - 1 : 1" class="w-10 h-10 flex items-center justify-center border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 transition cursor-pointer">
-                            <span class="text-lg font-bold">-</span>
+                    <div class="flex items-center justify-between w-full border border-slate-300 rounded-lg overflow-hidden bg-white focus-within:border-[#FFC000] focus-within:ring-1 focus-within:ring-[#FFC000] transition-all">
+                        <button type="button" @click="unit.detail.kapasitas_penghuni = (unit.detail.kapasitas_penghuni || 1) > 1 ? (unit.detail.kapasitas_penghuni || 1) - 1 : 1" class="w-12 h-11 flex items-center justify-center border-r border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0">
+                            <span class="text-xl font-bold">-</span>
                         </button>
                         <input
                             v-model.number="unit.detail.kapasitas_penghuni"
                             type="number"
                             min="1"
                             placeholder="1"
+                            @keydown="['-', '+', 'e', 'E'].includes($event.key) && $event.preventDefault()"
                             @input="e => {
                                 let val = parseInt(e.target.value);
                                 if(val < 1 || isNaN(val)) { e.target.value = 1; unit.detail.kapasitas_penghuni = 1; }
                             }"
-                            class="w-20 text-center text-base font-bold border border-slate-300 rounded-lg py-2 focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
+                            class="flex-1 text-center text-base font-bold text-slate-800 border-0 focus:border-transparent focus:ring-0 shadow-none outline-none m-0 p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]"
                         />
-                        <button type="button" @click="unit.detail.kapasitas_penghuni = (unit.detail.kapasitas_penghuni || 1) + 1" class="w-10 h-10 flex items-center justify-center border border-slate-300 rounded-lg text-slate-600 hover:bg-slate-50 transition cursor-pointer">
-                            <span class="text-lg font-bold">+</span>
+                        <button type="button" @click="unit.detail.kapasitas_penghuni = (unit.detail.kapasitas_penghuni || 1) + 1" class="w-12 h-11 flex items-center justify-center border-l border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0">
+                            <span class="text-xl font-bold">+</span>
                         </button>
-                        <span class="text-sm font-semibold text-slate-500">Orang / Kamar</span>
                     </div>
                 </div>
 
@@ -206,10 +206,10 @@ onMounted(() => {
                 <div class="mb-6">
                     <label class="block text-base font-bold text-slate-800 mb-3">Ukuran Kamar</label>
                     <!-- Presets -->
-                    <div class="flex flex-wrap gap-2 mb-4">
-                        <button type="button" @click="unit.detail.ukuran_panjang = 3; unit.detail.ukuran_lebar = 3; unit.detail.ukuran_kamar = '3 x 3'" class="px-4 py-1.5 text-sm font-medium border border-slate-200 rounded-full hover:bg-slate-50 text-slate-700 transition cursor-pointer" :class="(unit.detail.ukuran_panjang == 3 && unit.detail.ukuran_lebar == 3) ? 'bg-[#0A2540] text-white border-[#0A2540]' : ''">3 x 3 meter</button>
-                        <button type="button" @click="unit.detail.ukuran_panjang = 3; unit.detail.ukuran_lebar = 4; unit.detail.ukuran_kamar = '3 x 4'" class="px-4 py-1.5 text-sm font-medium border border-slate-200 rounded-full hover:bg-slate-50 text-slate-700 transition cursor-pointer" :class="(unit.detail.ukuran_panjang == 3 && unit.detail.ukuran_lebar == 4) ? 'bg-[#0A2540] text-white border-[#0A2540]' : ''">3 x 4 meter</button>
-                        <button type="button" @click="unit.detail.ukuran_panjang = 4; unit.detail.ukuran_lebar = 4; unit.detail.ukuran_kamar = '4 x 4'" class="px-4 py-1.5 text-sm font-medium border border-slate-200 rounded-full hover:bg-slate-50 text-slate-700 transition cursor-pointer" :class="(unit.detail.ukuran_panjang == 4 && unit.detail.ukuran_lebar == 4) ? 'bg-[#0A2540] text-white border-[#0A2540]' : ''">4 x 4 meter</button>
+                    <div class="flex flex-wrap gap-3 mb-4">
+                        <button type="button" @click="unit.detail.ukuran_panjang = 3; unit.detail.ukuran_lebar = 3; unit.detail.ukuran_kamar = '3 x 3'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(unit.detail.ukuran_panjang == 3 && unit.detail.ukuran_lebar == 3) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">3x3</button>
+                        <button type="button" @click="unit.detail.ukuran_panjang = 3; unit.detail.ukuran_lebar = 4; unit.detail.ukuran_kamar = '3 x 4'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(unit.detail.ukuran_panjang == 3 && unit.detail.ukuran_lebar == 4) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">3x4</button>
+                        <button type="button" @click="unit.detail.ukuran_panjang = 4; unit.detail.ukuran_lebar = 4; unit.detail.ukuran_kamar = '4 x 4'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(unit.detail.ukuran_panjang == 4 && unit.detail.ukuran_lebar == 4) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">4x4</button>
                     </div>
                     <!-- Manual Input -->
                     <div class="flex items-center gap-3">
@@ -217,28 +217,30 @@ onMounted(() => {
                             v-model.number="unit.detail.ukuran_panjang"
                             type="number"
                             min="1"
-                            placeholder="3"
+                            step="any"
+                            placeholder="P"
                             @input="e => {
                                 let val = parseFloat(e.target.value);
                                 if(val < 1) { e.target.value = 1; unit.detail.ukuran_panjang = 1; }
                                 unit.detail.ukuran_kamar = `${unit.detail.ukuran_panjang} x ${unit.detail.ukuran_lebar || ''}`;
                             }"
-                            class="flex-1 max-w-[120px] text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] transition"
+                            class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-lg border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all placeholder:font-normal placeholder:text-slate-400"
                         />
-                        <span class="text-slate-400 font-bold">x</span>
+                        <span class="text-slate-400 font-bold shrink-0">x</span>
                         <input
                             v-model.number="unit.detail.ukuran_lebar"
                             type="number"
                             min="1"
-                            placeholder="3"
+                            step="any"
+                            placeholder="L"
                             @input="e => {
                                 let val = parseFloat(e.target.value);
                                 if(val < 1) { e.target.value = 1; unit.detail.ukuran_lebar = 1; }
                                 unit.detail.ukuran_kamar = `${unit.detail.ukuran_panjang || ''} x ${unit.detail.ukuran_lebar}`;
                             }"
-                            class="flex-1 max-w-[120px] text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] transition"
+                            class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-lg border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all placeholder:font-normal placeholder:text-slate-400"
                         />
-                        <span class="text-sm font-medium text-slate-500">meter</span>
+                        <span class="text-sm font-medium text-slate-500 shrink-0">Meter</span>
                     </div>
                 </div>
             </div>
@@ -308,6 +310,12 @@ onMounted(() => {
                             placeholder="Pilih..."
                             class="w-full"
                         />
+                        
+                        <div v-else-if="field.type === 'counter'" class="flex items-center justify-between w-full border border-slate-300 rounded-lg overflow-hidden bg-white focus-within:border-[#FFC000] focus-within:ring-1 focus-within:ring-[#FFC000] transition-all">
+                            <button type="button" @click="unit.detail[field.key] = Math.max(1, (unit.detail[field.key] || 1) - 1)" class="w-12 h-11 flex items-center justify-center border-r border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0"><span class="text-xl font-bold">-</span></button>
+                            <input type="number" min="1" v-model="unit.detail[field.key]" class="flex-1 text-center text-base font-bold text-slate-800 border-0 focus:border-transparent focus:ring-0 shadow-none outline-none m-0 p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" @keydown="['-', '+', 'e', 'E'].includes($event.key) && $event.preventDefault()" @input="if(unit.detail[field.key] !== '' && unit.detail[field.key] !== null && unit.detail[field.key] < 1) unit.detail[field.key] = 1;" @blur="if(!unit.detail[field.key] || unit.detail[field.key] < 1) unit.detail[field.key] = 1;" />
+                            <button type="button" @click="unit.detail[field.key] = Math.max(1, (unit.detail[field.key] || 1) + 1)" class="w-12 h-11 flex items-center justify-center border-l border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0"><span class="text-xl font-bold">+</span></button>
+                        </div>
 
                         <input
                             v-else

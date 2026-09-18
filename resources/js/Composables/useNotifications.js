@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 
 // Singleton state — kondisi notifikasi dishare seluruh komponen
@@ -67,16 +68,29 @@ export function useNotifications() {
     };
 
     /**
-     * Inisialisasi awal: ambil unread count saja (ringan)
+     * Inisialisasi awal: ambil unread count dari Inertia Shared Data
      */
-    const init = async () => {
+    const init = () => {
         if (initialized) return;
         initialized = true;
+        
         try {
-            const res = await axios.get('/api/notifications/unread-count');
-            unreadCount.value = res.data.count;
+            const page = usePage();
+            if (page.props.auth?.badges) {
+                unreadCount.value = page.props.auth.badges.total || 0;
+            }
+
+            // Sync dengan Inertia jika navigasi terjadi
+            document.addEventListener('inertia:success', () => {
+                if (page.props.auth?.badges) {
+                    // Update hanya jika kita tidak sedang membuka dropdown
+                    if (!isDropdownOpen.value) {
+                        unreadCount.value = page.props.auth.badges.total || 0;
+                    }
+                }
+            });
         } catch (e) {
-            // Tidak perlu handle — mungkin user belum login
+            console.error('Gagal membaca initial badge data', e);
         }
     };
 

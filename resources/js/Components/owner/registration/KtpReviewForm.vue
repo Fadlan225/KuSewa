@@ -9,6 +9,7 @@ const props = defineProps({
   allCities:   { type: Array, default: () => [] },
   provinces:   { type: Array, default: () => [] },
   isManual:    { type: Boolean, default: false }, // true jika user pilih isi manual
+  serverErrors:{ type: Object, default: () => ({}) },
 });
 
 const emit = defineEmits(['confirmed']);
@@ -30,7 +31,6 @@ const form = reactive({
   date_of_birth:       props.initialData?.date_of_birth    ?? '',
   national_id:         props.initialData?.nik              ?? '',
   // KTP Tambahan
-  religion:            props.initialData?.religion         ?? '',
   marital_status:      props.initialData?.marital_status   ?? '',
   occupation:          props.initialData?.occupation       ?? '',
   nationality:         props.initialData?.nationality      ?? 'WNI',
@@ -54,7 +54,6 @@ const ocrFilledFields = computed(() => {
     name:           'name',
     gender:         'gender',
     date_of_birth:  'birth_date',
-    religion:       'religion',
     marital_status: 'marital_status',
     occupation:     'occupation',
     nationality:    'nationality',
@@ -155,7 +154,7 @@ const validateForm = () => {
   else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
     errors.email = 'Format email tidak valid.'; valid = false;
   }
-  if (!form.phone)        { errors.phone = 'Nomor HP / WhatsApp wajib diisi.'; valid = false; }
+  if (!form.phone)        { errors.phone = 'Nomor HP wajib diisi.'; valid = false; }
   if (!form.province_code){ errors.province_code = 'Provinsi wajib dipilih.'; valid = false; }
   if (!form.city_code)    { errors.city_code = 'Kota wajib dipilih.'; valid = false; }
   if (!form.district_code){ errors.district_code = 'Kecamatan wajib dipilih.'; valid = false; }
@@ -169,6 +168,22 @@ const validateForm = () => {
 };
 
 const isSubmitting = ref(false);
+
+watch(() => props.serverErrors, (newVal) => {
+  if (newVal && Object.keys(newVal).length > 0) {
+    Object.keys(newVal).forEach(key => {
+      errors[key] = newVal[key];
+    });
+    isSubmitting.value = false;
+    nextTick(() => {
+      const firstError = document.querySelector('.border-red-500');
+      if (firstError) {
+        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstError.focus({ preventScroll: true });
+      }
+    });
+  }
+}, { deep: true, immediate: true });
 
 const submit = () => {
   if (!validateForm()) {
@@ -294,21 +309,10 @@ const birthPlaceHint = computed(() => props.initialData?.birth_place_ocr_text ??
             </div>
           </div>
 
-          <!-- Grid for Agama & Status -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <!-- Agama -->
-            <div>
-              <label class="field-label">
-                Agama
-              </label>
-              <input v-model="form.religion" type="text" placeholder="Contoh: Islam" class="field-input"/>
-            </div>
-
             <!-- Status Perkawinan -->
             <div>
-              <label class="field-label">
-                Status
-              </label>
+              <label class="field-label">Status Perkawinan</label>
               <input v-model="form.marital_status" type="text" placeholder="Contoh: Belum Kawin" class="field-input"/>
             </div>
           </div>
@@ -330,8 +334,8 @@ const birthPlaceHint = computed(() => props.initialData?.birth_place_ocr_text ??
 
           <!-- No HP -->
           <div>
-            <label class="field-label">Nomor HP / WhatsApp <span class="text-red-500">*</span></label>
-            <input v-model="form.phone" type="text" placeholder="0812xxxxxxxx" class="field-input" :class="{ 'border-red-500': errors.phone }"/>
+            <label class="field-label">Nomor HP <span class="text-red-500">*</span></label>
+            <input v-model="form.phone" type="text" placeholder="081234567890" class="field-input" :class="{ 'border-red-500': errors.phone }"/>
             <p v-if="errors.phone" class="text-red-500 text-xs mt-1 font-medium">{{ errors.phone }}</p>
           </div>
         </div>

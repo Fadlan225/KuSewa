@@ -784,7 +784,7 @@ function deleteFasilitas(id) {
                         <input v-model="fasilitasForm.name" type="text" class="w-full text-sm font-medium text-slate-800 bg-slate-50/50 border border-slate-200 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-slate-300 focus:border-slate-300 transition-all placeholder:text-slate-400" placeholder="Misal: Kulkas, Kompor" />
                     </div>
                     <label class="flex items-center gap-3 cursor-pointer py-1">
-                        <input type="checkbox" v-model="fasilitasForm.is_active" :true-value="false" :false-value="true" class="w-4 h-4 rounded border-slate-300 text-[#0A2540] focus:ring-[#0A2540] cursor-pointer" />
+                        <input type="checkbox" v-model="fasilitasForm.is_active" :true-value="false" :false-value="true" class="w-4 h-4 rounded border-slate-300 text-[#FFC000] focus:ring-[#FFC000] cursor-pointer" />
                         <span class="text-sm font-medium text-slate-700">Sembunyikan Fasilitas ini</span>
                     </label>
                 </div>
@@ -878,7 +878,7 @@ function deleteFasilitas(id) {
 
                  <div class="px-5 py-2 space-y-4">
                     <label class="flex items-center gap-3 cursor-pointer py-1" v-if="activeDraftCategory">
-                        <input type="checkbox" v-model="activeDraftCategory.is_mandatory" class="w-4 h-4 rounded border-slate-300 text-[#0A2540] focus:ring-[#0A2540] cursor-pointer">
+                        <input type="checkbox" v-model="activeDraftCategory.is_mandatory" class="w-4 h-4 rounded border-slate-300 text-[#FFC000] focus:ring-[#FFC000] cursor-pointer">
                         <span class="text-sm font-medium text-slate-700">Kategori Wajib</span>
                     </label>
                  </div>

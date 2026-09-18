@@ -2,7 +2,7 @@
 
 namespace App\Services\Ocr;
 
-use App\Models\city;
+use App\Models\City;
 use Illuminate\Support\Facades\Cache;
 
 class KtpCityMatcher
@@ -81,7 +81,7 @@ class KtpCityMatcher
     private function getCities(): array
     {
         return Cache::remember(self::CACHE_KEY, self::CACHE_TTL, function () {
-            return city::select('code', 'name')->get()->map(function ($c) {
+            return City::select('code', 'name')->get()->map(function ($c) {
                 return ['code' => $c->code, 'name' => $c->name];
             })->toArray();
         });

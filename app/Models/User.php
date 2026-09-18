@@ -11,7 +11,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use NotificationChannels\WebPush\HasPushSubscriptions;
 
-#[Fillable(['name', 'email', 'password','phone','profile_photo','place_of_birth_code','date_of_birth','gender','role', 'status','last_login_at', 'email_verified_at'])]
+#[Fillable(['name', 'email', 'password','phone','profile_photo','place_of_birth_code','date_of_birth','gender','marital_status','occupation','nationality','role', 'status','last_login_at', 'email_verified_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {

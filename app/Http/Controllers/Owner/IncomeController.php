@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\booking;
 use App\Models\asset;
+use App\Models\asset_units;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -16,6 +17,22 @@ class IncomeController extends Controller
     {
         $ownerProfileId = auth()->user()->ownerProfile->id;
         $period = $request->query('period', 'bulan_ini');
+
+        $activeAssetSlug = $request->session()->get('active_asset_slug');
+        $isGlobal = empty($activeAssetSlug) || $activeAssetSlug === 'global';
+
+        $assetQuery = asset::where('owner_profile_id', $ownerProfileId);
+        if (!$isGlobal) {
+            $assetQuery->where(function($q) use ($activeAssetSlug) {
+                $q->where('slug', $activeAssetSlug)->orWhere('id', $activeAssetSlug);
+            });
+        }
+        $assetIds = $assetQuery->pluck('id');
+        
+        $hasUnits = false;
+        if (!$isGlobal && $assetIds->isNotEmpty()) {
+            $hasUnits = asset_units::where('asset_id', $assetIds->first())->sum('quantity') > 0;
+        }
 
         // Define date range based on selected period
         $now = Carbon::now();
@@ -79,17 +96,13 @@ class IncomeController extends Controller
         $validStatuses = ['confirmed', 'active', 'completed'];
 
         // Base query for current period
-        $currentBookings = booking::whereHas('asset', function($q) use ($ownerProfileId) {
-                $q->where('owner_profile_id', $ownerProfileId);
-            })
+        $currentBookings = booking::whereIn('asset_id', $assetIds)
             ->whereIn('booking_status', $validStatuses)
             ->whereBetween('created_at', [$startDate, $endDate])
             ->get();
 
         // Base query for previous period (for growth comparison)
-        $previousBookings = booking::whereHas('asset', function($q) use ($ownerProfileId) {
-                $q->where('owner_profile_id', $ownerProfileId);
-            })
+        $previousBookings = booking::whereIn('asset_id', $assetIds)
             ->whereIn('booking_status', $validStatuses)
             ->whereBetween('created_at', [$prevStartDate, $prevEndDate])
             ->get();
@@ -103,15 +116,23 @@ class IncomeController extends Controller
         $incomeGrowth = $previousIncome > 0 ? (($currentIncome - $previousIncome) / $previousIncome) * 100 : ($currentIncome > 0 ? 100 : 0);
         $trxGrowth = $currentTrxCount - $previousTrxCount;
 
-        // Best asset calculation
-        $assetIncomes = $currentBookings->groupBy('asset_id')->map(function ($bookings) {
-            return [
-                'name' => $bookings->first()->asset_name,
-                'income' => $bookings->sum('subtotal')
-            ];
-        })->sortByDesc('income');
+                if ($isGlobal) {
+            $incomesByGrouping = $currentBookings->groupBy('asset_id')->map(function ($bookings) {
+                return [
+                    'name' => $bookings->first()->asset_name ?? ($bookings->first()->asset->title ?? '-'),
+                    'income' => $bookings->sum('subtotal')
+                ];
+            })->sortByDesc('income');
+        } else {
+            $incomesByGrouping = $currentBookings->groupBy('asset_unit_id')->map(function ($bookings) {
+                return [
+                    'name' => $bookings->first()->asset_unit_name ?? ($bookings->first()->assetUnit->name ?? 'Semua Unit'),
+                    'income' => $bookings->sum('subtotal')
+                ];
+            })->sortByDesc('income');
+        }
 
-        $bestAsset = $assetIncomes->first();
+        $bestAsset = $incomesByGrouping->first();
         $bestAssetPercent = $currentIncome > 0 && $bestAsset ? ($bestAsset['income'] / $currentIncome) * 100 : 0;
 
         $avgTrx = $currentTrxCount > 0 ? $currentIncome / $currentTrxCount : 0;
@@ -166,16 +187,20 @@ class IncomeController extends Controller
             return ['label' => $label, 'income' => $income];
         })->values()->toArray();
 
-        // Asset Donut Chart Data
+                // Asset Donut Chart Data
         $colors = ['#FFC000', '#0A2540', '#10b981', '#3b82f6', '#8b5cf6', '#f43f5e', '#ec4899', '#f97316'];
-        $assetIncomeData = $assetIncomes->values()->map(function ($item, $index) use ($currentIncome, $colors) {
-            return [
-                'name' => $item['name'],
-                'income' => $item['income'],
-                'percent' => $currentIncome > 0 ? round(($item['income'] / $currentIncome) * 100, 1) : 0,
-                'color' => $colors[$index % count($colors)]
-            ];
-        })->toArray();
+        
+        $assetIncomeData = [];
+        if ($isGlobal || $hasUnits) {
+            $assetIncomeData = $incomesByGrouping->values()->map(function ($item, $index) use ($currentIncome, $colors) {
+                return [
+                    'name' => $item['name'],
+                    'income' => $item['income'],
+                    'percent' => $currentIncome > 0 ? round(($item['income'] / $currentIncome) * 100, 1) : 0,
+                    'color' => $colors[$index % count($colors)]
+                ];
+            })->toArray();
+        }
 
         // Unit Breakdown
         $unitBreakdowns = [];
@@ -235,13 +260,15 @@ class IncomeController extends Controller
             ];
         });
 
-        return Inertia::render('owner/Income', [
+                return Inertia::render('owner/Income', [
             'initialPeriod' => $period,
             'summaryData' => $summaryData,
             'incomeTrendData' => $incomeTrendData,
             'assetIncomeData' => $assetIncomeData,
             'unitBreakdowns' => (object) $unitBreakdowns,
-            'recentTransactions' => $recentTransactions
+            'recentTransactions' => $recentTransactions,
+            'isGlobal' => $isGlobal,
+            'hasUnits' => $hasUnits
         ]);
     }
 }

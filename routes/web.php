@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\EmailChangeController;
+use App\Http\Controllers\HelpCenterController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -45,9 +47,13 @@ Route::get('/api/asset-type/{id}/details', [AssetTypeController::class, 'details
 
 Route::resource('assets', AssetController::class)->only(['show']);
 
-Route::get('/bantuan', function () {
-    return Inertia::render('Home/Support/PusatBantuan');
-})->name('bantuan');
+Route::prefix('bantuan')->name('bantuan.')->group(function () {
+    Route::get('/', [HelpCenterController::class, 'index'])->name('index');
+    Route::get('/search', [HelpCenterController::class, 'search'])->name('search');
+    Route::get('/kategori/{id}', [HelpCenterController::class, 'category'])->name('category');
+    Route::get('/artikel/{slug}', [HelpCenterController::class, 'article'])->name('article');
+    Route::post('/artikel/{id}/feedback', [HelpCenterController::class, 'submitFeedback'])->name('feedback');
+});
 
 Route::get('/hubungi-kami', function () {
     return Inertia::render('Home/Support/HubungiKami');
@@ -84,6 +90,7 @@ Route::middleware('auth')->prefix('owner')->name('owner.')->group(function() {
     Route::post('asset/upload-temp', [OwnerAssetController::class, 'uploadTemp'])->name('asset.upload-temp');
     Route::get('asset/preview-nearby', [OwnerAssetController::class, 'previewNearby'])->name('asset.preview-nearby');
     Route::post('/set-active-asset', [OwnerAssetController::class, 'setActiveAsset'])->name('set-active-asset');
+    Route::get('/set-active-asset', fn() => redirect()->route('owner.dashboard'))->name('set-active-asset.get');
     Route::post('asset/auto-save', [OwnerAssetController::class, 'autoSaveDraft'])->name('asset.auto-save');
     Route::get('asset/draft/{id}', [OwnerAssetController::class, 'editDraft'])->name('asset.edit-draft');
     Route::resource('asset', OwnerAssetController::class)->names('asset');
@@ -171,11 +178,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Social Media Links (Admin only)
+    Route::post('/profile/social-media/reorder', [\App\Http\Controllers\SocialMediaLinkController::class, 'reorder'])->name('profile.social-media.reorder');
+    Route::post('/profile/social-media', [\App\Http\Controllers\SocialMediaLinkController::class, 'store'])->name('profile.social-media.store');
+    Route::put('/profile/social-media/{socialMediaLink}', [\App\Http\Controllers\SocialMediaLinkController::class, 'update'])->name('profile.social-media.update');
+    Route::delete('/profile/social-media/{socialMediaLink}', [\App\Http\Controllers\SocialMediaLinkController::class, 'destroy'])->name('profile.social-media.destroy');
     Route::post('/profile/photo', [ProfileController::class, 'updatePhoto'])->name('profile.photo');
     Route::delete('/profile/photo', [ProfileController::class, 'destroyPhoto'])->name('profile.photo.destroy');
     Route::get('/profile/settings', [ProfileController::class, 'settings'])->name('profile.settings');
     Route::get('/profile/bisnis', [ProfileController::class, 'bisnis'])->name('profile.bisnis');
     Route::get('/profile/security', [ProfileController::class, 'security'])->name('profile.security');
+    Route::get('/profile/security/password', [ProfileController::class, 'securityPassword'])->name('profile.security.password');
+    
+    // Email Change Routes
+    Route::post('/profile/email/send-old-otp', [EmailChangeController::class, 'sendOldOtp'])->name('profile.email.send-old-otp');
+    Route::post('/profile/email/verify-old', [EmailChangeController::class, 'verifyOldEmail'])->name('profile.email.verify-old');
+    Route::post('/profile/email/send-new-otp', [EmailChangeController::class, 'sendNewOtp'])->name('profile.email.send-new-otp');
+    Route::post('/profile/email/verify-new', [EmailChangeController::class, 'verifyNewEmail'])->name('profile.email.verify-new');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

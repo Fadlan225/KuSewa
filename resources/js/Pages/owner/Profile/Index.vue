@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { AlertTriangle, ClipboardList, Wallet, Heart, ChevronRight } from 'lucide-vue-next';
+import { AlertTriangle, ClipboardList, Wallet, Heart, ChevronRight, CircleAlert } from 'lucide-vue-next';
 import ProfileLayout from '@/Layouts/ProfileLayout.vue';
 import SettingsForms from '@/Pages/Profile/Partials/SettingsForms.vue';
 import SecurityForms from '@/Pages/Profile/Partials/SecurityForms.vue';
@@ -27,7 +27,8 @@ const props = defineProps({
     lastSeen: { type: Object, default: () => ({}) },
     reviews: { type: Object, default: () => ({}) },
     initialFavorites: { type: Array, default: () => [] },
-    categoriesList: { type: Array, default: () => ['Semua'] }
+    categoriesList: { type: Array, default: () => ['Semua'] },
+    banks: { type: Array, default: () => [] }
 });
 
 const getTitle = computed(() => {
@@ -52,6 +53,20 @@ onMounted(() => {
     }
 });
 
+const isProfileComplete = computed(() => {
+    let filled = 0;
+    const fields = [
+        'name', 'email', 'phone', 'gender',
+        'date_of_birth', 'place_of_birth_code', 'marital_status',
+        'occupation', 'nationality'
+    ];
+    fields.forEach(field => {
+        if (props.user && props.user[field]) filled++;
+    });
+    if (props.user && (props.user.profile_photo || props.user.avatar)) filled++;
+    return filled === 10;
+});
+
 const requestLocationPermission = () => {
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -74,7 +89,7 @@ const requestLocationPermission = () => {
 
     <ProfileLayout isDashboard :title="getTitle">
         <!-- Pesan Izin Lokasi (ditampilkan jika ditolak) -->
-        <div v-if="locationDenied" class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-2xl shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+        <div v-if="locationDenied" class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-md shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
             <div class="flex items-start">
                 <div class="flex-shrink-0 mt-0.5">
                     <AlertTriangle class="text-amber-500 text-lg" />
@@ -95,7 +110,7 @@ const requestLocationPermission = () => {
         </div>
 
         <!-- Bagian Ringkasan Pesanan -->
-        <div class="bg-white p-6 shadow-md rounded-2xl">
+        <div class="bg-white p-6 shadow-md rounded-md">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-lg sm:text-xl font-bold text-[#0A2540]">Pesanan Saya</h2>
                 <!-- Mobile Link -->
@@ -119,14 +134,14 @@ const requestLocationPermission = () => {
             <div class="grid grid-cols-3 gap-4 sm:gap-6 text-center">
                 <!-- Booking -->
                 <Link :href="route('aktivitas.transaksi', { status: 'Berlangsung' })" class="md:hidden flex flex-col items-center group cursor-pointer">
-                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-[#FFC000]/10 transition-colors duration-200">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-[#FFC000]/10 transition-colors duration-200">
                         <ClipboardList class="text-2xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                         <span v-if="bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ bookings_count }}</span>
                     </div>
                     <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Booking</p>
                 </Link>
                 <Link :href="route('owner.profile', { tab: 'transaksi', status: 'Berlangsung' })" class="hidden md:flex flex-col items-center group cursor-pointer">
-                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-[#FFC000]/10 transition-colors duration-200">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-[#FFC000]/10 transition-colors duration-200">
                         <ClipboardList class="text-2xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                         <span v-if="bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ bookings_count }}</span>
                     </div>
@@ -135,14 +150,14 @@ const requestLocationPermission = () => {
 
                 <!-- Belum Bayar -->
                 <Link :href="route('aktivitas.transaksi', { status: 'Belum Bayar' })" class="md:hidden flex flex-col items-center group cursor-pointer">
-                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-red-50 transition-colors duration-200">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-red-50 transition-colors duration-200">
                         <Wallet class="text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors" />
                         <span v-if="unpaid_bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ unpaid_bookings_count }}</span>
                     </div>
                     <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-red-500 transition-colors">Belum Bayar</p>
                 </Link>
                 <Link :href="route('owner.profile', { tab: 'transaksi', status: 'Belum Bayar' })" class="hidden md:flex flex-col items-center group cursor-pointer">
-                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-red-50 transition-colors duration-200">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-red-50 transition-colors duration-200">
                         <Wallet class="text-2xl text-[#0A2540] group-hover:text-red-500 transition-colors" />
                         <span v-if="unpaid_bookings_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ unpaid_bookings_count }}</span>
                     </div>
@@ -151,20 +166,30 @@ const requestLocationPermission = () => {
 
                 <!-- Aset Favorit -->
                 <Link :href="route('favorites.index')" class="md:hidden flex flex-col items-center group cursor-pointer">
-                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-pink-50 transition-colors duration-200">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-pink-50 transition-colors duration-200">
                         <Heart class="text-2xl text-[#0A2540] group-hover:text-pink-500 transition-colors" />
                         <span v-if="favorite_assets_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ favorite_assets_count }}</span>
                     </div>
                     <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-pink-500 transition-colors">Aset Favorit</p>
                 </Link>
                 <Link :href="route('owner.profile', { tab: 'favorit' })" class="hidden md:flex flex-col items-center group cursor-pointer">
-                    <div class="relative bg-[#F8F9FA] p-4 rounded-2xl group-hover:bg-pink-50 transition-colors duration-200">
+                    <div class="relative bg-[#F8F9FA] p-4 rounded-md group-hover:bg-pink-50 transition-colors duration-200">
                         <Heart class="text-2xl text-[#0A2540] group-hover:text-pink-500 transition-colors" />
                         <span v-if="favorite_assets_count > 0" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-xs">{{ favorite_assets_count }}</span>
                     </div>
                     <p class="mt-2 text-xs sm:text-sm font-semibold text-[#0A2540] group-hover:text-pink-500 transition-colors">Aset Favorit</p>
                 </Link>
             </div>
+        </div>
+
+        <!-- Inline Alert Profil (Khusus Tab Profil) -->
+        <div v-if="tab === 'profil' && !isProfileComplete" class="bg-white p-4 shadow-sm rounded-md border border-gray-100 flex items-center gap-3">
+            <div class="bg-[#FFC000] rounded-full p-1.5 shrink-0">
+                <CircleAlert class="w-5 h-5 text-white" />
+            </div>
+            <p class="text-[13px] sm:text-sm font-medium text-gray-700 leading-relaxed">
+                Pastikan profil Anda jelas dan lengkap agar lebih disukai oleh pemilik aset.
+            </p>
         </div>
 
         <!-- Bagian Settings Forms (Desktop Only) -->
@@ -182,6 +207,7 @@ const requestLocationPermission = () => {
                 :user="user"
                 :owner_profile="owner_profile"
                 :bank_account="bank_account"
+                :banks="banks"
             />
             <SecurityForms
                 v-if="tab === 'keamanan'"

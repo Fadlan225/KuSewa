@@ -233,7 +233,7 @@ const removeFacility = (id) => {
                     <h3 class="text-lg font-bold text-slate-900 mb-4">Tambah Fasilitas Baru</h3>
                     <div class="mb-5">
                         <label class="text-xs font-bold text-slate-500 block mb-1">Pilih Fasilitas</label>
-                        <select v-model="newFacilityId" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition">
+                        <select v-model="newFacilityId" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]">
                             <option value="" disabled>-- Pilih Fasilitas --</option>
                             <option v-for="fac in availableFacilitiesForActiveCategory" :key="fac.id" :value="fac.id">
                                 {{ fac.name }}

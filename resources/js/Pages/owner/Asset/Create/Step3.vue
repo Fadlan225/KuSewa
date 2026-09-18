@@ -68,7 +68,7 @@ const toggleExpand = (index) => {
             <template v-for="field in detailFields" :key="field.key">
                 <div>
                     <label class="block text-base font-bold text-slate-800 mb-2">
-                        {{ field.label }} 
+                        {{ field.label }}
                         <span v-if="field.required" class="text-rose-500">*</span>
                         <span v-else class="text-sm font-normal text-slate-400">(opsional)</span>
                     </label>
@@ -87,25 +87,24 @@ const toggleExpand = (index) => {
                         <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
                     </select>
 
-                    <!-- Type: Counter -->
-                    <div v-else-if="field.type === 'counter'" class="flex items-center gap-4">
-                        <button type="button" @click="form.detail[field.key] = (form.detail[field.key] || 1) > 1 ? (form.detail[field.key] || 1) - 1 : 1" class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-md text-slate-600 hover:bg-slate-50 transition cursor-pointer"><span class="text-lg font-bold">-</span></button>
-                        <input v-model.number="form.detail[field.key]" type="number" min="1" placeholder="1" @input="e => { let val = parseInt(e.target.value); if(val < 1 || isNaN(val)) { e.target.value = 1; form.detail[field.key] = 1; } }" class="w-12 text-center text-lg font-bold bg-transparent focus:outline-none focus:ring-0 p-0 border-none" />
-                        <button type="button" @click="form.detail[field.key] = (form.detail[field.key] || 1) + 1" class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-md text-slate-600 hover:bg-slate-50 transition cursor-pointer"><span class="text-lg font-bold">+</span></button>
+                    <div v-else-if="field.type === 'counter'" class="flex items-center justify-between w-full border border-slate-300 rounded-lg overflow-hidden bg-white focus-within:border-[#FFC000] focus-within:ring-1 focus-within:ring-[#FFC000] transition-all">
+                        <button type="button" @click="form.detail[field.key] = Math.max(1, (form.detail[field.key] || 1) - 1)" class="w-12 h-11 flex items-center justify-center border-r border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0"><span class="text-xl font-bold">-</span></button>
+                        <input type="number" min="1" v-model="form.detail[field.key]" class="flex-1 text-center text-base font-bold text-slate-800 border-0 focus:border-transparent focus:ring-0 shadow-none outline-none m-0 p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" @keydown="['-', '+', 'e', 'E'].includes($event.key) && $event.preventDefault()" @input="if(form.detail[field.key] !== '' && form.detail[field.key] !== null && form.detail[field.key] < 1) form.detail[field.key] = 1;" @blur="if(!form.detail[field.key] || form.detail[field.key] < 1) form.detail[field.key] = 1;" />
+                        <button type="button" @click="form.detail[field.key] = Math.max(1, (form.detail[field.key] || 1) + 1)" class="w-12 h-11 flex items-center justify-center border-l border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0"><span class="text-xl font-bold">+</span></button>
                     </div>
 
                     <!-- Type: Room Size -->
                     <div v-else-if="field.type === 'room_size'" class="mb-2">
-                        <div class="flex flex-wrap gap-2 mb-3">
-                            <button type="button" @click="form.detail[`${field.key}_p`] = 3; form.detail[`${field.key}_l`] = 3; form.detail[field.key] = '3 x 3'" class="px-4 py-2 text-sm font-medium border rounded-md transition cursor-pointer" :class="(form.detail[`${field.key}_p`] == 3 && form.detail[`${field.key}_l`] == 3) ? 'border-[#FFC000] bg-amber-50 text-[#0A2540] font-bold' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">3 x 3 meter</button>
-                            <button type="button" @click="form.detail[`${field.key}_p`] = 3; form.detail[`${field.key}_l`] = 4; form.detail[field.key] = '3 x 4'" class="px-4 py-2 text-sm font-medium border rounded-md transition cursor-pointer" :class="(form.detail[`${field.key}_p`] == 3 && form.detail[`${field.key}_l`] == 4) ? 'border-[#FFC000] bg-amber-50 text-[#0A2540] font-bold' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">3 x 4 meter</button>
-                            <button type="button" @click="form.detail[`${field.key}_p`] = 4; form.detail[`${field.key}_l`] = 4; form.detail[field.key] = '4 x 4'" class="px-4 py-2 text-sm font-medium border rounded-md transition cursor-pointer" :class="(form.detail[`${field.key}_p`] == 4 && form.detail[`${field.key}_l`] == 4) ? 'border-[#FFC000] bg-amber-50 text-[#0A2540] font-bold' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">4 x 4 meter</button>
+                        <div class="flex flex-wrap gap-3 mb-4">
+                            <button type="button" @click="form.detail[`${field.key}_p`] = 3; form.detail[`${field.key}_l`] = 3; form.detail[field.key] = '3 x 3'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(form.detail[`${field.key}_p`] == 3 && form.detail[`${field.key}_l`] == 3) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">3x3</button>
+                            <button type="button" @click="form.detail[`${field.key}_p`] = 3; form.detail[`${field.key}_l`] = 4; form.detail[field.key] = '3 x 4'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(form.detail[`${field.key}_p`] == 3 && form.detail[`${field.key}_l`] == 4) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">3x4</button>
+                            <button type="button" @click="form.detail[`${field.key}_p`] = 4; form.detail[`${field.key}_l`] = 4; form.detail[field.key] = '4 x 4'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(form.detail[`${field.key}_p`] == 4 && form.detail[`${field.key}_l`] == 4) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">4x4</button>
                         </div>
                         <div class="flex items-center gap-3">
-                            <input v-model.number="form.detail[`${field.key}_p`]" type="number" min="1" placeholder="3" @input="e => { let val = parseFloat(e.target.value); if(val < 1) { e.target.value = 1; form.detail[`${field.key}_p`] = 1; } form.detail[field.key] = `${form.detail[`${field.key}_p`]} x ${form.detail[`${field.key}_l`] || ''}`; }" class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] transition" />
+                            <input v-model.number="form.detail[`${field.key}_p`]" type="number" min="1" step="any" placeholder="P" @input="e => { let val = parseFloat(e.target.value); if(val < 1) { e.target.value = 1; form.detail[`${field.key}_p`] = 1; } form.detail[field.key] = `${form.detail[`${field.key}_p`]} x ${form.detail[`${field.key}_l`] || ''}`; }" class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-lg border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all placeholder:font-normal placeholder:text-slate-400" />
                             <span class="text-slate-400 font-bold shrink-0">x</span>
-                            <input v-model.number="form.detail[`${field.key}_l`]" type="number" min="1" placeholder="3" @input="e => { let val = parseFloat(e.target.value); if(val < 1) { e.target.value = 1; form.detail[`${field.key}_l`] = 1; } form.detail[field.key] = `${form.detail[`${field.key}_p`] || ''} x ${form.detail[`${field.key}_l`]}`; }" class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] transition" />
-                            <span class="text-sm font-medium text-slate-500 shrink-0">meter</span>
+                            <input v-model.number="form.detail[`${field.key}_l`]" type="number" min="1" step="any" placeholder="L" @input="e => { let val = parseFloat(e.target.value); if(val < 1) { e.target.value = 1; form.detail[`${field.key}_l`] = 1; } form.detail[field.key] = `${form.detail[`${field.key}_p`] || ''} x ${form.detail[`${field.key}_l`]}`; }" class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-lg border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all placeholder:font-normal placeholder:text-slate-400" />
+                            <span class="text-sm font-medium text-slate-500 shrink-0">Meter</span>
                         </div>
                     </div>
 
@@ -203,7 +202,7 @@ const toggleExpand = (index) => {
                             <template v-for="field in unitDetailFields" :key="field.key">
                                 <div class="mb-8 pb-8 border-b border-slate-200/70">
                                     <label class="block text-base font-bold text-slate-800 mb-2">
-                                        {{ field.label }} 
+                                        {{ field.label }}
                                         <span v-if="field.required" class="text-rose-500">*</span>
                                         <span v-else class="text-sm font-normal text-slate-400">(opsional)</span>
                                     </label>
@@ -222,25 +221,24 @@ const toggleExpand = (index) => {
                                         <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
                                     </select>
 
-                                    <!-- Type: Counter -->
-                                    <div v-else-if="field.type === 'counter'" class="flex items-center gap-4">
-                                        <button type="button" @click="unit.detail[field.key] = (unit.detail[field.key] || 1) > 1 ? (unit.detail[field.key] || 1) - 1 : 1" class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-md text-slate-600 hover:bg-slate-50 transition cursor-pointer"><span class="text-lg font-bold">-</span></button>
-                                        <input v-model.number="unit.detail[field.key]" type="number" min="1" placeholder="1" @input="e => { let val = parseInt(e.target.value); if(val < 1 || isNaN(val)) { e.target.value = 1; unit.detail[field.key] = 1; } }" class="w-12 text-center text-lg font-bold bg-transparent focus:outline-none focus:ring-0 p-0 border-none" />
-                                        <button type="button" @click="unit.detail[field.key] = (unit.detail[field.key] || 1) + 1" class="w-9 h-9 flex items-center justify-center border border-slate-200 rounded-md text-slate-600 hover:bg-slate-50 transition cursor-pointer"><span class="text-lg font-bold">+</span></button>
+                                    <div v-else-if="field.type === 'counter'" class="flex items-center justify-between w-full border border-slate-300 rounded-lg overflow-hidden bg-white focus-within:border-[#FFC000] focus-within:ring-1 focus-within:ring-[#FFC000] transition-all">
+                                        <button type="button" @click="unit.detail[field.key] = Math.max(1, (unit.detail[field.key] || 1) - 1)" class="w-12 h-11 flex items-center justify-center border-r border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0"><span class="text-xl font-bold">-</span></button>
+                                        <input type="number" min="1" v-model="unit.detail[field.key]" class="flex-1 text-center text-base font-bold text-slate-800 border-0 focus:border-transparent focus:ring-0 shadow-none outline-none m-0 p-0 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" @keydown="['-', '+', 'e', 'E'].includes($event.key) && $event.preventDefault()" @input="if(unit.detail[field.key] !== '' && unit.detail[field.key] !== null && unit.detail[field.key] < 1) unit.detail[field.key] = 1;" @blur="if(!unit.detail[field.key] || unit.detail[field.key] < 1) unit.detail[field.key] = 1;" />
+                                        <button type="button" @click="unit.detail[field.key] = Math.max(1, (unit.detail[field.key] || 1) + 1)" class="w-12 h-11 flex items-center justify-center border-l border-slate-300 text-slate-600 hover:bg-slate-50 transition-colors cursor-pointer shrink-0"><span class="text-xl font-bold">+</span></button>
                                     </div>
 
                                     <!-- Type: Room Size -->
                                     <div v-else-if="field.type === 'room_size'" class="mb-2">
-                                        <div class="flex flex-wrap gap-2 mb-3">
-                                            <button type="button" @click="unit.detail[`${field.key}_p`] = 3; unit.detail[`${field.key}_l`] = 3; unit.detail[field.key] = '3 x 3'" class="px-4 py-2 text-sm font-medium border rounded-md transition cursor-pointer" :class="(unit.detail[`${field.key}_p`] == 3 && unit.detail[`${field.key}_l`] == 3) ? 'border-[#FFC000] bg-amber-50 text-[#0A2540] font-bold' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">3 x 3 meter</button>
-                                            <button type="button" @click="unit.detail[`${field.key}_p`] = 3; unit.detail[`${field.key}_l`] = 4; unit.detail[field.key] = '3 x 4'" class="px-4 py-2 text-sm font-medium border rounded-md transition cursor-pointer" :class="(unit.detail[`${field.key}_p`] == 3 && unit.detail[`${field.key}_l`] == 4) ? 'border-[#FFC000] bg-amber-50 text-[#0A2540] font-bold' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">3 x 4 meter</button>
-                                            <button type="button" @click="unit.detail[`${field.key}_p`] = 4; unit.detail[`${field.key}_l`] = 4; unit.detail[field.key] = '4 x 4'" class="px-4 py-2 text-sm font-medium border rounded-md transition cursor-pointer" :class="(unit.detail[`${field.key}_p`] == 4 && unit.detail[`${field.key}_l`] == 4) ? 'border-[#FFC000] bg-amber-50 text-[#0A2540] font-bold' : 'border-slate-200 text-slate-600 hover:bg-slate-50'">4 x 4 meter</button>
+                                        <div class="flex flex-wrap gap-3 mb-4">
+                                            <button type="button" @click="unit.detail[`${field.key}_p`] = 3; unit.detail[`${field.key}_l`] = 3; unit.detail[field.key] = '3 x 3'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(unit.detail[`${field.key}_p`] == 3 && unit.detail[`${field.key}_l`] == 3) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">3x3</button>
+                                            <button type="button" @click="unit.detail[`${field.key}_p`] = 3; unit.detail[`${field.key}_l`] = 4; unit.detail[field.key] = '3 x 4'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(unit.detail[`${field.key}_p`] == 3 && unit.detail[`${field.key}_l`] == 4) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">3x4</button>
+                                            <button type="button" @click="unit.detail[`${field.key}_p`] = 4; unit.detail[`${field.key}_l`] = 4; unit.detail[field.key] = '4 x 4'" class="px-5 py-2.5 text-base font-bold border-2 rounded-lg transition-colors cursor-pointer" :class="(unit.detail[`${field.key}_p`] == 4 && unit.detail[`${field.key}_l`] == 4) ? 'bg-[#FFF8E6] border-[#FFC000] text-[#0A2540]' : 'border-slate-200 text-slate-600 bg-white hover:border-slate-300 hover:bg-slate-50'">4x4</button>
                                         </div>
                                         <div class="flex items-center gap-3">
-                                            <input v-model.number="unit.detail[`${field.key}_p`]" type="number" min="1" placeholder="3" @input="e => { let val = parseFloat(e.target.value); if(val < 1) { e.target.value = 1; unit.detail[`${field.key}_p`] = 1; } unit.detail[field.key] = `${unit.detail[`${field.key}_p`]} x ${unit.detail[`${field.key}_l`] || ''}`; }" class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] transition" />
+                                            <input v-model.number="unit.detail[`${field.key}_p`]" type="number" min="1" step="any" placeholder="P" @input="e => { let val = parseFloat(e.target.value); if(val < 1) { e.target.value = 1; unit.detail[`${field.key}_p`] = 1; } unit.detail[field.key] = `${unit.detail[`${field.key}_p`]} x ${unit.detail[`${field.key}_l`] || ''}`; }" class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-lg border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all placeholder:font-normal placeholder:text-slate-400" />
                                             <span class="text-slate-400 font-bold shrink-0">x</span>
-                                            <input v-model.number="unit.detail[`${field.key}_l`]" type="number" min="1" placeholder="3" @input="e => { let val = parseFloat(e.target.value); if(val < 1) { e.target.value = 1; unit.detail[`${field.key}_l`] = 1; } unit.detail[field.key] = `${unit.detail[`${field.key}_p`] || ''} x ${unit.detail[`${field.key}_l`]}`; }" class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] transition" />
-                                            <span class="text-sm font-medium text-slate-500 shrink-0">meter</span>
+                                            <input v-model.number="unit.detail[`${field.key}_l`]" type="number" min="1" step="any" placeholder="L" @input="e => { let val = parseFloat(e.target.value); if(val < 1) { e.target.value = 1; unit.detail[`${field.key}_l`] = 1; } unit.detail[field.key] = `${unit.detail[`${field.key}_p`] || ''} x ${unit.detail[`${field.key}_l`]}`; }" class="flex-1 min-w-0 text-sm px-4 py-2.5 rounded-lg border border-slate-300 text-slate-800 bg-white font-medium focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] outline-none transition-all placeholder:font-normal placeholder:text-slate-400" />
+                                            <span class="text-sm font-medium text-slate-500 shrink-0">Meter</span>
                                         </div>
                                     </div>
 
@@ -261,7 +259,7 @@ const toggleExpand = (index) => {
                         </template>
 
                         <!-- Deskripsi Kamar -->
-                        <div class="mb-6">
+                        <!-- <div class="mb-6">
                             <div class="flex items-center justify-between mb-1.5">
                                 <label class="block text-base font-bold text-slate-800">Deskripsi Kamar <span class="text-sm font-normal text-slate-400">(opsional)</span></label>
                                 <button type="button" class="flex items-center gap-1.5 text-sm font-bold text-[#FFC000] hover:text-amber-500 transition cursor-pointer">
@@ -269,7 +267,7 @@ const toggleExpand = (index) => {
                                 </button>
                             </div>
                             <textarea v-model="unit.description" rows="5" placeholder="Deskripsikan keunggulan spesifik kamar ini..." class="w-full text-sm px-4 py-2.5 rounded-md border border-slate-300 focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-transparent transition resize-none"></textarea>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
 

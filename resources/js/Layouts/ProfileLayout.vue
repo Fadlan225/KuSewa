@@ -1,7 +1,7 @@
 <script setup>
 import AppIcon from '@/Components/AppIcon.vue';
 import ProfileMenu from '@/Components/ProfileMenu.vue';
-import { Loader2, Camera, Medal, AlertTriangle, ChevronRight, ClipboardList, Wallet, Heart, Briefcase, Trash2, X, Image as ImageIcon } from 'lucide-vue-next';
+import { Loader2, Camera, Medal, AlertTriangle, ChevronRight, ClipboardList, Wallet, Heart, Briefcase, Trash2, X, Image as ImageIcon, User } from 'lucide-vue-next';
 import { ref, computed, nextTick } from 'vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
@@ -30,6 +30,35 @@ const total_assets_rented = computed(() => page.props.total_assets_rented || 0);
 // Image load error fallback state
 const imageError = ref(false);
 
+// Progress bar calculation
+const profileCompletion = computed(() => {
+    let filled = 0;
+    const fields = [
+        'name', 'email', 'phone', 'gender',
+        'date_of_birth', 'place_of_birth_code', 'marital_status',
+        'occupation', 'nationality'
+    ];
+    
+    // Check 9 fields
+    fields.forEach(field => {
+        if (user.value && user.value[field]) {
+            filled++;
+        }
+    });
+    
+    // Field 10 is profile_photo or avatar (via Google auth)
+    if (user.value && (user.value.profile_photo || user.value.avatar)) {
+        filled++;
+    }
+    
+    const percentage = Math.round((filled / 10) * 100);
+    return {
+        filled,
+        total: 10,
+        percentage
+    };
+});
+
 // Photo upload state
 const photoInput = ref(null);
 const cameraInput = ref(null);
@@ -44,6 +73,13 @@ const originalFile = ref(null);
 
 const selectNewPhoto = () => {
     showPhotoMenu.value = true;
+};
+
+const showPreviewModal = ref(false);
+
+const previewPhoto = () => {
+    showPhotoMenu.value = false;
+    showPreviewModal.value = true;
 };
 
 const selectCamera = () => {
@@ -186,7 +222,7 @@ const requestLocationPermission = () => {
             <!-- LEFT PANEL WRAPPER -->
             <div :class="[(route().current('profile.edit') || route().current('owner.profile')) ? 'contents md:flex md:flex-col md:gap-6' : 'hidden md:flex md:flex-col md:gap-6', 'md:col-span-4 md:col-start-1 md:order-1']">
                 <!-- Hero Section -->
-                <div class="bg-white p-6 shadow-md rounded-2xl flex flex-col items-center gap-6 relative order-1 md:order-none">
+                <div class="bg-white p-6 shadow-md rounded-lg flex flex-col items-center gap-6 relative order-1 md:order-none">
 
                 <!-- Foto Profil / Initials -->
                 <div class="relative flex-shrink-0 group cursor-pointer" @click="selectNewPhoto">
@@ -224,16 +260,25 @@ const requestLocationPermission = () => {
                         {{ user.name }}
                     </h1>
 
-                    <!-- Badge status keanggotaan -->
-                    <div class="flex justify-center mt-4 w-full px-2">
-                        <div class="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 bg-[#F8F9FA] px-4 py-2 rounded-xl text-xs border border-gray-100 text-[#000000] font-medium text-center">
-                            <div class="flex items-center gap-1.5">
-                                <Medal class="text-[#FFC000] w-4 h-4 shrink-0" />
-                                <span class="whitespace-nowrap">Penyewa Aktif</span>
+                    <!-- Progress Bar Kelengkapan Profil -->
+                    <div v-if="profileCompletion.percentage < 100 && user.role !== 'admin'" class="flex flex-col mt-5 w-full mx-auto max-w-sm px-4">
+                        <div class="w-full max-w-[280px] mx-auto">
+                            <!-- Bar -->
+                            <div class="w-full bg-gray-200 h-1.5">
+                                <div class="bg-[#FFC000] h-1.5 transition-all duration-500 ease-out" :style="{ width: profileCompletion.percentage + '%' }"></div>
                             </div>
-                            <span class="text-gray-300 hidden min-[380px]:inline">|</span>
-                            <span class="whitespace-nowrap">Total Aset Disewa: <strong>{{ total_assets_rented }}</strong></span>
+                            
+                            <!-- Angka Persen & Step -->
+                            <div class="flex justify-between items-center mt-1.5">
+                                <span class="text-sm font-bold text-[#0A2540]">{{ profileCompletion.percentage }}%</span>
+                                <span class="text-xs font-medium text-gray-500">{{ profileCompletion.filled }} / {{ profileCompletion.total }} data terisi</span>
+                            </div>
                         </div>
+                        
+                        <!-- Teks Penjelasan -->
+                        <p class="text-[13px] text-gray-600 text-center mt-3 leading-relaxed font-medium">
+                            Profil yang lengkap bisa membantu kami memberikan rekomendasi yang lebih akurat.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -251,19 +296,25 @@ const requestLocationPermission = () => {
         <!-- Mobile Photo Menu Bottom Sheet -->
         <BottomSheet v-model="showPhotoMenu" title="Foto profil" heightClass="h-auto pb-6">
             <div class="flex flex-col mt-2 px-5">
-                <button @click="selectCamera" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                <button @click="previewPhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left w-full">
+                    <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                        <User class="w-6 h-6" />
+                    </div>
+                    <span class="text-base font-medium text-gray-800">Lihat Foto Profil</span>
+                </button>
+                <button @click="selectCamera" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left w-full">
                     <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
                         <Camera class="w-6 h-6" />
                     </div>
                     <span class="text-base font-medium text-gray-800">Kamera</span>
                 </button>
-                <button @click="selectGallery" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                <button @click="selectGallery" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left w-full">
                     <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
                         <ImageIcon class="w-6 h-6" />
                     </div>
                     <span class="text-base font-medium text-gray-800">Galeri</span>
                 </button>
-                <button v-if="user.avatar" @click="deletePhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                <button v-if="user.avatar" @click="deletePhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left w-full">
                     <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
                         <Trash2 class="w-6 h-6" />
                     </div>
@@ -282,7 +333,7 @@ const requestLocationPermission = () => {
                 leave-from-class="opacity-100"
             >
                 <div v-if="showPhotoMenu" class="fixed inset-0 z-[150] hidden md:flex items-center justify-center bg-black/50 transition-opacity" @click.self="showPhotoMenu = false">
-                    <div class="bg-white rounded-2xl w-full max-w-sm p-5 shadow-xl transition-transform">
+                    <div class="bg-white rounded-lg w-full max-w-sm p-5 shadow-xl transition-transform">
                         <div class="flex items-center justify-between mb-2">
                             <div class="w-10">
                                 <button @click="showPhotoMenu = false" class="text-gray-500 hover:text-gray-700 transition-colors p-1.5 rounded-full hover:bg-gray-100">
@@ -294,19 +345,25 @@ const requestLocationPermission = () => {
                         </div>
                         
                         <div class="flex flex-col mt-2">
-                            <button @click="selectCamera" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                            <button @click="previewPhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left w-full">
+                                <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
+                                    <User class="w-6 h-6" />
+                                </div>
+                                <span class="text-base font-medium text-gray-800">Lihat Foto Profil</span>
+                            </button>
+                            <button @click="selectCamera" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left w-full">
                                 <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
                                     <Camera class="w-6 h-6" />
                                 </div>
                                 <span class="text-base font-medium text-gray-800">Kamera</span>
                             </button>
-                            <button @click="selectGallery" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                            <button @click="selectGallery" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left w-full">
                                 <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
                                     <ImageIcon class="w-6 h-6" />
                                 </div>
                                 <span class="text-base font-medium text-gray-800">Galeri</span>
                             </button>
-                            <button v-if="user.avatar" @click="deletePhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-xl transition-colors text-left w-full">
+                            <button v-if="user.avatar" @click="deletePhoto" class="flex items-center gap-5 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left w-full">
                                 <div class="w-12 h-12 rounded-full border border-gray-200 flex items-center justify-center text-gray-600">
                                     <Trash2 class="w-6 h-6" />
                                 </div>
@@ -321,7 +378,7 @@ const requestLocationPermission = () => {
         <!-- Crop Modal -->
         <Teleport to="body" v-if="showCropModal">
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/80 overflow-hidden">
-                <div class="bg-white rounded-2xl w-full max-w-lg p-6 shadow-xl flex flex-col max-h-[90vh]">
+                <div class="bg-white rounded-lg w-full max-w-lg p-6 shadow-xl flex flex-col max-h-[90vh]">
                     <h2 class="text-xl font-bold text-gray-900 mb-4 text-center">Sesuaikan Foto Profil</h2>
 
                     <div class="flex-grow min-h-0 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center" style="max-height: 60vh;">
@@ -332,20 +389,45 @@ const requestLocationPermission = () => {
                         <button
                             type="button"
                             @click="cancelCrop"
-                            class="px-6 py-2.5 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors"
+                            class="px-6 py-2.5 bg-white border border-gray-300 rounded-lg font-bold text-sm text-gray-700 hover:bg-gray-50 focus:outline-none transition-colors"
                         >
                             Batal
                         </button>
                         <button
                             type="button"
                             @click="submitCroppedImage"
-                            class="px-6 py-2.5 bg-primary border border-transparent rounded-xl font-bold text-sm text-white hover:bg-primary/90 focus:outline-none transition-colors"
+                            class="px-6 py-2.5 bg-primary border border-transparent rounded-lg font-bold text-sm text-white hover:bg-primary/90 focus:outline-none transition-colors"
                         >
                             Crop & Upload
                         </button>
                     </div>
                 </div>
             </div>
+        </Teleport>
+
+        <!-- Preview Modal -->
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition-opacity duration-300"
+                enter-from-class="opacity-0"
+                enter-to-class="opacity-100"
+                leave-active-class="transition-opacity duration-300"
+                leave-from-class="opacity-100"
+            >
+                <div v-if="showPreviewModal" class="fixed inset-0 z-[250] flex items-center justify-center bg-black/90 transition-opacity p-4" @click.self="showPreviewModal = false">
+                    <button @click="showPreviewModal = false" class="absolute top-4 right-4 sm:top-6 sm:right-6 text-white/70 hover:text-white transition-colors p-2">
+                        <X class="w-8 h-8 sm:w-10 sm:h-10" />
+                    </button>
+                    <div class="relative max-w-full max-h-full">
+                        <template v-if="user.avatar && !imageError">
+                            <img :src="user.avatar" alt="Foto Profil" class="max-w-[90vw] max-h-[85vh] object-contain rounded-lg shadow-2xl">
+                        </template>
+                        <div v-else class="w-64 h-64 sm:w-[400px] sm:h-[400px] rounded-full bg-[#f8f9fa] flex items-center justify-center shadow-2xl overflow-hidden select-none">
+                            <UserAvatar :user="user" />
+                        </div>
+                    </div>
+                </div>
+            </Transition>
         </Teleport>
     </component>
 </template>

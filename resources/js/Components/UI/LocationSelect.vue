@@ -9,7 +9,7 @@
         @focus="openDropdown"
         :placeholder="loading ? 'Memuat data...' : placeholder"
         :disabled="disabled || loading"
-        class="block w-full appearance-none bg-white border border-gray-300 rounded-xl py-3 pl-4 pr-10 text-[15px] font-semibold text-[#0A2540] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm placeholder:text-gray-400 placeholder:font-normal"
+        class="block w-full appearance-none bg-white border border-gray-300 rounded-md py-3 pl-4 pr-10 text-[15px] font-semibold text-[#0A2540] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm placeholder:text-gray-400 placeholder:font-normal"
         :class="{ 'opacity-70 cursor-not-allowed': disabled || loading }"
       />
       
@@ -25,7 +25,7 @@
     <!-- Dropdown Menu -->
     <div
       v-if="isOpen"
-      class="absolute z-[100] w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto"
+      class="absolute z-[100] w-full mt-2 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
     >
       <div v-if="filteredOptions.length === 0" class="px-4 py-3 text-sm text-gray-500">
         Tidak ditemukan data kota yang cocok.

@@ -349,10 +349,10 @@ function executeDelete() {
                     <template v-if="activePopover.includes('kategori')">
                         <div>
                             <label class="text-[11px] uppercase font-bold text-slate-500 mb-1 block">Nama Kategori</label>
-                            <input v-model="kategoriForm.name" type="text" class="w-full text-sm font-semibold px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000]" placeholder="Contoh : Industri, Rekreasi" />
+                            <input v-model="kategoriForm.name" type="text" class="w-full text-sm font-semibold px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Contoh : Industri, Rekreasi" />
                         </div>
                         <label class="flex items-center gap-2 cursor-pointer pt-1 group w-fit">
-                            <input type="checkbox" :checked="!kategoriForm.is_active" @change="kategoriForm.is_active = !$event.target.checked" class="rounded border-slate-300 text-[#0A2540] focus:ring-[#FFC000]/30 transition-shadow" />
+                            <input type="checkbox" :checked="!kategoriForm.is_active" @change="kategoriForm.is_active = !$event.target.checked" class="rounded border-slate-300 text-[#FFC000] focus:ring-[#FFC000]/30 transition-shadow focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                             <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">Sembunyikan Kategori</span>
                         </label>
                     </template>
@@ -363,11 +363,11 @@ function executeDelete() {
                         </div>
                         <div>
                             <label class="text-[11px] uppercase font-bold text-slate-500 mb-1 block">Nama Tipe</label>
-                            <input v-model="jenisForm.name" type="text" class="w-full text-sm font-semibold px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000]" placeholder="Contoh : Gedung, Homestay" />
+                            <input v-model="jenisForm.name" type="text" class="w-full text-sm font-semibold px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Contoh : Gedung, Homestay" />
                         </div>
                         <div>
                             <label class="text-[11px] uppercase font-bold text-slate-500 mb-1 block">Batas Pembayaran (Menit)</label>
-                            <input v-model.number="jenisForm.payment_countdown_minutes" type="number" min="1" class="w-full text-sm font-semibold px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000]" placeholder="Contoh : 60" />
+                            <input v-model.number="jenisForm.payment_countdown_minutes" type="number" min="1" class="w-full text-sm font-semibold px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg focus:ring-[#FFC000] focus:border-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Contoh : 60" />
                         </div>
                         <div>
                             <label class="text-[11px] uppercase font-bold text-slate-500 mb-1 block">Satuan Harga Dasar</label>
@@ -385,11 +385,11 @@ function executeDelete() {
                             />
                         </div>
                         <label class="flex items-center gap-2 cursor-pointer pt-1 group w-fit">
-                            <input type="checkbox" v-model="jenisForm.allow_units" class="rounded border-slate-300 text-[#0A2540] focus:ring-[#FFC000]/30 transition-shadow" />
+                            <input type="checkbox" v-model="jenisForm.allow_units" class="rounded border-slate-300 text-[#FFC000] focus:ring-[#FFC000]/30 transition-shadow focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                             <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">Izinkan Multi Unit</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer pt-1 group w-fit">
-                            <input type="checkbox" :checked="!jenisForm.is_active" @change="jenisForm.is_active = !$event.target.checked" class="rounded border-slate-300 text-[#0A2540] focus:ring-[#FFC000]/30 transition-shadow" />
+                            <input type="checkbox" :checked="!jenisForm.is_active" @change="jenisForm.is_active = !$event.target.checked" class="rounded border-slate-300 text-[#FFC000] focus:ring-[#FFC000]/30 transition-shadow focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                             <span class="text-xs font-semibold text-slate-600 group-hover:text-slate-800 transition-colors">Sembunyikan Tipe</span>
                         </label>
                     </template>

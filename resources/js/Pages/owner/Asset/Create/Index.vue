@@ -3,6 +3,7 @@ import { Send, History, ArrowLeft } from 'lucide-vue-next';
 import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue';
 import { Head, Link, useForm, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
+import { compressImage } from '@/lib/imageCompressor';
 import DashboardLayout from '@/Layouts/DashboardLayout.vue';
 import Toast from '@/Components/ui/Toast.vue';
 import DetailBottomBar from '@/Components/ui/DetailBottomBar.vue';
@@ -64,14 +65,25 @@ const fetchAssetTypeDetails = async (typeId, isReset = false) => {
             form.custom_policies = [];
 
             if (data.mandatory_categories && data.mandatory_categories.length > 0) {
-                form.photos = data.mandatory_categories.map(cat => ({
-                    _id: Date.now() + Math.random(),
-                    gallery_category_id: cat.id,
-                    gallery_category_name: cat.name,
-                    is_mandatory: true,
-                    files: [],
-                    previews: [],
-                }));
+                const filteredCats = data.mandatory_categories.filter(cat => !cat.name.toLowerCase().includes('sampul'));
+                if (filteredCats.length > 0) {
+                    form.photos = filteredCats.map(cat => ({
+                        _id: Date.now() + Math.random(),
+                        gallery_category_id: cat.id,
+                        gallery_category_name: cat.name,
+                        is_mandatory: true,
+                        files: [],
+                        previews: [],
+                    }));
+                } else {
+                    form.photos = [{
+                        _id: Date.now(),
+                        gallery_category_id: null,
+                        is_mandatory: false,
+                        files: [],
+                        previews: [],
+                    }];
+                }
             } else {
                 form.photos = [{
                     _id: Date.now(),
@@ -500,9 +512,10 @@ const handleUnitFileUpload = async (event, unitIndex, photoIndex) => {
         const previewUrl = URL.createObjectURL(file);
         form.units[unitIndex].photos[photoIndex].previews.push(previewUrl);
 
-        // Asynchronous Upload for Draft
+        // Kompresi ke WebP sebelum upload agar tidak melebihi batas server
+        const compressed = await compressImage(file);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', compressed);
         try {
             const res = await axios.post(route('owner.asset.upload-temp'), formData);
             form.units[unitIndex].photos[photoIndex].files.push(res.data.path);
@@ -527,8 +540,9 @@ const gantiUnitFoto = async (event, unitIndex, photoIndex, fileIndex) => {
     const previewUrl = URL.createObjectURL(file);
     form.units[unitIndex].photos[photoIndex].previews.splice(fileIndex, 1, previewUrl);
 
+    const compressed = await compressImage(file);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', compressed);
     try {
         const res = await axios.post(route('owner.asset.upload-temp'), formData);
         form.units[unitIndex].photos[photoIndex].files.splice(fileIndex, 1, res.data.path);
@@ -558,8 +572,9 @@ const handleUnitThumbnailUpload = async (event, unitIndex) => {
         if (form.units[unitIndex].thumbnail_preview) URL.revokeObjectURL(form.units[unitIndex].thumbnail_preview);
         form.units[unitIndex].thumbnail_preview = URL.createObjectURL(file);
 
+        const compressed = await compressImage(file);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', compressed);
         try {
             const res = await axios.post(route('owner.asset.upload-temp'), formData);
             form.units[unitIndex].thumbnail = res.data.path;
@@ -594,8 +609,9 @@ const handleFileUpload = async (event, index) => {
         const previewUrl = URL.createObjectURL(file);
         form.photos[index].previews.push(previewUrl);
 
+        const compressed = await compressImage(file);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', compressed);
         try {
             const res = await axios.post(route('owner.asset.upload-temp'), formData);
             form.photos[index].files.push(res.data.path);
@@ -620,8 +636,9 @@ const gantiFoto = async (event, index, fileIndex) => {
     const previewUrl = URL.createObjectURL(file);
     form.photos[index].previews.splice(fileIndex, 1, previewUrl);
 
+    const compressed = await compressImage(file);
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', compressed);
     try {
         const res = await axios.post(route('owner.asset.upload-temp'), formData);
         form.photos[index].files.splice(fileIndex, 1, res.data.path);
@@ -651,8 +668,9 @@ const handleThumbnailUpload = async (event) => {
         if (form.thumbnail_preview) URL.revokeObjectURL(form.thumbnail_preview);
         form.thumbnail_preview = URL.createObjectURL(file);
 
+        const compressed = await compressImage(file);
         const formData = new FormData();
-        formData.append('file', file);
+        formData.append('file', compressed);
         try {
             const res = await axios.post(route('owner.asset.upload-temp'), formData);
             form.thumbnail = res.data.path;

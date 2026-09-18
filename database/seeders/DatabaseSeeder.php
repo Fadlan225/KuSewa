@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            // ── Infrastructure ─────────────────────────────────────────────
+                // ── Infrastructure ─────────────────────────────────────────────
             WilayahSeeder::class,              // Master data wilayah (Provinsi, Kota, Kecamatan, Desa)
             BankSeeder::class,                 // Master data bank Indonesia (dari CSV)
             ServiceFeeSeeder::class,           // Biaya platform default per tipe aset (Rp 5.000)
@@ -20,22 +20,22 @@ class DatabaseSeeder extends Seeder
             AssetTypeSeeder::class,            // 16 tipe aset (Hotel, Villa, Kos, Studio, Baliho, dll)
             AssetTypeDefaultSpecSeeder::class, // Default spesifikasi form (detail_fields & unit_detail_fields) per tipe aset
 
-            // ── Facilities ─────────────────────────────────────────────────
+                // ── Facilities ─────────────────────────────────────────────────
             FacilityCategorySeeder::class,     // 18 master kategori fasilitas (Internet, Parkir, Keamanan, dll)
             FacilitySeeder::class,             // ~81 master fasilitas (WiFi, AC, Kolam Renang, Drum, dll)
             AssetTypeFacilitySeeder::class,    // ~184 aturan fasilitas yang relevan per tipe aset
             AssetTypeMandatorySeeder::class,   // Kategori fasilitas & galeri wajib per tipe aset
 
-            // ── Gallery ────────────────────────────────────────────────────
+                // ── Gallery ────────────────────────────────────────────────────
             GaleryCategorySeeder::class,       // ~55 kategori galeri global (Tampak Depan, Lobby, Kamar, dll)
 
-            // ── Review ─────────────────────────────────────────────────────
+                // ── Review ─────────────────────────────────────────────────────
             ReviewTagSeeder::class,            // Master tag review per tipe aset (Bersih, Nyaman, View Indah, dll)
 
-            // ── Policy ─────────────────────────────────────────────────────
+                // ── Policy ─────────────────────────────────────────────────────
             PolicyTemplateSeeder::class,       // Template kebijakan default per tipe aset (Kos: jam malam, tamu, dll)
 
-            // ── Users & Profiles ───────────────────────────────────────────
+                // ── Users & Profiles ───────────────────────────────────────────
             AdminSeeder::class,                // 1 akun admin (admin@kitasewa.com)
             // UsersSeeder::class,             // [DUMMY] 1 admin + 5 owner + 5 customer
             // OwnerProfileSeeder::class,      // [DUMMY] 5 profil owner (verified)

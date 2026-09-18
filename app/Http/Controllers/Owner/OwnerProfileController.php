@@ -9,6 +9,7 @@ use App\Models\search_log;
 use App\Models\AssetView;
 use App\Models\review;
 use App\Models\asset_category;
+use App\Models\bank;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,6 +80,9 @@ class OwnerProfileController extends Controller
                 'date_of_birth' => $user->date_of_birth,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'gender' => $user->gender,
+                'marital_status' => $user->marital_status,
+                'occupation' => $user->occupation,
+                'nationality' => $user->nationality,
                 'avatar' => $avatarUrl,
                 'profile_photo' => $avatarUrl,
                 'is_owner' => $isOwner || $user->role === 'admin',
@@ -92,7 +96,7 @@ class OwnerProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
@@ -101,6 +105,7 @@ class OwnerProfileController extends Controller
             'unpaid_bookings_count' => $unpaidBookingsCount,
             'favorite_assets_count' => $favoriteAssetsCount,
             'tab' => $tab,
+            'banks' => bank::orderBy('name')->get(['code', 'name']),
         ];
 
         $userId = $user->id;

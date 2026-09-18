@@ -14,11 +14,11 @@ const props = defineProps({
             <!-- ADDRESS (Editable) -->
             <div class="mb-4">
                 <label class="text-xs font-bold text-slate-500 block mb-1">Alamat Lengkap</label>
-                <input v-model="form.address" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full bg-white transition shadow-sm" placeholder="Jalan, No, RT/RW" />
+                <input v-model="form.address" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full bg-white transition shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Jalan, No, RT/RW" />
                 <div v-if="form.errors.address" class="text-xs text-rose-500 mt-1">{{ form.errors.address }}</div>
 
                 <label class="text-xs font-bold text-slate-500 block mt-3 mb-1">Kode Pos</label>
-                <input v-model="form.postal_code" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full bg-white transition shadow-sm" placeholder="Kode Pos" />
+                <input v-model="form.postal_code" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full bg-white transition shadow-sm focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Kode Pos" />
                 <div v-if="form.errors.postal_code" class="text-xs text-rose-500 mt-1">{{ form.errors.postal_code }}</div>
             </div>
 

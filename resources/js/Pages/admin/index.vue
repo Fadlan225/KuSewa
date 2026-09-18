@@ -417,7 +417,7 @@ const monitoringCssVars = computed(() => {
                             </div>
                             <div class="shrink-0">
                                 <Select v-model="selectedMonitoringCategory">
-                                    <SelectTrigger class="w-full xl:w-[140px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors">
+                                    <SelectTrigger class="w-full xl:w-[140px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]">
                                         <SelectValue placeholder="Kategori" />
                                     </SelectTrigger>
                                     <SelectContent :body-lock="false" class="text-xs rounded-xl border !border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">

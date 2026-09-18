@@ -3,7 +3,7 @@ import { ChevronDown, Loader2 } from 'lucide-vue-next';
 import { Link, useForm, usePage } from '@inertiajs/vue3';
 import { ref, watch, onMounted } from 'vue';
 import LocationSelect from '@/Components/ui/LocationSelect.vue';
-
+import CustomSelect from '@/Components/ui/CustomSelect.vue';
 const props = defineProps({
     mustVerifyEmail: {
         type: Boolean,
@@ -22,19 +22,71 @@ const dob_year = ref('');
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
+const genderOptions = [
+    { label: 'Laki-laki', value: 'male' },
+    { label: 'Perempuan', value: 'female' },
+    { label: 'Memilih untuk tidak ingin memberi tahu', value: null }
+];
+
+const maritalStatusOptions = [
+    { label: 'Belum Kawin', value: 'Belum Kawin' },
+    { label: 'Sudah Kawin', value: 'Sudah Kawin' },
+];
+
+const nationalityOptions = [
+    { label: 'Warga Negara Indonesia (WNI)', value: 'WNI' },
+    { label: 'Warga Negara Asing (WNA)', value: 'WNA' },
+];
+
+const occupationOptions = [
+    { label: 'PELAJAR / MAHASISWA', value: 'PELAJAR / MAHASISWA' },
+    { label: 'KARYAWAN', value: 'KARYAWAN' },
+    { label: 'Lainnya', value: 'Lainnya' },
+];
+
+if (user.role === 'admin') {
+    occupationOptions.unshift({ label: 'ADMINISTRATOR', value: 'ADMINISTRATOR' });
+}
+
+const predefinedOccupations = ['Mahasiswa / Pelajar', 'Karyawan', 'ADMINISTRATOR'];
+let initialOccupationDropdown = '';
+let initialOccupationCustom = '';
+
+if (user.occupation) {
+    if (predefinedOccupations.includes(user.occupation)) {
+        initialOccupationDropdown = user.occupation;
+    } else {
+        initialOccupationDropdown = 'Lainnya';
+        initialOccupationCustom = user.occupation;
+    }
+}
+
+const occupationDropdown = ref(initialOccupationDropdown);
+const occupationCustom = ref(initialOccupationCustom);
+
 const form = useForm({
     name: user.name,
-    email: user.email,
     phone: user.phone || '',
     gender: user.gender || '',
     date_of_birth: user.date_of_birth || '',
     place_of_birth_code: user.place_of_birth_code || '',
+    marital_status: user.marital_status || '',
+    occupation: user.occupation || '',
+    nationality: user.nationality || '',
+});
+
+watch([occupationDropdown, occupationCustom], ([dropdown, custom]) => {
+    if (dropdown === 'Lainnya') {
+        form.occupation = custom;
+    } else {
+        form.occupation = dropdown;
+    }
 });
 
 onMounted(() => {
     console.log("Auth User:", user);
     console.log("Place of birth code:", user.place_of_birth_code);
-    
+
     if (user.date_of_birth) {
         const parts = user.date_of_birth.split('-');
         if (parts.length === 3) {
@@ -80,10 +132,10 @@ const resetForm = () => {
                 <!-- Nama Lengkap -->
                 <div>
                     <label for="name" class="block text-sm text-[#333333] mb-1.5">Nama lengkap</label>
-                    <input
+                <input
                         id="name"
                         type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
+                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-md shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                         v-model="form.name"
                         required
                         autofocus
@@ -94,46 +146,28 @@ const resetForm = () => {
 
                 <!-- Nomor Ponsel -->
                 <div>
-                    <label for="phone" class="block text-sm text-[#333333] mb-1.5">Nomor ponsel</label>
+                    <label for="phone" class="block text-sm text-[#333333] mb-1.5">Nomor HP</label>
                     <input
                         id="phone"
                         type="text"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
+                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-md shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                         v-model="form.phone"
                         autocomplete="tel"
+                        placeholder="081234567890"
                     />
                     <p class="mt-1.5 text-[13px] text-gray-500">Lengkapi nomor ponsel untuk dapat memulai booking.</p>
                     <p v-show="form.errors.phone" class="mt-1 text-sm text-red-600">{{ form.errors.phone }}</p>
                 </div>
 
-                <!-- Email -->
-                <div>
-                    <label for="email" class="block text-sm text-[#333333] mb-1.5">Email</label>
-                    <input
-                        id="email"
-                        type="email"
-                        class="block w-full border border-gray-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-xl shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors"
-                        v-model="form.email"
-                        required
-                        autocomplete="username"
-                    />
-                    <p class="mt-2 text-xs text-gray-500 leading-relaxed">Kami akan menghubungimu melalui email untuk masalah terkait akun dan tujuan komunikasi produk.</p>
-                    <p v-show="form.errors.email" class="mt-1 text-sm text-red-600">{{ form.errors.email }}</p>
-                </div>
-
                 <!-- Kelamin -->
-                <div>
+                <div v-if="user.role !== 'admin'">
                     <label class="block text-sm text-[#333333] mb-1.5">Jenis kelamin</label>
-                    <div class="relative">
-                        <select v-model="form.gender" class="block w-full appearance-none bg-white border border-gray-300 rounded-xl py-3 pl-4 pr-10 text-[15px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm cursor-pointer">
-                            <option value="" disabled selected>Pilih jenis kelamin</option>
-                            <option value="male">Laki-laki</option>
-                            <option value="female">Perempuan</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-4">
-                            <ChevronDown class="text-gray-400 text-sm" />
-                        </div>
-                    </div>
+                    <CustomSelect
+                        v-model="form.gender"
+                        :options="genderOptions"
+                        placeholder="Pilih jenis kelamin"
+                        :fullWidth="true"
+                    />
                 </div>
 
                 <!-- Tempat Lahir -->
@@ -147,13 +181,55 @@ const resetForm = () => {
                     <p v-show="form.errors.place_of_birth_code" class="mt-1 text-sm text-red-600">{{ form.errors.place_of_birth_code }}</p>
                 </div>
 
+                <!-- Status Perkawinan -->
+                <div v-if="user.role !== 'admin'">
+                    <label class="block text-sm text-[#333333] mb-1.5">Status Perkawinan</label>
+                    <CustomSelect
+                        v-model="form.marital_status"
+                        :options="maritalStatusOptions"
+                        placeholder="Pilih status perkawinan"
+                        :fullWidth="true"
+                    />
+                </div>
+
+                <!-- Pekerjaan -->
+                <div>
+                    <label class="block text-sm text-[#333333] mb-1.5">Pekerjaan</label>
+                    <CustomSelect
+                        v-model="occupationDropdown"
+                        :options="occupationOptions"
+                        placeholder="Pilih pekerjaan"
+                        :fullWidth="true"
+                    />
+
+                    <div v-if="occupationDropdown === 'Lainnya'" class="mt-3">
+                        <input
+                            type="text"
+                            class="block w-full border border-gray-300 focus:border-[#FFC000] rounded-md shadow-sm px-4 py-3 text-[15px] text-[#1D1D1F] transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
+                            v-model="occupationCustom"
+                            placeholder="Sebutkan pekerjaan Anda..."
+                        />
+                    </div>
+                </div>
+
+                <!-- Kewarganegaraan -->
+                <div>
+                    <label class="block text-sm text-[#333333] mb-1.5">Kewarganegaraan</label>
+                    <CustomSelect
+                        v-model="form.nationality"
+                        :options="nationalityOptions"
+                        placeholder="Pilih kewarganegaraan"
+                        :fullWidth="true"
+                    />
+                </div>
+
                 <!-- Tanggal Lahir -->
                 <div>
                     <label class="block text-sm text-[#333333] mb-1.5">Tanggal Lahir</label>
                     <div class="flex gap-2 sm:gap-3">
                         <!-- Tanggal -->
                         <div class="relative w-1/3">
-                            <select v-model="dob_day" class="block w-full appearance-none bg-white border border-gray-300 rounded-xl py-3 pl-3 pr-8 text-[15px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm cursor-pointer">
+                            <select v-model="dob_day" class="block w-full appearance-none bg-white border border-gray-300 rounded-md py-3 pl-3 pr-8 text-[15px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm cursor-pointer">
                                 <option value="" disabled selected>DD</option>
                                 <option v-for="d in 31" :key="d" :value="d">{{ String(d).padStart(2, '0') }}</option>
                             </select>
@@ -164,7 +240,7 @@ const resetForm = () => {
 
                         <!-- Bulan -->
                         <div class="relative w-1/3">
-                            <select v-model="dob_month" class="block w-full appearance-none bg-white border border-gray-300 rounded-xl py-3 pl-3 pr-8 text-[15px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm cursor-pointer">
+                            <select v-model="dob_month" class="block w-full appearance-none bg-white border border-gray-300 rounded-md py-3 pl-3 pr-8 text-[15px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm cursor-pointer">
                                 <option value="" disabled selected>Bulan</option>
                                 <option :value="1">Januari</option>
                                 <option :value="2">Februari</option>
@@ -186,7 +262,7 @@ const resetForm = () => {
 
                         <!-- Tahun -->
                         <div class="relative w-1/3">
-                            <select v-model="dob_year" class="block w-full appearance-none bg-white border border-gray-300 rounded-xl py-3 pl-3 pr-8 text-[15px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm cursor-pointer">
+                            <select v-model="dob_year" class="block w-full appearance-none bg-white border border-gray-300 rounded-md py-3 pl-3 pr-8 text-[15px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] transition-colors shadow-sm cursor-pointer">
                                 <option value="" disabled selected>YYYY</option>
                                 <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
                             </select>
@@ -196,29 +272,6 @@ const resetForm = () => {
                         </div>
                     </div>
                     <p v-show="form.errors.date_of_birth" class="mt-1 text-sm text-red-600">{{ form.errors.date_of_birth }}</p>
-                </div>
-            </div>
-
-
-
-            <div v-if="mustVerifyEmail && user.email_verified_at === null">
-                <p class="mt-2 text-sm text-gray-800">
-                    Alamat email Anda belum diverifikasi.
-                    <Link
-                        :href="route('verification.send')"
-                        method="post"
-                        as="button"
-                        class="rounded-md text-sm text-[#FFC000] underline hover:text-[#e6ad00] focus:outline-none focus:ring-2 focus:ring-[#FFC000] focus:ring-offset-2"
-                    >
-                        Klik di sini untuk mengirim ulang email verifikasi.
-                    </Link>
-                </p>
-
-                <div
-                    v-show="status === 'verification-link-sent'"
-                    class="mt-2 text-sm font-medium text-green-600"
-                >
-                    Link verifikasi baru telah dikirim ke alamat email Anda.
                 </div>
             </div>
 
@@ -243,7 +296,7 @@ const resetForm = () => {
                     v-if="form.isDirty"
                     type="button"
                     @click="resetForm"
-                    class="inline-flex items-center px-4 py-2 bg-transparent text-gray-500 font-bold rounded-xl text-sm transition-colors hover:text-gray-700"
+                    class="inline-flex items-center px-4 py-2 bg-transparent text-gray-500 font-bold rounded-md text-sm transition-colors hover:text-gray-700"
                 >
                     Batal
                 </button>
@@ -251,7 +304,7 @@ const resetForm = () => {
                 <button
                     type="submit"
                     :disabled="form.processing || !form.isDirty"
-                    class="inline-flex items-center px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-200"
+                    class="inline-flex items-center px-6 py-2.5 rounded-md font-bold text-sm transition-all duration-200"
                     :class="form.isDirty ? 'bg-primary text-white hover:bg-primary/80 active:scale-95 shadow-md cursor-pointer' : 'bg-gray-100 text-gray-400 cursor-not-allowed'"
                 >
                     <Loader2 v-if="form.processing" class="mr-2 animate-spin" />

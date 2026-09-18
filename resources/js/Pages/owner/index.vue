@@ -382,7 +382,7 @@ const assetChartSlices = computed(() => {
                                 </p>
                             </div>
                             <Select v-model="selectedTime">
-                                <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors">
+                                <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]">
                                     <SelectValue placeholder="Periode" />
                                 </SelectTrigger>
                                 <SelectContent :body-lock="false" class="text-xs rounded-xl border !border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">
@@ -487,7 +487,7 @@ const assetChartSlices = computed(() => {
                     <div class="flex flex-col sm:flex-row items-center border-t sm:border-t-0 sm:border-l border-slate-100">
                         <div class="px-6 py-4 w-full sm:w-auto flex items-center justify-center">
                             <Select v-model="selectedBookingTime">
-                                <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors">
+                                <SelectTrigger class="w-[130px] h-9 text-xs font-semibold bg-white border-slate-200 rounded-xl shadow-sm hover:border-[#FFC000] focus:ring-[#FFC000]/30 focus:border-[#FFC000] focus:ring-offset-0 transition-colors focus:outline-none focus:ring-2 focus:ring-[#FFC000]">
                                     <SelectValue placeholder="Periode" />
                                 </SelectTrigger>
                                 <SelectContent :body-lock="false" class="text-xs rounded-xl border !border-slate-200 !bg-white !opacity-100 !z-[9999] shadow-xl">

@@ -35,10 +35,18 @@ class BookingController extends Controller
                 'kategoriGroups' => [],
             ]);
         }
+        // Konteks aktif
+        $activeAssetSlug = $request->session()->get('active_asset_slug');
+        $isGlobal = empty($activeAssetSlug) || $activeAssetSlug === 'global';
 
-        // Ambil semua ID aset milik owner ini (1 query)
-        $assetIds = asset::where('owner_profile_id', $ownerProfile->id)->pluck('id');
-
+        // Ambil ID aset milik owner ini (sesuaikan dengan konteks)
+        $assetQuery = asset::where('owner_profile_id', $ownerProfile->id);
+        if (!$isGlobal) {
+            $assetQuery->where(function($q) use ($activeAssetSlug) {
+                $q->where('slug', $activeAssetSlug)->orWhere('id', $activeAssetSlug);
+            });
+        }
+        $assetIds = $assetQuery->pluck('id');
         // === Hitung status counts (1 query terpisah sebelum pagination) ===
         $statusCountsRaw = booking::whereIn('asset_id', $assetIds)
             ->select('booking_status', DB::raw('count(*) as total'))
@@ -153,6 +161,7 @@ class BookingController extends Controller
             ],
             'statusCounts'   => $statusCounts,
             'kategoriGroups' => $kategoriGroups,
+            'isGlobal'       => $isGlobal,
         ]);
     }
 

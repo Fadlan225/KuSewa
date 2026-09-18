@@ -13,11 +13,16 @@ class AdminSeeder extends Seeder
     public function run(): void
     {
         \App\Models\User::updateOrCreate(
-            ['email' => 'admin@kitasewa.com'], // Gunakan email sebagai kunci pencarian
+            ['email' => 'kitasewa.web.id@gmail.com'],
             [
-                'name' => 'admin kitasewa',
-                'password' => \Illuminate\Support\Facades\Hash::make('password'),
+                'name' => 'ADMIN KITASEWA',
+                'password' => \Illuminate\Support\Facades\Hash::make('KitaSewa#123'),
                 'role' => 'admin',
+                'phone' => '085151242588',
+                'place_of_birth_code' => '6472', // Kota Samarinda
+                'date_of_birth' => '2000-09-07',
+                'nationality' => 'WNI',
+                'occupation' => 'ADMINISTRATOR',
             ]
         );
     }

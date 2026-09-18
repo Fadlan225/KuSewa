@@ -9,6 +9,7 @@ defineProps({
     user: Object,
     owner_profile: { type: Object, default: null },
     bank_account: { type: Object, default: null },
+    banks: { type: Array, default: () => [] },
 });
 </script>
 
@@ -25,6 +26,7 @@ defineProps({
                     :user="user"
                     :owner_profile="owner_profile"
                     :bank_account="bank_account"
+                    :banks="banks"
                 />
             </div>
         </div>

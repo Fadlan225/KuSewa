@@ -120,7 +120,7 @@ const closeModal = () => {
 
 <template>
     <section>
-        <div class="flex items-center justify-between p-4 sm:p-5 border border-gray-200/80 rounded-2xl shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] bg-white transition-all hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]">
+        <div class="flex items-center justify-between p-4 sm:p-5 border border-gray-200/80 rounded-md shadow-[0_2px_8px_-4px_rgba(0,0,0,0.05)] bg-white transition-all hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.08)]">
             <div class="pr-4">
                 <p class="text-[15px] font-bold text-[#1D1D1F]">Hapus Akun</p>
                 <p class="text-[13px] text-gray-500 mt-1 leading-relaxed">Setelah dihapus, akun dan semua datanya tidak dapat dipulihkan.</p>
@@ -136,7 +136,7 @@ const closeModal = () => {
 
         <Teleport to="body" v-if="confirmingUserDeletion">
             <div class="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/50 overflow-y-auto">
-                <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-8 shadow-xl transform transition-all duration-300 text-center">
+                <div class="bg-white rounded-md max-w-md w-full p-6 sm:p-8 shadow-xl transform transition-all duration-300 text-center">
 
                     <template v-if="step === 'confirm'">
                         <h2 class="text-xl font-bold text-gray-900 mb-6">
@@ -151,7 +151,7 @@ const closeModal = () => {
                                 type="button"
                                 :disabled="isSendingOtp"
                                 @click="sendOtp"
-                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-sm text-white uppercase tracking-widest hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
+                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary border border-transparent rounded-md font-bold text-sm text-white uppercase tracking-widest hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
                             >
                                 <span v-if="isSendingOtp"><Loader2 class="mr-2 animate-spin" /> Mengirim...</span>
                                 <span v-else>Kirim Kode OTP</span>
@@ -161,7 +161,7 @@ const closeModal = () => {
                                 type="button"
                                 :disabled="isSendingOtp"
                                 @click="closeModal"
-                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
+                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-md font-bold text-sm text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
                             >
                                 Batal
                             </button>
@@ -185,7 +185,7 @@ const closeModal = () => {
                                 type="text"
                                 inputmode="numeric"
                                 maxlength="1"
-                                class="w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000]"
+                                class="w-10 h-12 text-center text-xl font-bold border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#FFC000] focus:border-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]"
                                 @input="handleOtpInput(index, $event)"
                                 @keydown="handleOtpKeydown(index, $event)"
                             />
@@ -197,7 +197,7 @@ const closeModal = () => {
                                 type="button"
                                 :disabled="isVerifyingOtp || form.processing"
                                 @click="verifyOtpAndDelete"
-                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary border border-transparent rounded-xl font-bold text-sm text-white uppercase tracking-widest hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
+                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-primary border border-transparent rounded-md font-bold text-sm text-white uppercase tracking-widest hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50"
                             >
                                 <span v-if="isVerifyingOtp || form.processing"><Loader2 class="mr-2 animate-spin" /> Memproses...</span>
                                 <span v-else>Hapus Akun</span>
@@ -207,7 +207,7 @@ const closeModal = () => {
                                 type="button"
                                 :disabled="isVerifyingOtp || form.processing"
                                 @click="closeModal"
-                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-xl font-bold text-sm text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
+                                class="w-full inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-300 rounded-md font-bold text-sm text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none transition ease-in-out duration-150"
                             >
                                 Batal
                             </button>

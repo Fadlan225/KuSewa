@@ -8,6 +8,7 @@ use App\Models\search_log;
 use App\Models\AssetView;
 use App\Models\review;
 use App\Models\asset_category;
+use App\Models\AccountActivity;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,6 +19,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
+
+use App\Models\bank;
 
 class ProfileController extends Controller
 {
@@ -58,9 +61,13 @@ class ProfileController extends Controller
                 'date_of_birth' => $user->date_of_birth,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'gender' => $user->gender,
+                'marital_status' => $user->marital_status,
+                'occupation' => $user->occupation,
+                'nationality' => $user->nationality,
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+                'role' => $user->role,
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,
@@ -70,11 +77,12 @@ class ProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
             'total_assets_rented' => $totalAssetsRented,
+            'banks' => bank::orderBy('name')->get(['code', 'name']),
         ]);
     }
 
@@ -115,9 +123,13 @@ class ProfileController extends Controller
                 'date_of_birth' => $user->date_of_birth,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'gender' => $user->gender,
+                'marital_status' => $user->marital_status,
+                'occupation' => $user->occupation,
+                'nationality' => $user->nationality,
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+                'role' => $user->role,
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,
@@ -127,12 +139,21 @@ class ProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
             'total_assets_rented' => $totalAssetsRented,
+            'banks' => bank::orderBy('name')->get(['code', 'name']),
         ]);
+    }
+
+    /**
+     * Display the user's password change form (Mobile only).
+     */
+    public function securityPassword(Request $request): Response
+    {
+        return Inertia::render('Profile/SecurityPassword');
     }
 
     /**
@@ -170,6 +191,7 @@ class ProfileController extends Controller
                 'avatar' => $avatarUrl,
                 'is_owner' => $user->role === 'admin' || $ownerProfile !== null,
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+                'role' => $user->role,
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,
@@ -179,10 +201,11 @@ class ProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
+            'banks' => bank::orderBy('name')->get(['code', 'name']),
         ]);
     }
 
@@ -246,10 +269,14 @@ class ProfileController extends Controller
                 'date_of_birth' => $user->date_of_birth,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'gender' => $user->gender,
+                'marital_status' => $user->marital_status,
+                'occupation' => $user->occupation,
+                'nationality' => $user->nationality,
                 'avatar' => $avatarUrl,
                 'profile_photo' => $avatarUrl,
                 'is_owner' => $isOwner || $user->role === 'admin',
                 'is_google_linked' => $user->providers()->where('provider', 'google')->exists(),
+                'role' => $user->role,
             ],
             'owner_profile' => $ownerProfile ? [
                 'national_id' => $ownerProfile->national_id,
@@ -259,7 +286,7 @@ class ProfileController extends Controller
                 'status' => $ownerProfile->status,
             ] : null,
             'bank_account' => $bankAccount ? [
-                'bank_name' => $bankAccount->bank_name,
+                'bank_code' => $bankAccount->bank_code,
                 'account_number' => $bankAccount->account_number,
                 'account_holder' => $bankAccount->account_holder,
             ] : null,
@@ -267,6 +294,8 @@ class ProfileController extends Controller
             'bookings_count' => $bookingsCount,
             'unpaid_bookings_count' => $unpaidBookingsCount,
             'favorite_assets_count' => $favoriteAssetsCount,
+            'pending_accounts_count' => $user->role === 'admin' ? \App\Models\owner_profile::where('status', 'pending')->count() : 0,
+            'pending_assets_count' => $user->role === 'admin' ? \App\Models\asset::where('status', 'pending')->count() : 0,
             'tab' => $tab,
         ];
 
@@ -320,6 +349,13 @@ class ProfileController extends Controller
             })->filter()->values();
             
             $data['categoriesList'] = collect(['Semua'])->merge(asset_category::pluck('name'))->values();
+        } elseif ($tab === 'riwayat-akun') {
+            $activities = AccountActivity::where('user_id', $userId)->orderBy('created_at', 'desc')->get();
+            $data['accountActivities'] = $activities->map(function ($activity) {
+                $activity->province = \App\Models\Province::where('code', $activity->province_code)->first();
+                $activity->city = \App\Models\City::where('code', $activity->regency_code)->first();
+                return $activity;
+            });
         }
 
         return Inertia::render('Profile/Edit', $data);
@@ -335,11 +371,13 @@ class ProfileController extends Controller
 
         $user->fill([
             'name' => $validated['name'],
-            'email' => $validated['email'],
             'phone' => array_key_exists('phone', $validated) ? $validated['phone'] : $user->phone,
             'date_of_birth' => array_key_exists('date_of_birth', $validated) ? $validated['date_of_birth'] : $user->date_of_birth,
             'place_of_birth_code' => array_key_exists('place_of_birth_code', $validated) ? $validated['place_of_birth_code'] : $user->place_of_birth_code,
             'gender' => array_key_exists('gender', $validated) ? $validated['gender'] : $user->gender,
+            'marital_status' => array_key_exists('marital_status', $validated) ? $validated['marital_status'] : $user->marital_status,
+            'occupation' => array_key_exists('occupation', $validated) ? $validated['occupation'] : $user->occupation,
+            'nationality' => array_key_exists('nationality', $validated) ? $validated['nationality'] : $user->nationality,
         ]);
 
         if ($user->isDirty('email')) {
@@ -356,17 +394,17 @@ class ProfileController extends Controller
                 'date_of_birth' => $validated['date_of_birth'] ?? $user->ownerProfile->date_of_birth,
             ]);
 
-            if (isset($validated['bank_name']) || isset($validated['account_number']) || isset($validated['account_holder'])) {
+            if (isset($validated['bank_code']) || isset($validated['account_number']) || isset($validated['account_holder'])) {
                 $bankAccount = $user->ownerProfile->bankAccounts()->first();
                 if ($bankAccount) {
                     $bankAccount->update([
-                        'bank_name' => $validated['bank_name'] ?? $bankAccount->bank_name,
+                        'bank_code' => $validated['bank_code'] ?? $bankAccount->bank_code,
                         'account_number' => $validated['account_number'] ?? $bankAccount->account_number,
                         'account_holder' => $validated['account_holder'] ?? $bankAccount->account_holder,
                     ]);
                 } else {
                     $user->ownerProfile->bankAccounts()->create([
-                        'bank_name' => $validated['bank_name'],
+                        'bank_code' => $validated['bank_code'],
                         'account_number' => $validated['account_number'],
                         'account_holder' => $validated['account_holder'],
                     ]);

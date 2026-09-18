@@ -300,7 +300,7 @@ onUnmounted(() => {
             <CardContent class="p-5 md:p-6 space-y-8">
                 <!-- Modal/Form Add Category -->
                 <div v-if="showAddCategory" class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row items-center gap-3 animate-in fade-in zoom-in-95 duration-200">
-                    <select v-model="selectedCategoryId" class="text-sm font-semibold border-slate-300 rounded-lg px-3 py-2 w-full sm:w-auto flex-1 focus:ring-[#FFC000] focus:border-[#FFC000] transition">
+                    <select v-model="selectedCategoryId" class="text-sm font-semibold border-slate-300 rounded-lg px-3 py-2 w-full sm:w-auto flex-1 focus:ring-[#FFC000] focus:border-[#FFC000] transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]">
                         <option value="" disabled>Pilih Kategori Fasilitas</option>
                         <option v-for="cat in availableCategoriesToAdd" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                     </select>
@@ -360,7 +360,7 @@ onUnmounted(() => {
                     <h3 class="text-lg font-bold text-slate-900 mb-4">Tambah Fasilitas Baru</h3>
                     <div class="mb-5">
                         <label class="text-xs font-bold text-slate-500 block mb-1">Pilih Fasilitas</label>
-                        <select v-model="newFacilityId" class="text-sm font-semibold text-slate-700 border border-slate-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-lg px-3 py-2 w-full transition">
+                        <select v-model="newFacilityId" class="text-sm font-semibold text-slate-700 border border-slate-300 focus:border-[#FFC000] focus:ring-[#FFC000] rounded-lg px-3 py-2 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]">
                             <option value="" disabled>-- Pilih Fasilitas --</option>
                             <option v-for="fac in availableFacilitiesForActiveCategory" :key="fac.id" :value="fac.id">
                                 {{ fac.name }}

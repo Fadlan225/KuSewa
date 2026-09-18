@@ -307,11 +307,8 @@ const displayedBanks = computed(() => {
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">No. Handphone*</label>
-                        <div class="flex">
-                            <span class="inline-flex items-center px-3 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-xs font-semibold text-slate-600">+62</span>
-                            <input type="text" v-model="form.phone" required class="w-full px-3.5 py-2.5 rounded-r-xl border border-slate-200 focus:border-[#ffc000] focus:ring-4 focus:ring-[#ffc000]/20 transition-all text-sm outline-none bg-slate-50/50 focus:bg-white" />
-                        </div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Nomor HP*</label>
+                        <input type="text" v-model="form.phone" placeholder="081234567890" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 focus:border-[#ffc000] focus:ring-4 focus:ring-[#ffc000]/20 transition-all text-sm outline-none bg-slate-50/50 focus:bg-white" />
                         <span v-if="!form.phone" class="text-[11px] text-red-500 font-medium mt-1 block">* Wajib diisi agar pemilik aset bisa menghubungi Anda.</span>
                         </div>
                         <div>

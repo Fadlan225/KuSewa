@@ -58,7 +58,16 @@ const accountMenuItems = [
         label: 'Aktivitas',
         icon: 'fa-solid fa-chart-line',
         routeMobile: route('aktivitas.hub'),
-        isActive: () => route().current('aktivitas.*') || route().current('last-seen.*') || route().current('favorites.*')
+        isActive: () => route().current('aktivitas.*') || route().current('last-seen.*') || route().current('favorites.*'),
+        show: () => page.props.auth?.user?.role !== 'admin'
+    },
+    {
+        label: 'Media Sosial',
+        icon: 'fa-solid fa-share-nodes',
+        routeDesktop: route('profile.edit', { tab: 'media-sosial' }),
+        routeMobile: route('profile.edit', { tab: 'media-sosial' }),
+        isActive: () => route().current('profile.edit') && route().params.tab === 'media-sosial',
+        show: () => page.props.auth?.user?.role === 'admin'
     },
 ];
 
@@ -97,9 +106,17 @@ const activityMenuItems = [
 
 const settingsMenuItems = [];
 
+const accountHistoryMenuItems = [
+    {
+        label: 'Riwayat Akun',
+        icon: 'fa-solid fa-clock-rotate-left', // or clock-history
+        routeDesktop: props.isDashboard ? route('owner.profile', { tab: 'riwayat-akun' }) : route('profile.edit', { tab: 'riwayat-akun' }),
+        isActive: () => props.isDashboard ? (route().current('owner.profile') && route().params.tab === 'riwayat-akun') : (route().current('profile.edit') && route().params.tab === 'riwayat-akun')
+    }
+];
 
 const helpMenuItems = [
-    { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: route('bantuan'), routeNames: ['bantuan'] },
+    { label: 'Pusat Bantuan', icon: 'fa-solid fa-circle-info', route: route('bantuan.index'), routeNames: ['bantuan.index'] },
     { label: 'Hubungi Kami', icon: 'fa-solid fa-headset', route: route('hubungi-kami'), routeNames: ['hubungi-kami'] },
     { label: 'Keluar', icon: 'fa-solid fa-arrow-right-from-bracket text-red-500', action: 'logout' },
 ];
@@ -125,7 +142,7 @@ const checkIsActive = (item) => {
 <template>
     <div class="space-y-6 w-full">
         <!-- Grup Menu 'Akun Saya' -->
-        <div class="bg-white p-6 shadow-md rounded-2xl space-y-2">
+        <div class="bg-white p-6 shadow-md rounded-lg space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Akun Saya</h3>
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 
@@ -135,7 +152,7 @@ const checkIsActive = (item) => {
                     v-if="item.routeDesktop && (item.show === undefined || item.show())"
                     :href="item.routeDesktop"
                     :class="[
-                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
                         checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
                     ]"
                 >
@@ -143,8 +160,9 @@ const checkIsActive = (item) => {
                     <div class="flex items-center space-x-4">
                         <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D]' : 'text-[#6C757D] group-hover:text-[#FFC000]']" />
                         <span :class="['text-sm sm:text-base font-semibold transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#0A2540]' : 'text-[#0A2540] group-hover:text-[#FFC000]']">{{ item.label }}</span>
-                        <!-- Red Dot for Profil Bisnis -->
-                        <div v-if="item.label === 'Profil Bisnis' && page.props.isProfileComplete === false" class="w-2 h-2 bg-red-500 rounded-full ml-1"></div>
+                        <!-- Red Dots -->
+                        <div v-if="item.label === 'Profil Saya' && page.props.auth.badges?.incomplete_profile" class="w-2 h-2 bg-red-500 rounded-full ml-1 shadow-sm"></div>
+                        <div v-if="item.label === 'Profil Bisnis' && page.props.isProfileComplete === false" class="w-2 h-2 bg-red-500 rounded-full ml-1 shadow-sm"></div>
                     </div>
                     <ChevronRight :class="['text-sm transition-all duration-200', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D] md:translate-x-1' : 'text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]']" />
                 </Link>
@@ -153,11 +171,14 @@ const checkIsActive = (item) => {
                 <Link
                     v-if="item.routeMobile && (item.show === undefined || item.show())"
                     :href="item.routeMobile"
-                    class="flex md:hidden items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative hover:bg-[#F8F9FA]"
+                    class="flex md:hidden items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative hover:bg-[#F8F9FA]"
                 >
                     <div class="flex items-center space-x-4">
                         <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors text-[#6C757D] group-hover:text-[#FFC000]']" />
                         <span class="text-sm sm:text-base font-semibold transition-colors text-[#0A2540] group-hover:text-[#FFC000]">{{ item.label }}</span>
+                        <!-- Red Dots -->
+                        <div v-if="item.label === 'Profil Saya' && page.props.auth.badges?.incomplete_profile" class="w-2 h-2 bg-red-500 rounded-full ml-1 shadow-sm"></div>
+                        <div v-if="item.label === 'Profil Bisnis' && page.props.isProfileComplete === false" class="w-2 h-2 bg-red-500 rounded-full ml-1 shadow-sm"></div>
                     </div>
                     <ChevronRight class="text-sm transition-all duration-200 text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]" />
                 </Link>
@@ -167,7 +188,7 @@ const checkIsActive = (item) => {
                     v-if="!item.routeDesktop && !item.routeMobile && (item.show === undefined || item.show())"
                     :href="item.route"
                     :class="[
-                        'flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        'flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
                         checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
                     ]"
                 >
@@ -182,9 +203,9 @@ const checkIsActive = (item) => {
 
             <!-- Profile Bisnis / Pusat Mitra -->
             <Link
-                v-if="user"
+                v-if="user && user.role !== 'admin'"
                 :href="mitraRoute"
-                class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-xl transition-colors duration-150 group relative overflow-hidden"
+                class="flex items-center justify-between py-3 border-b border-gray-50 hover:bg-[#F8F9FA] px-3 rounded-md transition-colors duration-150 group relative overflow-hidden"
             >
                 <div class="flex items-center space-x-4">
                     <Briefcase class="text-lg text-[#6C757D] group-hover:text-[#FFC000] w-6 text-center transition-colors" />
@@ -197,7 +218,7 @@ const checkIsActive = (item) => {
         </div>
 
         <!-- Grup Menu 'Pusat Aktivitas' (Hanya tampil di Desktop karena isinya hanya rute desktop) -->
-        <div class="hidden md:block bg-white p-6 shadow-md rounded-2xl space-y-2">
+        <div v-if="user?.role !== 'admin'" class="hidden md:block bg-white p-6 shadow-md rounded-lg space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Pusat Aktivitas</h3>
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 
@@ -207,7 +228,32 @@ const checkIsActive = (item) => {
                     v-if="item.routeDesktop"
                     :href="item.routeDesktop"
                     :class="[
-                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
+                        checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
+                    ]"
+                >
+                    <div v-if="checkIsActive(item)" class="hidden md:block absolute left-0 top-0 bottom-0 w-1 bg-[#FFC000]"></div>
+                    <div class="flex items-center space-x-4">
+                        <AppIcon :iconClass="[item.icon, 'text-lg w-6 text-center transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D]' : 'text-[#6C757D] group-hover:text-[#FFC000]']" />
+                        <span :class="['text-sm sm:text-base font-semibold transition-colors', checkIsActive(item) ? 'md:text-[#FFC000] text-[#0A2540]' : 'text-[#0A2540] group-hover:text-[#FFC000]']">{{ item.label }}</span>
+                    </div>
+                    <ChevronRight :class="['text-sm transition-all duration-200', checkIsActive(item) ? 'md:text-[#FFC000] text-[#6C757D] md:translate-x-1' : 'text-[#6C757D] group-hover:translate-x-1 group-hover:text-[#FFC000]']" />
+                </Link>
+            </template>
+        </div>
+
+        <!-- Grup Menu 'Aktivitas Akun' (Tampil untuk semua pengguna) -->
+        <div class="hidden md:block bg-white p-6 shadow-md rounded-lg space-y-2">
+            <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Aktivitas Keamanan</h3>
+            <div class="border-t border-[#F8F9FA] mb-2"></div>
+
+            <template v-for="(item, index) in accountHistoryMenuItems" :key="index">
+                <!-- Desktop Link -->
+                <Link
+                    v-if="item.routeDesktop"
+                    :href="item.routeDesktop"
+                    :class="[
+                        'hidden md:flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
                         checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
                     ]"
                 >
@@ -222,7 +268,7 @@ const checkIsActive = (item) => {
         </div>
 
         <!-- Grup Menu 'Bantuan & Lainnya' -->
-        <div class="bg-white p-6 shadow-md rounded-2xl space-y-2">
+        <div class="bg-white p-6 shadow-md rounded-lg space-y-2">
             <h3 class="text-base sm:text-lg font-bold text-[#0A2540] mb-2">Bantuan & Lainnya</h3>
             <div class="border-t border-[#F8F9FA] mb-2"></div>
 
@@ -230,7 +276,7 @@ const checkIsActive = (item) => {
                 <button
                     v-if="item.action === 'logout'"
                     @click="showLogoutModal = true"
-                    class="w-full flex items-center justify-between py-3 border-b border-gray-50 hover:bg-red-50 px-3 rounded-xl transition-colors duration-150 group"
+                    class="w-full flex items-center justify-between py-3 border-b border-gray-50 hover:bg-red-50 px-3 rounded-md transition-colors duration-150 group"
                 >
                     <div class="flex items-center space-x-4">
                         <AppIcon :iconClass="[item.icon, 'text-lg text-[#6C757D] group-hover:text-red-500 w-6 text-center transition-colors']" />
@@ -242,7 +288,7 @@ const checkIsActive = (item) => {
                     v-else
                     :href="item.route"
                     :class="[
-                        'w-full flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-xl transition-colors duration-150 group relative',
+                        'w-full flex items-center justify-between py-3 border-b border-gray-50 px-3 rounded-md transition-colors duration-150 group relative',
                         checkIsActive(item) ? '' : 'hover:bg-[#F8F9FA]'
                     ]"
                 >

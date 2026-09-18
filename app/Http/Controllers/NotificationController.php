@@ -23,16 +23,58 @@ class NotificationController extends Controller
             $query->whereNull('read_at');
         }
 
-        $notifications = $query->latest()->paginate($perPage);
+        $dbNotifications = $query->latest()->paginate($perPage);
+
+        $items = $dbNotifications->items();
+        $unreadCount = $user->unreadNotifications()->count();
+
+        // Cek kelengkapan profil untuk notifikasi virtual
+        $filledFields = 0;
+        $profileFields = [
+            'name', 'email', 'phone', 'gender',
+            'date_of_birth', 'place_of_birth_code', 'marital_status',
+            'occupation', 'nationality'
+        ];
+        
+        foreach ($profileFields as $field) {
+            if (!empty($user->{$field})) {
+                $filledFields++;
+            }
+        }
+        
+        if (!empty($user->profile_photo) || !empty($user->avatar)) {
+            $filledFields++;
+        }
+
+        if ($filledFields < 10 && $user->role !== 'admin') {
+            $unreadCount += 1;
+            $virtualNotification = [
+                'id' => 'virtual-profile-completion',
+                'type' => 'App\\Notifications\\ProfileCompletionNotification',
+                'notifiable_type' => 'App\\Models\\User',
+                'notifiable_id' => $user->id,
+                'data' => [
+                    'title' => 'Lengkapi Profil Anda',
+                    'message' => 'Pastikan profil Anda jelas dan lengkap agar lebih disukai oleh pemilik aset.',
+                    'action_url' => '/profile',
+                ],
+                'read_at' => null,
+                'created_at' => now()->toISOString(),
+                'updated_at' => now()->toISOString(),
+            ];
+
+            // Sisipkan di urutan teratas
+            array_unshift($items, $virtualNotification);
+        }
 
         return response()->json([
-            'data' => $notifications->items(),
+            'data' => $items,
             'meta' => [
-                'current_page' => $notifications->currentPage(),
-                'last_page'    => $notifications->lastPage(),
-                'total'        => $notifications->total(),
+                'current_page' => $dbNotifications->currentPage(),
+                'last_page'    => $dbNotifications->lastPage(),
+                'total'        => $dbNotifications->total() + (($filledFields < 10 && $user->role !== 'admin') ? 1 : 0),
             ],
-            'unread_count' => $user->unreadNotifications()->count(),
+            'unread_count' => $unreadCount,
         ]);
     }
 
@@ -41,6 +83,11 @@ class NotificationController extends Controller
      */
     public function markAsRead(string $id): JsonResponse
     {
+        // Abaikan jika ini adalah notifikasi virtual
+        if ($id === 'virtual-profile-completion') {
+            return response()->json(['message' => 'Notifikasi virtual tidak bisa di-mark as read secara manual. Selesaikan tugas untuk menghilangkan notifikasi.']);
+        }
+
         $notification = Auth::user()->notifications()->findOrFail($id);
         $notification->markAsRead();
 
@@ -62,8 +109,32 @@ class NotificationController extends Controller
      */
     public function unreadCount(): JsonResponse
     {
+        $user = Auth::user();
+        $unreadCount = $user->unreadNotifications()->count();
+        
+        $filledFields = 0;
+        $profileFields = [
+            'name', 'email', 'phone', 'gender',
+            'date_of_birth', 'place_of_birth_code', 'marital_status',
+            'occupation', 'nationality'
+        ];
+        
+        foreach ($profileFields as $field) {
+            if (!empty($user->{$field})) {
+                $filledFields++;
+            }
+        }
+        
+        if (!empty($user->profile_photo) || !empty($user->avatar)) {
+            $filledFields++;
+        }
+
+        if ($filledFields < 10 && $user->role !== 'admin') {
+            $unreadCount += 1;
+        }
+
         return response()->json([
-            'count' => Auth::user()->unreadNotifications()->count(),
+            'count' => $unreadCount,
         ]);
     }
 

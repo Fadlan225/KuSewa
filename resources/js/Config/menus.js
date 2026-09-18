@@ -25,6 +25,14 @@ export const getOwnerMenu = (sidebarCounts, isProfileComplete = true) => [
     },
     { label: 'Biaya Bulanan', route: route('owner.monthly-payment'), routeName: 'owner.monthly-payment', icon: CreditCard },
     { label: 'Keuangan', route: route('owner.income'), routeName: 'owner.income', icon: Wallet },
+    {
+        label: 'Profil Saya',
+        route: route('owner.profile'),
+        routeName: 'owner.profile',
+        icon: User,
+        badge: !isProfileComplete ? ' ' : null,
+        badgeClass: 'bg-rose-500 rounded-full w-2.5 h-2.5'
+    },
     { divider: true },
 ];
 

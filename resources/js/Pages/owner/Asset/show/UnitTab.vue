@@ -322,14 +322,14 @@ const submit = () => {
                         <!-- NAMA UNIT -->
                         <div>
                             <label class="text-xs font-bold text-slate-500 block mb-1">Nama Unit</label>
-                            <input v-model="form.name" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" placeholder="Contoh: Kamar Deluxe" required />
+                            <input v-model="form.name" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Contoh: Kamar Deluxe" required />
                             <div v-if="formErrors.name" class="text-xs text-rose-500 mt-1">{{ formErrors.name }}</div>
                         </div>
 
                         <!-- KUANTITAS -->
                         <div>
                             <label class="text-xs font-bold text-slate-500 block mb-1">Kuantitas (Jumlah) <span class="text-rose-500">*</span></label>
-                            <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" required />
+                            <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" required />
                             <div v-if="formErrors.quantity" class="text-xs text-rose-500 mt-1">{{ formErrors.quantity }}</div>
                         </div>
 
@@ -345,11 +345,11 @@ const submit = () => {
                                 <div v-for="(pricing, pIdx) in form.pricings" :key="pricing._id || pIdx" class="flex items-center gap-3 bg-slate-50 border border-slate-100 rounded-lg p-3">
                                     <div class="w-1/4">
                                         <label class="block text-[10px] font-bold text-slate-500 mb-1">Durasi</label>
-                                        <input v-model="pricing.duration" type="number" min="1" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0" required />
+                                        <input v-model="pricing.duration" type="number" min="1" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0 focus:outline-none focus:ring-2 focus:ring-[#FFC000]" required />
                                     </div>
                                     <div class="w-1/4">
                                         <label class="block text-[10px] font-bold text-slate-500 mb-1">Satuan</label>
-                                        <select v-model="pricing.rental_unit" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0" required>
+                                        <select v-model="pricing.rental_unit" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0 focus:outline-none focus:ring-2 focus:ring-[#FFC000]" required>
                                             <option value="hour">Jam</option>
                                             <option value="day">Hari</option>
                                             <option value="night">Malam</option>
@@ -359,7 +359,7 @@ const submit = () => {
                                     </div>
                                     <div class="flex-1">
                                         <label class="block text-[10px] font-bold text-slate-500 mb-1">Harga (Rp)</label>
-                                        <input v-model="pricing.price" type="number" min="0" placeholder="100000" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0" required />
+                                        <input v-model="pricing.price" type="number" min="0" placeholder="100000" class="w-full text-xs px-2.5 py-2 rounded-md border border-slate-300 focus:border-[#FFC000] focus:ring-0 focus:outline-none focus:ring-2 focus:ring-[#FFC000]" required />
                                     </div>
                                     <button v-if="form.pricings.length > 1" type="button" @click="form.pricings.splice(pIdx, 1)" class="w-8 h-8 rounded-md bg-rose-50 text-rose-500 hover:bg-rose-500 hover:text-slate-900 transition flex items-center justify-center shrink-0 mt-4" title="Hapus">
                                         <Trash2 class="text-xs" />
@@ -407,16 +407,16 @@ const submit = () => {
                                     </label>
 
                                     <template v-if="field.type === 'select'">
-                                        <select v-model="form.detail[field.key]" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" :required="field.required">
+                                        <select v-model="form.detail[field.key]" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" :required="field.required">
                                             <option value="" disabled>Pilih {{ field.label }}</option>
                                             <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
                                         </select>
                                     </template>
                                     <template v-else-if="field.type === 'number'">
-                                        <input v-model="form.detail[field.key]" type="number" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" :placeholder="field.label" :required="field.required" min="0" />
+                                        <input v-model="form.detail[field.key]" type="number" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" :placeholder="field.label" :required="field.required" min="0" />
                                     </template>
                                     <template v-else>
-                                        <input v-model="form.detail[field.key]" :type="field.type === 'time' ? 'time' : 'text'" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full transition" :placeholder="field.label" :required="field.required" />
+                                        <input v-model="form.detail[field.key]" :type="field.type === 'time' ? 'time' : 'text'" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" :placeholder="field.label" :required="field.required" />
                                     </template>
                                 </div>
                             </div>
@@ -427,7 +427,7 @@ const submit = () => {
                             <h4 class="text-sm font-bold text-slate-800 mb-3">Fasilitas Unit</h4>
                             <div class="grid grid-cols-3 gap-3">
                                 <label v-for="fac in unitFacilitiesFromDB" :key="fac.id" class="flex items-center gap-2 cursor-pointer group">
-                                    <input type="checkbox" :value="fac.id" v-model="form.facilities" class="w-4 h-4 text-[#FFC000] border-slate-300 rounded focus:ring-[#FFC000]" />
+                                    <input type="checkbox" :value="fac.id" v-model="form.facilities" class="w-4 h-4 text-[#FFC000] border-slate-300 rounded focus:ring-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                                     <span class="text-xs text-slate-600 group-hover:text-slate-800 transition line-clamp-1">{{ fac.name }}</span>
                                 </label>
                             </div>
@@ -461,7 +461,7 @@ const submit = () => {
                                 <!-- Grouped New Images -->
                                 <div v-for="(group, gIdx) in unitImageGroups" :key="group.id" class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
                                     <div class="flex items-center justify-between mb-3">
-                                        <select v-model="group.category_id" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2 w-full max-w-[250px] transition" required>
+                                        <select v-model="group.category_id" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2 w-full max-w-[250px] transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" required>
                                             <option value="" disabled>Pilih Kategori Foto</option>
                                             <option v-for="cat in galleryCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                                         </select>
@@ -508,7 +508,7 @@ const submit = () => {
                     <!-- NAMA UNIT -->
                     <div>
                         <label class="text-xs font-bold text-slate-500 block mb-1">Nama Unit</label>
-                        <input v-model="form.name" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" placeholder="Contoh: Kamar Deluxe" required />
+                        <input v-model="form.name" type="text" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-3 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" placeholder="Contoh: Kamar Deluxe" required />
                         <div v-if="formErrors.name" class="text-xs text-rose-500 mt-1">{{ formErrors.name }}</div>
                     </div>
 
@@ -516,12 +516,12 @@ const submit = () => {
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-bold text-slate-500 block mb-1">Kuantitas</label>
-                            <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" required />
+                            <input v-model="form.quantity" type="number" min="1" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-3 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" required />
                             <div v-if="formErrors.quantity" class="text-xs text-rose-500 mt-1">{{ formErrors.quantity }}</div>
                         </div>
                         <div>
                             <label class="text-xs font-bold text-slate-500 block mb-1">Harga Sewa (Rp)</label>
-                            <input v-model="form.price" type="number" min="0" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" required />
+                            <input v-model="form.price" type="number" min="0" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-3 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" required />
                             <div v-if="formErrors.price" class="text-xs text-rose-500 mt-1">{{ formErrors.price }}</div>
                         </div>
                     </div>
@@ -536,16 +536,16 @@ const submit = () => {
                                 </label>
 
                                 <template v-if="field.type === 'select'">
-                                    <select v-model="form.detail[field.key]" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" :required="field.required">
+                                    <select v-model="form.detail[field.key]" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-3 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" :required="field.required">
                                         <option value="" disabled>Pilih {{ field.label }}</option>
                                         <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
                                     </select>
                                 </template>
                                 <template v-else-if="field.type === 'number'">
-                                    <input v-model="form.detail[field.key]" type="number" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" :placeholder="field.label" :required="field.required" min="0" />
+                                    <input v-model="form.detail[field.key]" type="number" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-3 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" :placeholder="field.label" :required="field.required" min="0" />
                                 </template>
                                 <template v-else>
-                                    <input v-model="form.detail[field.key]" :type="field.type === 'time' ? 'time' : 'text'" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-3 w-full transition" :placeholder="field.label" :required="field.required" />
+                                    <input v-model="form.detail[field.key]" :type="field.type === 'time' ? 'time' : 'text'" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-3 w-full transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" :placeholder="field.label" :required="field.required" />
                                 </template>
                             </div>
                         </div>
@@ -556,7 +556,7 @@ const submit = () => {
                         <h4 class="text-sm font-bold text-slate-800 mb-3">Fasilitas Unit</h4>
                         <div class="grid grid-cols-2 gap-3">
                             <label v-for="fac in unitFacilitiesFromDB" :key="fac.id" class="flex items-center gap-2 cursor-pointer group py-1">
-                                <input type="checkbox" :value="fac.id" v-model="form.facilities" class="w-5 h-5 text-[#FFC000] border-slate-300 rounded focus:ring-[#FFC000]" />
+                                <input type="checkbox" :value="fac.id" v-model="form.facilities" class="w-5 h-5 text-[#FFC000] border-slate-300 rounded focus:ring-[#FFC000] focus:outline-none focus:ring-2 focus:ring-[#FFC000]" />
                                 <span class="text-xs text-slate-600 transition">{{ fac.name }}</span>
                             </label>
                         </div>
@@ -590,7 +590,7 @@ const submit = () => {
                             <!-- Grouped New Images (Mobile) -->
                             <div v-for="(group, gIdx) in unitImageGroups" :key="group.id" class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
                                 <div class="flex items-center gap-2">
-                                    <select v-model="group.category_id" class="text-sm text-slate-700 border border-slate-300 focus:border-indigo-500 rounded-lg px-3 py-2.5 flex-1 transition" required>
+                                    <select v-model="group.category_id" class="text-sm text-slate-700 border border-slate-300 focus:border-[#FFC000] rounded-lg px-3 py-2.5 flex-1 transition focus:outline-none focus:ring-2 focus:ring-[#FFC000]" required>
                                         <option value="" disabled>Pilih Kategori</option>
                                         <option v-for="cat in galleryCategories" :key="cat.id" :value="cat.id">{{ cat.name }}</option>
                                     </select>

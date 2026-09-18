@@ -68,7 +68,7 @@ const goBack = () => {
                     v-for="(menu, index) in menus"
                     :key="index"
                     @click="navigateTo(menu.route)"
-                    class="w-full flex items-center justify-between p-4 sm:p-5 bg-white border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.15)] rounded-2xl hover:bg-gray-50 transition-all duration-300 group"
+                    class="w-full flex items-center justify-between p-4 sm:p-5 bg-white border border-gray-100 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] hover:shadow-[0_4px_12px_-4px_rgba(0,0,0,0.15)] rounded-md hover:bg-gray-50 transition-all duration-300 group"
                 >
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-full flex items-center justify-center bg-[#F8F9FA] text-gray-500 group-hover:bg-[#FFC000]/10 group-hover:text-[#FFC000] transition-colors shrink-0">

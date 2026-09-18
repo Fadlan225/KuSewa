@@ -553,7 +553,7 @@ const handleLogoutConfirm = () => {
                                         <div class="space-y-4 max-h-[250px] overflow-y-auto pr-2 overscroll-contain">
                                             <div v-if="!assetSearchQuery" class="space-y-2">
                                                 <label class="flex items-center gap-3 cursor-pointer group p-1 border border-[#6C757D]/20 rounded-xl px-4 py-3 bg-[#F8F9FA]">
-                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.length === 0}">
+                                                    <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#FFC000] border-[#FFC000]': selectedAssets.length === 0}">
                                                         <Check v-if="selectedAssets.length === 0" class="text-white text-[10px]" />
                                                     </div>
                                                     <span class="text-sm font-bold text-[#0A2540]">Semua</span>
@@ -564,7 +564,7 @@ const handleLogoutConfirm = () => {
                                                 <h3 class="text-xs font-bold text-[#6C757D] mb-2">{{ cat.name }}</h3>
                                                 <div class="space-y-2">
                                                     <label v-for="item in cat.items" :key="item" class="flex items-center gap-3 cursor-pointer group p-1">
-                                                        <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#0A2540] border-[#0A2540]': selectedAssets.includes(item)}">
+                                                        <div class="relative flex items-center justify-center w-5 h-5 rounded border border-[#6C757D]/40 transition" :class="{'bg-[#FFC000] border-[#FFC000]': selectedAssets.includes(item)}">
                                                             <Check v-if="selectedAssets.includes(item)" class="text-white text-[10px]" />
                                                         </div>
                                                         <span class="text-sm font-medium text-[#0A2540]">{{ item }}</span>
@@ -717,7 +717,7 @@ const handleLogoutConfirm = () => {
                     <!-- Bantuan -->
                     <Link
                         v-if="!page.props.auth.user"
-                        :href="route('bantuan')"
+                        :href="route('bantuan.index')"
                         :class="[
                             'relative h-full flex items-center text-sm transition-colors duration-300 group',
                             isBantuan ? 'font-bold' : 'font-semibold',
@@ -733,7 +733,7 @@ const handleLogoutConfirm = () => {
 
                     <!-- Aktivitas -->
                     <Link
-                        v-if="page.props.auth.user"
+                        v-if="page.props.auth.user && !isAdmin"
                         :href="route('profile.edit', { tab: 'transaksi' })"
                         :class="[
                             'relative h-full flex items-center text-sm transition-colors duration-300 group',
@@ -824,7 +824,7 @@ const handleLogoutConfirm = () => {
                             >
                                 <div
                                     v-if="isNotifDropdownOpen"
-                                    class="absolute top-[130%] right-0 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 origin-top-right overflow-hidden"
+                                    class="absolute top-[130%] right-0 bg-white rounded-md shadow-2xl border border-gray-100 z-50 origin-top-right overflow-hidden"
                                 >
                                     <NotificationDropdown @close="isNotifDropdownOpen = false" />
                                 </div>
@@ -848,14 +848,14 @@ const handleLogoutConfirm = () => {
                                     v-if="userProfilePhoto"
                                     :src="userProfilePhoto"
                                     class="w-full h-full object-cover"
+                                    alt="User profile"
                                 />
-                                <div
-                                    v-else
-                                    class="w-full h-full bg-[#f8f9fa] flex items-center justify-center font-bold text-sm"
-                                >
+                                <div v-else class="w-full h-full flex items-center justify-center bg-[#f8f9fa]">
                                     <UserAvatar :user="page.props.auth.user" />
                                 </div>
                             </button>
+                            <!-- Red Dot Indicator untuk Profil Belum Lengkap -->
+                            <div v-if="page.props.auth.badges?.incomplete_profile" class="absolute -top-0 -right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white z-10 shadow-sm pointer-events-none"></div>
 
                             <!-- Backdrop Overlay to Close Menu -->
                             <div
@@ -878,7 +878,7 @@ const handleLogoutConfirm = () => {
                                     class="absolute top-[130%] right-0 w-[320px] sm:w-[340px] bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 origin-top-right text-[#0A2540]"
                                 >
                                     <!-- 1. Pusat Bantuan -->
-                                    <Link :href="route('bantuan')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
+                                    <Link :href="route('bantuan.index')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
                                         <HelpCircle class="text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
                                         <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Pusat Bantuan</span>
                                     </Link>
@@ -894,7 +894,10 @@ const handleLogoutConfirm = () => {
 
                                     <Link :href="route('profile.edit')" class="flex items-center gap-3 pb-3 cursor-pointer group" @click="isUserMenuOpen = false">
                                         <User class="text-xl text-[#0A2540] group-hover:text-[#FFC000] transition-colors" />
-                                        <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Profile</span>
+                                        <div class="flex items-center">
+                                            <span class="text-sm font-semibold text-[#0A2540] group-hover:text-[#FFC000] transition-colors">Profile</span>
+                                            <div v-if="page.props.auth.badges?.incomplete_profile" class="w-2 h-2 bg-red-500 rounded-full ml-2 shadow-sm"></div>
+                                        </div>
                                     </Link>
 
                                     <div class="h-px bg-gray-100 my-2"></div>
@@ -982,7 +985,7 @@ const handleLogoutConfirm = () => {
                                             @click="isUserMenuOpen = false"
                                             class="relative overflow-hidden py-3 px-4 bg-white rounded-xl border border-gray-200 hover:border-amber-400 transition-all cursor-pointer group shadow-sm hover:shadow-md my-1 block"
                                         >
-                                            <!-- Ilustrasi (Ditempatkan di sudut kanan) --> 
+                                            <!-- Ilustrasi (Ditempatkan di sudut kanan) -->
                                             <div class="absolute -right-2 bottom-0 h-full w-28 opacity-90 group-hover:opacity-100 transition-all duration-300 pointer-events-none flex items-end">
                                                 <div class="w-full h-full flex items-center justify-end pr-4 text-[#0A2540] opacity-10 group-hover:opacity-20 transition-opacity">
                                                     <PieChart class="text-5xl" />

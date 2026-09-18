@@ -40,6 +40,9 @@ class OwnerRegistrationController extends Controller
                 'gender'             => $user->gender,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'date_of_birth'      => $user->date_of_birth,
+                'marital_status'     => $user->marital_status,
+                'occupation'         => $user->occupation,
+                'nationality'        => $user->nationality,
             ],
             'initialProfile' => $ownerProfile ? [
                 'national_id'     => $ownerProfile->national_id,
@@ -49,10 +52,6 @@ class OwnerRegistrationController extends Controller
                 'village_code'    => $ownerProfile->village_code,
                 'postal_code'     => $ownerProfile->postal_code,
                 'address'         => $ownerProfile->address,
-                'religion'        => $ownerProfile->religion,
-                'marital_status'  => $ownerProfile->marital_status,
-                'occupation'      => $ownerProfile->occupation,
-                'nationality'     => $ownerProfile->nationality,
                 'has_ktp_photo'   => !empty($ownerProfile->ktp_photo),
             ] : null,
         ]);
@@ -78,6 +77,9 @@ class OwnerRegistrationController extends Controller
                 'gender'             => $user->gender,
                 'place_of_birth_code' => $user->place_of_birth_code,
                 'date_of_birth'      => $user->date_of_birth,
+                'marital_status'     => $user->marital_status,
+                'occupation'         => $user->occupation,
+                'nationality'        => $user->nationality,
             ],
             'initialProfile' => $ownerProfile ? [
                 'national_id'     => $ownerProfile->national_id,
@@ -87,10 +89,6 @@ class OwnerRegistrationController extends Controller
                 'village_code'    => $ownerProfile->village_code,
                 'postal_code'     => $ownerProfile->postal_code,
                 'address'         => $ownerProfile->address,
-                'religion'        => $ownerProfile->religion,
-                'marital_status'  => $ownerProfile->marital_status,
-                'occupation'      => $ownerProfile->occupation,
-                'nationality'     => $ownerProfile->nationality,
                 'has_ktp_photo'   => !empty($ownerProfile->ktp_photo),
             ] : null,
         ]);
@@ -195,6 +193,9 @@ class OwnerRegistrationController extends Controller
             'gender'             => $request->gender,
             'place_of_birth_code' => $request->place_of_birth_code,
             'date_of_birth'      => $request->date_of_birth,
+            'marital_status'     => $request->marital_status,
+            'occupation'         => $request->occupation,
+            'nationality'        => $request->nationality ?? 'WNI',
         ]);
 
         // --- Pindahkan KTP dari temp ke final path ---
@@ -213,10 +214,6 @@ class OwnerRegistrationController extends Controller
             ['user_id' => $user->id],
             [
                 'national_id'    => $request->national_id,
-                'religion'       => $request->religion,
-                'marital_status' => $request->marital_status,
-                'occupation'     => $request->occupation,
-                'nationality'    => $request->nationality ?? 'WNI',
                 'province_code'  => $request->province_code,
                 'city_code'      => $request->city_code,
                 'district_code'  => $request->district_code,

@@ -36,7 +36,6 @@ class StoreOwnerDataRequest extends FormRequest
                 'required', 'string', 'size:16', 'regex:/^\d{16}$/',
                 Rule::unique('owner_profiles', 'national_id')->ignore($userId, 'user_id'),
             ],
-            'religion'           => ['nullable', 'string', 'max:50'],
             'marital_status'     => ['nullable', 'string', 'max:50'],
             'occupation'         => ['nullable', 'string', 'max:100'],
             'nationality'        => ['nullable', 'string', 'max:10'],
