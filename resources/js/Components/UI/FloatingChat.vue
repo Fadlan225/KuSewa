@@ -699,19 +699,18 @@ watch(activeContactId, (newId, oldId) => {
 
 onMounted(() => {
   window.addEventListener('resize', updateWindowDimensions);
-  // If user is authenticated, we could fetch contacts on load to get the unread count
-  if (document.cookie.includes('XSRF-TOKEN')) {
+  // Hanya fetch contacts jika user sudah login (cek dari Inertia props, bukan cookie XSRF)
+  // XSRF-TOKEN selalu ada bahkan untuk guest, sehingga tidak bisa dijadikan indikator login
+  const userId = usePage().props.auth?.user?.id;
+  if (userId) {
       fetchContacts()
       // Polling lambat dihapus untuk menghemat beban server
-      const userId = usePage().props.auth?.user?.id;
-      if (userId) {
-          window.Echo?.private(`App.Models.User.${userId}`)
-              .notification((notification) => {
-                  if (notification.type === 'chat_message') {
-                      fetchContacts();
-                  }
-              });
-      }
+      window.Echo?.private(`App.Models.User.${userId}`)
+          .notification((notification) => {
+              if (notification.type === 'chat_message') {
+                  fetchContacts();
+              }
+          });
   }
 })
 
